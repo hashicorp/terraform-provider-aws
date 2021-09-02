@@ -116,6 +116,39 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_OnlyMajorVersion(t *testing.T) {
+	var dbInstance1 rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	engine := "mysql"
+	engineVersion1 := "5.6"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_MajorVersionOnly(engine, engineVersion1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"engine_version",
+					"password",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 
@@ -643,6 +676,59 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorage(t *testing.T) {
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_Iops(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_Iops(rName, 1000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorageAndIops(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_AllocatedStorageAndIops(rName, 220, 2200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "220"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "2200"),
 				),
 			},
 		},
@@ -2217,7 +2303,12 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 
 func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 	var vBefore, vAfter rds.DBInstance
-	rInt := acctest.RandInt()
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	domain := testAccRandomDomain()
+	directory1 := domain.RandomSubdomain().String()
+	directory2 := domain.RandomSubdomain().String()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2226,25 +2317,21 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_MSSQLDomain(rInt),
+				Config: testAccAWSDBInstanceConfig_MSSQLDomain(rName, directory1, directory2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vBefore),
-					testAccCheckAWSDBInstanceDomainAttributes("terraformtesting.com", &vBefore),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.mssql", "domain"),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.mssql", "domain_iam_role_name"),
+					testAccCheckAWSDBInstanceExists(resourceName, &vBefore),
+					testAccCheckAWSDBInstanceDomainAttributes(directory1, &vBefore),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 			{
-				Config: testAccAWSDBInstanceConfig_MSSQLUpdateDomain(rInt),
+				Config: testAccAWSDBInstanceConfig_MSSQLUpdateDomain(rName, directory1, directory2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vAfter),
-					testAccCheckAWSDBInstanceDomainAttributes("corp.notexample.com", &vAfter),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.mssql", "domain"),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.mssql", "domain_iam_role_name"),
+					testAccCheckAWSDBInstanceExists(resourceName, &vAfter),
+					testAccCheckAWSDBInstanceDomainAttributes(directory2, &vAfter),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 		},
@@ -2253,7 +2340,11 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 
 func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 	var v, vRestoredInstance rds.DBInstance
-	rInt := acctest.RandInt()
+	resourceName := "aws_db_instance.test"
+	originResourceName := "aws_db_instance.origin"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2262,15 +2353,13 @@ func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_MSSQLDomainSnapshotRestore(rInt),
+				Config: testAccAWSDBInstanceConfig_MSSQLDomainSnapshotRestore(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql_restore", &vRestoredInstance),
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
-					testAccCheckAWSDBInstanceDomainAttributes("terraformtesting.com", &vRestoredInstance),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.mssql_restore", "domain"),
-					resource.TestCheckResourceAttrSet(
-						"aws_db_instance.mssql_restore", "domain_iam_role_name"),
+					testAccCheckAWSDBInstanceExists(resourceName, &vRestoredInstance),
+					testAccCheckAWSDBInstanceExists(originResourceName, &v),
+					testAccCheckAWSDBInstanceDomainAttributes(domain, &vRestoredInstance),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 		},
@@ -3234,6 +3323,244 @@ func TestAccAWSDBInstance_RestoreToPointInTime_SourceResourceID(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_NationalCharacterSet_Oracle(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_NationalCharacterSet_Oracle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "UTF8"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_NoNationalCharacterSet_Oracle(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_NoNationalCharacterSet_Oracle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "AL16UTF16"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_CoipEnabled(t *testing.T) {
+	var v rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, true, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					testAccCheckAWSDBInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(
+						resourceName, "customer_owned_ip_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_CoipEnabled_DisabledToEnabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, false, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, true, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_CoipEnabled_EnabledToDisabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, true, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, false, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_CoipEnabled_RestoreToPointInTime(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceName := "aws_db_instance.test"
+	resourceName := "aws_db_instance.restore"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_CoipEnabled_RestorePointInTime(rName, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"delete_automated_backups",
+					"final_snapshot_identifier",
+					"latest_restorable_time", // dynamic value of a DBInstance
+					"password",
+					"restore_to_point_in_time",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_CoipEnabled_SnapshotIdentifier(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.test"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.restore"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_CoipEnabled_SnapshotIdentifier(rName, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSDBInstanceConfig_orderableClass(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
@@ -3279,6 +3606,32 @@ resource "aws_db_instance" "bar" {
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
 `)
+}
+
+func testAccAWSDBInstanceConfig_MajorVersionOnly(engine, engineVersion string) string {
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+locals {
+  engine = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = local.engine
+  engine_version          = %[2]q
+  instance_class          = "db.r4.large"
+  name                    = "baz"
+  parameter_group_name    = "default.mysql5.6"
+  password                = "barbarbarbar"
+  skip_final_snapshot     = true
+  username                = "foo"
+
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
+}
+`, engine, engineVersion))
 }
 
 func testAccAWSDBInstanceConfig_namePrefix() string {
@@ -4240,122 +4593,24 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 `, rInt))
 }
 
-func testAccAWSDBInstanceConfig_MSSQLDomain(rInt int) string {
-	return composeConfig(
-		testAccAWSDBInstanceConfig_orderableClassSQLServerEx(),
-		testAccAvailableAZsNoOptInConfig(),
-		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "terraform-testacc-db-instance-mssql-domain"
-  }
-}
-
-resource "aws_db_subnet_group" "rds_one" {
-  name        = "tf_acc_test_%[1]d"
-  description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = "tf-acc-db-instance-mssql-domain-main"
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = "tf-acc-db-instance-mssql-domain-other"
-  }
-}
-
-resource "aws_db_instance" "mssql" {
-  allocated_storage       = 20
-  backup_retention_period = 0
-  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
-  domain                  = aws_directory_service_directory.foo.id
-  domain_iam_role_name    = aws_iam_role.role.name
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier              = "tf-test-mssql-%[1]d"
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "somecrazypassword"
-  skip_final_snapshot     = true
-  username                = "somecrazyusername"
-  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
-}
-
-resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test-%[1]d"
-
-  description = "TF Testing"
-  vpc_id      = aws_vpc.foo.id
-}
-
-resource "aws_security_group_rule" "rds-mssql-1" {
-  type        = "egress"
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = aws_security_group.rds-mssql.id
-}
-
-resource "aws_directory_service_directory" "foo" {
-  name     = "terraformtesting.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-  edition  = "Standard"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.foo.id
-    subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-  }
-}
-
-resource "aws_directory_service_directory" "bar" {
-  name     = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-  edition  = "Standard"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.foo.id
-    subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-  }
-}
-
-data "aws_partition" "current" {}
-
+func testAccAWSDBInstanceConfig_RDSServiceRole(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role-%[1]d"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "rds.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+			"Service": "rds.${data.aws_partition.current.dns_suffix}"
+		},
+		"Effect": "Allow",
+		"Sid": ""
+		}
+	]
 }
 EOF
 }
@@ -4364,268 +4619,180 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = aws_iam_role.role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt))
+`, rName)
 }
 
-func testAccAWSDBInstanceConfig_MSSQLUpdateDomain(rInt int) string {
+func testAccAWSDBInstanceConfig_VpcConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+}
+
+resource "aws_db_subnet_group" "test" {
+  name = %[1]q
+
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, domain string) string {
 	return composeConfig(
 		testAccAWSDBInstanceConfig_orderableClassSQLServerEx(),
 		testAccAvailableAZsNoOptInConfig(),
+		testAccAWSDBInstanceConfig_VpcConfigBase(rName),
+		testAccAWSDBInstanceConfig_RDSServiceRole(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
 
-  tags = {
-    Name = "terraform-testacc-db-instance-mssql-domain"
+resource "aws_security_group_rule" "test" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_directory_service_directory" "directory" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 
-resource "aws_db_subnet_group" "rds_one" {
-  name        = "tf_acc_test_%[1]d"
-  description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
+data "aws_partition" "current" {}
+`, rName, domain))
 }
 
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
+func testAccAWSDBInstanceConfig_MSSQLDomain(rName, directory1, directory2 string) string {
+	return composeConfig(
+		testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, directory1),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "somecrazypassword"
+  skip_final_snapshot     = true
+  username                = "somecrazyusername"
+  vpc_security_group_ids  = [aws_security_group.test.id]
 
-  tags = {
-    Name = "tf-acc-db-instance-mssql-domain-main"
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+}
+
+resource "aws_directory_service_directory" "directory-2" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = "tf-acc-db-instance-mssql-domain-other"
-  }
+`, rName, directory2))
 }
 
-resource "aws_db_instance" "mssql" {
+func testAccAWSDBInstanceConfig_MSSQLUpdateDomain(rName, directory1, directory2 string) string {
+	return composeConfig(
+		testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, directory1),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
   allocated_storage       = 20
   apply_immediately       = true
   backup_retention_period = 0
-  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
-  domain                  = aws_directory_service_directory.bar.id
-  domain_iam_role_name    = aws_iam_role.role.name
+  db_subnet_group_name    = aws_db_subnet_group.test.name
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier              = "tf-test-mssql-%[1]d"
+  identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   password                = "somecrazypassword"
   skip_final_snapshot     = true
   username                = "somecrazyusername"
-  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
+  vpc_security_group_ids  = [aws_security_group.test.id]
+
+  domain               = aws_directory_service_directory.directory-2.id
+  domain_iam_role_name = aws_iam_role.role.name
 }
 
-resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test-%[1]d"
-
-  description = "TF Testing"
-  vpc_id      = aws_vpc.foo.id
-}
-
-resource "aws_security_group_rule" "rds-mssql-1" {
-  type        = "egress"
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = aws_security_group.rds-mssql.id
-}
-
-resource "aws_directory_service_directory" "foo" {
-  name     = "terraformtesting.com"
+resource "aws_directory_service_directory" "directory-2" {
+  name     = %[2]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
 
   vpc_settings {
-    vpc_id     = aws_vpc.foo.id
-    subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-
-resource "aws_directory_service_directory" "bar" {
-  name     = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-  edition  = "Standard"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.foo.id
-    subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-  }
+`, rName, directory2))
 }
 
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role-%[1]d"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "rds.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "attatch-policy" {
-  role       = aws_iam_role.role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
-}
-`, rInt))
-}
-
-func testAccAWSDBInstanceConfig_MSSQLDomainSnapshotRestore(rInt int) string {
+func testAccAWSDBInstanceConfig_MSSQLDomainSnapshotRestore(rName, directory string) string {
 	return composeConfig(
-		testAccAWSDBInstanceConfig_orderableClassSQLServerEx(),
-		testAccAvailableAZsNoOptInConfig(),
+		testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, directory),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "terraform-testacc-db-instance-mssql-domain"
-  }
-}
-
-resource "aws_db_subnet_group" "rds_one" {
-  name        = "tf_acc_test_%[1]d"
-  description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = "tf-acc-db-instance-mssql-domain-main"
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = "tf-acc-db-instance-mssql-domain-other"
-  }
-}
-
-resource "aws_db_instance" "mssql" {
+resource "aws_db_instance" "origin" {
   allocated_storage   = 20
   engine              = data.aws_rds_orderable_db_instance.test.engine
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier          = "tf-test-mssql-%[1]d"
+  identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password            = "somecrazypassword"
   skip_final_snapshot = true
   username            = "somecrazyusername"
 }
 
-resource "aws_db_snapshot" "mssql-snap" {
-  db_instance_identifier = aws_db_instance.mssql.id
-  db_snapshot_identifier = "tf-acc-test-%[1]d"
+resource "aws_db_snapshot" "origin" {
+  db_instance_identifier = aws_db_instance.origin.id
+  db_snapshot_identifier = %[1]q
 }
 
-resource "aws_db_instance" "mssql_restore" {
+resource "aws_db_instance" "test" {
   allocated_storage       = 20
   apply_immediately       = true
   backup_retention_period = 0
-  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
-  domain                  = aws_directory_service_directory.foo.id
-  domain_iam_role_name    = aws_iam_role.role.name
-  engine                  = aws_db_instance.mssql.engine
-  engine_version          = aws_db_instance.mssql.engine_version
-  identifier              = "tf-test-mssql-%[1]d-restore"
-  instance_class          = aws_db_instance.mssql.instance_class
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = aws_db_instance.origin.engine
+  engine_version          = aws_db_instance.origin.engine_version
+  identifier              = "%[1]s-restore"
+  instance_class          = aws_db_instance.origin.instance_class
   password                = "somecrazypassword"
   skip_final_snapshot     = true
-  snapshot_identifier     = aws_db_snapshot.mssql-snap.id
   username                = "somecrazyusername"
-  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
+  vpc_security_group_ids  = [aws_security_group.test.id]
+
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+
+  snapshot_identifier = aws_db_snapshot.origin.id
 }
-
-resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test-%[1]d"
-
-  description = "TF Testing"
-  vpc_id      = aws_vpc.foo.id
-}
-
-resource "aws_security_group_rule" "rds-mssql-1" {
-  type        = "egress"
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = aws_security_group.rds-mssql.id
-}
-
-resource "aws_directory_service_directory" "foo" {
-  name     = "terraformtesting.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-  edition  = "Standard"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.foo.id
-    subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-  }
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role-%[1]d"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "rds.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "attatch-policy" {
-  role       = aws_iam_role.role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
-}
-`, rInt))
+`, rName))
 }
 
 func testAccAWSDBInstanceConfig_MySQLSnapshotRestoreWithEngineVersion(rInt int) string {
@@ -5250,10 +5417,9 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Oracle(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "oracle-se"
-  engine_version = "11.2.0.4.v25"
-  license_model  = "bring-your-own-license"
-  storage_type   = "standard"
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
 }
@@ -5262,11 +5428,59 @@ resource "aws_db_instance" "test" {
   allocated_storage               = 10
   enabled_cloudwatch_logs_exports = ["alert", "listener", "trace"]
   engine                          = data.aws_rds_orderable_db_instance.test.engine
-  identifier                      = %q
+  identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model                   = "bring-your-own-license"
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_NationalCharacterSet_Oracle(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage        = 10
+  engine                   = data.aws_rds_orderable_db_instance.test.engine
+  identifier               = %[1]q
+  instance_class           = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model            = "bring-your-own-license"
+  nchar_character_set_name = "UTF8"
+  password                 = "avoid-plaintext-passwords"
+  username                 = "tfacctest"
+  skip_final_snapshot      = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_NoNationalCharacterSet_Oracle(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = 10
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model       = "bring-your-own-license"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
 }
 `, rName)
 }
@@ -5385,6 +5599,59 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, allocatedStorage))
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_Iops(rName string, iops int) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 200
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  iops                    = 1100
+  storage_type            = "io1"
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+  iops                = %d
+  storage_type        = "io1"
+}
+`, rName, rName, iops)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_AllocatedStorageAndIops(rName string, allocatedStorage, iops int) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = %[2]d
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%[1]s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  iops                    = 1000
+  storage_type            = "io1"
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = %[2]d
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+  iops                = %[3]d
+  storage_type        = "io1"
+}
+`, rName, allocatedStorage, iops)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
@@ -7438,4 +7705,117 @@ resource "aws_db_instance" "test" {
   delete_automated_backups = false
 }
 `, rName))
+}
+
+func testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName string, coipEnabled bool, backupRetentionPeriod int) string {
+	return fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_vpc" "foo" {
+  cidr_block = "10.128.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block        = "10.128.1.0/24"
+  availability_zone = data.aws_outposts_outpost.test.availability_zone
+  vpc_id            = aws_vpc.foo.id
+  outpost_arn       = data.aws_outposts_outpost.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "foo" {
+  name       = %[1]q
+  subnet_ids = [aws_subnet.foo.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_ec2_local_gateway_route_table" "test" {
+  outpost_arn = data.aws_outposts_outpost.test.arn
+}
+
+resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
+  local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
+  vpc_id                       = aws_vpc.foo.id
+}
+
+data "aws_rds_engine_version" "test" {
+  engine             = "mysql"
+  preferred_versions = ["8.0.17", "8.0.19", "8.0.20", "8.0.21"]
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version
+  preferred_instance_classes = ["db.m5.large", "db.m5.xlarge", "db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_db_instance" "test" {
+  identifier                = %[1]q
+  allocated_storage         = 20
+  backup_retention_period   = %[3]d
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class            = data.aws_rds_orderable_db_instance.test.instance_class
+  name                      = "baz"
+  parameter_group_name      = "default.${data.aws_rds_engine_version.test.parameter_group_family}"
+  password                  = "barbarbarbar"
+  skip_final_snapshot       = true
+  username                  = "foo"
+  db_subnet_group_name      = aws_db_subnet_group.foo.name
+  storage_encrypted         = true
+  customer_owned_ip_enabled = %[2]t
+}
+`, rName, coipEnabled, backupRetentionPeriod)
+}
+
+func testAccAWSDBInstanceConfig_CoipEnabled_RestorePointInTime(rName string, sourceCoipEnabled bool, targetCoipEnabled bool) string {
+	return composeConfig(
+		testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, sourceCoipEnabled, 1),
+		fmt.Sprintf(`
+resource "aws_db_instance" "restore" {
+  identifier     = "%[1]s-restore"
+  instance_class = aws_db_instance.test.instance_class
+  restore_to_point_in_time {
+    source_db_instance_identifier = aws_db_instance.test.identifier
+    use_latest_restorable_time    = true
+  }
+  storage_encrypted         = true
+  skip_final_snapshot       = true
+  db_subnet_group_name      = aws_db_instance.test.db_subnet_group_name
+  customer_owned_ip_enabled = %[2]t
+}
+`, rName, targetCoipEnabled))
+}
+
+func testAccAWSDBInstanceConfig_CoipEnabled_SnapshotIdentifier(rName string, sourceCoipEnabled bool, targetCoipEnabled bool) string {
+	return composeConfig(testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, sourceCoipEnabled, 1), fmt.Sprintf(`
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.test.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "restore" {
+  customer_owned_ip_enabled = %[2]t
+  db_subnet_group_name      = aws_db_subnet_group.foo.name
+  storage_encrypted         = true
+  identifier                = "%[1]s-restore"
+  instance_class            = aws_db_instance.test.instance_class
+  snapshot_identifier       = aws_db_snapshot.test.id
+  skip_final_snapshot       = true
+}
+`, rName, targetCoipEnabled))
 }

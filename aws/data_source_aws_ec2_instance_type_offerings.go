@@ -16,18 +16,24 @@ func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
 			"instance_types": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"locations": {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"location_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.LocationTypeAvailabilityZone,
-					ec2.LocationTypeAvailabilityZoneId,
-					ec2.LocationTypeRegion,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ec2.LocationType_Values(), false),
+			},
+			"location_types": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -47,35 +53,39 @@ func dataSourceAwsEc2InstanceTypeOfferingsRead(d *schema.ResourceData, meta inte
 	}
 
 	var instanceTypes []string
+	var locations []string
+	var locationTypes []string
 
-	for {
-		output, err := conn.DescribeInstanceTypeOfferings(input)
-
-		if err != nil {
-			return fmt.Errorf("error reading EC2 Instance Type Offerings: %w", err)
+	err := conn.DescribeInstanceTypeOfferingsPages(input, func(page *ec2.DescribeInstanceTypeOfferingsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if output == nil {
-			break
-		}
-
-		for _, instanceTypeOffering := range output.InstanceTypeOfferings {
+		for _, instanceTypeOffering := range page.InstanceTypeOfferings {
 			if instanceTypeOffering == nil {
 				continue
 			}
 
 			instanceTypes = append(instanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
+			locations = append(locations, aws.StringValue(instanceTypeOffering.Location))
+			locationTypes = append(locationTypes, aws.StringValue(instanceTypeOffering.LocationType))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Instance Type Offerings: %w", err)
 	}
 
 	if err := d.Set("instance_types", instanceTypes); err != nil {
 		return fmt.Errorf("error setting instance_types: %w", err)
+	}
+	if err := d.Set("locations", locations); err != nil {
+		return fmt.Errorf("error setting locations: %w", err)
+	}
+	if err := d.Set("location_types", locationTypes); err != nil {
+		return fmt.Errorf("error setting location_types: %w", err)
 	}
 
 	d.SetId(meta.(*AWSClient).region)

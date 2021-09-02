@@ -45,6 +45,7 @@ func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 				),
 			},
 			{
@@ -52,6 +53,7 @@ func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 				),
 			},
 			{

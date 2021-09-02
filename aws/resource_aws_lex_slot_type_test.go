@@ -346,6 +346,59 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAwsLexSlotType_computeVersion(t *testing.T) {
+	var v1 lexmodelbuildingservice.GetSlotTypeOutput
+	var v2 lexmodelbuildingservice.GetIntentOutput
+
+	slotTypeResourceName := "aws_lex_slot_type.test"
+	intentResourceName := "aws_lex_intent.test"
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	version := "1"
+	updatedVersion := "2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexSlotTypeConfig_withVersion(testSlotTypeID),
+					testAccAwsLexIntentConfig_slotsWithVersion(testSlotTypeID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexSlotTypeExistsWithVersion(slotTypeResourceName, version, &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "version", version),
+					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v2),
+					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", version),
+				),
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexSlotTypeUpdateConfig_enumerationValuesWithVersion(testSlotTypeID),
+					testAccAwsLexIntentConfig_slotsWithVersion(testSlotTypeID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexSlotTypeExistsWithVersion(slotTypeResourceName, updatedVersion, &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(slotTypeResourceName, "enumeration_value.*", map[string]string{
+						"value": "tulips",
+					}),
+					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Eduardoregelia"),
+					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Podonix"),
+					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v2),
+					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", updatedVersion),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsLexSlotTypeExistsWithVersion(rName, slotTypeVersion string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
@@ -444,7 +497,8 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeConfig_withVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
-  name = "%s"
+  create_version = true
+  name           = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
@@ -452,7 +506,6 @@ resource "aws_lex_slot_type" "test" {
     ]
     value = "lilies"
   }
-  create_version = true
 }
 `, rName)
 }
@@ -476,12 +529,12 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeConfig_enumerationValues(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
+  name = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
       "Martagon",
     ]
-
     value = "lilies"
   }
 
@@ -490,11 +543,8 @@ resource "aws_lex_slot_type" "test" {
       "Eduardoregelia",
       "Podonix",
     ]
-
     value = "tulips"
   }
-
-  name = "%s"
 }
 `, rName)
 }
@@ -510,6 +560,30 @@ resource "aws_lex_slot_type" "test" {
       "Martagon",
     ]
     value = "lilies"
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexSlotTypeUpdateConfig_enumerationValuesWithVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_slot_type" "test" {
+  create_version = true
+  name           = "%s"
+  enumeration_value {
+    synonyms = [
+      "Lirium",
+      "Martagon",
+    ]
+    value = "lilies"
+  }
+
+  enumeration_value {
+    synonyms = [
+      "Eduardoregelia",
+      "Podonix",
+    ]
+    value = "tulips"
   }
 }
 `, rName)

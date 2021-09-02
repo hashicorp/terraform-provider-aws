@@ -92,19 +92,20 @@ import (
 {{- range .ServiceNames }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
 {{- end }}
+    "github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 {{- range .ServiceNames }}
 
 // {{ . | Title }}GetTag fetches an individual {{ . }} service tag for a resource.
-// Returns whether the key exists, the key value, and any errors.
+// Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
 // This function will optimise the handling over {{ . | Title }}ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 {{- if or ( . | TagTypeIdentifierField ) ( . | TagTypeAdditionalBoolFields) }}
-func {{ . | Title }}GetTag(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}, key string) (bool, *TagData, error) {
+func {{ . | Title }}GetTag(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}, key string) (*TagData, error) {
 {{- else }}
-func {{ . | Title }}GetTag(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}, key string) (bool, *string, error) {
+func {{ . | Title }}GetTag(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}, key string) (*string, error) {
 {{- end }}
 	{{- if . | ListTagsInputFilterIdentifierName }}
 	input := &{{ . | TagPackage  }}.{{ . | ListTagsFunction }}Input{
@@ -123,7 +124,7 @@ func {{ . | Title }}GetTag(conn {{ . | ClientType }}, identifier string{{ if . |
 	output, err := conn.{{ . | ListTagsFunction }}(input)
 
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
 
 	listTags := {{ . | Title }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}{{ if . | TagTypeIdentifierField }}, identifier{{ if . | TagResourceTypeField }}, resourceType{{ end }}{{ end }})
@@ -131,14 +132,18 @@ func {{ . | Title }}GetTag(conn {{ . | ClientType }}, identifier string{{ if . |
 	listTags, err := {{ . | Title }}ListTags(conn, identifier{{ if . | TagResourceTypeField }}, resourceType{{ end }})
 
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
 	{{- end }}
 
+	if !listTags.KeyExists(key) {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
 	{{ if or ( . | TagTypeIdentifierField ) ( . | TagTypeAdditionalBoolFields) }}
-	return listTags.KeyExists(key), listTags.KeyTagData(key), nil
+	return listTags.KeyTagData(key), nil
 	{{- else }}
-	return listTags.KeyExists(key), listTags.KeyValue(key), nil
+	return listTags.KeyValue(key), nil
 	{{- end }}
 }
 {{- end }}

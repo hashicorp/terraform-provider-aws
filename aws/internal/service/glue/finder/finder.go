@@ -3,8 +3,38 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
 )
+
+func DevEndpointByName(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
+	input := &glue.GetDevEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := conn.GetDevEndpoint(input)
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DevEndpoint == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.DevEndpoint, nil
+}
 
 // TableByName returns the Table corresponding to the specified name.
 func TableByName(conn *glue.Glue, catalogID, dbName, name string) (*glue.GetTableOutput, error) {

@@ -47,6 +47,12 @@ resource "aws_wafv2_web_acl" "example" {
         excluded_rule {
           name = "NoUserAgent_HEADER"
         }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
       }
     }
 
@@ -410,6 +416,7 @@ The `managed_rule_group_statement` block supports the following arguments:
 
 * `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
 * `name` - (Required) The name of the managed rule group.
+* `scope_down_statement` - Narrows the scope of the statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 * `vendor_name` - (Required) The name of the managed rule group vendor.
 
 ### NOT Statement
@@ -557,7 +564,8 @@ The `single_query_argument` block supports the following arguments:
 The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) The relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
-* `type` - (Required) The transformation to apply, you can specify the following types: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+* `type` - (Required) The transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+
 
 ### Visibility Configuration
 

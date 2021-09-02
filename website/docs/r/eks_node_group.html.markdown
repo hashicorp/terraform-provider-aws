@@ -25,6 +25,10 @@ resource "aws_eks_node_group" "example" {
     min_size     = 1
   }
 
+  update_config {
+    max_unavailable = 2
+  }
+
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
   # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
   depends_on = [
@@ -126,7 +130,7 @@ The following arguments are optional:
 * `capacity_type` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`. Terraform will only perform drift detection if a configuration value is provided.
 * `disk_size` - (Optional) Disk size in GiB for worker nodes. Defaults to `20`. Terraform will only perform drift detection if a configuration value is provided.
 * `force_update_version` - (Optional) Force version update if existing pods are unable to be drained due to a pod disruption budget issue.
-* `instance_types` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
+* `instance_types` - (Optional) Set of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
 * `launch_template` - (Optional) Configuration block with Launch Template settings. Detailed below.
 * `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`.
@@ -161,6 +165,13 @@ The following arguments are optional:
 * `key` - (Required) The key of the taint. Maximum length of 63.
 * `value` - (Optional) The value of the taint. Maximum length of 63.
 * `effect` - (Required) The effect of the taint. Valid values: `NO_SCHEDULE`, `NO_EXECUTE`, `PREFER_NO_SCHEDULE`.
+
+### update_config Configuration Block
+
+The following arguments are mutually exclusive.
+
+* `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
+* `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
 
 ## Attributes Reference
 

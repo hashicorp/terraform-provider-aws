@@ -23,23 +23,27 @@ a conflict of rule settings and will overwrite rules.
 resource "aws_network_acl" "main" {
   vpc_id = aws_vpc.main.id
 
-  egress {
-    protocol   = "tcp"
-    rule_no    = 200
-    action     = "allow"
-    cidr_block = "10.3.0.0/18"
-    from_port  = 443
-    to_port    = 443
-  }
+  egress = [
+    {
+      protocol   = "tcp"
+      rule_no    = 200
+      action     = "allow"
+      cidr_block = "10.3.0.0/18"
+      from_port  = 443
+      to_port    = 443
+    }
+  ]
 
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "10.3.0.0/18"
-    from_port  = 80
-    to_port    = 80
-  }
+  ingress = [
+    {
+      protocol   = "tcp"
+      rule_no    = 100
+      action     = "allow"
+      cidr_block = "10.3.0.0/18"
+      from_port  = 80
+      to_port    = 80
+    }
+  ]
 
   tags = {
     Name = "main"
@@ -58,6 +62,10 @@ The following arguments are supported:
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
   This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### egress and ingress
+
+Both arguments are processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 Both `egress` and `ingress` support the following keys:
 

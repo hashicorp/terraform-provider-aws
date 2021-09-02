@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 )
 
 const (
@@ -16,6 +17,8 @@ const (
 	NfsFileShareDeletedDelay                                = 5 * time.Second
 	SmbFileShareAvailableDelay                              = 5 * time.Second
 	SmbFileShareDeletedDelay                                = 5 * time.Second
+	FileSystemAssociationAvailableDelay                     = 5 * time.Second
+	FileSystemAssociationDeletedDelay                       = 5 * time.Second
 )
 
 func StorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
@@ -111,12 +114,11 @@ func NfsFileShareDeleted(conn *storagegateway.StorageGateway, fileShareArn strin
 	return nil, err
 }
 
-// SmbFileShareAvailable waits for a SMB File Share to return Available
-func SmbFileShareAvailable(conn *storagegateway.StorageGateway, fileShareArn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
+func SMBFileShareCreated(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"CREATING", "UPDATING"},
-		Target:  []string{"AVAILABLE"},
-		Refresh: SmbFileShareStatus(conn, fileShareArn),
+		Pending: []string{tfstoragegateway.FileShareStatusCreating},
+		Target:  []string{tfstoragegateway.FileShareStatusAvailable},
+		Refresh: SMBFileShareStatus(conn, arn),
 		Timeout: timeout,
 		Delay:   SmbFileShareAvailableDelay,
 	}
@@ -130,11 +132,11 @@ func SmbFileShareAvailable(conn *storagegateway.StorageGateway, fileShareArn str
 	return nil, err
 }
 
-func SmbFileShareDeleted(conn *storagegateway.StorageGateway, fileShareArn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
+func SMBFileShareDeleted(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"AVAILABLE", "DELETING", "FORCE_DELETING"},
+		Pending:        []string{tfstoragegateway.FileShareStatusAvailable, tfstoragegateway.FileShareStatusDeleting, tfstoragegateway.FileShareStatusForceDeleting},
 		Target:         []string{},
-		Refresh:        SmbFileShareStatus(conn, fileShareArn),
+		Refresh:        SMBFileShareStatus(conn, arn),
 		Timeout:        timeout,
 		Delay:          SmbFileShareDeletedDelay,
 		NotFoundChecks: 1,
@@ -143,6 +145,62 @@ func SmbFileShareDeleted(conn *storagegateway.StorageGateway, fileShareArn strin
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*storagegateway.SMBFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func SMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{tfstoragegateway.FileShareStatusUpdating},
+		Target:  []string{tfstoragegateway.FileShareStatusAvailable},
+		Refresh: SMBFileShareStatus(conn, arn),
+		Timeout: timeout,
+		Delay:   SmbFileShareAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*storagegateway.SMBFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FileSystemAssociationAvailable waits for a File System Association to return Available
+func FileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: tfstoragegateway.FileSystemAssociationStatusAvailableStatusPending(),
+		Target:  tfstoragegateway.FileSystemAssociationStatusAvailableStatusTarget(),
+		Refresh: FileSystemAssociationStatus(conn, fileSystemArn),
+		Timeout: timeout,
+		Delay:   FileSystemAssociationAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*storagegateway.FileSystemAssociationInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func FileSystemAssociationDeleted(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        tfstoragegateway.FileSystemAssociationStatusDeletedStatusPending(),
+		Target:         tfstoragegateway.FileSystemAssociationStatusDeletedStatusTarget(),
+		Refresh:        FileSystemAssociationStatus(conn, fileSystemArn),
+		Timeout:        timeout,
+		Delay:          FileSystemAssociationDeletedDelay,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*storagegateway.FileSystemAssociationInfo); ok {
 		return output, err
 	}
 

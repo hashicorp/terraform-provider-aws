@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -488,12 +489,15 @@ func changeRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResource
 }
 
 func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) error {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	wait := resource.StateChangeConf{
-		Delay:      30 * time.Second,
-		Pending:    []string{route53.ChangeStatusPending},
-		Target:     []string{route53.ChangeStatusInsync},
-		Timeout:    30 * time.Minute,
-		MinTimeout: 5 * time.Second,
+		Pending:      []string{route53.ChangeStatusPending},
+		Target:       []string{route53.ChangeStatusInsync},
+		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		MinTimeout:   5 * time.Second,
+		PollInterval: 20 * time.Second,
+		Timeout:      30 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			changeRequest := &route53.GetChangeInput{
 				Id: aws.String(requestId),
@@ -964,15 +968,16 @@ func parseRecordId(id string) [4]string {
 	parts := strings.SplitN(id, "_", 2)
 	if len(parts) == 2 {
 		recZone = parts[0]
-		lastUnderscore := strings.LastIndex(parts[1], "_")
-		if lastUnderscore != -1 {
-			recName, recType = parts[1][0:lastUnderscore], parts[1][lastUnderscore+1:]
-			if !r53ValidRecordTypes.MatchString(recType) {
-				recSet, recType = recType, ""
-				lastUnderscore = strings.LastIndex(recName, "_")
-				if lastUnderscore != -1 {
-					recName, recType = recName[0:lastUnderscore], recName[lastUnderscore+1:]
-				}
+		firstUnderscore := strings.Index(parts[1][:], "_")
+		// Handles the case of having a DNS name that starts with _
+		if firstUnderscore == 0 {
+			firstUnderscore = strings.Index(parts[1][1:], "_") + 1
+		}
+		recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
+		if !r53ValidRecordTypes.MatchString(recType) {
+			firstUnderscore = strings.Index(recType, "_")
+			if firstUnderscore != -1 {
+				recType, recSet = recType[0:firstUnderscore], recType[firstUnderscore+1:]
 			}
 		}
 	}

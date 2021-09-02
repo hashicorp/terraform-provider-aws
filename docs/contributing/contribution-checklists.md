@@ -18,7 +18,12 @@ each type of contribution.
     - [Resource Tagging Code Implementation](#resource-tagging-code-implementation)
     - [Resource Tagging Acceptance Testing Implementation](#resource-tagging-acceptance-testing-implementation)
     - [Resource Tagging Documentation Implementation](#resource-tagging-documentation-implementation)
+- [Adding Resource Filtering Support](#adding-resource-filtering-support)
+    - [Adding Service to Filter Generating Code](#adding-service-to-filter-generating-code)
+    - [Resource Filtering Code Implementation](#resource-filtering-code-implementation)
+    - [Resource Filtering Documentation Implementation](#resource-filtering-documentation-implementation)
 - [New Resource](#new-resource)
+    - [New Tag Resource](#new-tag-resource)
 - [New Service](#new-service)
 - [New Region](#new-region)
 
@@ -547,6 +552,64 @@ More details about this code generation, including fixes for potential error mes
   * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
   ```
 
+## Adding Resource Filtering Support
+
+AWS provides server-side filtering across many services and resources, which can be used when listing resources of that type, for example in the implementation of a data source.
+See the [EC2 Listing and filtering your resources page](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI) for information about how server-side filtering can be used with EC2 resources.
+
+Implementing server-side filtering support for Terraform AWS Provider resources requires the following, each with its own section below:
+
+- [ ] _Generated Service Filtering Code_: In the internal code generators (e.g. `aws/internal/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
+- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g. `aws/data_source_aws_service_thing.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
+- [ ] _Resource Filtering Documentation Implementation_: In the resource's equivalent data source documentation (e.g. `website/docs/d/service_thing.html.markdown`), addition of `filter` argument
+
+### Adding Service to Filter Generating Code
+
+This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
+
+More details about this code generation can be found in the [namevaluesfilters documentation](../../aws/internal/namevaluesfilters/README.md).
+
+- Open the AWS Go SDK documentation for the service, e.g. for [`service/rds`](https://docs.aws.amazon.com/sdk-for-go/api/service/rds/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
+- Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g. `rds`) to `sliceServiceNames` in `aws/internal/namevaluesfilters/generators/servicefilters/main.go`.
+- Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
+
+### Resource Filter Code Implementation
+
+- In the resource's equivalent data source Go file (e.g. `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/namevaluesfilters"`
+- In the resource schema, add `"filter": namevaluesfilters.Schema(),`
+- Implement the logic to build the list of filters:
+
+```go
+input := &ec2.DescribeInternetGatewaysInput{}
+
+// Filters based on attributes.
+filters := namevaluesfilters.New(map[string]string{
+	"internet-gateway-id": d.Get("internet_gateway_id").(string),
+})
+// Add filters based on keyvalue tags (N.B. Not applicable to all AWS services that support filtering)
+filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()))
+// Add filters based on the custom filtering "filter" attribute.
+filters.Add(d.Get("filter").(*schema.Set))
+
+input.Filters = filters.Ec2Filters()
+```
+
+### Resource Filtering Documentation Implementation
+
+- In the resource's equivalent data source documentation (e.g. `website/docs/d/internet_gateway.html.markdown`), add the following to the arguments reference:
+
+```markdown
+* `filter` - (Optional) Custom filter block as described below.
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
+
+* `name` - (Required) The name of the field to filter by, as defined by
+  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInternetGateways.html).
+
+* `values` - (Required) Set of values that are accepted for the given field.
+  An Internet Gateway will be selected if any one of the given values matches.
+```
+
 ## New Resource
 
 _Before submitting this type of contribution, it is highly recommended to read and understand the other pages of the [Contributing Guide](../CONTRIBUTING.md)._
@@ -593,6 +656,183 @@ guidelines.
 - [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
    This is to avoid conflicts as version updates tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
+
+### New Tag Resource
+
+Adding a tag resource, similar to the `aws_ecs_tag` resource, has its own implementation procedure since the resource code and initial acceptance testing functions are automatically generated. The rest of the resource acceptance testing and resource documentation must still be manually created.
+
+- In `aws/internal/keyvaluetags`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
+- In `aws/tag_resources.go`: Add the new `//go:generate` call with the correct service name. Run `make gen` after any modifications.
+- In `aws/provider.go`: Add the new resource.
+- Run `make test` and ensure there are no failures.
+- Create `aws/resource_aws_{service}_tag_test.go` with initial acceptance testing similar to the following (where the parent resource is simple to provision):
+
+```go
+
+import (
+	"fmt"
+	"testing"
+
+  "github.com/aws/aws-sdk-go/service/{Service}"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
+func TestAccAWS{Service}Tag_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_{service}_tag.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, {Service}.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheck{Service}TagDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck{Service}TagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWS{Service}Tag_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_{service}_tag.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, {Service}.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheck{Service}TagDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck{Service}TagExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAws{Service}Tag(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWS{Service}Tag_Value(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_{service}_tag.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, {Service}.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheck{Service}TagDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck{Service}TagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAcc{Service}TagConfig(rName, "key1", "value1updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck{Service}TagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+				),
+			},
+		},
+	})
+}
+
+func testAcc{Service}TagConfig(rName string, key string, value string) string {
+	return fmt.Sprintf(`
+resource "aws_{service}_{thing}" "test" {
+  name = %[1]q
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+resource "aws_{service}_tag" "test" {
+  resource_arn = aws_{service}_{thing}.test.arn
+  key          = %[2]q
+  value        = %[3]q
+}
+`, rName, key, value)
+}
+```
+
+- Run `make testacc TEST=./aws TESTARGS='-run=TestAccAWS{Service}Tags_'` and ensure there are no failures.
+- Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
+
+``````markdown
+---
+subcategory: "{SERVICE}"
+layout: "aws"
+page_title: "AWS: aws_{service}_tag"
+description: |-
+  Manages an individual {SERVICE} resource tag
+---
+
+# Resource: aws_{service}_tag
+
+Manages an individual {SERVICE} resource tag. This resource should only be used in cases where {SERVICE} resources are created outside Terraform (e.g. {SERVICE} {THING}s implicitly created by {OTHER SERVICE THING}).
+
+~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_{service}_{thing}` and `aws_{service}_tag` to manage tags of the same {SERVICE} {THING} will cause a perpetual difference where the `aws_{service}_{thing}` resource will try to remove the tag being added by the `aws_{service}_tag` resource.
+
+~> **NOTE:** This tagging resource does not use the [provider `ignore_tags` configuration](/docs/providers/aws/index.html#ignore_tags).
+
+## Example Usage
+
+```terraform
+resource "aws_{service}_tag" "example" {
+  resource_arn = "..."
+  key          = "Name"
+  value        = "Hello World"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `resource_arn` - (Required) Amazon Resource Name (ARN) of the {SERVICE} resource to tag.
+* `key` - (Required) Tag name.
+* `value` - (Required) Tag value.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - {SERVICE} resource identifier and key, separated by a comma (`,`)
+
+## Import
+
+`aws_{service}_tag` can be imported by using the {SERVICE} resource identifier and key, separated by a comma (`,`), e.g.
+
+```
+$ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
+```
+``````
 
 ## New Service
 

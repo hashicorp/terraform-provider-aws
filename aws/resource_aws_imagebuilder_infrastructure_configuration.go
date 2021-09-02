@@ -129,7 +129,8 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateInfrastructureConfigurationInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken:                aws.String(resource.UniqueId()),
+		TerminateInstanceOnFailure: aws.Bool(d.Get("terminate_instance_on_failure").(bool)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -174,10 +175,6 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().ImagebuilderTags()
-	}
-
-	if v, ok := d.GetOk("terminate_instance_on_failure"); ok {
-		input.TerminateInstanceOnFailure = aws.Bool(v.(bool))
 	}
 
 	var output *imagebuilder.CreateInfrastructureConfigurationOutput
@@ -290,6 +287,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 	) {
 		input := &imagebuilder.UpdateInfrastructureConfigurationInput{
 			InfrastructureConfigurationArn: aws.String(d.Id()),
+			TerminateInstanceOnFailure:     aws.Bool(d.Get("terminate_instance_on_failure").(bool)),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -326,10 +324,6 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 
 		if v, ok := d.GetOk("subnet_id"); ok {
 			input.SubnetId = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("terminate_instance_on_failure"); ok {
-			input.TerminateInstanceOnFailure = aws.Bool(v.(bool))
 		}
 
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {

@@ -2,12 +2,11 @@ package aws
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
 )
 
 func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
@@ -78,23 +77,17 @@ func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
 func resourceAwsDxGatewayAssociationStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	conn := meta.(*AWSClient).dxconn
 
-	log.Println("[INFO] Found Direct Connect gateway association state v0; migrating to v1")
+	log.Println("[INFO] Found Direct Connect Gateway Association state v0; migrating to v1")
 
 	// dx_gateway_association_id was introduced in v2.8.0. Handle the case where it's not yet present.
 	if v, ok := rawState["dx_gateway_association_id"]; !ok || v == nil {
-		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
-			DirectConnectGatewayId: aws.String(rawState["dx_gateway_id"].(string)),
-			VirtualGatewayId:       aws.String(rawState["vpn_gateway_id"].(string)),
-		})
+		output, err := finder.GatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn, rawState["dx_gateway_id"].(string), rawState["vpn_gateway_id"].(string))
+
 		if err != nil {
 			return nil, err
 		}
 
-		if len(resp.DirectConnectGatewayAssociations) == 0 {
-			return nil, fmt.Errorf("Direct Connect gateway association not found, remove from state using 'terraform state rm'")
-		}
-
-		rawState["dx_gateway_association_id"] = aws.StringValue(resp.DirectConnectGatewayAssociations[0].AssociationId)
+		rawState["dx_gateway_association_id"] = aws.StringValue(output.AssociationId)
 	}
 
 	return rawState, nil

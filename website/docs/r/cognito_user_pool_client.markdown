@@ -126,6 +126,7 @@ The following arguments are optional:
 * `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
 * `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
+* `enable_token_revocation` - (Optional) Enables or disables token revocation.
 * `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH).
 * `generate_secret` - (Optional) Should an application secret be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in `token_validity_units`.

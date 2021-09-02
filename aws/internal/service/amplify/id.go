@@ -34,7 +34,7 @@ func BranchCreateResourceID(appID, branchName string) string {
 }
 
 func BranchParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, branchResourceIDSeparator)
+	parts := strings.SplitN(id, branchResourceIDSeparator, 2)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

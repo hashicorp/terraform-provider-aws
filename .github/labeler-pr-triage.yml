@@ -560,6 +560,10 @@ service/mediatailor:
   - 'aws/internal/service/mediatailor/**/*'
   - '**/*_media_tailor_*'
   - '**/media_tailor_*'
+service/memorydb:
+  - 'aws/internal/service/memorydb/**/*'
+  - '**/*_memorydb_*'
+  - '**/memorydb_*'
 service/mobile:
   - 'aws/internal/service/mobile/**/*'
   - '**/*_mobile_*'
@@ -664,6 +668,14 @@ service/route53domains:
   - 'aws/internal/service/route53domains/**/*'
   - '**/*_route53domains_*'
   - '**/route53domains_*'
+service/route53recoverycontrolconfig:
+  - 'aws/internal/service/route53recoverycontrolconfig/**/*'
+  - '**/*_route53recoverycontrolconfig_*'
+  - '**/route53recoverycontrolconfig_*'
+service/route53recoveryreadiness:
+  - 'aws/internal/service/route53recoveryreadiness/**/*'
+  - '**/*_route53recoveryreadiness_*'
+  - '**/route53recoveryreadiness_*'
 service/route53resolver:
   - 'aws/internal/service/route53resolver/**/*'
   - '**/*_route53_resolver_*'

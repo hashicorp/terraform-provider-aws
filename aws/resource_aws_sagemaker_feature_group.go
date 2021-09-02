@@ -15,6 +15,7 @@ import (
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerFeatureGroup() *schema.Resource {
@@ -265,14 +266,15 @@ func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	output, err := finder.FeatureGroupByName(conn, d.Id())
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Feature Group (%s); removing from state", d.Id())
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker Feature Group (%s): %w", d.Id(), err)
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SageMaker Feature Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.FeatureGroupArn)

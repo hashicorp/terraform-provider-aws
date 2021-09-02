@@ -138,6 +138,7 @@ variable "service_labels" {
     "mediapackagevod",
     "mediastore",
     "mediatailor",
+    "memorydb",
     "meteringmarketplace",
     "mobile",
     "mq",
@@ -167,6 +168,8 @@ variable "service_labels" {
     "robomaker",
     "route53",
     "route53domains",
+    "route53recoverycontrolconfig",
+    "route53recoveryreadiness",
     "route53resolver",
     "s3",
     "s3control",
@@ -220,5 +223,5 @@ resource "github_issue_label" "service" {
 
   repository = "terraform-provider-aws"
   name       = "service/${each.value}"
-  color      = "bfd4f2"
+  color      = "7b42bc" # color:terraform (logomark)
 }

@@ -26,7 +26,7 @@ func TestAccDataSourceAwsEc2InstanceType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceBasic, "default_threads_per_core", "2"),
 					resource.TestCheckResourceAttr(resourceBasic, "default_vcpus", "2"),
 					resource.TestCheckResourceAttr(resourceBasic, "ebs_encryption_support", "supported"),
-					resource.TestCheckResourceAttr(resourceBasic, "ebs_nvme_support", "unsupported"),
+					resource.TestCheckResourceAttr(resourceBasic, "ebs_nvme_support", "required"),
 					resource.TestCheckResourceAttr(resourceBasic, "ebs_optimized_support", "default"),
 					resource.TestCheckResourceAttr(resourceBasic, "efa_supported", "false"),
 					resource.TestCheckResourceAttr(resourceBasic, "ena_support", "required"),

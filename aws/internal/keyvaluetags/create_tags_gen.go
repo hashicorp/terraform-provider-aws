@@ -25,23 +25,18 @@ func Ec2CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error 
 		Tags:      tags.IgnoreAws().Ec2Tags(),
 	}
 
-	err := resource.Retry(EventualConsistencyTimeout, func() *resource.RetryError {
-		_, err := conn.CreateTags(input)
+	_, err := tfresource.RetryWhenNotFound(EventualConsistencyTimeout, func() (interface{}, error) {
+		output, err := conn.CreateTags(input)
 
 		if tfawserr.ErrCodeContains(err, ".NotFound") {
-			return resource.RetryableError(err)
+			err = &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+		return output, err
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateTags(input)
-	}
 
 	if err != nil {
 		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)

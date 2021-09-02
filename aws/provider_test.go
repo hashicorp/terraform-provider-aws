@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -820,6 +821,25 @@ func testAccOrganizationManagementAccountPreCheck(t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must be the management account of an AWS Organization")
+	}
+}
+
+func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+	_, err := conn.GetRole(input)
+
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
+	}
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance test: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -2282,4 +2302,64 @@ func composeConfig(config ...string) string {
 	}
 
 	return str.String()
+}
+
+type domainName string
+
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+const domainNameTestTopLevelDomain domainName = "test"
+
+// testAccRandomSubdomain creates a random three-level domain name in the form
+// "<random>.<random>.test"
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomSubdomain() string {
+	return string(testAccRandomDomain().RandomSubdomain())
+}
+
+// testAccRandomDomainName creates a random two-level domain name in the form
+// "<random>.test"
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomDomainName() string {
+	return string(testAccRandomDomain())
+}
+
+// testAccRandomFQDomainName creates a random fully-qualified two-level domain name in the form
+// "<random>.test."
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomFQDomainName() string {
+	return string(testAccRandomDomain().FQDN())
+}
+
+func (d domainName) Subdomain(name string) domainName {
+	return domainName(fmt.Sprintf("%s.%s", name, d))
+}
+
+func (d domainName) RandomSubdomain() domainName {
+	return d.Subdomain(acctest.RandString(8))
+}
+
+func (d domainName) FQDN() domainName {
+	return domainName(fmt.Sprintf("%s.", d))
+}
+
+func (d domainName) String() string {
+	return string(d)
+}
+
+func testAccRandomDomain() domainName {
+	return domainNameTestTopLevelDomain.RandomSubdomain()
+}
+
+// testAccDefaultEmailAddress is the default email address to set as a
+// resource or data source parameter for acceptance tests.
+const testAccDefaultEmailAddress = "no-reply@hashicorp.com"
+
+// testAccRandomEmailAddress generates a random email address in the form
+// "tf-acc-test-<random>@<domain>"
+func testAccRandomEmailAddress(domainName string) string {
+	return fmt.Sprintf("%s@%s", acctest.RandomWithPrefix("tf-acc-test"), domainName)
 }

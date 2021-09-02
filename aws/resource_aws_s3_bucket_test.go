@@ -164,7 +164,7 @@ func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 	return aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
 }
 
-func TestAccAWSS3Bucket_basic(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_basic(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	region := testAccGetRegion()
 	hostedZoneID, _ := HostedZoneIDForRegion(region)
@@ -201,7 +201,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 
 // Support for common Terraform 0.11 pattern
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7868
-func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_emptyString(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -227,7 +227,7 @@ func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_tagsWithNoSystemTags(t *testing.T) {
+func TestAccAWSS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 
@@ -286,7 +286,7 @@ func TestAccAWSS3Bucket_tagsWithNoSystemTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
+func TestAccAWSS3Bucket_Tags_withSystemTags(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 
@@ -371,7 +371,7 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_ignoreTags(t *testing.T) {
+func TestAccAWSS3Bucket_Tags_ignoreTags(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -416,7 +416,7 @@ func TestAccAWSS3Bucket_ignoreTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_withTags(t *testing.T) {
+func TestAccAWSS3Bucket_Tags_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_s3_bucket.bucket1"
 
@@ -439,7 +439,7 @@ func TestAccAWSS3Bucket_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_namePrefix(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_namePrefix(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -465,7 +465,7 @@ func TestAccAWSS3Bucket_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_generatedName(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_generatedName(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -490,7 +490,7 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_acceleration(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_acceleration(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -527,7 +527,7 @@ func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_RequestPayer(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_requestPayer(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -563,7 +563,7 @@ func TestAccAWSS3Bucket_RequestPayer(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Policy(t *testing.T) {
+func TestAccAWSS3Bucket_Security_policy(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	partition := testAccGetPartition()
 	resourceName := "aws_s3_bucket.bucket"
@@ -615,7 +615,7 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
+func TestAccAWSS3Bucket_Security_updateACL(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -649,7 +649,7 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
+func TestAccAWSS3Bucket_Security_updateGrant(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -707,7 +707,7 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_AclToGrant(t *testing.T) {
+func TestAccAWSS3Bucket_Security_ACLToGrant(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -737,7 +737,7 @@ func TestAccAWSS3Bucket_AclToGrant(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_GrantToAcl(t *testing.T) {
+func TestAccAWSS3Bucket_Security_GrantToACL(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -767,7 +767,7 @@ func TestAccAWSS3Bucket_GrantToAcl(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
+func TestAccAWSS3Bucket_Web_simple(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	region := testAccGetRegion()
 	resourceName := "aws_s3_bucket.bucket"
@@ -812,7 +812,7 @@ func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
+func TestAccAWSS3Bucket_Web_redirect(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	region := testAccGetRegion()
 	resourceName := "aws_s3_bucket.bucket"
@@ -857,7 +857,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
+func TestAccAWSS3Bucket_Web_routingRules(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	region := testAccGetRegion()
 	resourceName := "aws_s3_bucket.bucket"
@@ -909,7 +909,7 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
+func TestAccAWSS3Bucket_Security_enableDefaultEncryptionWhenTypical(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
 
@@ -940,7 +940,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
+func TestAccAWSS3Bucket_Security_enableDefaultEncryptionWhenAES256IsUsed(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
 
@@ -971,7 +971,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(t *testing.T) {
+func TestAccAWSS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEnabled(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
 
@@ -1004,7 +1004,7 @@ func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(
 	})
 }
 
-func TestAccAWSS3Bucket_bucketKeyEnabled(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_keyEnabled(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
 
@@ -1036,10 +1036,10 @@ func TestAccAWSS3Bucket_bucketKeyEnabled(t *testing.T) {
 	})
 }
 
-// Test TestAccAWSS3Bucket_shouldFailNotFound is designed to fail with a "plan
+// Test TestAccAWSS3Bucket_Basic_shouldFailNotFound is designed to fail with a "plan
 // not empty" error in Terraform, to check against regresssions.
 // See https://github.com/hashicorp/terraform/pull/2925
-func TestAccAWSS3Bucket_shouldFailNotFound(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_shouldFailNotFound(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1061,7 +1061,7 @@ func TestAccAWSS3Bucket_shouldFailNotFound(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Versioning(t *testing.T) {
+func TestAccAWSS3Bucket_Manage_versioning(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1102,7 +1102,7 @@ func TestAccAWSS3Bucket_Versioning(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Cors_Update(t *testing.T) {
+func TestAccAWSS3Bucket_Security_corsUpdate(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1187,7 +1187,7 @@ func TestAccAWSS3Bucket_Cors_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
+func TestAccAWSS3Bucket_Security_corsDelete(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1227,7 +1227,7 @@ func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
+func TestAccAWSS3Bucket_Security_corsEmptyOrigin(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1265,7 +1265,7 @@ func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Logging(t *testing.T) {
+func TestAccAWSS3Bucket_Security_logging(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1292,7 +1292,7 @@ func TestAccAWSS3Bucket_Logging(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
+func TestAccAWSS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1409,7 +1409,7 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
+func TestAccAWSS3Bucket_Manage_lifecycleExpireMarkerOnly(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1447,7 +1447,7 @@ func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11420
-func TestAccAWSS3Bucket_LifecycleRule_Expiration_EmptyConfigurationBlock(t *testing.T) {
+func TestAccAWSS3Bucket_Manage_lifecycleRuleExpirationEmptyConfigurationBlock(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1468,7 +1468,7 @@ func TestAccAWSS3Bucket_LifecycleRule_Expiration_EmptyConfigurationBlock(t *test
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15138
-func TestAccAWSS3Bucket_LifecycleRule_AbortIncompleteMultipartUploadDays_NoExpiration(t *testing.T) {
+func TestAccAWSS3Bucket_Manage_lifecycleRuleAbortIncompleteMultipartUploadDaysNoExpiration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -1494,7 +1494,7 @@ func TestAccAWSS3Bucket_LifecycleRule_AbortIncompleteMultipartUploadDays_NoExpir
 	})
 }
 
-func TestAccAWSS3Bucket_Replication(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
 	region := testAccGetRegion()
@@ -1612,7 +1612,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Replication_MultipleDestinations_EmptyFilter(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
 	region := testAccGetRegion()
@@ -1679,7 +1679,7 @@ func TestAccAWSS3Bucket_Replication_MultipleDestinations_EmptyFilter(t *testing.
 	})
 }
 
-func TestAccAWSS3Bucket_Replication_MultipleDestinations_NonEmptyFilter(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
 	region := testAccGetRegion()
@@ -1749,7 +1749,7 @@ func TestAccAWSS3Bucket_Replication_MultipleDestinations_NonEmptyFilter(t *testi
 	})
 }
 
-func TestAccAWSS3Bucket_Replication_MultipleDestinations_TwoDestination(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_twoDestination(t *testing.T) {
 	// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
@@ -1808,7 +1808,7 @@ func TestAccAWSS3Bucket_Replication_MultipleDestinations_TwoDestination(t *testi
 	})
 }
 
-func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlTranslation(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_configurationRuleDestinationAccessControlTranslation(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
 	partition := testAccGetPartition()
@@ -1901,7 +1901,7 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlT
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12480
-func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AddAccessControlTranslation(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_configurationRuleDestinationAddAccessControlTranslation(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
 	partition := testAccGetPartition()
@@ -1983,7 +1983,7 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AddAccessContr
 }
 
 // StorageClass issue: https://github.com/hashicorp/terraform/issues/10909
-func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_withoutStorageClass(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
 	region := testAccGetRegion()
@@ -2019,7 +2019,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_expectVersioningValidationError(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	// record the initialized providers so that we can use them to check for the instances in each region
@@ -2043,7 +2043,7 @@ func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T)
 }
 
 // Prefix issue: https://github.com/hashicorp/terraform-provider-aws/issues/6340
-func TestAccAWSS3Bucket_ReplicationWithoutPrefix(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_withoutPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
 	region := testAccGetRegion()
@@ -2079,7 +2079,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_schemaV2(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
 	region := testAccGetRegion()
@@ -2099,6 +2099,36 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithV2ConfigurationDeleteMarkerReplicationDisabled(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_configuration.0.role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+								},
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("foo"),
+								},
+								Priority: aws.Int64(0),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+							},
+						},
+					),
+				),
+			},
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
@@ -2122,7 +2152,7 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 								},
 								Priority: aws.Int64(0),
 								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
-									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+									Status: aws.String(s3.DeleteMarkerReplicationStatusEnabled),
 								},
 							},
 						},
@@ -2266,7 +2296,7 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_SameRegionReplicationSchemaV2(t *testing.T) {
+func TestAccAWSS3Bucket_Replication_schemaV2SameRegion(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationResourceName := "aws_s3_bucket.destination"
@@ -2301,7 +2331,7 @@ func TestAccAWSS3Bucket_SameRegionReplicationSchemaV2(t *testing.T) {
 								},
 								Priority: aws.Int64(0),
 								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
-									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+									Status: aws.String(s3.DeleteMarkerReplicationStatusEnabled),
 								},
 							},
 						},
@@ -2320,7 +2350,7 @@ func TestAccAWSS3Bucket_SameRegionReplicationSchemaV2(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_objectLock(t *testing.T) {
+func TestAccAWSS3Bucket_Manage_objectLock(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
 
@@ -2360,7 +2390,7 @@ func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_forceDestroy(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_forceDestroy(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 
@@ -2386,7 +2416,7 @@ func TestAccAWSS3Bucket_forceDestroy(t *testing.T) {
 // While the aws_s3_bucket_object resource automatically cleans the key
 // to not contain these extra slashes, out-of-band handling and other AWS
 // services may create keys with extra slashes (empty "directory" prefixes).
-func TestAccAWSS3Bucket_forceDestroyWithEmptyPrefixes(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 
@@ -2407,7 +2437,7 @@ func TestAccAWSS3Bucket_forceDestroyWithEmptyPrefixes(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_forceDestroyWithObjectLockEnabled(t *testing.T) {
+func TestAccAWSS3Bucket_Basic_forceDestroyWithObjectLockEnabled(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 
@@ -4544,6 +4574,8 @@ resource "aws_s3_bucket" "bucket" {
         prefix = "testprefix"
       }
 
+      delete_marker_replication_status = "Enabled"
+
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
@@ -4560,6 +4592,37 @@ resource "aws_s3_bucket" "destination" {
   }
 }
 `, rName, rNameDestination))
+}
+
+func testAccAWSS3BucketConfigReplicationWithV2ConfigurationDeleteMarkerReplicationDisabled(randInt int) string {
+	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+
+      filter {
+        prefix = "foo"
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+  }
+}
+`, randInt)
 }
 
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(randInt int) string {
@@ -4582,6 +4645,8 @@ resource "aws_s3_bucket" "bucket" {
       filter {
         prefix = "foo"
       }
+
+      delete_marker_replication_status = "Enabled"
 
       destination {
         bucket        = aws_s3_bucket.destination.arn

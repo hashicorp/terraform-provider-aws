@@ -32,7 +32,7 @@ func TestAccDataSourceAwsWafv2RegexPatternSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "regular_expression_list", resourceName, "regular_expression_list"),
+					resource.TestCheckResourceAttrPair(datasourceName, "regular_expression", resourceName, "regular_expression"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scope", resourceName, "scope"),
 				),
 			},

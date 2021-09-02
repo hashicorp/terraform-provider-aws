@@ -54,3 +54,5 @@ Key Pairs can be imported using the `key_name`, e.g.
 ```
 $ terraform import aws_key_pair.deployer deployer-key
 ```
+
+~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.

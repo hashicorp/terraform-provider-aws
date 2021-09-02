@@ -54,6 +54,7 @@ the selected Hosted Zone.
 
 The following attribute is additionally exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - The comment field of the Hosted Zone.
 * `name_servers` - The list of DNS name servers for the Hosted Zone.

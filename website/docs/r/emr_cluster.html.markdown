@@ -249,15 +249,19 @@ steps are being managed outside of Terraform.
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
-  step {
-    action_on_failure = "TERMINATE_CLUSTER"
-    name              = "Setup Hadoop Debugging"
+  step = [
+    {
+      action_on_failure = "TERMINATE_CLUSTER"
+      name              = "Setup Hadoop Debugging"
 
-    hadoop_jar_step {
-      jar  = "command-runner.jar"
-      args = ["state-pusher-script"]
+      hadoop_jar_step = [
+        {
+          jar  = "command-runner.jar"
+          args = ["state-pusher-script"]
+        }
+      ]
     }
-  }
+  ]
 
   # Optional: ignore outside changes to running cluster steps
   lifecycle {
@@ -446,6 +450,8 @@ Attributes for the EBS volumes attached to each EC2 instance in the `master_inst
 
 ## step
 
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
 Attributes for step configuration
 
 * `action_on_failure` - (Required) The action to take if the step fails. Valid values: `TERMINATE_JOB_FLOW`, `TERMINATE_CLUSTER`, `CANCEL_AND_WAIT`, and `CONTINUE`
@@ -453,6 +459,8 @@ Attributes for step configuration
 * `name` - (Required) The name of the step.
 
 ### hadoop_jar_step
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 Attributes for Hadoop job step configuration
 

@@ -477,8 +477,10 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
+
 	meshName := acctest.RandomWithPrefix("tf-acc-test")
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := testAccRandomDomainName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
@@ -525,14 +527,14 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 			},
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualGatewayConfigRootCA(vgName),
+				Config: testAccAppmeshVirtualGatewayConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
 					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName),
+				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
@@ -567,7 +569,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName),
+				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -1106,7 +1108,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigRootCA(rName string) string {
+func testAccAppmeshVirtualGatewayConfigRootCA(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -1117,23 +1119,23 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
-`, rName)
+`, domain)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName string) string {
+func testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain string) string {
 	return composeConfig(
-		testAccAppmeshVirtualGatewayConfigRootCA(vgName),
+		testAccAppmeshVirtualGatewayConfigRootCA(domain),
 		fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
 }
 
 resource "aws_acm_certificate" "test" {
-  domain_name               = "test.%[2]s.com"
+  domain_name               = "test.%[3]s"
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
 
@@ -1160,7 +1162,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
     }
   }
 }
-`, meshName, vgName))
+`, meshName, vgName, domain))
 }
 
 func testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName string) string {

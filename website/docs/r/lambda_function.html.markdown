@@ -47,7 +47,7 @@ resource "aws_lambda_function" "test_lambda" {
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.test"
+  handler       = "index.test"
 
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
@@ -251,7 +251,7 @@ Dead letter queue configuration that specifies the queue or topic where Lambda s
 
 ### file_system_config
 
-Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets much be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
+Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets must be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - (Required) Path where the function can access the file system, starting with /mnt/.

@@ -358,7 +358,7 @@ func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
-		if output != nil && aws.StringValue(output.State) == ec2.RouteTableAssociationStateCodeFailed {
+		if state := aws.StringValue(output.State); state == ec2.RouteTableAssociationStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 		}
 
@@ -370,7 +370,7 @@ func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 
 func RouteTableAssociationDeleted(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating},
+		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating, ec2.RouteTableAssociationStateCodeAssociated},
 		Target:  []string{},
 		Refresh: RouteTableAssociationState(conn, id),
 		Timeout: RouteTableAssociationDeletedTimeout,
@@ -379,7 +379,7 @@ func RouteTableAssociationDeleted(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
-		if output != nil && aws.StringValue(output.State) == ec2.RouteTableAssociationStateCodeFailed {
+		if state := aws.StringValue(output.State); state == ec2.RouteTableAssociationStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 		}
 
@@ -400,7 +400,7 @@ func RouteTableAssociationUpdated(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
-		if output != nil && aws.StringValue(output.State) == ec2.RouteTableAssociationStateCodeFailed {
+		if state := aws.StringValue(output.State); state == ec2.RouteTableAssociationStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 		}
 
@@ -704,8 +704,8 @@ func VpcEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Durat
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if output != nil && aws.StringValue(output.State) == tfec2.VpcEndpointStateFailed && output.LastError != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastError.Code), aws.StringValue(output.LastError.Message)))
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VpcEndpointStateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
 		return output, err
@@ -727,6 +727,10 @@ func VpcEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Dura
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VpcEndpointStateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
+		}
+
 		return output, err
 	}
 

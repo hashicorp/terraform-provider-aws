@@ -6,10 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsWorkspacesDirectory() *schema.Resource {
@@ -128,6 +131,11 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
+						"device_type_linux": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
+						},
 						"device_type_osx": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -212,19 +220,27 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		input.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", *input)
-	_, err := conn.RegisterWorkspaceDirectory(input)
-	if err != nil {
-		return err
-	}
-	d.SetId(directoryID)
+	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+		waiter.DirectoryRegisterInvalidResourceStateTimeout,
+		func() (interface{}, error) {
+			return conn.RegisterWorkspaceDirectory(input)
+		},
+		// "error registering WorkSpaces Directory (d-000000000000): InvalidResourceStateException: The specified directory is not in a valid state. Confirm that the directory has a status of Active, and try again."
+		workspaces.ErrCodeInvalidResourceStateException,
+	)
 
-	log.Printf("[DEBUG] Waiting for WorkSpaces Directory (%s) to be registered", directoryID)
-	_, err = waiter.DirectoryRegistered(conn, directoryID)
 	if err != nil {
 		return fmt.Errorf("error registering WorkSpaces Directory (%s): %w", directoryID, err)
 	}
-	log.Printf("[INFO] WorkSpaces Directory (%s) registered", directoryID)
+
+	d.SetId(directoryID)
+
+	_, err = waiter.DirectoryRegistered(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to register: %w", d.Id(), err)
+	}
 
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", directoryID)
@@ -283,17 +299,18 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := waiter.DirectoryState(conn, d.Id())()
-	if err != nil {
-		return fmt.Errorf("error getting WorkSpaces Directory (%s): %w", d.Id(), err)
-	}
-	if state == workspaces.WorkspaceDirectoryStateDeregistered {
+	directory, err := finder.DirectoryByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	directory := rawOutput.(*workspaces.WorkspaceDirectory)
+	if err != nil {
+		return fmt.Errorf("error reading WorkSpaces Directory (%s): %w", d.Id(), err)
+	}
+
 	d.Set("directory_id", directory.DirectoryId)
 	if err := d.Set("subnet_ids", flattenStringSet(directory.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
@@ -430,29 +447,31 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	err := workspacesDirectoryDelete(d.Id(), conn)
-	if err != nil {
-		return fmt.Errorf("error deleting WorkSpaces Directory (%s): %w", d.Id(), err)
+	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+		waiter.DirectoryDeregisterInvalidResourceStateTimeout,
+		func() (interface{}, error) {
+			return conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
+				DirectoryId: aws.String(d.Id()),
+			})
+		},
+		// "error deregistering WorkSpaces Directory (d-000000000000): InvalidResourceStateException: The specified directory is not in a valid state. Confirm that the directory has a status of Active, and try again."
+		workspaces.ErrCodeInvalidResourceStateException,
+	)
+
+	if tfawserr.ErrCodeEquals(err, workspaces.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	return nil
-}
-
-func workspacesDirectoryDelete(id string, conn *workspaces.WorkSpaces) error {
-	log.Printf("[DEBUG] Deregistering WorkSpaces Directory (%s)", id)
-	_, err := conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
-		DirectoryId: aws.String(id),
-	})
 	if err != nil {
-		return fmt.Errorf("error deregistering WorkSpaces Directory (%s): %w", id, err)
+		return fmt.Errorf("error deregistering WorkSpaces Directory (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for WorkSpaces Directory (%s) to be deregistered", id)
-	_, err = waiter.DirectoryDeregistered(conn, id)
+	_, err = waiter.DirectoryDeregistered(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to be deregistered: %w", id, err)
+		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to deregister: %w", d.Id(), err)
 	}
-	log.Printf("[INFO] WorkSpaces Directory (%s) deregistered", id)
 
 	return nil
 }
@@ -476,6 +495,10 @@ func expandWorkspaceAccessProperties(properties []interface{}) *workspaces.Works
 
 	if p["device_type_ios"].(string) != "" {
 		result.DeviceTypeIos = aws.String(p["device_type_ios"].(string))
+	}
+
+	if p["device_type_linux"].(string) != "" {
+		result.DeviceTypeLinux = aws.String(p["device_type_linux"].(string))
 	}
 
 	if p["device_type_osx"].(string) != "" {
@@ -573,6 +596,7 @@ func flattenWorkspaceAccessProperties(properties *workspaces.WorkspaceAccessProp
 			"device_type_android":    aws.StringValue(properties.DeviceTypeAndroid),
 			"device_type_chromeos":   aws.StringValue(properties.DeviceTypeChromeOs),
 			"device_type_ios":        aws.StringValue(properties.DeviceTypeIos),
+			"device_type_linux":      aws.StringValue(properties.DeviceTypeLinux),
 			"device_type_osx":        aws.StringValue(properties.DeviceTypeOsx),
 			"device_type_web":        aws.StringValue(properties.DeviceTypeWeb),
 			"device_type_windows":    aws.StringValue(properties.DeviceTypeWindows),

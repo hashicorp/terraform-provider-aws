@@ -28,6 +28,10 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"key_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -170,6 +174,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
+	d.Set("status", matchedCertificate.Status)
 
 	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 

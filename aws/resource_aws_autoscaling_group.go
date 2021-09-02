@@ -26,12 +26,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfautoscaling "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-)
-
-const (
-	autoscalingTagResourceTypeAutoScalingGroup = `auto-scaling-group`
 )
 
 func resourceAwsAutoscalingGroup() *schema.Resource {
@@ -687,11 +684,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok {
-		var err error
-		createOpts.LaunchTemplate, err = expandLaunchTemplateSpecification(v.([]interface{}))
-		if err != nil {
-			return err
-		}
+		createOpts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 	}
 
 	// Availability Zones are optional if VPC Zone Identifier(s) are specified
@@ -700,11 +693,11 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -893,23 +886,23 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	// Deprecated: In a future major version, this should always set all tags except those ignored.
 	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 
-		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 
-		if err := d.Set("tags", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
+		if err := d.Set("tags", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
@@ -1055,7 +1048,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("launch_template") {
 		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 {
-			opts.LaunchTemplate, _ = expandLaunchTemplateSpecification(v.([]interface{}))
+			opts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 		}
 		shouldRefreshInstances = true
 	}
@@ -1120,15 +1113,15 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		oTagRaw, nTagRaw := d.GetChange("tag")
 		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := keyvaluetags.AutoscalingKeyValueTags(oTagRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
-		oTags := keyvaluetags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		oTag := keyvaluetags.AutoscalingKeyValueTags(oTagRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
+		oTags := keyvaluetags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 		oldTags := oTag.Merge(oTags).AutoscalingTags()
 
-		nTag := keyvaluetags.AutoscalingKeyValueTags(nTagRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
-		nTags := keyvaluetags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		nTag := keyvaluetags.AutoscalingKeyValueTags(nTagRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
+		nTags := keyvaluetags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 		newTags := nTag.Merge(nTags).AutoscalingTags()
 
-		if err := keyvaluetags.AutoscalingUpdateTags(conn, d.Id(), autoscalingTagResourceTypeAutoScalingGroup, oldTags, newTags); err != nil {
+		if err := keyvaluetags.AutoscalingUpdateTags(conn, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup, oldTags, newTags); err != nil {
 			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
 	}
@@ -1457,7 +1450,8 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 		}
 
 		err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-			if _, err := conn.DeleteWarmPool(&deleteopts); err != nil {
+			_, err := conn.DeleteWarmPool(&deleteopts)
+			if err != nil {
 				if callerr, ok := err.(awserr.Error); ok {
 					switch callerr.Code() {
 					case "ResourceInUse", "ScalingActivityInProgress":
@@ -1891,7 +1885,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 	return instancesDistribution
 }
 
-func expandAutoScalingLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
+func expandMixedInstancesLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1899,7 +1893,7 @@ func expandAutoScalingLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplat
 	m := l[0].(map[string]interface{})
 
 	launchTemplate := &autoscaling.LaunchTemplate{
-		LaunchTemplateSpecification: expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
+		LaunchTemplateSpecification: expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
 	}
 
 	if v, ok := m["override"]; ok {
@@ -1934,7 +1928,7 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 	}
 
 	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
-		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
+		launchTemplateOverrides.LaunchTemplateSpecification = expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
 	}
 
 	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
@@ -1944,7 +1938,7 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 	return launchTemplateOverrides
 }
 
-func expandAutoScalingLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandMixedInstancesLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
 	launchTemplateSpecification := &autoscaling.LaunchTemplateSpecification{}
 
 	if len(l) == 0 || l[0] == nil {
@@ -1979,7 +1973,7 @@ func expandAutoScalingMixedInstancesPolicy(l []interface{}) *autoscaling.MixedIn
 	m := l[0].(map[string]interface{})
 
 	mixedInstancesPolicy := &autoscaling.MixedInstancesPolicy{
-		LaunchTemplate: expandAutoScalingLaunchTemplate(m["launch_template"].([]interface{})),
+		LaunchTemplate: expandMixedInstancesLaunchTemplate(m["launch_template"].([]interface{})),
 	}
 
 	if v, ok := m["instances_distribution"]; ok {
@@ -2293,4 +2287,55 @@ func validateAutoScalingGroupInstanceRefreshTriggerFields(i interface{}, path ct
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+}
+
+func expandLaunchTemplateSpecification(specs []interface{}) *autoscaling.LaunchTemplateSpecification {
+	if len(specs) < 1 {
+		return nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	result := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result
+}
+
+func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	if lt == nil {
+		return []map[string]interface{}{}
+	}
+
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// id and name are always returned by DescribeAutoscalingGroups
+	attrs["id"] = aws.StringValue(lt.LaunchTemplateId)
+	attrs["name"] = aws.StringValue(lt.LaunchTemplateName)
+
+	// version is returned only if it was previously set
+	if lt.Version != nil {
+		attrs["version"] = aws.StringValue(lt.Version)
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
 }

@@ -8,11 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/waiter"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBudgetsBudgetAction() *schema.Resource {
@@ -21,9 +24,11 @@ func resourceAwsBudgetsBudgetAction() *schema.Resource {
 		Read:   resourceAwsBudgetsBudgetActionRead,
 		Update: resourceAwsBudgetsBudgetActionUpdate,
 		Delete: resourceAwsBudgetsBudgetActionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -205,39 +210,40 @@ func resourceAwsBudgetsBudgetAction() *schema.Resource {
 func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).budgetconn
 
-	var accountID string
-	if v, ok := d.GetOk("account_id"); ok {
-		accountID = v.(string)
-	} else {
+	accountID := d.Get("account_id").(string)
+	if accountID == "" {
 		accountID = meta.(*AWSClient).accountid
 	}
 
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
-		BudgetName:       aws.String(d.Get("budget_name").(string)),
+		ActionThreshold:  expandAwsBudgetsBudgetActionActionThreshold(d.Get("action_threshold").([]interface{})),
 		ActionType:       aws.String(d.Get("action_type").(string)),
 		ApprovalModel:    aws.String(d.Get("approval_model").(string)),
+		BudgetName:       aws.String(d.Get("budget_name").(string)),
+		Definition:       expandAwsBudgetsBudgetActionActionDefinition(d.Get("definition").([]interface{})),
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
 		NotificationType: aws.String(d.Get("notification_type").(string)),
-		ActionThreshold:  expandAwsBudgetsBudgetActionActionThreshold(d.Get("action_threshold").([]interface{})),
 		Subscribers:      expandAwsBudgetsBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
-		Definition:       expandAwsBudgetsBudgetActionActionDefinition(d.Get("definition").([]interface{})),
 	}
 
-	var output *budgets.CreateBudgetActionOutput
-	_, err := retryOnAwsCode(budgets.ErrCodeAccessDeniedException, func() (interface{}, error) {
-		var err error
-		output, err = conn.CreateBudgetAction(input)
-		return output, err
-	})
+	log.Printf("[DEBUG] Creating Budget Action: %s", input)
+	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, func() (interface{}, error) {
+		return conn.CreateBudgetAction(input)
+	}, budgets.ErrCodeAccessDeniedException)
+
 	if err != nil {
-		return fmt.Errorf("create Budget Action failed: %v", err)
+		return fmt.Errorf("error creating Budget Action: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", aws.StringValue(output.AccountId), aws.StringValue(output.ActionId), aws.StringValue(output.BudgetName)))
+	output := outputRaw.(*budgets.CreateBudgetActionOutput)
+	actionID := aws.StringValue(output.ActionId)
+	budgetName := aws.StringValue(output.BudgetName)
 
-	if _, err := waiter.ActionAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Budget Action (%s) creation: %w", d.Id(), err)
+	d.SetId(tfbudgets.BudgetActionCreateResourceID(accountID, actionID, budgetName))
+
+	if _, err := waiter.ActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+		return fmt.Errorf("error waiting for Budget Action (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceAwsBudgetsBudgetActionRead(d, meta)
@@ -245,52 +251,53 @@ func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).budgetconn
-	out, err := finder.ActionById(conn, d.Id())
-	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] Budget Action %s not found, removing from state", d.Id())
+
+	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("describe Budget Action failed: %w", err)
+		return fmt.Errorf("error reading Budget Action (%s): %w", d.Id(), err)
 	}
 
-	action := out.Action
-	if action == nil {
-		log.Printf("[WARN] Budget Action %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	d.Set("account_id", accountID)
+	d.Set("action_id", actionID)
+
+	if err := d.Set("action_threshold", flattenAwsBudgetsBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
+		return fmt.Errorf("error setting action_threshold: %w", err)
 	}
 
-	budgetName := aws.StringValue(out.BudgetName)
-	actId := aws.StringValue(action.ActionId)
-	d.Set("account_id", out.AccountId)
+	d.Set("action_type", output.ActionType)
+	d.Set("approval_model", output.ApprovalModel)
 	d.Set("budget_name", budgetName)
-	d.Set("action_id", actId)
-	d.Set("action_type", action.ActionType)
-	d.Set("approval_model", action.ApprovalModel)
-	d.Set("execution_role_arn", action.ExecutionRoleArn)
-	d.Set("notification_type", action.NotificationType)
-	d.Set("status", action.Status)
 
-	if err := d.Set("subscriber", flattenAwsBudgetsBudgetActionSubscriber(action.Subscribers)); err != nil {
-		return fmt.Errorf("error setting subscriber: %w", err)
-	}
-
-	if err := d.Set("definition", flattenAwsBudgetsBudgetActionDefinition(action.Definition)); err != nil {
+	if err := d.Set("definition", flattenAwsBudgetsBudgetActionDefinition(output.Definition)); err != nil {
 		return fmt.Errorf("error setting definition: %w", err)
 	}
 
-	if err := d.Set("action_threshold", flattenAwsBudgetsBudgetActionActionThreshold(action.ActionThreshold)); err != nil {
-		return fmt.Errorf("error setting action_threshold: %w", err)
+	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set("notification_type", output.NotificationType)
+	d.Set("status", output.Status)
+
+	if err := d.Set("subscriber", flattenAwsBudgetsBudgetActionSubscriber(output.Subscribers)); err != nil {
+		return fmt.Errorf("error setting subscriber: %w", err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "budgetservice",
+		Service:   "budgets",
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actId),
+		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
 	d.Set("arn", arn.String())
 
@@ -298,20 +305,30 @@ func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	accountID, actionID, budgetName, err := tfbudgets.DecodeBudgetsBudgetActionID(d.Id())
+	conn := meta.(*AWSClient).budgetconn
+
+	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
 
-	conn := meta.(*AWSClient).budgetconn
 	input := &budgets.UpdateBudgetActionInput{
-		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 		ActionId:   aws.String(actionID),
+		BudgetName: aws.String(budgetName),
+	}
+
+	if d.HasChange("action_threshold") {
+		input.ActionThreshold = expandAwsBudgetsBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
 	}
 
 	if d.HasChange("approval_model") {
 		input.ApprovalModel = aws.String(d.Get("approval_model").(string))
+	}
+
+	if d.HasChange("definition") {
+		input.Definition = expandAwsBudgetsBudgetActionActionDefinition(d.Get("definition").([]interface{}))
 	}
 
 	if d.HasChange("execution_role_arn") {
@@ -322,49 +339,46 @@ func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface
 		input.NotificationType = aws.String(d.Get("notification_type").(string))
 	}
 
-	if d.HasChange("action_threshold") {
-		input.ActionThreshold = expandAwsBudgetsBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
-	}
-
 	if d.HasChange("subscriber") {
 		input.Subscribers = expandAwsBudgetsBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
 	}
 
-	if d.HasChange("definition") {
-		input.Definition = expandAwsBudgetsBudgetActionActionDefinition(d.Get("definition").([]interface{}))
-	}
-
+	log.Printf("[DEBUG] Updating Budget Action: %s", input)
 	_, err = conn.UpdateBudgetAction(input)
+
 	if err != nil {
-		return fmt.Errorf("Updating Budget Action failed: %w", err)
+		return fmt.Errorf("error updating Budget Action (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ActionAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Budget Action (%s) update: %w", d.Id(), err)
+	if _, err := waiter.ActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+		return fmt.Errorf("error waiting for Budget Action (%s) to update: %w", d.Id(), err)
 	}
 
 	return resourceAwsBudgetsBudgetActionRead(d, meta)
 }
 
 func resourceAwsBudgetsBudgetActionDelete(d *schema.ResourceData, meta interface{}) error {
-	accountID, actionID, budgetName, err := tfbudgets.DecodeBudgetsBudgetActionID(d.Id())
+	conn := meta.(*AWSClient).budgetconn
+
+	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
 
-	conn := meta.(*AWSClient).budgetconn
+	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
 	_, err = conn.DeleteBudgetAction(&budgets.DeleteBudgetActionInput{
-		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 		ActionId:   aws.String(actionID),
+		BudgetName: aws.String(budgetName),
 	})
-	if err != nil {
-		if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-			log.Printf("[INFO] Budget Action %s could not be found. skipping delete.", d.Id())
-			return nil
-		}
 
-		return fmt.Errorf("Deleting Budget Action failed: %w", err)
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Budget Action (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -83,7 +83,7 @@ func iamRoleNameFilter(name string) bool {
 		"ssm_role",
 		"ssm-role",
 		"test",
-		"tf",
+		"tf-acc",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {

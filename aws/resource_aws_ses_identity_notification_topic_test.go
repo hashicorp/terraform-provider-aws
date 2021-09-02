@@ -14,10 +14,8 @@ import (
 )
 
 func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
-	topicName := fmt.Sprintf("test-topic-%d", acctest.RandInt())
+	domain := testAccRandomDomainName()
+	topicName := acctest.RandomWithPrefix("test-topic")
 	resourceName := "aws_ses_identity_notification_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{

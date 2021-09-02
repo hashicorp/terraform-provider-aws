@@ -59,7 +59,7 @@ data "aws_availability_zones" "example" {
 
 Only Availability Zones (no Local Zones):
 
-```
+```terraform
 data "aws_availability_zones" "example" {
   filter {
     name   = "opt-in-status"

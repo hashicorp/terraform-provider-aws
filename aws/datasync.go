@@ -1,22 +1,10 @@
 package aws
 
 import (
-	"net/url"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-func dataSyncParseLocationURI(uri string) (string, error) {
-	parsedURL, err := url.ParseRequestURI(uri)
-
-	if err != nil {
-		return "", err
-	}
-
-	return parsedURL.Path, nil
-}
 
 func expandDataSyncEc2Config(l []interface{}) *datasync.Ec2Config {
 	if len(l) == 0 || l[0] == nil {

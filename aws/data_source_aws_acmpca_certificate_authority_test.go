@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -12,6 +13,8 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, acmpca.EndpointsID),
@@ -22,7 +25,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN,
+				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -47,6 +50,8 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, acmpca.EndpointsID),
@@ -57,7 +62,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN,
+				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -82,7 +87,8 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN = `
+func testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
 
@@ -91,7 +97,7 @@ resource "aws_acmpca_certificate_authority" "wrong" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 }
@@ -104,7 +110,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 }
@@ -112,9 +118,11 @@ resource "aws_acmpca_certificate_authority" "test" {
 data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.test.arn
 }
-`
+`, commonName)
+}
 
-const testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN = `
+func testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
 
@@ -123,7 +131,7 @@ resource "aws_acmpca_certificate_authority" "wrong" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 }
@@ -136,7 +144,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 }
@@ -144,7 +152,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.test.arn
 }
-`
+`, commonName)
+}
 
 //lintignore:AWSAT003,AWSAT005
 const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent = `

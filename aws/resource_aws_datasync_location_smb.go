@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfdatasync "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync"
 )
 
 func resourceAwsDataSyncLocationSmb() *schema.Resource {
@@ -164,10 +165,10 @@ func resourceAwsDataSyncLocationSmbRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
 	}
 
-	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := tfdatasync.SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return fmt.Errorf("error parsing Location SMB (%s) URI (%s): %w", d.Id(), aws.StringValue(output.LocationUri), err)
+		return err
 	}
 
 	d.Set("agent_arns", flattenStringSet(output.AgentArns))

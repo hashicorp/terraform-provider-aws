@@ -17,6 +17,9 @@ const (
 
 	replicationGroupDeletedMinTimeout = 10 * time.Second
 	replicationGroupDeletedDelay      = 30 * time.Second
+
+	UserActiveTimeout  = 5 * time.Minute
+	UserDeletedTimeout = 5 * time.Minute
 )
 
 // ReplicationGroupAvailable waits for a ReplicationGroup to return Available
@@ -229,4 +232,32 @@ func GlobalReplicationGroupMemberDetached(conn *elasticache.ElastiCache, globalR
 		return v, err
 	}
 	return nil, err
+}
+
+// UserActive waits for an ElastiCache user to reach an active state after modifications
+func UserActive(conn *elasticache.ElastiCache, userId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{UserStatusModifying},
+		Target:  []string{UserStatusActive},
+		Refresh: UserStatus(conn, userId),
+		Timeout: UserActiveTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+// UserDeleted waits for an ElastiCache user to be deleted
+func UserDeleted(conn *elasticache.ElastiCache, userId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{UserStatusDeleting},
+		Target:  []string{},
+		Refresh: UserStatus(conn, userId),
+		Timeout: UserDeletedTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
