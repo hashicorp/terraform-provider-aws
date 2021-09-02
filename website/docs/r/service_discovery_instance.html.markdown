@@ -47,7 +47,8 @@ resource "aws_service_discovery_service" "example" {
 resource "aws_service_discovery_instance" "example" {
   instance_id = "example-instance-id"
   service_id  = aws_service_discovery_service.example.id
-  attributes  = {
+
+  attributes = {
     AWS_INSTANCE_IPV4 = "172.18.0.1"
     custom_attribute  = "custom"
   }
@@ -68,7 +69,8 @@ resource "aws_service_discovery_service" "example" {
 resource "aws_service_discovery_instance" "example" {
   instance_id = "example-instance-id"
   service_id  = aws_service_discovery_service.example.id
-  attributes  = {
+
+  attributes = {
     AWS_EC2_INSTANCE_ID = "i-0abdg374kd892cj6dl"
   }
 }

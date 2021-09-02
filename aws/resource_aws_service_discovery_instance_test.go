@@ -262,7 +262,8 @@ func testAccAWSServiceDiscoveryInstanceConfig(instanceID string, attributes stri
 resource "aws_service_discovery_instance" "instance" {
   service_id  = aws_service_discovery_service.sd_register_instance.id
   instance_id = %[1]q
-  attributes  = {
+
+  attributes = {
     %[2]s
   }
 }`, instanceID, attributes)
