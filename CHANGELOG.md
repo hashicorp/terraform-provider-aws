@@ -1,5 +1,9 @@
 ## 3.57.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_service_discovery_instance` ([#17498](https://github.com/hashicorp/terraform-provider-aws/issues/17498))
+
 ENHANCEMENTS:
 
 * data-source/aws_instance: Add `ipv6_addresses` attribute ([#17859](https://github.com/hashicorp/terraform-provider-aws/issues/17859))
