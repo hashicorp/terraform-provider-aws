@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/quicksight/finder"
 )
 
 func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
@@ -82,29 +83,22 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 
 		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
 
-		input := &quicksight.ListUserGroupsInput{
+		listInput := &quicksight.ListGroupMembershipsInput{
 			AwsAccountId: aws.String(awsAccountID),
 			Namespace:    aws.String(namespace),
-			UserName:     aws.String(userName),
+			GroupName:    aws.String(groupName),
 		}
 
-		output, err := conn.ListUserGroups(input)
-
+		found, err := finder.GroupMembership(conn, listInput, userName)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error listing QuickSight Group Memberships: %s", err)
 		}
 
-		if output == nil || output.GroupList == nil {
-			return fmt.Errorf("QuickSight Group (%s) not found", rs.Primary.ID)
+		if !found {
+			return fmt.Errorf("QuickSight Group Membership (%s) not found", rs.Primary.ID)
 		}
 
-		for _, group := range output.GroupList {
-			if *group.GroupName == groupName {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("QuickSight Group (%s) not found in user's group list", rs.Primary.ID)
+		return nil
 	}
 }
 

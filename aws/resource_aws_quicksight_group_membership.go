@@ -11,13 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/quicksight/finder"
 )
 
 func resourceAwsQuickSightGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsQuickSightGroupMembershipCreate,
-		ReadContext:   resourceAwsQuickSightGroupMembershipRead,
-		DeleteContext: resourceAwsQuickSightGroupMembershipDelete,
+		CreateWithoutTimeout: resourceAwsQuickSightGroupMembershipCreate,
+		ReadWithoutTimeout:   resourceAwsQuickSightGroupMembershipRead,
+		DeleteWithoutTimeout: resourceAwsQuickSightGroupMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -44,7 +45,7 @@ func resourceAwsQuickSightGroupMembership() *schema.Resource {
 
 			"group_name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
@@ -67,6 +68,7 @@ func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.R
 	awsAccountID := meta.(*AWSClient).accountid
 	namespace := d.Get("namespace").(string)
 	groupName := d.Get("group_name").(string)
+	memberName := d.Get("member_name").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
@@ -75,13 +77,13 @@ func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.R
 	createOpts := &quicksight.CreateGroupMembershipInput{
 		AwsAccountId: aws.String(awsAccountID),
 		GroupName:    aws.String(groupName),
-		MemberName:   aws.String(d.Get("member_name").(string)),
+		MemberName:   aws.String(memberName),
 		Namespace:    aws.String(namespace),
 	}
 
 	resp, err := conn.CreateGroupMembershipWithContext(ctx, createOpts)
 	if err != nil {
-		return diag.Errorf("Error adding QuickSight user to group: %s", err)
+		return diag.Errorf("error adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
@@ -97,48 +99,26 @@ func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("%s", err)
 	}
 
-	listOpts := &quicksight.ListUserGroupsInput{
+	listInput := &quicksight.ListGroupMembershipsInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
-		UserName:     aws.String(userName),
+		GroupName:    aws.String(groupName),
 	}
 
-	found := false
-
-	for {
-		resp, err := conn.ListUserGroupsWithContext(ctx, listOpts)
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] QuickSight User %s is not found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return diag.Errorf("Error listing QuickSight User groups (%s): %s", d.Id(), err)
-		}
-
-		for _, group := range resp.GroupList {
-			if aws.StringValue(group.GroupName) == groupName {
-				found = true
-				break
-			}
-		}
-
-		if found || resp.NextToken == nil {
-			break
-		}
-
-		listOpts.NextToken = resp.NextToken
+	found, err := finder.GroupMembership(conn, listInput, userName)
+	if err != nil {
+		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
 
-	if found {
-		d.Set("aws_account_id", awsAccountID)
-		d.Set("namespace", namespace)
-		d.Set("member_name", userName)
-		d.Set("group_name", groupName)
-	} else {
+	if !found {
 		log.Printf("[WARN] QuickSight User-group membership %s is not found", d.Id())
 		d.SetId("")
 	}
+
+	d.Set("aws_account_id", awsAccountID)
+	d.Set("namespace", namespace)
+	d.Set("member_name", userName)
+	d.Set("group_name", groupName)
 
 	return nil
 }
