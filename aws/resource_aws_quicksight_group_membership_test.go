@@ -22,7 +22,7 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 		// There's no way to actual retrieve a group membership after
 		// the user and group have been destroyed.
 		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy: testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay,
+		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -51,13 +51,13 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 		Providers:  testAccProviders,
 		// There's no way to actual retrieve a group membership after
 		// the user and group have been destroyed.
-		CheckDestroy: testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay,
+		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightGroupMembershipExists(resourceName),
-					testAccCheckQuickSightGroupMembershipDisappears(groupName, memberName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsQuickSightGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,7 +65,35 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay(s *terraform.State) error {
+func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_quicksight_group_membership" {
+			continue
+		}
+
+		awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		listInput := &quicksight.ListGroupMembershipsInput{
+			AwsAccountId: aws.String(awsAccountID),
+			Namespace:    aws.String(namespace),
+			GroupName:    aws.String(groupName),
+		}
+
+		found, err := finder.GroupMembership(conn, listInput, userName)
+		if err != nil {
+			return err
+		}
+
+		if found {
+			return fmt.Errorf("QuickSight Group (%s) still exists", rs.Primary.ID)
+		}
+	}
+
 	return nil
 }
 
@@ -132,12 +160,13 @@ func testAccCheckQuickSightGroupMembershipDisappears(groupName string, memberNam
 }
 
 func testAccAWSQuickSightGroupMembershipConfig(groupName string, memberName string) string {
-	return fmt.Sprintf(`
-%s
-%s
+	return composeConfig(
+		testAccAWSQuickSightGroupConfig(groupName),
+		testAccAWSQuickSightUserConfig(memberName),
+		fmt.Sprintf(`
 resource "aws_quicksight_group_membership" "default" {
   group_name  = aws_quicksight_group.default.group_name
   member_name = aws_quicksight_user.%s.user_name
 }
-`, testAccAWSQuickSightGroupConfig(groupName), testAccAWSQuickSightUserConfig(memberName), memberName)
+`, memberName))
 }
