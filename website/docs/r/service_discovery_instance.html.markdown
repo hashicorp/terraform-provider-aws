@@ -84,6 +84,12 @@ The following arguments are supported:
 * `service_id` - (Required, ForceNew) The ID of the service that you want to use to create the instance.
 * `attributes` - (Required) A map contains the attributes of the instance. Check the [doc](https://docs.aws.amazon.com/cloud-map/latest/api/API_RegisterInstance.html#API_RegisterInstance_RequestSyntax) for the supported attributes and syntax.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The ID of the instance.
+
 ## Import
 
 Service Discovery Instance can be imported using the service ID and instance ID, e.g.
