@@ -52,15 +52,17 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &servicediscovery.CreateHttpNamespaceInput{
-		Name:             aws.String(name),
-		Tags:             tags.IgnoreAws().ServicediscoveryTags(),
 		CreatorRequestId: aws.String(resource.UniqueId()),
+		Name:             aws.String(name),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
 	}
 
 	output, err := conn.CreateHttpNamespace(input)
