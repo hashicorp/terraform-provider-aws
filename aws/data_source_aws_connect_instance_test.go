@@ -93,7 +93,7 @@ data "aws_connect_instance" "test" {
 func testAccAwsConnectInstanceDataSourceConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
-  instance_alias = %[1]q
+  instance_alias           = %[1]q
   identity_management_type = "CONNECT_MANAGED"
   inbound_calls_enabled    = true
   outbound_calls_enabled   = true
@@ -108,7 +108,7 @@ data "aws_connect_instance" "test" {
 func testAccAwsConnectInstanceDataSourceConfigAlias(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
-  instance_alias = %[1]q
+  instance_alias           = %[1]q
   identity_management_type = "CONNECT_MANAGED"
   inbound_calls_enabled    = true
   outbound_calls_enabled   = true

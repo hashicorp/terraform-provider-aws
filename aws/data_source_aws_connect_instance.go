@@ -165,8 +165,7 @@ func dataSourceAwsConnectGetAllConnectInstanceSummaries(ctx context.Context, con
 
 	for {
 		input := &connect.ListInstancesInput{
-			// MaxResults Valid Range: Minimum value of 1. Maximum value of 60
-			MaxResults: aws.Int64(int64(60)),
+			MaxResults: aws.Int64(int64(tfconnect.ListInstancesMaxResults)),
 		}
 		if nextToken != "" {
 			input.NextToken = aws.String(nextToken)

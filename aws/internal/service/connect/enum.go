@@ -4,6 +4,10 @@ import "github.com/aws/aws-sdk-go/service/connect"
 
 const InstanceStatusStatusNotFound = "ResourceNotFoundException"
 
+const (
+	ListInstancesMaxResults = 10
+)
+
 func InstanceAttributeMapping() map[string]string {
 	return map[string]string{
 		connect.InstanceAttributeTypeAutoResolveBestVoices: "auto_resolve_best_voices_enabled",

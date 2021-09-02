@@ -99,59 +99,19 @@ func TestAccAwsConnectInstance_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccAwsConnectInstance_custom(t *testing.T) {
-	var v connect.DescribeInstanceOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
-	resourceName := "aws_connect_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectInstanceConfigCustom(rName),
+				Config: testAccAwsConnectInstanceConfigBasicFlipped(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectInstanceExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
-					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
-					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
-					testAccMatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAwsConnectInstanceConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectInstanceExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "true"), //verified default result from ListInstanceAttributes()
-					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "false"),       //verified default result from ListInstanceAttributes()
-					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "true"),             //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "true"), //verified default result from ListInstanceAttributes()
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
-					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "false"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
-					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 				),
 			},
@@ -173,8 +133,9 @@ func TestAccAwsConnectInstance_directory(t *testing.T) {
 			{
 				Config: testAccAwsConnectInstanceConfigDirectory(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeExistingDirectory),
 					testAccCheckAwsConnectInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeExistingDirectory),
+					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 				),
 			},
 			{
@@ -182,6 +143,33 @@ func TestAccAwsConnectInstance_directory(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"directory_id"},
+			},
+		},
+	})
+}
+
+func TestAccAwsConnectInstance_saml(t *testing.T) {
+	var v connect.DescribeInstanceOutput
+	rName := acctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsConnectInstanceConfigSAML(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeSaml),
+					testAccCheckAwsConnectInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -218,32 +206,6 @@ func testAccCheckAwsConnectInstanceExists(resourceName string, instance *connect
 	}
 }
 
-func TestAccAwsConnectInstance_saml(t *testing.T) {
-	var v connect.DescribeInstanceOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
-	resourceName := "aws_connect_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsConnectInstanceConfigSAML(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeSaml),
-					testAccCheckAwsConnectInstanceExists(resourceName, &v),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 func testAccCheckAwsConnectInstanceDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_instance" {
@@ -281,7 +243,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccAwsConnectInstanceConfigCustom(rName string) string {
+func testAccAwsConnectInstanceConfigBasicFlipped(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type         = "CONNECT_MANAGED"
@@ -290,42 +252,7 @@ resource "aws_connect_instance" "test" {
   outbound_calls_enabled           = false
   auto_resolve_best_voices_enabled = false
   contact_flow_logs_enabled        = true
-  contact_lens_enabled             = false
-  early_media_enabled       	   = false
-}
-`, rName)
-}
-
-func testAccAwsConnectInstanceConfigInboundEnabledOutboundDisabled(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_connect_instance" "test" {
-  identity_management_type = "CONNECT_MANAGED"
-  inbound_calls_enabled    = true
-  instance_alias           = %[1]q
-  outbound_calls_enabled   = false
-}
-`, rName)
-}
-
-func testAccAwsConnectInstanceConfigInboundDisabledOutboundEnabled(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_connect_instance" "test" {
-  identity_management_type = "CONNECT_MANAGED"
-  inbound_calls_enabled    = false
-  instance_alias           = %[1]q
-  outbound_calls_enabled   = true
-}
-`, rName)
-}
-
-func testAccAwsConnectInstanceConfigAttributeEarlyMedia(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_connect_instance" "test" {
-  identity_management_type = "CONNECT_MANAGED"
-  inbound_calls_enabled    = true
-  instance_alias           = %[1]q
-  outbound_calls_enabled   = true
-  early_media_enabled      = true
+  early_media_enabled              = false
 }
 `, rName)
 }
@@ -383,8 +310,6 @@ resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q
   inbound_calls_enabled    = true
   outbound_calls_enabled   = true
-
-  depends_on = [aws_directory_service_directory.test]
 }
 `, rName)
 }

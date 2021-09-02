@@ -13,8 +13,8 @@ Provides an Amazon Connect instance resource. For more information see
 
 ## Example Usage
 
-```hcl
-resource "aws_connect_instance" "foo" {
+```terraform
+resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
   instance_alias           = "resource-test-terraform-connect"
   inbound_calls_enabled    = true
