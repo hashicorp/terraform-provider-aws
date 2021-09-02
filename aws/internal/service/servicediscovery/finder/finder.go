@@ -8,31 +8,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func OperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
-	input := &servicediscovery.GetOperationInput{
-		OperationId: aws.String(id),
-	}
-
-	output, err := conn.GetOperation(input)
-
-	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeOperationNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Operation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Operation, nil
-}
-
 func InstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) (*servicediscovery.Instance, error) {
 	input := &servicediscovery.GetInstanceInput{
 		InstanceId: aws.String(instanceID),
@@ -57,6 +32,31 @@ func InstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscovery, s
 	}
 
 	return output.Instance, nil
+}
+
+func OperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
+	input := &servicediscovery.GetOperationInput{
+		OperationId: aws.String(id),
+	}
+
+	output, err := conn.GetOperation(input)
+
+	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeOperationNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Operation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Operation, nil
 }
 
 func ServiceByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Service, error) {

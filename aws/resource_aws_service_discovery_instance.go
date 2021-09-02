@@ -19,9 +19,9 @@ import (
 
 func resourceAwsServiceDiscoveryInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryInstanceCreate,
+		Create: resourceAwsServiceDiscoveryInstancePut,
 		Read:   resourceAwsServiceDiscoveryInstanceRead,
-		Update: resourceAwsServiceDiscoveryInstanceUpdate,
+		Update: resourceAwsServiceDiscoveryInstancePut,
 		Delete: resourceAwsServiceDiscoveryInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -59,7 +59,7 @@ func resourceAwsServiceDiscoveryInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceDiscoveryInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
 	instanceID := d.Get("instance_id").(string)
@@ -74,14 +74,14 @@ func resourceAwsServiceDiscoveryInstanceCreate(d *schema.ResourceData, meta inte
 	output, err := conn.RegisterInstance(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Discovery Instance (%s): %w", instanceID, err)
+		return fmt.Errorf("error registering Service Discovery Instance (%s): %w", instanceID, err)
 	}
 
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
 		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery Instance (%s) create: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for Service Discovery Instance (%s) register: %w", d.Id(), err)
 		}
 	}
 
@@ -104,6 +104,8 @@ func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interf
 	}
 
 	attributes := instance.Attributes
+	// https://docs.aws.amazon.com/cloud-map/latest/api/API_RegisterInstance.html#cloudmap-RegisterInstance-request-Attributes.
+	// "When the AWS_EC2_INSTANCE_ID attribute is specified, then the AWS_INSTANCE_IPV4 attribute will be filled out with the primary private IPv4 address."
 	if _, ok := attributes["AWS_EC2_INSTANCE_ID"]; ok {
 		delete(attributes, "AWS_INSTANCE_IPV4")
 	}
@@ -112,10 +114,6 @@ func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interf
 	d.Set("instance_id", instance.Id)
 
 	return nil
-}
-
-func resourceAwsServiceDiscoveryInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsServiceDiscoveryInstanceCreate(d, meta)
 }
 
 func resourceAwsServiceDiscoveryInstanceDelete(d *schema.ResourceData, meta interface{}) error {
