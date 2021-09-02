@@ -1573,7 +1573,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 func testAccAWSS3BucketReplicationConfig_schemaV2SameRegion(rName, rNameDestination string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "%[1]s"
 
   assume_role_policy = <<POLICY
 {
@@ -1593,55 +1593,55 @@ POLICY
 }
 
 resource "aws_s3_bucket" "destination" {
-  bucket   = %[2]q
+  bucket = "%[2]s"
 
   versioning {
     enabled = true
   }
 
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket" "source" {
-  bucket   = "tf-test-bucket-source-%[3]d"
-  acl = "private"
+  bucket = "tf-test-bucket-source-%[3]d"
+  acl    = "private"
 
   versioning {
     enabled = true
   }
 
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 resource "aws_s3_bucket_replication_configuration" "replication" {
-    bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.test.arn
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
 
-    rules {
-      id     = "testid"
-      status = "Enabled"
+  rules {
+    id     = "testid"
+    status = "Enabled"
 
-      filter {
-        prefix = "testprefix"
-      }
-
-      delete_marker_replication_status = "Enabled"
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
+    filter {
+      prefix = "testprefix"
     }
-} `, rName, rNameDestination, rInt)
+
+    delete_marker_replication_status = "Enabled"
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}`, rName, rNameDestination, rInt)
 }
 
 func testAccAWSS3BucketReplicationConfig_existingObjectReplication(rName, rNameDestination string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "%[1]s"
 
   assume_role_policy = <<POLICY
 {
@@ -1661,52 +1661,55 @@ POLICY
 }
 
 resource "aws_s3_bucket" "destination" {
-  bucket   = %[2]q
+  bucket = "%[2]s"
 
   versioning {
     enabled = true
   }
 
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket" "source" {
-  bucket   = "tf-test-bucket-source-%[3]d"
-  acl = "private"
+  bucket = "tf-test-bucket-source-%[3]d"
+  acl    = "private"
 
   versioning {
     enabled = true
   }
 
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
-    bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.test.arn
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
 
-    rules {
-      id     = "testid"
-      status = "Enabled"
+  rules {
+    id     = "testid"
+    status = "Enabled"
 
-      filter {
-        prefix = "testprefix"
-      }
-
-	  existing_object_replication {
-		  status = "Enabled"
-	  }
-
-      delete_marker_replication_status = "Enabled"
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
+    filter {
+      prefix = "testprefix"
     }
-} `, rName, rNameDestination, rInt)
+
+    existing_object_replication {
+      status = "Enabled"
+    }
+
+    delete_marker_replication_status = "Enabled"
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}
+
+
+`, rName, rNameDestination, rInt)
 }
