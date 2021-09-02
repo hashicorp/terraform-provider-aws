@@ -1,4 +1,4 @@
-## 3.57.0 (Unreleased)
+## 3.57.0 (September 02, 2021)
 
 FEATURES:
 
