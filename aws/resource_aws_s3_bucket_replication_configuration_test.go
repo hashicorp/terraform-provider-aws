@@ -1002,94 +1002,94 @@ resource "aws_s3_bucket" "destination" {
   }
 
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket" "source" {
-  bucket   = "tf-test-bucket-source-%[1]d"
+  bucket = "tf-test-bucket-source-%[1]d"
 
   versioning {
     enabled = true
   }
 
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
-} `, randInt)
+}`, randInt)
 }
 
 func testAccAWSS3BucketReplicationConfig(randInt int, storageClass string) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      prefix = "foo"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    prefix = "foo"
+    status = "Enabled"
 
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "%[1]s"
-      }
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "%[1]s"
     }
-} `, storageClass)
+  }
+}`, storageClass)
 }
 
 func testAccAWSS3BucketReplicationConfigRTC(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
-    bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      filter {
-        prefix = "foo"
+  rules {
+    id = "foobar"
+    filter {
+      prefix = "foo"
+    }
+    status = "Enabled"
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+      replication_time {
+        status = "Enabled"
+        time {
+          minutes = 15
+        }
       }
-      status = "Enabled"
-      destination {
-        bucket = aws_s3_bucket.destination.arn
-		replication_time {
-			status = "Enabled"
-			time {
-				minutes = 15
-			}
-		}
-		metrics {
-			status = "Enabled"
-			event_threshold {
-				minutes = 15
-			}
-		}
+      metrics {
+        status = "Enabled"
+        event_threshold {
+          minutes = 15
+        }
       }
     }
+  }
 }`
 }
 
 func testAccAWSS3BucketReplicationConfigReplicaMods(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
-    bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      filter {
-        prefix = "foo"
-      }
-	  source_selection_criteria {
-		replica_modifications {
-			status = "Enabled"
-		}
-	  }
-      status = "Enabled"
-      destination {
-        bucket = aws_s3_bucket.destination.arn
+  rules {
+    id = "foobar"
+    filter {
+      prefix = "foo"
+    }
+    source_selection_criteria {
+      replica_modifications {
+        status = "Enabled"
       }
     }
+    status = "Enabled"
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
 }`
 }
 
@@ -1105,7 +1105,7 @@ resource "aws_s3_bucket" "destination2" {
     enabled = true
   }
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
@@ -1117,54 +1117,54 @@ resource "aws_s3_bucket" "destination3" {
     enabled = true
   }
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
-    bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id       = "rule1"
-      priority = 1
-      status   = "Enabled"
+  rules {
+    id       = "rule1"
+    priority = 1
+    status   = "Enabled"
 
-      filter {}
+    filter {}
 
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
     }
+  }
 
-    rules {
-      id       = "rule2"
-      priority = 2
-      status   = "Enabled"
+  rules {
+    id       = "rule2"
+    priority = 2
+    status   = "Enabled"
 
-      filter {}
+    filter {}
 
-      destination {
-        bucket        = aws_s3_bucket.destination2.arn
-        storage_class = "STANDARD_IA"
-      }
+    destination {
+      bucket        = aws_s3_bucket.destination2.arn
+      storage_class = "STANDARD_IA"
     }
+  }
 
-    rules {
-      id       = "rule3"
-      priority = 3
-      status   = "Disabled"
+  rules {
+    id       = "rule3"
+    priority = 3
+    status   = "Disabled"
 
-      filter {}
+    filter {}
 
-      destination {
-        bucket        = aws_s3_bucket.destination3.arn
-        storage_class = "ONEZONE_IA"
-      }
+    destination {
+      bucket        = aws_s3_bucket.destination3.arn
+      storage_class = "ONEZONE_IA"
     }
-  
-} `, randInt))
+  }
+
+}`, randInt))
 }
 
 func testAccAWSS3BucketReplicationConfigWithMultipleDestinationsNonEmptyFilter(randInt int) string {
@@ -1179,7 +1179,7 @@ resource "aws_s3_bucket" "destination2" {
     enabled = true
   }
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
@@ -1191,65 +1191,65 @@ resource "aws_s3_bucket" "destination3" {
     enabled = true
   }
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id       = "rule1"
-      priority = 1
-      status   = "Enabled"
+  rules {
+    id       = "rule1"
+    priority = 1
+    status   = "Enabled"
 
-      filter {
-        prefix = "prefix1"
-      }
+    filter {
+      prefix = "prefix1"
+    }
 
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+
+  rules {
+    id       = "rule2"
+    priority = 2
+    status   = "Enabled"
+
+    filter {
+      tags = {
+        Key2 = "Value2"
       }
     }
 
-    rules {
-      id       = "rule2"
-      priority = 2
-      status   = "Enabled"
+    destination {
+      bucket        = aws_s3_bucket.destination2.arn
+      storage_class = "STANDARD_IA"
+    }
+  }
 
-      filter {
-        tags = {
-          Key2 = "Value2"
-        }
-      }
+  rules {
+    id       = "rule3"
+    priority = 3
+    status   = "Disabled"
 
-      destination {
-        bucket        = aws_s3_bucket.destination2.arn
-        storage_class = "STANDARD_IA"
+    filter {
+      prefix = "prefix3"
+
+      tags = {
+        Key3 = "Value3"
       }
     }
 
-    rules {
-      id       = "rule3"
-      priority = 3
-      status   = "Disabled"
-
-      filter {
-        prefix = "prefix3"
-
-        tags = {
-          Key3 = "Value3"
-        }
-      }
-
-      destination {
-        bucket        = aws_s3_bucket.destination3.arn
-        storage_class = "ONEZONE_IA"
-      }
+    destination {
+      bucket        = aws_s3_bucket.destination3.arn
+      storage_class = "ONEZONE_IA"
     }
-} `, randInt))
+  }
+}`, randInt))
 }
 
 func testAccAWSS3BucketReplicationConfigWithMultipleDestinationsTwoDestination(randInt int) string {
@@ -1264,46 +1264,46 @@ resource "aws_s3_bucket" "destination2" {
     enabled = true
   }
   lifecycle {
-	  ignore_changes = [replication_configuration]
+    ignore_changes = [replication_configuration]
   }
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id       = "rule1"
-      priority = 1
-      status   = "Enabled"
+  rules {
+    id       = "rule1"
+    priority = 1
+    status   = "Enabled"
 
-      filter {
-        prefix = "prefix1"
-      }
+    filter {
+      prefix = "prefix1"
+    }
 
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+
+  rules {
+    id       = "rule2"
+    priority = 2
+    status   = "Enabled"
+
+    filter {
+      tags = {
+        Key2 = "Value2"
       }
     }
 
-    rules {
-      id       = "rule2"
-      priority = 2
-      status   = "Enabled"
-
-      filter {
-        tags = {
-          Key2 = "Value2"
-        }
-      }
-
-      destination {
-        bucket        = aws_s3_bucket.destination2.arn
-        storage_class = "STANDARD_IA"
-      }
+    destination {
+      bucket        = aws_s3_bucket.destination2.arn
+      storage_class = "STANDARD_IA"
     }
-} `, randInt))
+  }
+}`, randInt))
 }
 
 func testAccAWSS3BucketReplicationConfigWithSseKmsEncryptedObjects(randInt int) string {
@@ -1316,26 +1316,26 @@ resource "aws_kms_key" "replica" {
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      prefix = "foo"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    prefix = "foo"
+    status = "Enabled"
 
-      destination {
-        bucket             = aws_s3_bucket.destination.arn
-        storage_class      = "STANDARD"
-        replica_kms_key_id = aws_kms_key.replica.arn
-      }
+    destination {
+      bucket             = aws_s3_bucket.destination.arn
+      storage_class      = "STANDARD"
+      replica_kms_key_id = aws_kms_key.replica.arn
+    }
 
-      source_selection_criteria {
-        sse_kms_encrypted_objects {
-		  status = "Enabled"
-        }
+    source_selection_criteria {
+      sse_kms_encrypted_objects {
+        status = "Enabled"
       }
     }
-} `
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithAccessControlTranslation(randInt int) string {
@@ -1344,24 +1344,24 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      prefix = "foo"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    prefix = "foo"
+    status = "Enabled"
 
-      destination {
-        account_id    = data.aws_caller_identity.current.account_id
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
+    destination {
+      account_id    = data.aws_caller_identity.current.account_id
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
 
-        access_control_translation {
-          owner = "Destination"
-        }
+      access_control_translation {
+        owner = "Destination"
       }
     }
-} `
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigConfigurationRulesDestination(randInt int) string {
@@ -1370,20 +1370,20 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      prefix = "foo"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    prefix = "foo"
+    status = "Enabled"
 
-      destination {
-        account_id    = data.aws_caller_identity.current.account_id
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
+    destination {
+      account_id    = data.aws_caller_identity.current.account_id
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
     }
-} `
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithSseKmsEncryptedObjectsAndAccessControlTranslation(randInt int) string {
@@ -1398,176 +1398,176 @@ resource "aws_kms_key" "replica" {
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      prefix = "foo"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    prefix = "foo"
+    status = "Enabled"
 
-      destination {
-        account_id         = data.aws_caller_identity.current.account_id
-        bucket             = aws_s3_bucket.destination.arn
-        storage_class      = "STANDARD"
-        replica_kms_key_id = aws_kms_key.replica.arn
+    destination {
+      account_id         = data.aws_caller_identity.current.account_id
+      bucket             = aws_s3_bucket.destination.arn
+      storage_class      = "STANDARD"
+      replica_kms_key_id = aws_kms_key.replica.arn
 
-        access_control_translation {
-          owner = "Destination"
-        }
-      }
-
-      source_selection_criteria {
-        sse_kms_encrypted_objects {
-		  status = "Enabled"
-        }
+      access_control_translation {
+        owner = "Destination"
       }
     }
-} `
+
+    source_selection_criteria {
+      sse_kms_encrypted_objects {
+        status = "Enabled"
+      }
+    }
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithoutStorageClass(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      prefix = "foo"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    prefix = "foo"
+    status = "Enabled"
 
-      destination {
-        bucket = aws_s3_bucket.destination.arn
-      }
+    destination {
+      bucket = aws_s3_bucket.destination.arn
     }
-} `
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithV2ConfigurationDeleteMarkerReplicationDisabled(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    status = "Enabled"
 
-      filter {
-        prefix = "foo"
-      }
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
+    filter {
+      prefix = "foo"
     }
-} `
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithV2ConfigurationNoTags(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    status = "Enabled"
 
-      filter {
-        prefix = "foo"
-      }
-
-      delete_marker_replication_status = "Enabled"
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
+    filter {
+      prefix = "foo"
     }
-} `
+
+    delete_marker_replication_status = "Enabled"
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithV2ConfigurationOnlyOneTag(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    status = "Enabled"
 
-      priority = 42
+    priority = 42
 
-      filter {
-        tags = {
-          ReplicateMe = "Yes"
-        }
-      }
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
+    filter {
+      tags = {
+        ReplicateMe = "Yes"
       }
     }
-} `
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithV2ConfigurationPrefixAndTags(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    status = "Enabled"
 
-      priority = 41
+    priority = 41
 
-      filter {
-        prefix = "foo"
+    filter {
+      prefix = "foo"
 
-        tags = {
-          AnotherTag  = "OK"
-          ReplicateMe = "Yes"
-        }
-      }
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
+      tags = {
+        AnotherTag  = "OK"
+        ReplicateMe = "Yes"
       }
     }
-} `
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithV2ConfigurationMultipleTags(randInt int) string {
 	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
 resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
+  role   = aws_iam_role.role.arn
 
-    rules {
-      id     = "foobar"
-      status = "Enabled"
+  rules {
+    id     = "foobar"
+    status = "Enabled"
 
-      filter {
-        tags = {
-          AnotherTag  = "OK"
-          Foo         = "Bar"
-          ReplicateMe = "Yes"
-        }
-      }
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
+    filter {
+      tags = {
+        AnotherTag  = "OK"
+        Foo         = "Bar"
+        ReplicateMe = "Yes"
       }
     }
-} `
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+    }
+  }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfig_schemaV2SameRegion(rName, rNameDestination string, rInt int) string {
