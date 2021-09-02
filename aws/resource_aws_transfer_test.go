@@ -6,6 +6,11 @@ import (
 
 func TestAccAWSTransfer_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"Access": {
+			"s3Basic":  testAccAWSTransferAccess_s3_basic,
+			"efsBasic": testAccAWSTransferAccess_efs_basic,
+			"s3Policy": testAccAWSTransferAccess_s3_policy,
+		},
 		"Server": {
 			"basic":                         testAccAWSTransferServer_basic,
 			"disappears":                    testAccAWSTransferServer_disappears,
@@ -39,11 +44,6 @@ func TestAccAWSTransfer_serial(t *testing.T) {
 			"ModifyWithOptions":     testAccAWSTransferUser_modifyWithOptions,
 			"Posix":                 testAccAWSTransferUser_posix,
 			"UserNameValidation":    testAccAWSTransferUser_UserName_Validation,
-		},
-		"Access": {
-			"s3Basic":  testAccAWSTransferAccess_s3_basic,
-			"efsBasic": testAccAWSTransferAccess_efs_basic,
-			"s3Policy": testAccAWSTransferAccess_s3_policy,
 		},
 	}
 

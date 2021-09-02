@@ -825,7 +825,12 @@ func testAccAWSTransferServer_directoryService(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSTransfer(t)
+			testAccPreCheckAWSDirectoryService(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
@@ -1040,6 +1045,7 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
+
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
@@ -1053,6 +1059,7 @@ resource "aws_subnet" "test2" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
+
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
@@ -1293,7 +1300,7 @@ func testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName st
 		fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id			 = "${aws_directory_service_directory.test.id}"
+  directory_id           = aws_directory_service_directory.test.id
   logging_role           = aws_iam_role.test.arn
 
   force_destroy = %[1]t
@@ -1308,7 +1315,8 @@ resource "aws_directory_service_directory" "test" {
   password = "SuperSecretPassw0rd"
 
   vpc_settings {
-    vpc_id     = aws_vpc.test.id
+    vpc_id = aws_vpc.test.id
+
     subnet_ids = [
       aws_subnet.test.id,
       aws_subnet.test2.id
