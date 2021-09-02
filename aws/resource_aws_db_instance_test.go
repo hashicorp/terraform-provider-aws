@@ -3561,6 +3561,47 @@ func TestAccAWSDBInstance_CoipEnabled_SnapshotIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_license(t *testing.T) {
+	var dbInstance1 rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_license(rName, "license-included"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "license_model", "license-included"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_license(rName, "bring-your-own-license"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "license_model", "bring-your-own-license"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSDBInstanceConfig_orderableClass(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
@@ -7818,4 +7859,28 @@ resource "aws_db_instance" "restore" {
   skip_final_snapshot       = true
 }
 `, rName, targetCoipEnabled))
+}
+
+func testAccAWSDBInstanceConfig_license(rName, license string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = "oracle-se2"
+  license_model = %[1]q
+  storage_type  = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_db_instance" "test" {
+  apply_immediately               = true
+  allocated_storage               = 10
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  identifier                      = %[2]q
+  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model                   = data.aws_rds_orderable_db_instance.test.license_model
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, license, rName)
 }
