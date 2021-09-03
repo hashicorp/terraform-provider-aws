@@ -1,0 +1,3 @@
+```release-note:bug
+resource_aws_iam_role: Changes `name_prefix` validation to a range of 1 ~ 64 characters to match the AWS documentation
+```
