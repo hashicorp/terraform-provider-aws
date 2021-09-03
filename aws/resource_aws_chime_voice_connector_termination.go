@@ -67,7 +67,7 @@ func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorTerminationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
 	vcId := d.Get("voice_connector_id").(string)
