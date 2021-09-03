@@ -130,7 +130,7 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s): %s", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Instance (%s): %s", d.Id(), err))
 	}
 
 	d.SetId(aws.StringValue(output.Id))

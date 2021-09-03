@@ -38,24 +38,16 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_logs_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_lens_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_resolve_best_voices_enabled"),
-					resource.TestCheckResourceAttrSet(resourceName, "use_custom_tts_voices_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "early_media_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAwsConnectInstanceDataSource_alias(t *testing.T) {
-	rName := acctest.RandomWithPrefix("datasource-test-terraform")
-	resourceName := "aws_connect_instance.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
-		Providers:  testAccProviders,
-		Steps: []resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAwsConnectInstanceDataSourceConfigAlias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -68,7 +60,6 @@ func TestAccAwsConnectInstanceDataSource_alias(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_logs_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_lens_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_resolve_best_voices_enabled"),
-					resource.TestCheckResourceAttrSet(resourceName, "use_custom_tts_voices_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "early_media_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role"),

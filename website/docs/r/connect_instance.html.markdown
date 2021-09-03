@@ -36,7 +36,7 @@ The following arguments are supported:
 * `contact_flow_logs_enabled` - (Optional) Specifies Whether contact flow logs are enabled. Defaults to `false`
 * `contact_lens_enabled` - (Optional) Specifies Whether contact lens is enabled. Defaults to `true`
 * `auto_resolve_best_voices` - (Optional) Specifies Whether auto resolve best voices is enabled. Defaults to `true`
-* `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false`
+<!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ### Timeouts
 

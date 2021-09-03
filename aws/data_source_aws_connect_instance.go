@@ -73,10 +73,10 @@ func dataSourceAwsConnectInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"use_custom_tts_voices_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+			// "use_custom_tts_voices_enabled": {
+			// 	Type:     schema.TypeBool,
+			// 	Computed: true,
+			// },
 		},
 	}
 }
@@ -165,7 +165,7 @@ func dataSourceAwsConnectGetAllConnectInstanceSummaries(ctx context.Context, con
 
 	for {
 		input := &connect.ListInstancesInput{
-			MaxResults: aws.Int64(int64(tfconnect.ListInstancesMaxResults)),
+			MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults),
 		}
 		if nextToken != "" {
 			input.NextToken = aws.String(nextToken)

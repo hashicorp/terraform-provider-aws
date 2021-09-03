@@ -246,13 +246,14 @@ resource "aws_connect_instance" "test" {
 func testAccAwsConnectInstanceConfigBasicFlipped(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
+  auto_resolve_best_voices_enabled = false
+  contact_flow_logs_enabled        = true
+  contact_lens_enabled            = false
+  early_media_enabled              = false
   identity_management_type         = "CONNECT_MANAGED"
   inbound_calls_enabled            = false
   instance_alias                   = %[1]q
   outbound_calls_enabled           = false
-  auto_resolve_best_voices_enabled = false
-  contact_flow_logs_enabled        = true
-  early_media_enabled              = false
 }
 `, rName)
 }
