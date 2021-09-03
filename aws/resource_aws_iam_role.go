@@ -57,7 +57,7 @@ func resourceAwsIamRole() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
+					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
 				),
 			},
