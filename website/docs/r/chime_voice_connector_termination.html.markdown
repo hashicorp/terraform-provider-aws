@@ -49,5 +49,5 @@ In addition to all arguments above, the following attributes are exported:
 Chime Voice Connector Termination can be imported using the `voice_connector_id`, e.g.
 
 ```
-$ terraform import aws_chime_voice_connector_termination.default example
+$ terraform import aws_chime_voice_connector_termination.default abcdef1ghij2klmno3pqr4
 ```
