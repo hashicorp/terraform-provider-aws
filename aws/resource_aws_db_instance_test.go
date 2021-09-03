@@ -7872,15 +7872,15 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  apply_immediately               = true
-  allocated_storage               = 10
-  engine                          = data.aws_rds_orderable_db_instance.test.engine
-  identifier                      = %[2]q
-  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model                   = data.aws_rds_orderable_db_instance.test.license_model
-  password                        = "avoid-plaintext-passwords"
-  username                        = "tfacctest"
-  skip_final_snapshot             = true
+  apply_immediately   = true
+  allocated_storage   = 10
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[2]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model       = data.aws_rds_orderable_db_instance.test.license_model
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
 }
 `, license, rName)
 }
