@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepConnectInstance(region string) error {
 	conn := client.(*AWSClient).connectconn
 	ctx := context.Background()
 	// MaxResults:  Maximum value of 10. https://docs.aws.amazon.com/connect/latest/APIReference/API_ListInstances.html
-	input := &connect.ListInstancesInput{MaxResults: aws.Int64(10)}
+	input := &connect.ListInstancesInput{MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults)}
 	var sweeperErrs *multierror.Error
 	for {
 		listOutput, err := conn.ListInstances(input)
@@ -248,7 +249,7 @@ func testAccAwsConnectInstanceConfigBasicFlipped(rName string) string {
 resource "aws_connect_instance" "test" {
   auto_resolve_best_voices_enabled = false
   contact_flow_logs_enabled        = true
-  contact_lens_enabled            = false
+  contact_lens_enabled             = false
   early_media_enabled              = false
   identity_management_type         = "CONNECT_MANAGED"
   inbound_calls_enabled            = false
