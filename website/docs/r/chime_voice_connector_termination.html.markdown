@@ -42,7 +42,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique termination settings ID.
+* `id` - The Amazon Chime Voice Connector ID.
 
 ## Import
 
