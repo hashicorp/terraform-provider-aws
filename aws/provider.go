@@ -560,6 +560,7 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget_action":                               resourceAwsBudgetsBudgetAction(),
 			"aws_chime_voice_connector":                               resourceAwsChimeVoiceConnector(),
 			"aws_chime_voice_connector_group":                         resourceAwsChimeVoiceConnectorGroup(),
+			"aws_chime_voice_connector_logging":                       resourceAwsChimeVoiceConnectorLogging(),
 			"aws_chime_voice_connector_origination":                   resourceAwsChimeVoiceConnectorOrigination(),
 			"aws_chime_voice_connector_termination":                   resourceAwsChimeVoiceConnectorTermination(),
 			"aws_cloud9_environment_ec2":                              resourceAwsCloud9EnvironmentEc2(),
