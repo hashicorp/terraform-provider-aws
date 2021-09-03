@@ -15,10 +15,10 @@ import (
 
 func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsChimeVoiceConnectorTerminationPut,
-		ReadContext:   resourceAwsChimeVoiceConnectorTerminationRead,
-		UpdateContext: resourceAwsChimeVoiceConnectorTerminationUpdate,
-		DeleteContext: resourceAwsChimeVoiceConnectorTerminationDelete,
+		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationPut,
+		ReadWithoutTimeout   resourceAwsChimeVoiceConnectorTerminationRead,
+		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationUpdate,
+		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
