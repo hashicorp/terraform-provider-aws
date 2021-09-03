@@ -51,7 +51,7 @@ func TestAccAWSChimeVoiceConnectorTermination_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
@@ -157,4 +157,31 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 
 		return nil
 	}
+}
+
+func testAccCheckAWSChimeVoiceConnectorTerminationDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_chime_voice_connector_termination" {
+			continue
+		}
+		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		input := &chime.GetVoiceConnectorTerminationInput{
+			VoiceConnectorId: aws.String(rs.Primary.Attributes["voice_connector_id"]),
+		}
+		resp, err := conn.GetVoiceConnectorTermination(input)
+
+		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if resp != nil && resp.Termination != nil {
+			return fmt.Errorf("error Chime Voice Connector Termination still exists")
+		}
+	}
+
+	return nil
 }

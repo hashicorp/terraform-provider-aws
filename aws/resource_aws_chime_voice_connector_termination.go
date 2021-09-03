@@ -15,8 +15,8 @@ import (
 
 func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationPut,
-		ReadWithoutTimeout   resourceAwsChimeVoiceConnectorTerminationRead,
+		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationCreate,
+		ReadWithoutTimeout:   resourceAwsChimeVoiceConnectorTerminationRead,
 		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationUpdate,
 		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorTerminationDelete,
 
@@ -26,7 +26,7 @@ func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"calling_regions": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				Elem: &schema.Schema{
@@ -35,7 +35,7 @@ func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 				},
 			},
 			"cidr_allow_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				Elem: &schema.Schema{
@@ -47,7 +47,7 @@ func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
-				ValidateFunc: validation.IntAtMost(1),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"default_phone_number": {
 				Type:         schema.TypeString,
@@ -77,8 +77,8 @@ func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *sch
 	}
 
 	termination := &chime.Termination{
-		CidrAllowedList: expandStringList(d.Get("cidr_allow_list").([]interface{})),
-		CallingRegions:  expandStringList(d.Get("calling_regions").([]interface{})),
+		CidrAllowedList: expandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
+		CallingRegions:  expandStringSet(d.Get("calling_regions").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("disabled"); ok {
@@ -143,8 +143,8 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
 		vcId := d.Get("voice_connector_id").(string)
 		termination := &chime.Termination{
-			CallingRegions:  expandStringList(d.Get("calling_regions").([]interface{})),
-			CidrAllowedList: expandStringList(d.Get("cidr_allow_list").([]interface{})),
+			CallingRegions:  expandStringSet(d.Get("calling_regions").(*schema.Set)),
+			CidrAllowedList: expandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
 			CpsLimit:        aws.Int64(int64(d.Get("cps_limit").(int))),
 		}
 
