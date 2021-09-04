@@ -2276,7 +2276,7 @@ resource "aws_launch_template" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
-	http_protocol_ipv6          = "enabled"
+    http_protocol_ipv6          = "enabled"
   }
 }
 `, rName)
