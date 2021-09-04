@@ -110,6 +110,20 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceListConflicting(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSourceIAMPolicyDocument_invalidCharacter(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSIAMPolicyDocumentInvalidCharacter,
+				ExpectError: regexp.MustCompile(`Invalid character.*`),
+			},
+		},
+	})
+}
+
 func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -789,6 +803,33 @@ data "aws_iam_policy_document" "test_source_list_conflicting" {
     data.aws_iam_policy_document.policy_a.json,
     data.aws_iam_policy_document.policy_b.json,
     data.aws_iam_policy_document.policy_c.json
+  ]
+}
+`
+
+var testAccAWSIAMPolicyDocumentInvalidCharacter = `
+data "aws_iam_policy_document" "policy_a" {
+  statement {
+    sid     = "sid-invalid"
+    effect  = "Allow"
+    actions = ["foo:ActionOne"]
+  }
+}
+
+data "aws_iam_policy_document" "policy_b" {
+  statement {
+    sid     = "validSid"
+    effect  = "Deny"
+    actions = ["foo:ActionTwo"]
+  }
+}
+
+data "aws_iam_policy_document" "test_source_list_conflicting" {
+  version = "2012-10-17"
+
+  source_policy_documents = [
+    data.aws_iam_policy_document.policy_a.json,
+    data.aws_iam_policy_document.policy_b.json
   ]
 }
 `
