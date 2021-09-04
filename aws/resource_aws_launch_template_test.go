@@ -177,7 +177,7 @@ func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
 				Config: testAccAWSLaunchTemplateConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &launchTemplate),
-					testAccCheckAWSLaunchTemplateDisappears(&launchTemplate),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLaunchTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1443,20 +1443,6 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSLaunchTemplateDisappears(launchTemplate *ec2.LaunchTemplate) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		input := &ec2.DeleteLaunchTemplateInput{
-			LaunchTemplateId: launchTemplate.LaunchTemplateId,
-		}
-
-		_, err := conn.DeleteLaunchTemplate(input)
-
-		return err
-	}
 }
 
 func testAccAWSLaunchTemplateConfigName(rName string) string {
