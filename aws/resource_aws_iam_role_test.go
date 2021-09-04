@@ -898,6 +898,20 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T)
 	})
 }
 
+func TestAccAWSIAMRole_policy_nameOrPolicyEmpty(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSIAMRoleNameOrPolicyEmpty,
+				ExpectError: regexp.MustCompile(`You must supply both a name and a policy`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -2199,3 +2213,48 @@ EOF
 }
 `, roleName, policyName)
 }
+
+var testAccAWSIAMRoleNameOrPolicyEmpty = `
+resource "aws_iam_role" "AWSRoleForConfig" {
+	name = "AWSRoleForConfig"
+	
+	assume_role_policy = jsonencode(
+		{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+			"Effect": "Allow",
+			"Principal": {
+				"Service": "config.amazonaws.com"
+			},
+			"Action": "sts:AssumeRole"
+			}
+		]
+		}
+	)
+	
+	managed_policy_arns = [
+		"arn:aws:iam::aws:policy/service-role/AWS_ConfigRole",
+	]
+	
+	inline_policy {
+		// BUG: if name is missing policy is not applied and no error appears
+		//name = "S3KMSKeyGrant"
+		policy = jsonencode(
+		{
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Effect": "Allow",
+					"Action": [
+						"kms:Decrypt",
+						"kms:GenerateDataKey"
+					],
+					"Resource": "arn:aws:iam:::key/example-key"
+				}
+			]
+		}
+		)
+	}
+	}
+`

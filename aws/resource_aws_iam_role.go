@@ -736,7 +736,7 @@ func addIamInlinePolicies(policies []*iam.PutRolePolicyInput, meta interface{}) 
 	var errs *multierror.Error
 	for _, policy := range policies {
 		if len(aws.StringValue(policy.PolicyName)) == 0 || len(aws.StringValue(policy.PolicyDocument)) == 0 {
-			continue
+			return fmt.Errorf("You must supply both a name and a policy")
 		}
 
 		if _, err := conn.PutRolePolicy(policy); err != nil {
