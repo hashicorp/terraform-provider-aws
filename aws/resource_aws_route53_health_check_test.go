@@ -523,6 +523,7 @@ resource "aws_route53_health_check" "test" {
   failure_threshold  = %[1]q
   request_interval   = "30"
   measure_latency    = true
+  invert_healthcheck = %[2]t
 }
 `, thershold, invert)
 }
