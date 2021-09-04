@@ -1,17 +1,80 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_route53_health_check", &resource.Sweeper{
+		Name: "aws_route53_health_check",
+		F:    testSweepRoute53Healthchecks,
+	})
+}
+
+func testSweepRoute53Healthchecks(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).r53conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &route53.ListHealthChecksInput{}
+
+	err = conn.ListHealthChecksPages(input, func(page *route53.ListHealthChecksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, detail := range page.HealthChecks {
+			if detail == nil {
+				continue
+			}
+
+			id := aws.StringValue(detail.Id)
+
+			r := resourceAwsRoute53HealthCheck()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Health Checks for %s: %w", region, err))
+	}
+
+	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Health Checks for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Route53 Health Checks sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 	var check route53.HealthCheck
@@ -196,6 +259,13 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoute53HealthCheckIpConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.5"),
+				),
 			},
 		},
 	})

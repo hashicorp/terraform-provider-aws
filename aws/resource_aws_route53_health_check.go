@@ -42,7 +42,7 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"failure_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
+				Default:      3,
 				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"request_interval": {
@@ -54,7 +54,6 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"ip_address": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IsIPAddress,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return net.ParseIP(old).Equal(net.ParseIP(new))
@@ -144,9 +143,22 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 
 			"regions": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				MinItems: 3,
+				MaxItems: 64,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"us-east-1",
+						"us-west-1",
+						"us-west-2",
+						"eu-west-1",
+						"ap-southeast-1",
+						"ap-southeast-2",
+						"ap-northeast-1",
+						"sa-east-1",
+					}, true),
+				},
 				Optional: true,
-				Set:      schema.HashString,
 			},
 
 			"disabled": {
@@ -173,70 +185,76 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
 
-	updateHealthCheck := &route53.UpdateHealthCheckInput{
-		HealthCheckId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("failure_threshold") {
-		updateHealthCheck.FailureThreshold = aws.Int64(int64(d.Get("failure_threshold").(int)))
-	}
-
-	if d.HasChange("fqdn") {
-		updateHealthCheck.FullyQualifiedDomainName = aws.String(d.Get("fqdn").(string))
-	}
-
-	if d.HasChange("port") {
-		updateHealthCheck.Port = aws.Int64(int64(d.Get("port").(int)))
-	}
-
-	if d.HasChange("resource_path") {
-		updateHealthCheck.ResourcePath = aws.String(d.Get("resource_path").(string))
-	}
-
-	if d.HasChange("invert_healthcheck") {
-		updateHealthCheck.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
-	}
-
-	if d.HasChange("child_healthchecks") {
-		updateHealthCheck.ChildHealthChecks = expandStringSet(d.Get("child_healthchecks").(*schema.Set))
-
-	}
-	if d.HasChange("child_health_threshold") {
-		updateHealthCheck.HealthThreshold = aws.Int64(int64(d.Get("child_health_threshold").(int)))
-	}
-
-	if d.HasChange("search_string") {
-		updateHealthCheck.SearchString = aws.String(d.Get("search_string").(string))
-	}
-
-	if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
-		cloudwatchAlarm := &route53.AlarmIdentifier{
-			Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
-			Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),
+	if d.HasChangeExcept("tags_all") {
+		updateHealthCheck := &route53.UpdateHealthCheckInput{
+			HealthCheckId: aws.String(d.Id()),
 		}
 
-		updateHealthCheck.AlarmIdentifier = cloudwatchAlarm
-	}
+		if d.HasChange("failure_threshold") {
+			updateHealthCheck.FailureThreshold = aws.Int64(int64(d.Get("failure_threshold").(int)))
+		}
 
-	if d.HasChange("insufficient_data_health_status") {
-		updateHealthCheck.InsufficientDataHealthStatus = aws.String(d.Get("insufficient_data_health_status").(string))
-	}
+		if d.HasChange("fqdn") {
+			updateHealthCheck.FullyQualifiedDomainName = aws.String(d.Get("fqdn").(string))
+		}
 
-	if d.HasChange("enable_sni") {
-		updateHealthCheck.EnableSNI = aws.Bool(d.Get("enable_sni").(bool))
-	}
+		if d.HasChange("port") {
+			updateHealthCheck.Port = aws.Int64(int64(d.Get("port").(int)))
+		}
 
-	if d.HasChange("regions") {
-		updateHealthCheck.Regions = expandStringSet(d.Get("regions").(*schema.Set))
-	}
+		if d.HasChange("resource_path") {
+			updateHealthCheck.ResourcePath = aws.String(d.Get("resource_path").(string))
+		}
 
-	if d.HasChange("disabled") {
-		updateHealthCheck.Disabled = aws.Bool(d.Get("disabled").(bool))
-	}
+		if d.HasChange("invert_healthcheck") {
+			updateHealthCheck.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
+		}
 
-	_, err := conn.UpdateHealthCheck(updateHealthCheck)
-	if err != nil {
-		return err
+		if d.HasChange("child_healthchecks") {
+			updateHealthCheck.ChildHealthChecks = expandStringSet(d.Get("child_healthchecks").(*schema.Set))
+		}
+
+		if d.HasChange("child_health_threshold") {
+			updateHealthCheck.HealthThreshold = aws.Int64(int64(d.Get("child_health_threshold").(int)))
+		}
+
+		if d.HasChange("search_string") {
+			updateHealthCheck.SearchString = aws.String(d.Get("search_string").(string))
+		}
+
+		if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
+			cloudwatchAlarm := &route53.AlarmIdentifier{
+				Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
+				Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),
+			}
+
+			updateHealthCheck.AlarmIdentifier = cloudwatchAlarm
+		}
+
+		if d.HasChange("insufficient_data_health_status") {
+			updateHealthCheck.InsufficientDataHealthStatus = aws.String(d.Get("insufficient_data_health_status").(string))
+		}
+
+		if d.HasChange("enable_sni") {
+			updateHealthCheck.EnableSNI = aws.Bool(d.Get("enable_sni").(bool))
+		}
+
+		if d.HasChange("regions") {
+			updateHealthCheck.Regions = expandStringSet(d.Get("regions").(*schema.Set))
+		}
+
+		if d.HasChange("disabled") {
+			updateHealthCheck.Disabled = aws.Bool(d.Get("disabled").(bool))
+		}
+
+		if d.HasChange("ip_address") {
+			updateHealthCheck.IPAddress = aws.String(d.Get("ip_address").(string))
+		}
+
+		_, err := conn.UpdateHealthCheck(updateHealthCheck)
+		if err != nil {
+			return fmt.Errorf("error updating Route53 Health Check (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -356,7 +374,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 	resp, err := conn.CreateHealthCheck(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Route53 Health Check (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(resp.HealthCheck.Id))
