@@ -6,24 +6,16 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-)
-
-const (
-	// ConnectContactFlowCreateTimeout Timeout for connect flow creation
-	ConnectContactFlowCreateTimeout = 1 * time.Minute
-	// ConnectContactFlowUpdateTimeout Timeout for connect flow update
-	ConnectContactFlowUpdateTimeout = 1 * time.Minute
-	// ConnectContactFlowDeleteTimeout Timeout for connect flow deletion
-	ConnectContactFlowDeleteTimeout = 1 * time.Minute
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
 )
 
 const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
@@ -33,7 +25,7 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 		CreateContext: resourceAwsConnectContactFlowCreate,
 		ReadContext:   resourceAwsConnectContactFlowRead,
 		UpdateContext: resourceAwsConnectContactFlowUpdate,
-		DeleteContext: resourceAwsConnectContactFlowDelete,
+		DeleteContext: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
@@ -50,11 +42,10 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ConnectContactFlowCreateTimeout),
-			Update: schema.DefaultTimeout(ConnectContactFlowUpdateTimeout),
-			Delete: schema.DefaultTimeout(ConnectContactFlowDeleteTimeout),
+			Create: schema.DefaultTimeout(waiter.ConnectContactFlowCreateTimeout),
+			Update: schema.DefaultTimeout(waiter.ConnectContactFlowUpdateTimeout),
 		},
-
+		CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -63,18 +54,6 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 			"contact_flow_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"content": {
 				Type:             schema.TypeString,
@@ -88,23 +67,36 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 					return json
 				},
 			},
-			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"content"},
-			},
 			"content_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"filename": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"content"},
+			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(connect.ContactFlowType_Values(), false),
 				Default:      connect.ContactFlowTypeContactFlow,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -121,6 +113,8 @@ func resourceAwsConnectContactFlowParseID(id string) (string, string, error) {
 
 func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -149,8 +143,8 @@ func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.Resource
 		input.Content = aws.String(content.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ConnectTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ConnectTags()
 	}
 
 	output, err := conn.CreateContactFlowWithContext(ctx, input)
@@ -167,6 +161,7 @@ func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.Resource
 
 func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
@@ -196,9 +191,17 @@ func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("type", resp.ContactFlow.Type)
 	d.Set("content", resp.ContactFlow.Content)
 
-	if err := d.Set("tags", keyvaluetags.ConnectKeyValueTags(resp.ContactFlow.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	tags := keyvaluetags.ConnectKeyValueTags(resp.ContactFlow.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
 	return nil
 }
 
@@ -256,9 +259,10 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(updateContentInputErr)
 		}
 	}
-	if d.HasChange("tags") {
-		oldTags, newTags := d.GetChange("tags")
-		if err := keyvaluetags.ConnectUpdateTags(conn, d.Get("arn").(string), oldTags, newTags); err != nil {
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.ConnectUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -266,30 +270,31 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 	return resourceAwsConnectContactFlowRead(ctx, d, meta)
 }
 
-func resourceAwsConnectContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).connectconn
+//Contact Flows do not support deletion today. We will NoOp the Delete method. Users can rename thier flows manually if they want.
+// func resourceAwsConnectContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// 	conn := meta.(*AWSClient).connectconn
 
-	instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
+// 	instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
 
-	if err != nil {
-		return diag.FromErr(err)
-	}
+// 	if err != nil {
+// 		return diag.FromErr(err)
+// 	}
 
-	input := &connect.UpdateContactFlowNameInput{
-		ContactFlowId: aws.String(contactFlowID),
-		InstanceId:    aws.String(instanceID),
-		Name:          aws.String(fmt.Sprintf("%s:%s:%d", "zzTrash", d.Get("name").(string), time.Now().Unix())),
-		Description:   aws.String("DELETED"),
-	}
+// 	input := &connect.UpdateContactFlowNameInput{
+// 		ContactFlowId: aws.String(contactFlowID),
+// 		InstanceId:    aws.String(instanceID),
+// 		Name:          aws.String(fmt.Sprintf("%s:%s:%d", "zzTrash", d.Get("name").(string), time.Now().Unix())),
+// 		Description:   aws.String("DELETED"),
+// 	}
 
-	_, delerr := conn.UpdateContactFlowNameWithContext(ctx, input)
+// 	_, delerr := conn.UpdateContactFlowNameWithContext(ctx, input)
 
-	if delerr != nil {
-		return diag.FromErr(fmt.Errorf("Unable to delete contact flow: %s", delerr))
-	}
+// 	if delerr != nil {
+// 		return diag.FromErr(fmt.Errorf("Unable to delete contact flow: %s", delerr))
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func resourceAwsConnectContactFlowLoadFileContent(filename string) (string, error) {
 	fileContent, err := ioutil.ReadFile(filename)

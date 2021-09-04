@@ -15,10 +15,11 @@ import (
 func TestAccAwsConnectContactFlow_basic(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rInt := acctest.RandInt()
-	resourceName := "aws_connect_contact_flow.foo"
+	resourceName := "aws_connect_contact_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
@@ -62,10 +63,11 @@ func TestAccAwsConnectContactFlow_basic(t *testing.T) {
 func TestAccAwsConnectContactFlow_filename(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rInt := acctest.RandInt()
-	resourceName := "aws_connect_contact_flow.foo"
+	resourceName := "aws_connect_contact_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +113,7 @@ func TestAccAwsConnectContactFlow_filename(t *testing.T) {
 func TestAccAwsConnectContactFlow_disappears(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rInt := acctest.RandInt()
-	resourceName := "aws_connect_contact_flow.foo"
+	resourceName := "aws_connect_contact_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -197,12 +199,12 @@ func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
 
 func testAccAwsConnectContactFlowConfigBasic(rInt int, contactFlowName string, label string) string {
 	return fmt.Sprintf(`
-resource "aws_connect_instance" "foo" {
+resource "aws_connect_instance" "test" {
   instance_alias = "resource-test-terraform-%[1]d"
 }
 
-resource "aws_connect_contact_flow" "foo" {
-  instance_id = aws_connect_instance.foo.id
+resource "aws_connect_contact_flow" "test" {
+  instance_id = aws_connect_instance.test.id
   name        = "%[2]s"
   description = "%[3]s"
   type        = "CONTACT_FLOW"
@@ -242,12 +244,12 @@ resource "aws_connect_contact_flow" "foo" {
 
 func testAccAwsConnectContactFlowConfig_filename(rInt int, contactFlowName string, label string, filepath string) string {
 	return fmt.Sprintf(`
-resource "aws_connect_instance" "foo" {
+resource "aws_connect_instance" "test" {
   instance_alias = "resource-test-terraform-%[1]d"
 }
 
-resource "aws_connect_contact_flow" "foo" {
-  instance_id  = aws_connect_instance.foo.id
+resource "aws_connect_contact_flow" "test" {
+  instance_id  = aws_connect_instance.test.id
   name         = "%[2]s"
   description  = "%[3]s"
   type         = "CONTACT_FLOW"

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 )
 
 func dataSourceAwsConnectContactFlow() *schema.Resource {
@@ -26,6 +27,14 @@ func dataSourceAwsConnectContactFlow() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"content": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -34,19 +43,11 @@ func dataSourceAwsConnectContactFlow() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"content": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			"tags": tagsSchema(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -116,30 +117,26 @@ func dataSourceAwsConnectContactFlowRead(ctx context.Context, d *schema.Resource
 
 func dataSourceAwsConnectGetAllConnectContactFlowSummaries(ctx context.Context, conn *connect.Connect, instanceID string) ([]*connect.ContactFlowSummary, error) {
 	var instances []*connect.ContactFlowSummary
-	var nextToken string
 
+	input := &connect.ListContactFlowsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int64(tfconnect.ListContactFlowsMaxResults),
+	}
+
+	log.Printf("[DEBUG] Listing Connect Contact Flows: %s", input)
 	for {
-		input := &connect.ListContactFlowsInput{
-			InstanceId: aws.String(instanceID),
-			// MaxResults Valid Range: Minimum value of 1. Maximum value of 60
-			MaxResults: aws.Int64(int64(60)),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-
-		log.Printf("[DEBUG] Listing Connect Contact Flows: %s", input)
-
 		output, err := conn.ListContactFlowsWithContext(ctx, input)
+
 		if err != nil {
 			return instances, err
 		}
 		instances = append(instances, output.ContactFlowSummaryList...)
 
-		if output.NextToken == nil {
+		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
-		nextToken = aws.StringValue(output.NextToken)
+
+		input.NextToken = output.NextToken
 	}
 
 	return instances, nil

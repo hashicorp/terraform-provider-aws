@@ -10,8 +10,8 @@ import (
 
 func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_connect_contact_flow.foo"
-	datasourceName := "data.aws_connect_contact_flow.foo"
+	resourceName := "aws_connect_contact_flow.test"
+	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -37,8 +37,8 @@ func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
 
 func TestAccDataSourceAwsConnectContactFlow_byname(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_connect_contact_flow.foo"
-	datasourceName := "data.aws_connect_contact_flow.foo"
+	resourceName := "aws_connect_contact_flow.test"
+	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -64,12 +64,12 @@ func TestAccDataSourceAwsConnectContactFlow_byname(t *testing.T) {
 
 func testAccAwsConnectContactFlowDataSourceBaseConfig(rInt int, contactFlowName string) string {
 	return fmt.Sprintf(`
-resource "aws_connect_instance" "foo" {
+resource "aws_connect_instance" "test" {
   instance_alias = "resource-test-terraform-%d"
 }
 
-resource "aws_connect_contact_flow" "foo" {
-  instance_id = aws_connect_instance.foo.id
+resource "aws_connect_contact_flow" "test" {
+  instance_id = aws_connect_instance.test.id
   name        = "%[2]s"
   description = "Test Contact Flow Description"
   type        = "CONTACT_FLOW"
@@ -110,18 +110,18 @@ resource "aws_connect_contact_flow" "foo" {
 
 func testAccAwsConnectContactFlowDataSourceConfig_basic(rInt int, contactFlowName string) string {
 	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rInt, contactFlowName) + `
-data "aws_connect_contact_flow" "foo" {
-  instance_id     = aws_connect_instance.foo.id
-  contact_flow_id = aws_connect_contact_flow.foo.contact_flow_id
+data "aws_connect_contact_flow" "test" {
+  instance_id     = aws_connect_instance.test.id
+  contact_flow_id = aws_connect_contact_flow.test.contact_flow_id
 }
 `)
 }
 
 func testAccAwsConnectContactFlowDataSourceConfig_byname(rInt int, contactFlowName string) string {
 	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rInt, contactFlowName) + `
-data "aws_connect_contact_flow" "foo" {
-  instance_id = aws_connect_instance.foo.id
-  name        = aws_connect_contact_flow.foo.name
+data "aws_connect_contact_flow" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = aws_connect_contact_flow.test.name
 }
 `)
 }

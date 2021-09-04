@@ -11,8 +11,11 @@ import (
 
 const (
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
-	ConnectInstanceCreatedTimeout = 5 * time.Minute
-	ConnectInstanceDeletedTimeout = 5 * time.Minute
+	ConnectInstanceCreatedTimeout   = 5 * time.Minute
+	ConnectInstanceDeletedTimeout   = 5 * time.Minute
+
+	ConnectContactFlowCreateTimeout = 5 * time.Minute
+	ConnectContactFlowUpdateTimeout = 5 * time.Minute
 )
 
 func InstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
