@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,7 +43,7 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"failure_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      3,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"request_interval": {
@@ -148,14 +149,14 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
-						"us-east-1",
-						"us-west-1",
-						"us-west-2",
-						"eu-west-1",
-						"ap-southeast-1",
-						"ap-southeast-2",
-						"ap-northeast-1",
-						"sa-east-1",
+						endpoints.UsWest1RegionID,
+						endpoints.UsWest2RegionID,
+						endpoints.UsEast1RegionID,
+						endpoints.EuWest1RegionID,
+						endpoints.SaEast1RegionID,
+						endpoints.ApSoutheast1RegionID,
+						endpoints.ApSoutheast2RegionID,
+						endpoints.ApNortheast1RegionID,
 					}, true),
 				},
 				Optional: true,

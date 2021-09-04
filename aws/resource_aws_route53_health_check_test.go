@@ -86,12 +86,13 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfig,
+				Config: testAccRoute53HealthCheckConfigBasic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					testAccMatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("healthcheck/.+")),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", "true"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "2"),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -102,7 +103,7 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigUpdate,
+				Config: testAccRoute53HealthCheckConfigBasic("5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "5"),
@@ -166,7 +167,7 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckSearchStringConfig("OK"),
+				Config: testAccRoute53HealthCheckSearchStringConfig("OK", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
@@ -179,7 +180,7 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckSearchStringConfig("FAILED"),
+				Config: testAccRoute53HealthCheckSearchStringConfig("FAILED", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
@@ -440,7 +441,7 @@ func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfig,
+				Config: testAccRoute53HealthCheckConfigBasic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53HealthCheck(), resourceName),
@@ -512,18 +513,19 @@ func testAccCheckRoute53HealthCheckExists(n string, hCheck *route53.HealthCheck)
 	}
 }
 
-const testAccRoute53HealthCheckConfig = `
+func testAccRoute53HealthCheckConfigBasic(thershold string, invert bool) string {
+	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP"
   resource_path      = "/"
-  failure_threshold  = "2"
+  failure_threshold  = %[1]q
   request_interval   = "30"
   measure_latency    = true
-  invert_healthcheck = true
 }
-`
+`, thershold, invert)
+}
 
 func testAccRoute53HealthCheckConfigTags1(tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
@@ -563,19 +565,6 @@ resource "aws_route53_health_check" "test" {
 }
 `, tag1Key, tag1Value, tagKey2, tagValue2)
 }
-
-const testAccRoute53HealthCheckConfigUpdate = `
-resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.example.com"
-  port               = 80
-  type               = "HTTP"
-  resource_path      = "/"
-  failure_threshold  = "5"
-  request_interval   = "30"
-  measure_latency    = true
-  invert_healthcheck = false
-}
-`
 
 func testAccRoute53HealthCheckIpConfig(ip string) string {
 	return fmt.Sprintf(`
@@ -657,7 +646,7 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-func testAccRoute53HealthCheckSearchStringConfig(search string) string {
+func testAccRoute53HealthCheckSearchStringConfig(search string, invert bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
@@ -667,14 +656,14 @@ resource "aws_route53_health_check" "test" {
   failure_threshold  = "2"
   request_interval   = "30"
   measure_latency    = true
-  invert_healthcheck = false
+  invert_healthcheck = %[2]t
   search_string      = %[1]q
 
   tags = {
     Name = "tf-test-health-check"
   }
 }
-`, search)
+`, search, invert)
 }
 
 const testAccRoute53HealthCheckConfigWithoutSNI = `
