@@ -166,7 +166,7 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigWithSearchString,
+				Config: testAccRoute53HealthCheckSearchStringConfig("OK"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
@@ -179,7 +179,7 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigWithSearchStringUpdate,
+				Config: testAccRoute53HealthCheckSearchStringConfig("FAILED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
@@ -249,7 +249,7 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckIpConfig,
+				Config: testAccRoute53HealthCheckIpConfig("1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.4"),
@@ -261,7 +261,7 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckIpConfig,
+				Config: testAccRoute53HealthCheckIpConfig("1.2.3.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.5"),
@@ -281,7 +281,7 @@ func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckIpv6Config,
+				Config: testAccRoute53HealthCheckIpConfig("1234:5678:9abc:6811:0:0:0:4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "1234:5678:9abc:6811:0:0:0:4"),
@@ -293,7 +293,7 @@ func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccRoute53HealthCheckIpv6ExpandedConfig,
+				Config:   testAccRoute53HealthCheckIpConfig("1234:5678:9abc:6811:0:0:0:4"),
 				PlanOnly: true,
 			},
 		},
@@ -347,14 +347,14 @@ func TestAccAWSRoute53HealthCheck_withSNI(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigWithSNIDisabled,
+				Config: testAccRoute53HealthCheckSNIConfig(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "false"),
 				),
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigWithSNI,
+				Config: testAccRoute53HealthCheckSNIConfig(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
@@ -577,9 +577,10 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-const testAccRoute53HealthCheckIpConfig = `
+func testAccRoute53HealthCheckIpConfig(ip string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
-  ip_address        = "1.2.3.4"
+  ip_address        = %[1]q
   port              = 80
   type              = "HTTP"
   resource_path     = "/"
@@ -590,37 +591,8 @@ resource "aws_route53_health_check" "test" {
     Name = "tf-test-health-check"
   }
 }
-`
-
-const testAccRoute53HealthCheckIpv6Config = `
-resource "aws_route53_health_check" "test" {
-  ip_address        = "1234:5678:9abc:6811::4"
-  port              = 80
-  type              = "HTTP"
-  resource_path     = "/"
-  failure_threshold = "2"
-  request_interval  = "30"
-
-  tags = {
-    Name = "tf-test-health-check"
-  }
+`, ip)
 }
-`
-
-const testAccRoute53HealthCheckIpv6ExpandedConfig = `
-resource "aws_route53_health_check" "test" {
-  ip_address        = "1234:5678:9abc:6811:0:0:0:4"
-  port              = 80
-  type              = "HTTP"
-  resource_path     = "/"
-  failure_threshold = "2"
-  request_interval  = "30"
-
-  tags = {
-    Name = "tf-test-health-check"
-  }
-}
-`
 
 const testAccRoute53HealthCheckConfig_withChildHealthChecks = `
 resource "aws_route53_health_check" "child1" {
@@ -685,7 +657,8 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-const testAccRoute53HealthCheckConfigWithSearchString = `
+func testAccRoute53HealthCheckSearchStringConfig(search string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
   port               = 80
@@ -695,31 +668,14 @@ resource "aws_route53_health_check" "test" {
   request_interval   = "30"
   measure_latency    = true
   invert_healthcheck = false
-  search_string      = "OK"
+  search_string      = %[1]q
 
   tags = {
     Name = "tf-test-health-check"
   }
 }
-`
-
-const testAccRoute53HealthCheckConfigWithSearchStringUpdate = `
-resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.example.com"
-  port               = 80
-  type               = "HTTP_STR_MATCH"
-  resource_path      = "/"
-  failure_threshold  = "5"
-  request_interval   = "30"
-  measure_latency    = true
-  invert_healthcheck = true
-  search_string      = "FAILED"
-
-  tags = {
-    Name = "tf-test-health-check"
-  }
+`, search)
 }
-`
 
 const testAccRoute53HealthCheckConfigWithoutSNI = `
 resource "aws_route53_health_check" "test" {
@@ -738,7 +694,8 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-const testAccRoute53HealthCheckConfigWithSNI = `
+func testAccRoute53HealthCheckSNIConfig(enable bool) string {
+	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
   port               = 443
@@ -748,31 +705,14 @@ resource "aws_route53_health_check" "test" {
   request_interval   = "30"
   measure_latency    = true
   invert_healthcheck = true
-  enable_sni         = true
+  enable_sni         = %[1]t
 
   tags = {
     Name = "tf-test-health-check"
   }
 }
-`
-
-const testAccRoute53HealthCheckConfigWithSNIDisabled = `
-resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.example.com"
-  port               = 443
-  type               = "HTTPS"
-  resource_path      = "/"
-  failure_threshold  = "2"
-  request_interval   = "30"
-  measure_latency    = true
-  invert_healthcheck = true
-  enable_sni         = false
-
-  tags = {
-    Name = "tf-test-health-check"
-  }
+`, enable)
 }
-`
 
 func testAccRoute53HealthCheckConfigDisabled(disabled bool) string {
 	return fmt.Sprintf(`
