@@ -968,18 +968,23 @@ func parseRecordId(id string) [4]string {
 	parts := strings.SplitN(id, "_", 2)
 	if len(parts) == 2 {
 		recZone = parts[0]
-		firstUnderscore := strings.Index(parts[1][:], "_")
-		// Handles the case of having a DNS name that starts with _
-		if firstUnderscore == 0 {
-			firstUnderscore = strings.Index(parts[1][1:], "_") + 1
-		}
-		recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
-		if !r53ValidRecordTypes.MatchString(recType) {
-			firstUnderscore = strings.Index(recType, "_")
-			if firstUnderscore != -1 {
-				recType, recSet = recType[0:firstUnderscore], recType[firstUnderscore+1:]
+
+		// Look backwards for underscores from the end until a valid type is found
+		index := strings.LastIndex(parts[1], "_")
+		recType = parts[1][index+1:]
+		for index != -1 && !r53ValidRecordTypes.MatchString(recType) {
+			index = strings.LastIndex(parts[1][0:index-1], "_")
+			if index != -1 {
+				nextPart := strings.SplitN(parts[1][index+1:], "_", 2)
+				recType = nextPart[0]
+
+				// Set identifier is everything after the type
+				recSet = nextPart[1]
 			}
 		}
+
+		// Name is everything up to the type
+		recName = parts[1][0:index]
 	}
 	recName = strings.TrimSuffix(recName, ".")
 	return [4]string{recZone, recName, recType, recSet}
