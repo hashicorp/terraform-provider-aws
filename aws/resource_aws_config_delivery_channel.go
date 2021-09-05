@@ -41,6 +41,11 @@ func resourceAwsConfigDeliveryChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"s3_kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -75,6 +80,9 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("s3_key_prefix"); ok {
 		channel.S3KeyPrefix = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("s3_kms_key_arn"); ok {
+		channel.S3KmsKeyArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("sns_topic_arn"); ok {
 		channel.SnsTopicARN = aws.String(v.(string))
@@ -152,6 +160,7 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 	d.Set("s3_bucket_name", channel.S3BucketName)
 	d.Set("s3_key_prefix", channel.S3KeyPrefix)
 	d.Set("sns_topic_arn", channel.SnsTopicARN)
+	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)
 
 	if channel.ConfigSnapshotDeliveryProperties != nil {
 		d.Set("snapshot_delivery_properties", flattenConfigSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
