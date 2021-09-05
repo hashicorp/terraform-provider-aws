@@ -176,12 +176,12 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 
 			if sid, ok := cfgStmt["sid"]; ok {
 				invalidChar := "-"
+				stmt.Sid = sid.(string)
 				if _, ok := sidMap[sid.(string)]; ok {
 					return fmt.Errorf("duplicate Sid (%s). Remove the Sid or ensure the Sid is unique.", sid.(string))
-				} else if strings.Contains(sid.(string), invalidChar) {
+				} else if strings.Contains(stmt.Sid, invalidChar) {
 					return fmt.Errorf("Invalid character. Remove the '-' from the Sid.")
 				}
-				stmt.Sid = sid.(string)
 				if len(stmt.Sid) > 0 {
 					sidMap[stmt.Sid] = struct{}{}
 				}
