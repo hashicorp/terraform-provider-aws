@@ -51,6 +51,12 @@ The `production_variants` block supports:
 * `initial_variant_weight` (Optional) - Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to 1.0.
 * `model_name` - (Required) The name of the model to use.
 * `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
+* `core_dump_config` - (Optional) Specifies configuration for a core dump from the model container when the process crashes.
+
+The `core_dump_config` block supports:
+
+* `destination_s3_uri` - (Required) The Amazon S3 bucket to send the core dump to.
+* `kms_key_id` - (Optional) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the core dump data at rest using Amazon S3 server-side encryption.
 
 The `data_capture_config` block supports:
 
