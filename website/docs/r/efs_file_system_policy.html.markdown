@@ -20,6 +20,8 @@ resource "aws_efs_file_system" "fs" {
 resource "aws_efs_file_system_policy" "policy" {
   file_system_id = aws_efs_file_system.fs.id
 
+  bypass_file_system_lockout_safety_check = true
+
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -53,6 +55,7 @@ POLICY
 The following arguments are supported:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
+* `bypass_file_system_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the FileSystemPolicy lockout safety check, see [Docs](https://docs.aws.amazon.com/efs/latest/ug/API_PutFileSystemPolicy.html#API_PutFileSystemPolicy_RequestSyntax)
 * `policy` - (Required) The JSON formatted file system policy for the EFS file system. see [Docs](https://docs.aws.amazon.com/efs/latest/ug/access-control-overview.html#access-control-manage-access-intro-resource-policies) for more info.
 
 ## Attributes Reference

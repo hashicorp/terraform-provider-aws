@@ -22,6 +22,11 @@ func resourceAwsEfsFileSystemPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"bypass_file_system_lockout_safety_check": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"file_system_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -41,9 +46,11 @@ func resourceAwsEfsFileSystemPolicyPut(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).efsconn
 
 	fsId := d.Get("file_system_id").(string)
+	bypassPolicyLockoutSafetyCheck := d.Get("bypass_file_system_lockout_safety_check").(bool)
 	input := &efs.PutFileSystemPolicyInput{
-		FileSystemId: aws.String(fsId),
-		Policy:       aws.String(d.Get("policy").(string)),
+		BypassPolicyLockoutSafetyCheck: aws.Bool(bypassPolicyLockoutSafetyCheck),
+		FileSystemId:                   aws.String(fsId),
+		Policy:                         aws.String(d.Get("policy").(string)),
 	}
 	log.Printf("[DEBUG] Adding EFS File System Policy: %#v", input)
 	_, err := conn.PutFileSystemPolicy(input)
