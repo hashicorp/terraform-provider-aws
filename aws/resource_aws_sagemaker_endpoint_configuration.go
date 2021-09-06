@@ -51,9 +51,9 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"ouput_config": {
+						"output_config": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							ForceNew: true,
 							Elem: &schema.Resource{
@@ -300,6 +300,10 @@ func resourceAwsSagemakerEndpointConfigurationCreate(d *schema.ResourceData, met
 		createOpts.DataCaptureConfig = expandSagemakerDataCaptureConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("async_inference_config"); ok {
+		createOpts.AsyncInferenceConfig = expandSagemakerEndpointConfigAsyncInferenceConfig(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
 	_, err := conn.CreateEndpointConfig(createOpts)
 	if err != nil {
@@ -334,11 +338,15 @@ func resourceAwsSagemakerEndpointConfigurationRead(d *schema.ResourceData, meta 
 	d.Set("kms_key_arn", endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
-		return err
+		return fmt.Errorf("error setting production_variants for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("data_capture_config", flattenSagemakerDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
-		return err
+		return fmt.Errorf("error setting data_capture_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("async_inference_config", flattenSagemakerEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
+		return fmt.Errorf("error setting async_inference_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
@@ -567,11 +575,11 @@ func expandSagemakerEndpointConfigAsyncInferenceConfig(configured []interface{})
 	c := &sagemaker.AsyncInferenceConfig{}
 
 	if v, ok := m["client_config"]; ok && (len(v.([]interface{})) > 0) {
-		c.ClientConfig = expandSagemakerEndpointConfigClientConfig(v.([]interface{})[0].(map[string]interface{}))
+		c.ClientConfig = expandSagemakerEndpointConfigClientConfig(v.([]interface{}))
 	}
 
-	if v, ok := m["ouput_config"]; ok && (len(v.([]interface{})) > 0) {
-		c.OutputConfig = expandSagemakerEndpointConfigOutputConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := m["output_config"]; ok && (len(v.([]interface{})) > 0) {
+		c.OutputConfig = expandSagemakerEndpointConfigOutputConfig(v.([]interface{}))
 	}
 
 	return c
@@ -601,7 +609,7 @@ func expandSagemakerEndpointConfigOutputConfig(configured []interface{}) *sagema
 	m := configured[0].(map[string]interface{})
 
 	c := &sagemaker.AsyncInferenceOutputConfig{
-		S3OutputPath: aws.String(m["s3_output_config"].(string)),
+		S3OutputPath: aws.String(m["s3_output_path"].(string)),
 	}
 
 	if v, ok := m["kms_key_id"]; ok {
@@ -609,7 +617,7 @@ func expandSagemakerEndpointConfigOutputConfig(configured []interface{}) *sagema
 	}
 
 	if v, ok := m["notification_config"]; ok && (len(v.([]interface{})) > 0) {
-		c.NotificationConfig = expandSagemakerEndpointConfigNotificationConfig(v.([]interface{})[0].(map[string]interface{}))
+		c.NotificationConfig = expandSagemakerEndpointConfigNotificationConfig(v.([]interface{}))
 	}
 
 	return c
@@ -633,4 +641,74 @@ func expandSagemakerEndpointConfigNotificationConfig(configured []interface{}) *
 	}
 
 	return c
+}
+
+func flattenSagemakerEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.ClientConfig != nil {
+		cfg["client_config"] = flattenSagemakerEndpointConfigClientConfig(config.ClientConfig)
+	}
+
+	if config.OutputConfig != nil {
+		cfg["output_config"] = flattenSagemakerEndpointConfigOutputConfig(config.OutputConfig)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenSagemakerEndpointConfigClientConfig(config *sagemaker.AsyncInferenceClientConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.MaxConcurrentInvocationsPerInstance != nil {
+		cfg["max_concurrent_invocations_per_instance"] = aws.Int64Value(config.MaxConcurrentInvocationsPerInstance)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenSagemakerEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{
+		"s3_output_path": aws.StringValue(config.S3OutputPath),
+	}
+
+	if config.KmsKeyId != nil {
+		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+	}
+
+	if config.NotificationConfig != nil {
+		cfg["notification_config"] = flattenSagemakerEndpointConfigNotificationConfig(config.NotificationConfig)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenSagemakerEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNotificationConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.ErrorTopic != nil {
+		cfg["error_topic"] = aws.StringValue(config.ErrorTopic)
+	}
+
+	if config.SuccessTopic != nil {
+		cfg["success_topic"] = aws.StringValue(config.SuccessTopic)
+	}
+
+	return []map[string]interface{}{cfg}
 }

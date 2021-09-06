@@ -78,6 +78,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
 				),
 			},
 			{
@@ -262,6 +263,37 @@ func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerEndpointConfiguration_async_client(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerEndpointConfigurationConfigAsyncConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -507,6 +539,38 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     capture_content_type_header {
       json_content_types = ["application/json"]
     }
+  }
+}
+`, rName)
+}
+
+func testAccSagemakerEndpointConfigurationConfigAsyncConfig(rName string) string {
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  async_inference_config {
+    client_config {
+      max_concurrent_invocations_per_instance = 1
+	}
+
+    output_config {
+      s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
+	}
   }
 }
 `, rName)
