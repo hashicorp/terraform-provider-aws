@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -25,35 +26,41 @@ func init() {
 func testSweepSagemakerEndpointConfigurations(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).sagemakerconn
+	var sweeperErrs *multierror.Error
 
 	req := &sagemaker.ListEndpointConfigsInput{
 		NameContains: aws.String("tf-acc-test"),
 	}
-	resp, err := conn.ListEndpointConfigs(req)
-	if err != nil {
-		return fmt.Errorf("error listing endpoint configs: %s", err)
-	}
+	err = conn.ListEndpointConfigsPages(req, func(page *sagemaker.ListEndpointConfigsOutput, lastPage bool) bool {
+		for _, endpointConfig := range page.EndpointConfigs {
 
-	if len(resp.EndpointConfigs) == 0 {
-		log.Print("[DEBUG] No SageMaker endpoint config to sweep")
-		return nil
-	}
-
-	for _, endpointConfig := range resp.EndpointConfigs {
-		_, err := conn.DeleteEndpointConfig(&sagemaker.DeleteEndpointConfigInput{
-			EndpointConfigName: endpointConfig.EndpointConfigName,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"failed to delete SageMaker endpoint config (%s): %s",
-				*endpointConfig.EndpointConfigName, err)
+			r := resourceAwsSagemakerEndpointConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(endpointConfig.EndpointConfigName))
+			err := r.Delete(d, client)
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
 		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Endpoint Config sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Endpoint Configs: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
@@ -77,6 +84,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.code_dump_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
 				),
@@ -474,7 +482,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 func testAccSagemakerEndpointConfiguration_Config_KmsKeyId(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
-  name        = %q
+  name        = %[1]q
   kms_key_arn = aws_kms_key.test.arn
 
   production_variants {
@@ -487,10 +495,10 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description             = %q
+  description             = %[1]q
   deletion_window_in_days = 10
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccSagemakerEndpointConfigurationConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -602,7 +610,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     output_config {
       s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
 	  kms_key_id     = aws_kms_key.test.arn
-	}
+    }
   }
 }
 `, rName)
@@ -635,12 +643,12 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   async_inference_config {
     client_config {
       max_concurrent_invocations_per_instance = 1
-	}
+    }
 
     output_config {
       s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
 	  kms_key_id     = aws_kms_key.test.arn
-	}
+    }
   }
 }
 `, rName)
