@@ -375,7 +375,7 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		output, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
+		_, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -605,7 +605,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   async_inference_config {
     output_config {
       s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
-	  kms_key_id     = aws_kms_key.test.arn
+      kms_key_id     = aws_kms_key.test.arn
     }
   }
 }
@@ -643,7 +643,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
     output_config {
       s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
-	  kms_key_id     = aws_kms_key.test.arn
+      kms_key_id     = aws_kms_key.test.arn
     }
   }
 }
