@@ -360,19 +360,7 @@ resource "aws_kms_key" "k" {
       },
       "Action": "kms:*",
       "Resource": "*"
-    },
-    {
-        "Sid" : "AWSConfigKMSPolicy",
-        "Effect" : "Allow",
-        "Principal" : {
-          "Service" : "config.amazonaws.com"
-        },
-        "Action" : [
-          "kms:Decrypt",
-          "kms:GenerateDataKey"
-        ],
-        "Resource" : "*"
-      }
+    }
   ]
 }
 POLICY
