@@ -51,7 +51,10 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
+				},
 			},
 			"filename": {
 				Type:          schema.TypeString,
