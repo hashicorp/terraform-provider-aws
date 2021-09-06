@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -391,7 +392,7 @@ func resourceAwsSagemakerEndpointConfigurationDelete(d *schema.ResourceData, met
 
 	_, err := conn.DeleteEndpointConfig(deleteOpts)
 
-	if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Could not find endpoint configuration") {
 		return nil
 	}
 

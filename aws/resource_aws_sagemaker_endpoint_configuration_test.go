@@ -271,6 +271,7 @@ func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
