@@ -159,8 +159,8 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 	d.Set("name", channel.Name)
 	d.Set("s3_bucket_name", channel.S3BucketName)
 	d.Set("s3_key_prefix", channel.S3KeyPrefix)
-	d.Set("sns_topic_arn", channel.SnsTopicARN)
 	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)
+	d.Set("sns_topic_arn", channel.SnsTopicARN)
 
 	if channel.ConfigSnapshotDeliveryProperties != nil {
 		d.Set("snapshot_delivery_properties", flattenConfigSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
