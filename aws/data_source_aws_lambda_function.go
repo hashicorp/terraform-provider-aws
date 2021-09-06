@@ -182,6 +182,13 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"architectures": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -334,6 +341,10 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("code_signing_config_arn", codeSigningConfigArn)
 
 	d.SetId(aws.StringValue(function.FunctionName))
+
+	if err := d.Set("architectures", flattenStringList(function.Architectures)); err != nil {
+		return fmt.Errorf("Error setting architectures for Lambda Function (%s): %w", d.Id(), err)
+	}
 
 	return nil
 }

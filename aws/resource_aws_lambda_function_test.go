@@ -999,6 +999,58 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			// Ensure function with arm64 architecture can be created
+			{
+				Config: testAccAWSLambdaArchitecturesARM64(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", "arm64"),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			// Ensure function architecture can be updated
+			{
+				Config: testAccAWSLambdaArchitecturesUpdate(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", "x86_64"),
+				),
+			},
+		},
+	})
+
+}
+
 func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("Lambda tracing config is not supported in %s partition", got)
@@ -2706,6 +2758,32 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, imageID, funcName)
+}
+
+func testAccAWSLambdaArchitecturesARM64(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  architectures = ["arm64"]
+}
+`, funcName)
+}
+
+func testAccAWSLambdaArchitecturesUpdate(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  architectures = ["x86_64"]
+}
+`, funcName)
 }
 
 func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
