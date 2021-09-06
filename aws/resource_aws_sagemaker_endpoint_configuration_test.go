@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -345,13 +347,9 @@ func testAccCheckSagemakerEndpointConfigurationDestroy(s *terraform.State) error
 			continue
 		}
 
-		input := &sagemaker.DescribeEndpointConfigInput{
-			EndpointConfigName: aws.String(rs.Primary.ID),
-		}
+		_, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
 
-		_, err := conn.DescribeEndpointConfig(input)
-
-		if isAWSErr(err, "ValidationException", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -359,7 +357,7 @@ func testAccCheckSagemakerEndpointConfigurationDestroy(s *terraform.State) error
 			return err
 		}
 
-		return fmt.Errorf("SageMaker Endpoint Configuration (%s) still exists", rs.Primary.ID)
+		return fmt.Errorf("SageMaker Endpoint Configuration %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -377,10 +375,8 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		opts := &sagemaker.DescribeEndpointConfigInput{
-			EndpointConfigName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeEndpointConfig(opts)
+		output, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}

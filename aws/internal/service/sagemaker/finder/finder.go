@@ -303,3 +303,31 @@ func HumanTaskUiByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 
 	return output, nil
 }
+
+func EndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
+	input := &sagemaker.DescribeEndpointConfigInput{
+		EndpointConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpointConfig(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Could not find endpoint configuration") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

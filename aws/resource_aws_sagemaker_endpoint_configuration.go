@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
@@ -319,18 +321,16 @@ func resourceAwsSagemakerEndpointConfigurationRead(d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	request := &sagemaker.DescribeEndpointConfigInput{
-		EndpointConfigName: aws.String(d.Id()),
+	endpointConfig, err := finder.EndpointConfigByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SageMaker Endpoint Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	endpointConfig, err := conn.DescribeEndpointConfig(request)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "Could not find endpoint configuration") {
-			log.Printf("[INFO] unable to find the SageMaker Endpoint Configuration resource and therefore it is removed from the state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker Endpoint Configuration %s: %s", d.Id(), err)
+		return fmt.Errorf("error reading SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", endpointConfig.EndpointConfigArn)
