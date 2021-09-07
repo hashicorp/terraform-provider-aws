@@ -21,7 +21,7 @@ func resourceAwsQuickSightGroupMembership() *schema.Resource {
 		DeleteWithoutTimeout: resourceAwsQuickSightGroupMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -111,8 +111,9 @@ func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.Res
 	}
 
 	if !found {
-		log.Printf("[WARN] QuickSight User-group membership %s is not found", d.Id())
+		log.Printf("[WARN] QuickSight User-group membership %s is not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
 	}
 
 	d.Set("aws_account_id", awsAccountID)

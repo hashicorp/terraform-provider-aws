@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,9 +19,7 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
-		// There's no way to actual retrieve a group membership after
-		// the user and group have been destroyed.
+		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
 		Providers:    testAccProviders,
@@ -46,11 +45,9 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, quicksight.EndpointsID),
-		Providers:  testAccProviders,
-		// There's no way to actual retrieve a group membership after
-		// the user and group have been destroyed.
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,6 +80,10 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 		}
 
 		found, err := finder.GroupMembership(conn, listInput, userName)
+
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -123,35 +124,6 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			return fmt.Errorf("QuickSight Group Membership (%s) not found", rs.Primary.ID)
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckQuickSightGroupMembershipDisappears(groupName string, memberName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_quicksight_group_membership" {
-				continue
-			}
-
-			awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			input := &quicksight.DeleteGroupMembershipInput{
-				AwsAccountId: aws.String(awsAccountID),
-				Namespace:    aws.String(namespace),
-				MemberName:   aws.String(userName),
-				GroupName:    aws.String(groupName),
-			}
-
-			if _, err := conn.DeleteGroupMembership(input); err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 }
