@@ -59,6 +59,15 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"availability_zone_relocation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"availability_zone_relocation_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -354,6 +363,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 			restoreOpts.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("availability_zone_relocation"); ok {
+			restoreOpts.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
 			restoreOpts.ClusterSubnetGroupName = aws.String(v.(string))
 		}
@@ -444,6 +457,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			createOpts.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("availability_zone_relocation"); ok {
+			createOpts.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
@@ -550,6 +567,8 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
+	d.Set("availability_zone_relocation", getAvailabilityZoneRelocationValue(rsc, d))
+	d.Set("availability_zone_relocation_status", rsc.AvailabilityZoneRelocationStatus)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenRedshiftClusterNodes(rsc.ClusterNodes)); err != nil {
 		return fmt.Errorf("error setting cluster_nodes: %w", err)
@@ -658,6 +677,11 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		} else {
 			req.ClusterType = aws.String("single-node")
 		}
+		requestUpdate = true
+	}
+
+	if d.HasChange("availability_zone_relocation") {
+		req.AvailabilityZoneRelocation = aws.Bool(d.Get("availability_zone_relocation").(bool))
 		requestUpdate = true
 	}
 
@@ -973,4 +997,28 @@ func flattenRedshiftClusterNodes(apiObjects []*redshift.ClusterNode) []interface
 	}
 
 	return tfList
+}
+
+func getAvailabilityZoneRelocationValue(rsc *redshift.Cluster, d *schema.ResourceData) bool {
+	// AvailabilityZoneRelocationStatus is an official API, but not documented.
+	// based on interactions with the API, these are the possible values that can be returned
+	// we infer the AvailabilityZoneRelocation from here
+	azr := *rsc.AvailabilityZoneRelocationStatus
+	statuses := map[string]bool{
+		"enabled":          true,
+		"pending_enabling": true,
+		"disabled":         false,
+		"pending_disabled": false,
+	}
+	if v, ok := statuses[azr]; ok {
+		return v
+	}
+	// if the API returns an unknown value, we try to use the state if available to avoid a possible dud plan
+	// otherwise, we default to false
+	if v, ok := d.GetOkExists("availability_zone_relocation"); ok {
+		log.Printf("[WARN] Redshift Cluster (%s) Unexpected AvailabilityZoneRelocationStatus from API: %s, returning value from state: %t.", d.Id(), azr, v)
+		return v.(bool)
+	}
+	log.Printf("[WARN] Redshift Cluster (%s) Unexpected AvailabilityZoneRelocationStatus from API: %s, returning default value: false.", d.Id(), azr)
+	return false
 }
