@@ -72,12 +72,10 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 		if rs.Type != "aws_quicksight_group_membership" {
 			continue
 		}
-
 		awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-
 		listInput := &quicksight.ListGroupMembershipsInput{
 			AwsAccountId: aws.String(awsAccountID),
 			Namespace:    aws.String(namespace),
@@ -88,7 +86,7 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-
+		fmt.Println(found)
 		if found {
 			return fmt.Errorf("QuickSight Group (%s) still exists", rs.Primary.ID)
 		}

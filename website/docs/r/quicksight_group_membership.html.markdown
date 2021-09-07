@@ -14,8 +14,8 @@ Resource for managing QuickSight Group Membership
 
 ```terraform
 resource "aws_quicksight_group_membership" "example" {
-	group_name  = "all-access-users"
-	member_name = "john_smith"
+  group_name  = "all-access-users"
+  member_name = "john_smith"
 }
 ```
 
