@@ -428,7 +428,7 @@ resource "aws_sagemaker_flow_definition" "test" {
 
   human_loop_activation_config {
     human_loop_activation_conditions_config {
-		human_loop_activation_conditions = <<EOF
+      human_loop_activation_conditions = <<EOF
         {
 			"Conditions": [
 			  {
@@ -440,7 +440,7 @@ resource "aws_sagemaker_flow_definition" "test" {
 			]
 		}
         EOF
-	}
+    }
   }
 
   output_config {
