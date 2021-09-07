@@ -52,15 +52,17 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &servicediscovery.CreateHttpNamespaceInput{
-		Name:             aws.String(name),
-		Tags:             tags.IgnoreAws().ServicediscoveryTags(),
 		CreatorRequestId: aws.String(resource.UniqueId()),
+		Name:             aws.String(name),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
 	}
 
 	output, err := conn.CreateHttpNamespace(input)
@@ -73,17 +75,13 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): creation response missing Operation ID", name)
 	}
 
-	operationOutput, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
+	operation, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Service Discovery HTTP Namespace (%s) creation: %w", name, err)
 	}
 
-	if operationOutput == nil || operationOutput.Operation == nil {
-		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): operation response missing Operation information", name)
-	}
-
-	namespaceID, ok := operationOutput.Operation.Targets[servicediscovery.OperationTargetTypeNamespace]
+	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
 
 	if !ok {
 		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): operation response missing Namespace ID", name)

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,6 +27,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 				Config: testAccRoute53DelegationSetConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
+					testAccMatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("delegationset/.+")),
 				),
 			},
 			{
@@ -71,6 +73,28 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"reference_name"},
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
+	refName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53_delegation_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53DelegationSetConfig(refName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53DelegationSetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53DelegationSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
