@@ -158,6 +158,8 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 	var addresses []interface{}
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		addresses = flattenStringList(dir.ConnectSettings.ConnectIps)
+	} else if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeSharedMicrosoftAd {
+		addresses = flattenStringList(dir.OwnerDirectoryDescription.DnsIpAddrs)
 	} else {
 		addresses = flattenStringList(dir.DnsIpAddrs)
 	}
