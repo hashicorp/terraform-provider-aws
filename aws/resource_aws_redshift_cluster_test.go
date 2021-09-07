@@ -605,6 +605,46 @@ func TestAccAWSRedshiftCluster_changeEncryption2(t *testing.T) {
 	})
 }
 
+func TestAccAWSRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
+	var v redshift.Cluster
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftClusterConfig_availabilityZoneRelocationEnabled(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "availability_zone_relocation", "true"),
+				),
+			},
+			{
+				ResourceName:      "aws_redshift_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccAWSRedshiftClusterConfig_availabilityZoneRelocationDisabled(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "availability_zone_relocation", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
 
@@ -1410,6 +1450,46 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
+}
+`, rInt))
+}
+
+func testAccAWSRedshiftClusterConfig_availabilityZoneRelocationDisabled(rInt int) string {
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  number_of_nodes                     = 2
+  cluster_type                        = "multi-node"
+  availability_zone_relocation        = false
+  publicly_accessible                 = false
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot = true
+}
+`, rInt))
+}
+
+func testAccAWSRedshiftClusterConfig_availabilityZoneRelocationEnabled(rInt int) string {
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  number_of_nodes                     = 2
+  cluster_type                        = "multi-node"
+  availability_zone_relocation        = true
+  publicly_accessible                 = false
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot = true
 }
 `, rInt))
 }
