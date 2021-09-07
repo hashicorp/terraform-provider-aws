@@ -151,9 +151,13 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 		}
 
 		resp, err := conn.GetVoiceConnectorTermination(input)
-		if err != nil || resp.Termination == nil {
+		if err != nil {
 			return err
 		}
+		
+		if resp == nil || resp.Termination == nil {
+		        return fmt.Errorf("Chime Voice Connector Termintation (%s) not found", rs.Primary.ID)
+		}        
 
 		return nil
 	}
