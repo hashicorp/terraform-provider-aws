@@ -230,7 +230,7 @@ The following values are supported: `ignore`, and `evaluate`.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Required) The period in seconds over which the specified `stat` is applied.
 * `stat` - (Required) The statistic to apply to this metric.
-   Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
+   See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
 
 
