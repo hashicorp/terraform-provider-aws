@@ -147,7 +147,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 
 		conn := testAccProvider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorTerminationInput{
-			VoiceConnectorId: aws.String(rs.Primary.Attributes["voice_connector_id"]),
+			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 
 		resp, err := conn.GetVoiceConnectorTermination(input)

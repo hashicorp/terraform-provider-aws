@@ -106,20 +106,19 @@ func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *sch
 func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
-	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.GetVoiceConnectorTerminationInput{
-		VoiceConnectorId: aws.String(vcId),
+		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorTerminationWithContext(ctx, input)
 	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] error getting Chime Voice Connector (%s) termination: %s", vcId, err)
+		log.Printf("[WARN] error getting Chime Voice Connector (%s) termination: %s", d.Id(), err)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil || resp.Termination == nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) termination: %s", vcId, err)
+		return diag.Errorf("error getting Chime Voice Connector (%s) termination: %s", d.Id(), err)
 	}
 
 	d.Set("cps_limit", resp.Termination.CpsLimit)
@@ -127,10 +126,10 @@ func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schem
 	d.Set("default_phone_number", resp.Termination.DefaultPhoneNumber)
 
 	if err := d.Set("calling_regions", flattenStringList(resp.Termination.CallingRegions)); err != nil {
-		return diag.Errorf("error setting termination calling regions (%s): %s", vcId, err)
+		return diag.Errorf("error setting termination calling regions (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("cidr_allow_list", flattenStringList(resp.Termination.CidrAllowedList)); err != nil {
-		return diag.Errorf("error setting termination cidr allow list (%s): %s", vcId, err)
+		return diag.Errorf("error setting termination cidr allow list (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -140,7 +139,6 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 	conn := meta.(*AWSClient).chimeconn
 
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
-		vcId := d.Get("voice_connector_id").(string)
 		termination := &chime.Termination{
 			CallingRegions:  expandStringSet(d.Get("calling_regions").(*schema.Set)),
 			CidrAllowedList: expandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
@@ -156,18 +154,18 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 		}
 
 		input := &chime.PutVoiceConnectorTerminationInput{
-			VoiceConnectorId: aws.String(vcId),
+			VoiceConnectorId: aws.String(d.Id()),
 			Termination:      termination,
 		}
 
 		if _, err := conn.PutVoiceConnectorTerminationWithContext(ctx, input); err != nil {
 			if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
-				log.Printf("[WARN] error getting Chime Voice Connector (%s) termination: %s", vcId, err)
+				log.Printf("[WARN] error getting Chime Voice Connector (%s) termination: %s", d.Id(), err)
 				d.SetId("")
 				return nil
 			}
 
-			return diag.Errorf("error updating Chime Voice Connector (%s) termination: %s", vcId, err)
+			return diag.Errorf("error updating Chime Voice Connector (%s) termination: %s", d.Id(), err)
 		}
 	}
 
