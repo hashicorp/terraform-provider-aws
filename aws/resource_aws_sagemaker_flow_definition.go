@@ -427,7 +427,7 @@ func expandSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(l []interf
 	}
 
 	config := &sagemaker.HumanLoopActivationConditionsConfig{
-		HumanLoopActivationConditions: aws.JSONValue(v),
+		HumanLoopActivationConditions: v,
 	}
 
 	return config, nil

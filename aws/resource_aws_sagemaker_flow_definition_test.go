@@ -378,6 +378,8 @@ func testAccAWSSagemakerFlowDefinitionPublicWorkforceConfig(rName string) string
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_sagemaker_flow_definition" "test" {
   flow_definition_name = %[1]q
   role_arn             = aws_iam_role.test.arn
@@ -388,7 +390,7 @@ resource "aws_sagemaker_flow_definition" "test" {
     task_count                            = 1
     task_description                      = %[1]q
     task_title                            = %[1]q
-    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {
