@@ -86,7 +86,6 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(found)
 		if found {
 			return fmt.Errorf("QuickSight Group (%s) still exists", rs.Primary.ID)
 		}
