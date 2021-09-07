@@ -314,3 +314,31 @@ func EndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 
 	return output, nil
 }
+
+func FlowDefinitionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	input := &sagemaker.DescribeFlowDefinitionInput{
+		FlowDefinitionName: aws.String(name),
+	}
+
+	output, err := conn.DescribeFlowDefinition(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
