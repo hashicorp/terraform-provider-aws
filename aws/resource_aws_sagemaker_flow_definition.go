@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -278,6 +279,10 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 
+	if _, err := waiter.FlowDefinitionActive(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to Active: %w", d.Id(), err)
+	}
+
 	return resourceAwsSagemakerFlowDefinitionRead(d, meta)
 }
 
@@ -367,6 +372,13 @@ func resourceAwsSagemakerFlowDefinitionDelete(d *schema.ResourceData, meta inter
 
 	if err != nil {
 		return fmt.Errorf("error deleting SageMaker Flow Definition (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.FlowDefinitionDeleted(conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			return nil
+		}
+		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil

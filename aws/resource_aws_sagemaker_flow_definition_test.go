@@ -393,7 +393,7 @@ resource "aws_sagemaker_flow_definition" "test" {
     public_workforce_task_price {
       amount_in_usd {
         cents                     = 1
-        tenth_fractions_of_a_cent = 2 
+        tenth_fractions_of_a_cent = 2
       }
     }
   }

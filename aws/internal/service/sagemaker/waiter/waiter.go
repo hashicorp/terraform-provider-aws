@@ -28,6 +28,8 @@ const (
 	UserProfileDeletedTimeout         = 10 * time.Minute
 	AppInServiceTimeout               = 10 * time.Minute
 	AppDeletedTimeout                 = 10 * time.Minute
+	FlowDefinitionActiveTimeout       = 2 * time.Minute
+	FlowDefinitionDeletedTimeout      = 2 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -377,6 +379,48 @@ func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, a
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FlowDefinitionActive waits for a FlowDefinition to return Active
+func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.FlowDefinitionStatusInitializing,
+		},
+		Target: []string{
+			sagemaker.FlowDefinitionStatusActive,
+		},
+		Refresh: FlowDefinitionStatus(conn, name),
+		Timeout: FlowDefinitionActiveTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FlowDefinitionDeleted waits for a FlowDefinition to return Deleted
+func FlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.FlowDefinitionStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: FlowDefinitionStatus(conn, name),
+		Timeout: FlowDefinitionDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
 		return output, err
 	}
 
