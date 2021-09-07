@@ -185,7 +185,7 @@ The following arguments are supported:
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Optional) The period in seconds over which the specified `statistic` is applied.
 * `statistic` - (Optional) The statistic to apply to the alarm's associated metric.
-   Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
+   See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
 * `threshold_metric_id` - (Optional) If this is an alarm based on an anomaly detection model, make this value match the ID of the ANOMALY_DETECTION_BAND function.
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
@@ -230,7 +230,7 @@ The following values are supported: `ignore`, and `evaluate`.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Required) The period in seconds over which the specified `stat` is applied.
 * `stat` - (Required) The statistic to apply to this metric.
-   Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
+   See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
 
 
