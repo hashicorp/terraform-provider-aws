@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -215,7 +216,9 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %s", input)
-	_, err := conn.CreateFlowDefinition(input)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, func() (interface{}, error) {
+		return conn.CreateFlowDefinition(input)
+	}, "ValidationException")
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker Flow Definition (%s): %w", name, err)
 	}
@@ -305,7 +308,7 @@ func resourceAwsSagemakerFlowDefinitionDelete(d *schema.ResourceData, meta inter
 		FlowDefinitionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil
 	}
 
