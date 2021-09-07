@@ -154,10 +154,10 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 		if err != nil {
 			return err
 		}
-		
+
 		if resp == nil || resp.Termination == nil {
-		        return fmt.Errorf("Chime Voice Connector Termintation (%s) not found", rs.Primary.ID)
-		}        
+			return fmt.Errorf("Chime Voice Connector Termintation (%s) not found", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -170,7 +170,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationDestroy(s *terraform.State) er
 		}
 		conn := testAccProvider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorTerminationInput{
-			VoiceConnectorId: aws.String(rs.Primary.Attributes["voice_connector_id"]),
+			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 		resp, err := conn.GetVoiceConnectorTermination(input)
 

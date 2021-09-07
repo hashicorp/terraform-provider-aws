@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -99,7 +98,7 @@ func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *sch
 		return diag.Errorf("error creating Chime Voice Connector (%s) termination: %s", vcId, err)
 	}
 
-	d.SetId(fmt.Sprintf("termination-%s", vcId))
+	d.SetId(vcId)
 
 	return resourceAwsChimeVoiceConnectorTerminationRead(ctx, d, meta)
 }
@@ -178,13 +177,12 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 func resourceAwsChimeVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
-	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.DeleteVoiceConnectorTerminationInput{
-		VoiceConnectorId: aws.String(vcId),
+		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteVoiceConnectorTerminationWithContext(ctx, input); err != nil {
-		return diag.Errorf("error deleting Chime Voice Connector (%s) termination (%s): %s", vcId, d.Id(), err)
+		return diag.Errorf("error deleting Chime Voice Connector termination (%s): %s", d.Id(), err)
 	}
 
 	return nil
