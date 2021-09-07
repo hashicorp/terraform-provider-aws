@@ -77,7 +77,10 @@ func TestAccAWSSagemakerFlowDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("flow-definition/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "human_loop_config.0.human_task_ui_arn", "aws_sagemaker_human_task_ui.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_availability_lifetime_in_seconds", "1"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_count", "1"),
@@ -87,6 +90,70 @@ func TestAccAWSSagemakerFlowDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "output_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_config.0.s3_output_path"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
+	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_flow_definition.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFlowDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFlowDefinitionPublicWorkforceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFlowDefinitionExists(resourceName, &flowDefinition),
+					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.0.cents", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.0.tenth_fractions_of_a_cent", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerFlowDefinition_humanLoopRequestSource(t *testing.T) {
+	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_flow_definition.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFlowDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFlowDefinitionHumanLoopRequestSourceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFlowDefinitionExists(resourceName, &flowDefinition),
+					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.0.aws_managed_human_loop_request_source", "AWS/Textract/AnalyzeDocument/Forms/V1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.0.human_loop_activation_conditions_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "human_loop_activation_config.0.human_loop_activation_conditions_config.0.human_loop_activation_conditions"),
 				),
 			},
 			{
@@ -217,8 +284,7 @@ func testAccCheckAWSSagemakerFlowDefinitionExists(n string, flowDefinition *sage
 }
 
 func testAccAWSSagemakerFlowDefinitionBaseConfig(rName string) string {
-	return composeConfig(testAccAWSSagemakerWorkteamCognitoConfig(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_sagemaker_human_task_ui" "test" {
   human_task_ui_name = %[1]q
 
@@ -280,15 +346,16 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, rName))
+`, rName)
 }
 
 func testAccAWSSagemakerFlowDefinitionBasicConfig(rName string) string {
 	return composeConfig(testAccAWSSagemakerFlowDefinitionBaseConfig(rName),
+		testAccAWSSagemakerWorkteamCognitoConfig(rName),
 		fmt.Sprintf(`
 resource "aws_sagemaker_flow_definition" "test" {
   flow_definition_name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn             = aws_iam_role.test.arn
 
   human_loop_config {
     human_task_ui_arn                     = aws_sagemaker_human_task_ui.test.arn
@@ -306,12 +373,90 @@ resource "aws_sagemaker_flow_definition" "test" {
 `, rName))
 }
 
-func testAccAWSSagemakerFlowDefinitionTagsConfig1(rName, tagKey1, tagValue1 string) string {
+func testAccAWSSagemakerFlowDefinitionPublicWorkforceConfig(rName string) string {
 	return composeConfig(testAccAWSSagemakerFlowDefinitionBaseConfig(rName),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_sagemaker_flow_definition" "test" {
+  flow_definition_name = %[1]q
+  role_arn             = aws_iam_role.test.arn
+
+  human_loop_config {
+    human_task_ui_arn                     = aws_sagemaker_human_task_ui.test.arn
+    task_availability_lifetime_in_seconds = 1
+    task_count                            = 1
+    task_description                      = %[1]q
+    task_title                            = %[1]q
+    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+
+	public_workforce_task_price {
+      amount_in_usd {
+        cents                     = 1
+        tenth_fractions_of_a_cent = 2 
+	  }
+	}
+  }
+
+  output_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
+  }
+}
+`, rName))
+}
+
+func testAccAWSSagemakerFlowDefinitionHumanLoopRequestSourceConfig(rName string) string {
+	return composeConfig(testAccAWSSagemakerFlowDefinitionBaseConfig(rName),
+		testAccAWSSagemakerWorkteamCognitoConfig(rName),
 		fmt.Sprintf(`
 resource "aws_sagemaker_flow_definition" "test" {
   flow_definition_name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn             = aws_iam_role.test.arn
+
+  human_loop_config {
+    human_task_ui_arn                     = aws_sagemaker_human_task_ui.test.arn
+    task_availability_lifetime_in_seconds = 1
+    task_count                            = 1
+    task_description                      = %[1]q
+    task_title                            = %[1]q
+    workteam_arn                          = aws_sagemaker_workteam.test.arn
+  }
+
+  human_loop_request_source {
+    aws_managed_human_loop_request_source = "AWS/Textract/AnalyzeDocument/Forms/V1"
+  }
+
+  human_loop_activation_config {
+    human_loop_activation_conditions_config {
+		human_loop_activation_conditions = <<EOF
+        {
+			"Conditions": [
+			  {
+				"ConditionType": "Sampling",
+				"ConditionParameters": {
+				  "RandomSamplingPercentage": 5
+				}
+			  }
+			]
+		}
+        EOF
+	}
+  }
+
+  output_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
+  }
+}
+`, rName))
+}
+
+func testAccAWSSagemakerFlowDefinitionTagsConfig1(rName, tagKey1, tagValue1 string) string {
+	return composeConfig(testAccAWSSagemakerFlowDefinitionBaseConfig(rName),
+		testAccAWSSagemakerWorkteamCognitoConfig(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_flow_definition" "test" {
+  flow_definition_name = %[1]q
+  role_arn             = aws_iam_role.test.arn
 
   human_loop_config {
     human_task_ui_arn                     = aws_sagemaker_human_task_ui.test.arn
@@ -335,10 +480,11 @@ resource "aws_sagemaker_flow_definition" "test" {
 
 func testAccAWSSagemakerFlowDefinitionTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(testAccAWSSagemakerFlowDefinitionBaseConfig(rName),
+		testAccAWSSagemakerWorkteamCognitoConfig(rName),
 		fmt.Sprintf(`
 resource "aws_sagemaker_flow_definition" "test" {
   flow_definition_name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn             = aws_iam_role.test.arn
 
   human_loop_config {
     human_task_ui_arn                     = aws_sagemaker_human_task_ui.test.arn

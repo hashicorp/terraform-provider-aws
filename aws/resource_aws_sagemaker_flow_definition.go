@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
@@ -43,10 +44,11 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 				),
 			},
 			"human_loop_activation_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"human_loop_request_source", "human_loop_activation_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"human_loop_activation_conditions_config": {
@@ -57,10 +59,18 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"human_loop_activation_conditions": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 10240),
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10240),
+											validation.StringIsJSON,
+										),
+										StateFunc: func(v interface{}) string {
+											json, _ := structure.NormalizeJsonString(v)
+											return json
+										},
+										DiffSuppressFunc: suppressEquivalentJsonDiffs,
 									},
 								},
 							},
@@ -80,6 +90,44 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validateArn,
+						},
+						"public_workforce_task_price": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"amount_in_usd": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cents": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(0, 99),
+												},
+												"dollars": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(0, 2),
+												},
+												"tenth_fractions_of_a_cent": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(0, 9),
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 						"task_availability_lifetime_in_seconds": {
 							Type:         schema.TypeInt,
@@ -135,10 +183,11 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 				},
 			},
 			"human_loop_request_source": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"human_loop_request_source", "human_loop_activation_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"aws_managed_human_loop_request_source": {
@@ -204,7 +253,11 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
-		input.HumanLoopActivationConfig = expandSagemakerFlowDefinitionHumanLoopActivationConfig(v.([]interface{}))
+		loopConfig, err := expandSagemakerFlowDefinitionHumanLoopActivationConfig(v.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("error creating SageMaker Flow Definition Human Loop Activation Config (%s): %w", name, err)
+		}
+		input.HumanLoopActivationConfig = loopConfig
 	}
 
 	if v, ok := d.GetOk("human_loop_request_source"); ok && (len(v.([]interface{})) > 0) {
@@ -319,18 +372,22 @@ func resourceAwsSagemakerFlowDefinitionDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func expandSagemakerFlowDefinitionHumanLoopActivationConfig(l []interface{}) *sagemaker.HumanLoopActivationConfig {
+func expandSagemakerFlowDefinitionHumanLoopActivationConfig(l []interface{}) (*sagemaker.HumanLoopActivationConfig, error) {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return nil, nil
 	}
 
 	m := l[0].(map[string]interface{})
 
+	loopConfig, err := expandSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(m["human_loop_activation_conditions_config"].([]interface{}))
+	if err != nil {
+		return nil, err
+	}
 	config := &sagemaker.HumanLoopActivationConfig{
-		HumanLoopActivationConditionsConfig: expandSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(m["human_loop_activation_conditions_config"].([]interface{})),
+		HumanLoopActivationConditionsConfig: loopConfig,
 	}
 
-	return config
+	return config, nil
 }
 
 func flattenSagemakerFlowDefinitionHumanLoopActivationConfig(config *sagemaker.HumanLoopActivationConfig) []map[string]interface{} {
@@ -345,23 +402,23 @@ func flattenSagemakerFlowDefinitionHumanLoopActivationConfig(config *sagemaker.H
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(l []interface{}) *sagemaker.HumanLoopActivationConditionsConfig {
+func expandSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(l []interface{}) (*sagemaker.HumanLoopActivationConditionsConfig, error) {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return nil, nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	v, _ := protocol.DecodeJSONValue(m["human_loop_activation_conditions"].(string), protocol.NoEscape)
-	// if err != nil {
-	// 	return err
-	// }
+	v, err := protocol.DecodeJSONValue(m["human_loop_activation_conditions"].(string), protocol.NoEscape)
+	if err != nil {
+		return nil, err
+	}
 
 	config := &sagemaker.HumanLoopActivationConditionsConfig{
 		HumanLoopActivationConditions: aws.JSONValue(v),
 	}
 
-	return config
+	return config, nil
 }
 
 func flattenSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(config *sagemaker.HumanLoopActivationConditionsConfig) []map[string]interface{} {
@@ -369,10 +426,10 @@ func flattenSagemakerFlowDefinitionHumanLoopActivationConditionsConfig(config *s
 		return []map[string]interface{}{}
 	}
 
-	v, _ := protocol.EncodeJSONValue(config.HumanLoopActivationConditions, protocol.NoEscape)
-	// if err != nil {
-	// 	return err
-	// }
+	v, err := protocol.EncodeJSONValue(config.HumanLoopActivationConditions, protocol.NoEscape)
+	if err != nil {
+		return []map[string]interface{}{}
+	}
 
 	m := map[string]interface{}{
 		"human_loop_activation_conditions": v,
@@ -453,6 +510,10 @@ func expandSagemakerFlowDefinitionHumanLoopConfig(l []interface{}) *sagemaker.Hu
 		WorkteamArn:     aws.String(m["workteam_arn"].(string)),
 	}
 
+	if v, ok := m["public_workforce_task_price"].([]interface{}); ok && len(v) > 0 {
+		config.PublicWorkforceTaskPrice = expandSagemakerFlowDefinitionPublicWorkforceTaskPrice(v)
+	}
+
 	if v, ok := m["task_keywords"].(*schema.Set); ok && v.Len() > 0 {
 		config.TaskKeywords = expandStringSet(v)
 	}
@@ -481,6 +542,10 @@ func flattenSagemakerFlowDefinitionHumanLoopConfig(config *sagemaker.HumanLoopCo
 		"workteam_arn":      aws.StringValue(config.WorkteamArn),
 	}
 
+	if config.PublicWorkforceTaskPrice != nil {
+		m["public_workforce_task_price"] = flattenSagemakerFlowDefinitionPublicWorkforceTaskPrice(config.PublicWorkforceTaskPrice)
+	}
+
 	if config.TaskKeywords != nil {
 		m["task_keywords"] = flattenStringSet(config.TaskKeywords)
 	}
@@ -491,6 +556,82 @@ func flattenSagemakerFlowDefinitionHumanLoopConfig(config *sagemaker.HumanLoopCo
 
 	if config.TaskTimeLimitInSeconds != nil {
 		m["task_time_limit_in_seconds"] = aws.Int64Value(config.TaskTimeLimitInSeconds)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandSagemakerFlowDefinitionPublicWorkforceTaskPrice(l []interface{}) *sagemaker.PublicWorkforceTaskPrice {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.PublicWorkforceTaskPrice{}
+
+	if v, ok := m["amount_in_usd"].([]interface{}); ok && len(v) > 0 {
+		config.AmountInUsd = expandSagemakerFlowDefinitionAmountInUsd(v)
+	}
+
+	return config
+}
+
+func expandSagemakerFlowDefinitionAmountInUsd(l []interface{}) *sagemaker.USD {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.USD{}
+
+	if v, ok := m["cents"].(int); ok {
+		config.Cents = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["dollars"].(int); ok {
+		config.Dollars = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["tenth_fractions_of_a_cent"].(int); ok {
+		config.TenthFractionsOfACent = aws.Int64(int64(v))
+	}
+
+	return config
+}
+
+func flattenSagemakerFlowDefinitionAmountInUsd(config *sagemaker.USD) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.Cents != nil {
+		m["cents"] = aws.Int64Value(config.Cents)
+	}
+
+	if config.Dollars != nil {
+		m["dollars"] = aws.Int64Value(config.Dollars)
+	}
+
+	if config.TenthFractionsOfACent != nil {
+		m["tenth_fractions_of_a_cent"] = aws.Int64Value(config.TenthFractionsOfACent)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenSagemakerFlowDefinitionPublicWorkforceTaskPrice(config *sagemaker.PublicWorkforceTaskPrice) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.AmountInUsd != nil {
+		m["amount_in_usd"] = flattenSagemakerFlowDefinitionAmountInUsd(config.AmountInUsd)
 	}
 
 	return []map[string]interface{}{m}
