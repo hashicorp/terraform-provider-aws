@@ -390,12 +390,12 @@ resource "aws_sagemaker_flow_definition" "test" {
     task_title                            = %[1]q
     workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
 
-	public_workforce_task_price {
+    public_workforce_task_price {
       amount_in_usd {
         cents                     = 1
         tenth_fractions_of_a_cent = 2 
-	  }
-	}
+      }
+    }
   }
 
   output_config {
