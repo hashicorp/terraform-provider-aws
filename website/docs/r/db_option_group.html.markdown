@@ -48,7 +48,15 @@ resource "aws_db_option_group" "example" {
 }
 ```
 
-~> **Note**: Any modifications to the `db_option_group` are set to happen immediately as we default to applying immediately.
+~> **Note**: Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
+
+~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
+
+If you try to delete an option group that is associated with an Amazon RDS resource, an error similar to the following is returned:
+
+> An error occurred (InvalidOptionGroupStateFault) when calling the DeleteOptionGroup operation: The option group 'optionGroupName' cannot be deleted because it is in use.
+
+More information about this can be found [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithOptionGroups.html#USER_WorkingWithOptionGroups.Delete).
 
 ## Argument Reference
 
@@ -96,15 +104,5 @@ In addition to all arguments above, the following attributes are exported:
 DB Option groups can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_db_option_group.bar mysql-option-group
+$ terraform import aws_db_option_group.example mysql-option-group
 ```
-
-~> **WARNING:** You can perform a destroy on a `db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
-
-If you try to delete an option group that is associated with an Amazon RDS resource, an error similar to the following is returned:
-
-```
-An error occurred (InvalidOptionGroupStateFault) when calling the DeleteOptionGroup operation: The option group 'optionGroupName' cannot be deleted because it is in use.
-```
-
-More information about this can be found [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithOptionGroups.html#USER_WorkingWithOptionGroups.Delete).
