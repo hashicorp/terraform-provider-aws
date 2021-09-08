@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-All arguments above are exported.
+No additional attributes are exported.
 
 ## Import
 
