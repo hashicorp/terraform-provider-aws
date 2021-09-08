@@ -580,7 +580,11 @@ func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTable
 		return !lastPage
 	})
 
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // VpcAttribute looks up a VPC attribute.
