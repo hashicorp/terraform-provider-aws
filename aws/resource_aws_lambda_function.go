@@ -1148,7 +1148,9 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("architectures") {
 			architectures := d.Get("architectures").([]interface{})
-			codeReq.Architectures = expandStringList(architectures)
+			if len(architectures) > 0 {
+				codeReq.Architectures = expandStringList(architectures)
+			}
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
