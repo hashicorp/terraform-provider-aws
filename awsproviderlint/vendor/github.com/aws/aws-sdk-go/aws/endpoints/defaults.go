@@ -1148,6 +1148,14 @@ var awsPartition = partition{
 				"us-west-2":  endpoint{},
 			},
 		},
+		"braket": service{
+
+			Endpoints: endpoints{
+				"us-east-1": endpoint{},
+				"us-west-1": endpoint{},
+				"us-west-2": endpoint{},
+			},
+		},
 		"budgets": service{
 			PartitionEndpoint: "aws-global",
 			IsRegionalized:    boxedFalse,
