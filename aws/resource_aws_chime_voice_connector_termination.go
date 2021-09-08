@@ -111,14 +111,19 @@ func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schem
 	}
 
 	resp, err := conn.GetVoiceConnectorTerminationWithContext(ctx, input)
+
 	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] error getting Chime Voice Connector (%s) termination: %s", d.Id(), err)
+		log.Printf("[WARN] Chime Voice Connector (%s) termination not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err != nil || resp.Termination == nil {
+	if err != nil {
 		return diag.Errorf("error getting Chime Voice Connector (%s) termination: %s", d.Id(), err)
+	}
+
+	if resp == nil || resp.Termination == nil {
+		return diag.Errorf("error getting Chime Voice Connector (%s) termination: empty response", d.Id())
 	}
 
 	d.Set("cps_limit", resp.Termination.CpsLimit)
@@ -131,6 +136,8 @@ func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schem
 	if err := d.Set("cidr_allow_list", flattenStringList(resp.Termination.CidrAllowedList)); err != nil {
 		return diag.Errorf("error setting termination cidr allow list (%s): %s", d.Id(), err)
 	}
+
+	d.Set("voice_connector_id", d.Id())
 
 	return nil
 }
@@ -158,13 +165,9 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 			Termination:      termination,
 		}
 
-		if _, err := conn.PutVoiceConnectorTerminationWithContext(ctx, input); err != nil {
-			if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
-				log.Printf("[WARN] error getting Chime Voice Connector (%s) termination: %s", d.Id(), err)
-				d.SetId("")
-				return nil
-			}
+		_, err := conn.PutVoiceConnectorTerminationWithContext(ctx, input)
 
+		if err != nil {
 			return diag.Errorf("error updating Chime Voice Connector (%s) termination: %s", d.Id(), err)
 		}
 	}
@@ -179,7 +182,13 @@ func resourceAwsChimeVoiceConnectorTerminationDelete(ctx context.Context, d *sch
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteVoiceConnectorTerminationWithContext(ctx, input); err != nil {
+	_, err := conn.DeleteVoiceConnectorTerminationWithContext(ctx, input)
+
+	if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
 		return diag.Errorf("error deleting Chime Voice Connector termination (%s): %s", d.Id(), err)
 	}
 

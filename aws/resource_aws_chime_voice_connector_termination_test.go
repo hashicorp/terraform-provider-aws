@@ -12,22 +12,19 @@ import (
 )
 
 func TestAccAWSChimeVoiceConnectorTermination_basic(t *testing.T) {
-	var vc *chime.VoiceConnector
 	name := acctest.RandomWithPrefix("tf-acc-test")
-	vcResourceName := "aws_chime_voice_connector.chime"
 	resourceName := "aws_chime_voice_connector_termination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
-
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorExists(vcResourceName, vc),
+					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", "1"),
@@ -35,7 +32,7 @@ func TestAccAWSChimeVoiceConnectorTermination_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      vcResourceName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -66,37 +63,36 @@ func TestAccAWSChimeVoiceConnectorTermination_disappears(t *testing.T) {
 }
 
 func TestAccAWSChimeVoiceConnectorTermination_update(t *testing.T) {
-	var vc *chime.VoiceConnector
 	name := acctest.RandomWithPrefix("tf-acc-test")
-	vcResourceName := "aws_chime_voice_connector.chime"
 	resourceName := "aws_chime_voice_connector_termination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorExists(vcResourceName, vc),
+					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
 				),
-			},
-			{
-				ResourceName:      vcResourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSChimeVoiceConnectorTerminationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.0", "100.35.78.97/32"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_allow_list.*", "100.35.78.97/32"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_phone_number", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
