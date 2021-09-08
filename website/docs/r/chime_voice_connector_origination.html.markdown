@@ -45,7 +45,7 @@ resource "aws_chime_voice_connector_origination" "default" {
 The following arguments are supported:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
-* `route` - (Required) The call distribution properties defined for your SIP hosts. Valid range: Minimum value of 1. Maximum value of 20.
+* `route` - (Required) Set of call distribution properties defined for your SIP hosts. See [route](#route) below for more details. Minimum of 1. Maximum of 20.
 * `disabled` - (Optional) When origination settings are disabled, inbound calls are not enabled for your Amazon Chime Voice Connector.
 
 ### `route`
@@ -62,12 +62,12 @@ Origination routes define call distribution properties for your SIP hosts to rec
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique origination settings ID.
+* `id` - The Amazon Chime Voice Connector ID.
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.
+Chime Voice Connector Origination can be imported using the `voice_connector_id`, e.g.
 
 ```
-$ terraform import aws_chime_voice_connector_origination.default example
+$ terraform import aws_chime_voice_connector_origination.default abcdef1ghij2klmno3pqr4
 ```
