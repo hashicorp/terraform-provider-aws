@@ -1,14 +1,16 @@
 package aws
 
 import (
+	"fmt"
 	"log"
-	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsRoute53DelegationSet() *schema.Resource {
@@ -21,10 +23,15 @@ func resourceAwsRoute53DelegationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"reference_name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Computed: true,
+			},
+			"reference_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 
 			"name_servers": {
@@ -58,8 +65,8 @@ func resourceAwsRoute53DelegationSetCreate(d *schema.ResourceData, meta interfac
 
 	set := out.DelegationSet
 	d.SetId(cleanDelegationSetId(*set.Id))
-	d.Set("name_servers", expandNameServers(set.NameServers))
-	return nil
+
+	return resourceAwsRoute53DelegationSetRead(d, meta)
 }
 
 func resourceAwsRoute53DelegationSetRead(d *schema.ResourceData, meta interface{}) error {
@@ -71,14 +78,24 @@ func resourceAwsRoute53DelegationSetRead(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Reading Route53 reusable delegation set: %#v", input)
 	out, err := r53.GetReusableDelegationSet(input)
 	if err != nil {
+		if isAWSErr(err, route53.ErrCodeNoSuchDelegationSet, "") {
+			d.SetId("")
+			return nil
+
+		}
 		return err
 	}
 	log.Printf("[DEBUG] Route53 reusable delegation set received: %#v", out)
 
 	set := out.DelegationSet
+	d.Set("name_servers", aws.StringValueSlice(set.NameServers))
 
-	d.SetId(cleanDelegationSetId(*set.Id))
-	d.Set("name_servers", expandNameServers(set.NameServers))
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "route53",
+		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -91,18 +108,15 @@ func resourceAwsRoute53DelegationSetDelete(d *schema.ResourceData, meta interfac
 	}
 	log.Printf("[DEBUG] Deleting Route53 reusable delegation set: %#v", input)
 	_, err := r53.DeleteReusableDelegationSet(input)
-	return err
-}
-
-func expandNameServers(name_servers []*string) []string {
-	log.Printf("[DEBUG] Processing %d name servers: %#v...", len(name_servers), name_servers)
-	ns := make([]string, len(name_servers))
-	for i, server := range name_servers {
-		ns[i] = *server
+	if isAWSErr(err, route53.ErrCodeNoSuchDelegationSet, "") {
+		return nil
 	}
-	sort.Strings(ns)
-	log.Printf("[DEBUG] Returning processed name servers: %#v", ns)
-	return ns
+
+	if err != nil {
+		return fmt.Errorf("error deleting Route53 reusable delegation set (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func cleanDelegationSetId(id string) string {

@@ -26,9 +26,8 @@ func resourceAwsPinpointEmailChannel() *schema.Resource {
 				ForceNew: true,
 			},
 			"configuration_set": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"enabled": {
 				Type:     schema.TypeBool,

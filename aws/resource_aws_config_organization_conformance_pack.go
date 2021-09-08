@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -21,6 +22,12 @@ func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -141,7 +148,7 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 
 	d.SetId(name)
 
-	if err := configWaitForOrganizationConformancePackStatusCreateSuccessful(conn, d.Id()); err != nil {
+	if err := configWaitForOrganizationConformancePackStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -226,7 +233,7 @@ func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, 
 		return fmt.Errorf("error updating Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn, d.Id()); err != nil {
+	if err := configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be updated: %w", d.Id(), err)
 	}
 
@@ -250,7 +257,7 @@ func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, 
 		return fmt.Errorf("erorr deleting Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id()); err != nil {
+	if err := configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 			return nil
 		}

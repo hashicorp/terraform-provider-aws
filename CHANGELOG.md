@@ -1,9 +1,50 @@
-## 3.56.0 (Unreleased)
+## 3.58.0 (Unreleased)
 
 FEATURES:
 
+* **New Resource:** `aws_quicksight_group_membership` ([#20687](https://github.com/hashicorp/terraform-provider-aws/issues/20687))
+
+## 3.57.0 (September 02, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_service_discovery_instance` ([#17498](https://github.com/hashicorp/terraform-provider-aws/issues/17498))
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Add `ipv6_addresses` attribute ([#17859](https://github.com/hashicorp/terraform-provider-aws/issues/17859))
+* resource/aws_athena_database: Read the database name from the `AwsDataCatalog` ([#19765](https://github.com/hashicorp/terraform-provider-aws/issues/19765))
+* resource/aws_cloudformation_stack_set: Retry when `OperationInProgress` errors are returned from the AWS API ([#10969](https://github.com/hashicorp/terraform-provider-aws/issues/10969))
+* resource/aws_cloudformation_stack_set_instance: Retry when `OperationInProgress` errors are returned from the AWS API ([#10969](https://github.com/hashicorp/terraform-provider-aws/issues/10969))
+* resource/aws_config_organization_conformance_pack: Add configurable timeouts ([#20560](https://github.com/hashicorp/terraform-provider-aws/issues/20560))
+* resource/aws_redshift_cluster: Add `cluster_nodes` attribute ([#4563](https://github.com/hashicorp/terraform-provider-aws/issues/4563))
+* resource/aws_s3_bucket: Retry on `PutBucketEncryption` HTTP 409 errors due to eventual consistency ([#11795](https://github.com/hashicorp/terraform-provider-aws/issues/11795))
+* resource/aws_sagemaker_notebook_instance: Add `platform_identifier` argument ([#20711](https://github.com/hashicorp/terraform-provider-aws/issues/20711))
+* resource/aws_service_discovery_service: Add `force_destroy` argument ([#3538](https://github.com/hashicorp/terraform-provider-aws/issues/3538))
+* resource_aws_route53_health_check: Add `RECOVERY_CONTROL` health check type and `routing_control_arn` argument ([#20731](https://github.com/hashicorp/terraform-provider-aws/issues/20731))
+* resource_vpn_connection: Handle paginated response when reading Transit Gateway Attachments ([#20775](https://github.com/hashicorp/terraform-provider-aws/issues/20775))
+
+BUG FIXES:
+
+* resource/aws_ecs_cluster: Ensure that `setting` attribute is set consistently ([#20720](https://github.com/hashicorp/terraform-provider-aws/issues/20720))
+* resource/aws_pinpoint_email_channel: When specifying the `configuration_set` parameter, use the name of the set instead of the ARN. ([#20691](https://github.com/hashicorp/terraform-provider-aws/issues/20691))
+* resource/aws_route53_record: Support `set_identifier` values containing `_` ([#13453](https://github.com/hashicorp/terraform-provider-aws/issues/13453))
+
+## 3.56.0 (August 26, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_dx_connection` ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* **New Data Source:** `aws_dx_location` ([#9735](https://github.com/hashicorp/terraform-provider-aws/issues/9735))
+* **New Data Source:** `aws_dx_locations` ([#9735](https://github.com/hashicorp/terraform-provider-aws/issues/9735))
+* **New Resource:** `aws_appstream_stack` ([#20547](https://github.com/hashicorp/terraform-provider-aws/issues/20547))
+* **New Resource:** `aws_autoscaling_group_tag` ([#20009](https://github.com/hashicorp/terraform-provider-aws/issues/20009))
 * **New Resource:** `aws_dynamodb_tag` ([#13783](https://github.com/hashicorp/terraform-provider-aws/issues/13783))
 * **New Resource:** `aws_ecs_tag` ([#13783](https://github.com/hashicorp/terraform-provider-aws/issues/13783))
+* **New Resource:** `aws_route53recoverycontrolconfig_cluster` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_control_panel` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_routing_control` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_safety_rule` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
 * **New Resource:** `aws_route53recoveryreadiness_cell` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
 * **New Resource:** `aws_route53recoveryreadiness_readiness_check` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
 * **New Resource:** `aws_route53recoveryreadiness_recovery_group` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
@@ -12,18 +53,33 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_elasticache_user: Mark `passwords` attribute as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
+* data-source/aws_efs_file_system: Add ability to filter results by `tags` ([#20399](https://github.com/hashicorp/terraform-provider-aws/issues/20399))
+* data-source/aws_route53_delegation_set: Add `arn` attribute ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
 * data-source/aws_route53_zone: Add `arn` attribute ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
+* resource/aws_dx_connection: Add `owner_account_id` attribute ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_dx_connection: Add `provider_name` argument ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_dx_lag: Add `owner_account_id` attribute ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_dx_lag: Add `provider_name` argument ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_eks_node_group: Add `update_config` argument to support parallel node upgrades ([#20137](https://github.com/hashicorp/terraform-provider-aws/issues/20137))
 * resource/aws_elasticache_user: Mark `passwords` argument as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
 * resource/aws_fsx_lustre_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20614](https://github.com/hashicorp/terraform-provider-aws/issues/20614))
 * resource/aws_fsx_windows_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20643](https://github.com/hashicorp/terraform-provider-aws/issues/20643))
+* resource/aws_route53_delegation_set: Add `arn` attribute ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_delegation_set: Add plan time validation for `reference_name` ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
 * resource/aws_route53_health_check: Add `arn` attribute. ([#20653](https://github.com/hashicorp/terraform-provider-aws/issues/20653))
 * resource/aws_route53_health_check: Add plan time validation for `failure_threshold`, `ip_address`, `fqdn`, `port`, `resource_path`, `search_string`, `child_healthchecks`. ([#20653](https://github.com/hashicorp/terraform-provider-aws/issues/20653))
+* resource/aws_route53_query_log: Add `arn` attribute. ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
 * resource/aws_route53_zone: Add `arn` attribute ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
 * resource/aws_route53_zone: Add plan time validation for `comment` ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
+* resource/aws_s3_bucket_inventory: Add missing values to `optional_fields` argument ([#20658](https://github.com/hashicorp/terraform-provider-aws/issues/20658))
 
 BUG FIXES:
 
+* data-source/aws_kms_public_key: Correctly base64 encode `public_key` value ([#19944](https://github.com/hashicorp/terraform-provider-aws/issues/19944))
 * data-source/aws_route53_resolver_rule: Fix lack of pagination when listing rules ([#20642](https://github.com/hashicorp/terraform-provider-aws/issues/20642))
+* resource/aws_codebuild_webhook: Only update `build_type` if a value is specified ([#20671](https://github.com/hashicorp/terraform-provider-aws/issues/20671))
+* resource/aws_route53_delegation_set: Properly remove from state when resource does not exist ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_query_log: Properly remove from state when resource does not exist ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
 
 ## 3.55.0 (August 19, 2021)
 
