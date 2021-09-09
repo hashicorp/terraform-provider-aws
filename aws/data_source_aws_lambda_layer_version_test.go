@@ -183,14 +183,14 @@ data "aws_lambda_layer_version" "test" {
 func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
-  filename            = "test-fixtures/lambdatest.zip"
-  layer_name          = %[1]q
-  compatible_runtimes = ["nodejs12.x"]
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = %[1]q
+  compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["x86_64"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name         = aws_lambda_layer_version.test.layer_name
+  layer_name              = aws_lambda_layer_version.test.layer_name
   compatible_architecture = "x86_64"	
 }
 
@@ -200,14 +200,14 @@ data "aws_lambda_layer_version" "test" {
 func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
-  filename            = "test-fixtures/lambdatest.zip"
-  layer_name          = %[1]q
-  compatible_runtimes = ["nodejs12.x"]
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = %[1]q
+  compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["arm64"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name         = aws_lambda_layer_version.test.layer_name
+  layer_name              = aws_lambda_layer_version.test.layer_name
   compatible_architecture = "arm64"	
 }
 `, rName)
@@ -216,14 +216,14 @@ data "aws_lambda_layer_version" "test" {
 func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86ARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
-  filename            = "test-fixtures/lambdatest.zip"
-  layer_name          = %[1]q
-  compatible_runtimes = ["nodejs12.x"]
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = %[1]q
+  compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["x86_64", "arm64"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name         = aws_lambda_layer_version.test.layer_name
+  layer_name              =  aws_lambda_layer_version.test.layer_name
   compatible_architecture = "arm64"	
 }
 `, rName)
