@@ -420,9 +420,8 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionCompatibleArchitecturesX86Arm(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-  filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
-
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = "%s"
   compatible_architectures = ["x86_64", "arm64"]
 }
 `, layerName)
@@ -431,9 +430,8 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionCompatibleArchitecturesX86(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-  filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
-
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = "%s"
   compatible_architectures = ["x86_64"]
 }
 `, layerName)
@@ -442,9 +440,8 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionCompatibleArchitecturesArm(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-  filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
-
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = "%s"
   compatible_architectures = ["arm64"]
 }
 `, layerName)
