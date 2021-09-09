@@ -95,6 +95,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "version", LambdaFunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
 					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, LambdaFunctionVersionLatest)),
 				),
 			},
@@ -1024,7 +1025,19 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
-					resource.TestCheckResourceAttr(resourceName, "architectures.0", "arm64"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
+				),
+			},
+			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
+			{
+				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1043,7 +1056,19 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
-					resource.TestCheckResourceAttr(resourceName, "architectures.0", "x86_64"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
+				),
+			},
+			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
+			{
+				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
 				),
 			},
 		},

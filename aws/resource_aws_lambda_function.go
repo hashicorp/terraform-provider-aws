@@ -50,6 +50,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"architectures": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
