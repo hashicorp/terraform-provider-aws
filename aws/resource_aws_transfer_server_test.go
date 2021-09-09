@@ -73,6 +73,7 @@ func testSweepTransferServers(region string) error {
 func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"Invalid server type: PUBLIC",
+		"InvalidServiceName: The Vpc Endpoint Service",
 	)
 }
 
