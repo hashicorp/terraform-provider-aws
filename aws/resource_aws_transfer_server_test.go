@@ -1024,7 +1024,7 @@ func testAccPreCheckAWSTransfer(t *testing.T) {
 }
 
 func testAccAWSTransferServerConfigBaseVpc(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1104,7 +1104,7 @@ resource "aws_eip" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSTransferServerConfigBaseLoggingRole(rName string) string {
@@ -1256,7 +1256,6 @@ resource "aws_transfer_server" "test" {
 
 func testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName string, forceDestroy bool) string {
 	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
 		testAccAWSTransferServerConfigBaseVpc(rName),
 		testAccAWSTransferServerConfigBaseDirectoryService(rName),
 		testAccAWSTransferServerConfigBaseLoggingRole(rName),
