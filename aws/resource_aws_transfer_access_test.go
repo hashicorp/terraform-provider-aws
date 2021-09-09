@@ -40,9 +40,10 @@ func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"role"},
 			},
 			{
 				Config: testAccAWSTransferAccessS3UpdatedConfig(rName),
@@ -84,9 +85,10 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"role"},
 			},
 			{
 				Config: testAccAWSTransferAccessEFSUpdatedConfig(rName),

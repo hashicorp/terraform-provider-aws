@@ -96,8 +96,10 @@ func resourceAwsTransferAccess() *schema.Resource {
 			},
 
 			"role": {
-				Type:         schema.TypeString,
-				Required:     true,
+				Type: schema.TypeString,
+				// Although Role is required in the API it is not currently returned on Read.
+				// Required:     true,
+				Optional:     true,
 				ValidateFunc: validateArn,
 			},
 
@@ -189,7 +191,8 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("posix_profile", flattenTransferUserPosixUser(access.PosixProfile)); err != nil {
 		return fmt.Errorf("error setting posix_profile: %w", err)
 	}
-	d.Set("role", access.Role)
+	// Role is currently not returned via the API.
+	// d.Set("role", access.Role)
 	d.Set("server_id", serverID)
 
 	return nil
