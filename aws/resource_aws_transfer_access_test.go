@@ -241,7 +241,7 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
-  availability_zone 	  = data.aws_availability_zones.available.names[0]
+  availability_zone       = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -254,7 +254,7 @@ resource "aws_subnet" "test2" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone 	  = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -284,11 +284,11 @@ resource "aws_iam_role" "test" {
 {
   "Version": "2012-10-17",
   "Statement": [{
-	"Effect": "Allow",
-	"Principal": {
-	  "Service": "transfer.amazonaws.com"
-	},
-	"Action": "sts:AssumeRole"
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
   }]
 }
 EOF
@@ -299,13 +299,13 @@ func testAccAWSTransferAccessConfigBase_S3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id			 = aws_directory_service_directory.test.id
+  directory_id           = aws_directory_service_directory.test.id
   logging_role           = aws_iam_role.test.arn
 }
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -422,9 +422,9 @@ func testAccAWSTransferAccessConfigBase_efs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id			 = aws_directory_service_directory.test.id
+  directory_id           = aws_directory_service_directory.test.id
   logging_role           = aws_iam_role.test.arn
-  domain				 = "EFS"
+  domain                 = "EFS"
 }
 
 resource "aws_efs_file_system" "test" {}
@@ -437,12 +437,12 @@ resource "aws_iam_role_policy" "test" {
 {
   "Version": "2012-10-17",
   "Statement": [{
-	"Sid": "AllowFullAccesstoCloudWatchLogs",
-	"Effect": "Allow",
-	"Action": [
-	  "logs:*"
-	],
-	"Resource": "*"
+    "Sid": "AllowFullAccesstoCloudWatchLogs",
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": "*"
   }]
 }
 POLICY
@@ -460,7 +460,7 @@ resource "aws_transfer_access" "test" {
   server_id   = aws_transfer_server.test.id
   role        = aws_iam_role.test.arn
 
-  home_directory = "/${aws_efs_file_system.test.id}/"
+  home_directory      = "/${aws_efs_file_system.test.id}/"
   home_directory_type = "PATH"
 
   posix_profile {
