@@ -40,6 +40,7 @@ func resourceAwsTransferAccess() *schema.Resource {
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"entry": {
@@ -60,12 +61,14 @@ func resourceAwsTransferAccess() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.HomeDirectoryTypePath,
-				ValidateFunc: validation.StringInSlice([]string{transfer.HomeDirectoryTypePath, transfer.HomeDirectoryTypeLogical}, false),
+				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
 			},
 
 			"policy": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validateIAMPolicyJson,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
 			"posix_profile": {
@@ -103,12 +106,6 @@ func resourceAwsTransferAccess() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateTransferServerID,
 			},
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 		},
 	}
 }
@@ -116,13 +113,13 @@ func resourceAwsTransferAccess() *schema.Resource {
 func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	input := &transfer.CreateAccessInput{}
-
-	serverID := d.Get("server_id").(string)
 	externalID := d.Get("external_id").(string)
-
-	input.ServerId = aws.String(serverID)
-	input.ExternalId = aws.String(externalID)
+	serverID := d.Get("server_id").(string)
+	id := tftransfer.AccessCreateResourceID(serverID, externalID)
+	input := &transfer.CreateAccessInput{
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
+	}
 
 	if v, ok := d.GetOk("home_directory"); ok {
 		input.HomeDirectory = aws.String(v.(string))
@@ -148,14 +145,14 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 		input.Role = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Access: %s", input)
-	output, err := conn.CreateAccess(input)
+	log.Printf("[DEBUG] Creating Transfer Access: %s", input)
+	_, err := conn.CreateAccess(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Access: %w", err)
+		return fmt.Errorf("error creating Transfer Access (%s): %w", id, err)
 	}
 
-	d.SetId(tftransfer.AccessCreateResourceID(*output.ServerId, *output.ExternalId))
+	d.SetId(id)
 
 	return resourceAwsTransferAccessRead(d, meta)
 }
@@ -163,54 +160,36 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	serverId, externalId, err := tftransfer.AccessParseResourceID(d.Id())
+	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer Access ID: %s", err)
+		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 	}
 
-	output, err := finder.AccessByID(conn, serverId, externalId)
+	access, err := finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Access with external ID (%s) not found for server (%s), removing from state", externalId, serverId)
+		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Access with external ID (%s) for server (%s): %w", externalId, serverId, err)
+		return fmt.Errorf("error reading Transfer Access (%s): %w", d.Id(), err)
 	}
 
-	access := output.Access
-
-	if err := d.Set("external_id", access.ExternalId); err != nil {
-		return fmt.Errorf("Error setting external_id: %w", err)
-	}
-	if err := d.Set("server_id", serverId); err != nil {
-		return fmt.Errorf("Error setting server_id: %w", err)
-	}
-	if err := d.Set("policy", access.Policy); err != nil {
-		return fmt.Errorf("Error setting policy: %w", err)
-	}
-	if err := d.Set("posix_profile", flattenTransferUserPosixUser(access.PosixProfile)); err != nil {
-		return fmt.Errorf("Error setting posix_profile: %w", err)
-	}
-	if err := d.Set("home_directory_type", access.HomeDirectoryType); err != nil {
-		return fmt.Errorf("Error setting home_directory_type: %w", err)
-	}
-	if err := d.Set("home_directory", access.HomeDirectory); err != nil {
-		return fmt.Errorf("Error setting home_directory: %w", err)
-	}
-	if err := d.Set("role", access.Role); err != nil {
-		return fmt.Errorf("Error setting role: %w", err)
-	}
-
+	d.Set("external_id", access.ExternalId)
+	d.Set("home_directory", access.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return fmt.Errorf("Error setting home_directory_mappings: %w", err)
 	}
-
+	d.Set("home_directory_type", access.HomeDirectoryType)
+	d.Set("policy", access.Policy)
 	if err := d.Set("posix_profile", flattenTransferUserPosixUser(access.PosixProfile)); err != nil {
-		return fmt.Errorf("Error setting posix_profile: %w", err)
+		return fmt.Errorf("error setting posix_profile: %w", err)
 	}
+	d.Set("role", access.Role)
+	d.Set("server_id", serverID)
 
 	return nil
 }
@@ -218,54 +197,46 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	serverId, externalId, err := tftransfer.AccessParseResourceID(d.Id())
+	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer Access ID: %s", err)
+		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 	}
 
 	input := &transfer.UpdateAccessInput{
-		ServerId:   aws.String(serverId),
-		ExternalId: aws.String(externalId),
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
 	}
-
-	hasChanges := false
 
 	if d.HasChange("home_directory") {
 		input.HomeDirectory = aws.String(d.Get("home_directory").(string))
-		hasChanges = true
 	}
 
 	if d.HasChange("home_directory_mappings") {
 		input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
-		hasChanges = true
 	}
 
 	if d.HasChange("home_directory_type") {
 		input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
-		hasChanges = true
 	}
 
 	if d.HasChange("policy") {
 		input.Policy = aws.String(d.Get("policy").(string))
-		hasChanges = true
 	}
 
 	if d.HasChange("posix_profile") {
 		input.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
-		hasChanges = true
 	}
 
 	if d.HasChange("role") {
 		input.Role = aws.String(d.Get("role").(string))
-		hasChanges = true
 	}
 
-	if hasChanges {
-		log.Printf("[DEBUG] Updating Transfer Access: %s", input)
-		_, err := conn.UpdateAccess(input)
-		if err != nil {
-			return fmt.Errorf("error updating Transfer Access (externalID: %s, serverID: %s): %w", aws.StringValue(input.ExternalId), aws.StringValue(input.ServerId), err)
-		}
+	log.Printf("[DEBUG] Updating Transfer Access: %s", input)
+	_, err = conn.UpdateAccess(input)
+
+	if err != nil {
+		return fmt.Errorf("error updating Transfer Access (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsTransferAccessRead(d, meta)
@@ -274,15 +245,16 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsTransferAccessDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	serverId, externalId, err := tftransfer.AccessParseResourceID(d.Id())
+	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer Access ID: %s", err)
+		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 	}
 
-	log.Printf("[DEBUG] Deleting Transfer Access: (externalID: %s, serverID: %s)", externalId, serverId)
+	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
 	_, err = conn.DeleteAccess(&transfer.DeleteAccessInput{
-		ExternalId: aws.String(externalId),
-		ServerId:   aws.String(serverId),
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
@@ -290,7 +262,7 @@ func resourceAwsTransferAccessDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Transfer Access (externalID: %s, serverID: %s): %w", externalId, serverId, err)
+		return fmt.Errorf("error deleting Transfer Access (%s): %w", d.Id(), err)
 	}
 
 	return nil

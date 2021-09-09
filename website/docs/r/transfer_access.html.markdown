@@ -51,17 +51,25 @@ The following arguments are supported:
 * `posix_profile` - (Optional) Specifies the full POSIX identity, including user ID (Uid), group ID (Gid), and any secondary groups IDs (SecondaryGids), that controls your users' access to your Amazon EFS file systems. See [Posix Profile](#posix-profile) below.
 * `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to controls your user’s access to your Amazon S3 bucket.
 
+### Home Directory Mappings
+
+* `entry` - (Required) Represents an entry and a target.
+* `target` - (Required) Represents the map target.
+
+### Posix Profile
+
+* `gid` - (Required) The POSIX group ID used for all EFS operations by this user.
+* `uid` - (Required) The POSIX user ID used for all EFS operations by this user.
+* `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
+
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id`  - The Server ID of the Transfer Access (e.g. `s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234`)
-* `endpoint` - The endpoint of the Transfer Server (e.g. `s-12345678.server.transfer.REGION.amazonaws.com`)
-* `host_key_fingerprint` - This value contains the message-digest algorithm (MD5) hash of the server's host key. This value is equivalent to the output of the `ssh-keygen -l -E md5 -f my-new-server-key` command.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `id`  - The ID of the resource
 
 ## Import
 
-Transfer Accesses can be imported using the `access id`, e.g.
+Transfer Accesses can be imported using the `server_id` and `external_id`, e.g.
 
 ```
 $ terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234

@@ -7,6 +7,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+func AccessByServerIDAndExternalID(conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
+	input := &transfer.DescribeAccessInput{
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
+	}
+
+	output, err := conn.DescribeAccess(input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Access == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Access, nil
+}
+
 func ServerByID(conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
 	input := &transfer.DescribeServerInput{
 		ServerId: aws.String(id),
@@ -55,35 +84,6 @@ func UserByID(conn *transfer.Transfer, serverId, userName string) (*transfer.Des
 	}
 
 	if output == nil || output.User == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func AccessByID(conn *transfer.Transfer, serverId, externalId string) (*transfer.DescribeAccessOutput, error) {
-	input := &transfer.DescribeAccessInput{
-		ExternalId: aws.String(externalId),
-		ServerId:   aws.String(serverId),
-	}
-
-	output, err := conn.DescribeAccess(input)
-
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Access == nil {
 		return nil, &resource.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
