@@ -101,16 +101,6 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 	}
 }
 
-func resourceAwsConnectContactFlowParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:connectFlowID", id)
-	}
-
-	return parts[0], parts[1], nil
-}
-
 func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
@@ -150,7 +140,7 @@ func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.CreateContactFlowWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error creating contact flow '%s': %w", name, err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow '%s': %w", name, err))
 	}
 	d.Set("arn", output.ContactFlowArn)
 	d.Set("contact_flow_id", output.ContactFlowId)
@@ -175,12 +165,12 @@ func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceDa
 		InstanceId:    aws.String(instanceID),
 	})
 	if isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Connect flow (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Connect Contact Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error getting connect flow '%s': %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("Error getting Connect Contact Flow '%s': %w", d.Id(), err))
 	}
 
 	d.Set("arn", resp.ContactFlow.Arn)
@@ -228,11 +218,11 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 		_, updateMetadataInputErr := conn.UpdateContactFlowNameWithContext(ctx, updateMetadataInput)
 
 		if updateMetadataInputErr != nil {
-			return diag.FromErr(updateMetadataInputErr)
+			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow (%s): %w", d.Id(), updateMetadataInputErr))
 		}
 	}
 
-	if d.HasChanges("content", "content_hash") {
+	if d.HasChanges("content", "content_hash", "filename") {
 		updateContentInput := &connect.UpdateContactFlowContentInput{
 			ContactFlowId: aws.String(contactFlowID),
 			InstanceId:    aws.String(instanceID),
@@ -256,7 +246,7 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 		_, updateContentInputErr := conn.UpdateContactFlowContentWithContext(ctx, updateContentInput)
 
 		if updateContentInputErr != nil {
-			return diag.FromErr(updateContentInputErr)
+			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow content (%s): %w", d.Id(), updateContentInputErr))
 		}
 	}
 
@@ -270,7 +260,7 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 	return resourceAwsConnectContactFlowRead(ctx, d, meta)
 }
 
-//Contact Flows do not support deletion today. We will NoOp the Delete method. Users can rename thier flows manually if they want.
+//Contact Flows do not support deletion today. We will NoOp the Delete method. Users can rename their flows manually if they want.
 // func resourceAwsConnectContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 // 	conn := meta.(*AWSClient).connectconn
 
@@ -295,6 +285,16 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 
 // 	return nil
 // }
+
+func resourceAwsConnectContactFlowParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:connectFlowID", id)
+	}
+
+	return parts[0], parts[1], nil
+}
 
 func resourceAwsConnectContactFlowLoadFileContent(filename string) (string, error) {
 	fileContent, err := ioutil.ReadFile(filename)

@@ -81,7 +81,7 @@ func dataSourceAwsConnectContactFlowRead(ctx context.Context, d *schema.Resource
 		}
 
 		for _, connectFlowSummary := range connectFlowSummaryList {
-			log.Printf("[DEBUG] Connect Contact flow summary: %s", connectFlowSummary)
+			log.Printf("[DEBUG] Connect Contact Flow summary: %s", connectFlowSummary)
 			if aws.StringValue(connectFlowSummary.Name) == name.(string) {
 				resp, err := conn.DescribeContactFlow(&connect.DescribeContactFlowInput{
 					ContactFlowId: connectFlowSummary.Id,

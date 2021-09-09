@@ -4,21 +4,23 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowDataSourceConfig_basic(rInt, resourceName),
+				Config: testAccAwsConnectContactFlowDataSourceConfig_basic(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -36,16 +38,18 @@ func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsConnectContactFlow_byname(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowDataSourceConfig_byname(rInt, resourceName),
+				Config: testAccAwsConnectContactFlowDataSourceConfig_byname(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -62,15 +66,18 @@ func TestAccDataSourceAwsConnectContactFlow_byname(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectContactFlowDataSourceBaseConfig(rInt int, contactFlowName string) string {
+func testAccAwsConnectContactFlowDataSourceBaseConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
-  instance_alias = "resource-test-terraform-%d"
+  identity_management_type = "CONNECT_MANAGED"
+  inbound_calls_enabled    = true
+  instance_alias           = %[1]q
+  outbound_calls_enabled   = true
 }
 
 resource "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
-  name        = "%[2]s"
+  name        = %[2]q
   description = "Test Contact Flow Description"
   type        = "CONTACT_FLOW"
   content     = <<JSON
@@ -99,17 +106,17 @@ resource "aws_connect_contact_flow" "test" {
 		]
 	}
 	JSON
-  tags = map(
-    "Name", "Test Contact Flow",
-    "Application", "Terraform",
-    "Method", "Create"
-  )
+  tags = {
+    "Name"        = "Test Contact Flow",
+    "Application" = "Terraform",
+    "Method"      = "Create"
+  }
 }
-	`, rInt, contactFlowName)
+	`, rName, rName2)
 }
 
-func testAccAwsConnectContactFlowDataSourceConfig_basic(rInt int, contactFlowName string) string {
-	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rInt, contactFlowName) + `
+func testAccAwsConnectContactFlowDataSourceConfig_basic(rName, rName2 string) string {
+	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id     = aws_connect_instance.test.id
   contact_flow_id = aws_connect_contact_flow.test.contact_flow_id
@@ -117,8 +124,8 @@ data "aws_connect_contact_flow" "test" {
 `)
 }
 
-func testAccAwsConnectContactFlowDataSourceConfig_byname(rInt int, contactFlowName string) string {
-	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rInt, contactFlowName) + `
+func testAccAwsConnectContactFlowDataSourceConfig_byname(rName, rName2 string) string {
+	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
   name        = aws_connect_contact_flow.test.name
