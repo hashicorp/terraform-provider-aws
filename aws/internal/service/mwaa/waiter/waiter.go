@@ -9,7 +9,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for an environment creation
-	EnvironmentCreatedTimeout = 90 * time.Minute
+	EnvironmentCreatedTimeout = 120 * time.Minute
 
 	// Maximum amount of time to wait for an environment update
 	EnvironmentUpdatedTimeout = 90 * time.Minute
