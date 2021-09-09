@@ -197,7 +197,28 @@ func TestAccAWSLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaLayerVersionCompatibleArchitectures(layerName),
+				Config: testAccAWSLambdaLayerVersionCompatibleArchitecturesNone(layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaLayerVersionCompatibleArchitecturesX86(layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaLayerVersionCompatibleArchitecturesArm(layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaLayerVersionCompatibleArchitecturesX86Arm(layerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "2"),
@@ -387,13 +408,44 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, layerName)
 }
 
-func testAccAWSLambdaLayerVersionCompatibleArchitectures(layerName string) string {
+func testAccAWSLambdaLayerVersionCompatibleArchitecturesNone(layerName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer_test" {
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
+}
+`, layerName)
+}
+
+func testAccAWSLambdaLayerVersionCompatibleArchitecturesX86Arm(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
   layer_name = "%s"
 
   compatible_architectures = ["x86_64", "arm64"]
+}
+`, layerName)
+}
+
+func testAccAWSLambdaLayerVersionCompatibleArchitecturesX86(layerName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer_test" {
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
+
+  compatible_architectures = ["x86_64"]
+}
+`, layerName)
+}
+
+func testAccAWSLambdaLayerVersionCompatibleArchitecturesArm(layerName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer_test" {
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
+
+  compatible_architectures = ["arm64"]
 }
 `, layerName)
 }

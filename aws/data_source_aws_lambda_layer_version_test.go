@@ -82,7 +82,7 @@ func TestAccDataSourceAWSLambdaLayerVersion_runtime(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaLayerVersion_architectures_x86(t *testing.T) {
+func TestAccDataSourceAWSLambdaLayerVersion_architectures(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lambda_layer_version.test"
 	resourceName := "aws_lambda_layer_version.test"
@@ -99,22 +99,22 @@ func TestAccDataSourceAWSLambdaLayerVersion_architectures_x86(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccDataSourceAWSLambdaLayerVersion_architectures_arm(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_lambda_layer_version.test"
-	resourceName := "aws_lambda_layer_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
-		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesARM(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
+				),
+			},
+			{
+				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86ARM(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
+				),
+			},
+			{
+				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
@@ -209,6 +209,36 @@ resource "aws_lambda_layer_version" "test" {
 data "aws_lambda_layer_version" "test" {
   layer_name         = aws_lambda_layer_version.test.layer_name
   compatible_architecture = "arm64"	
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86ARM(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
+  compatible_architectures = ["x86_64", "arm64"]
+}
+
+data "aws_lambda_layer_version" "test" {
+  layer_name         = aws_lambda_layer_version.test.layer_name
+  compatible_architecture = "arm64"	
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesNone(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
+}
+
+data "aws_lambda_layer_version" "test" {
+  layer_name         = aws_lambda_layer_version.test.layer_name
 }
 `, rName)
 }

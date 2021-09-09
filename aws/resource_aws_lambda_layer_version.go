@@ -31,7 +31,6 @@ func resourceAwsLambdaLayerVersion() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				MinItems: 1,
 				MaxItems: 2,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,

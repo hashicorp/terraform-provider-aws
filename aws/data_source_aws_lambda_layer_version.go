@@ -81,7 +81,7 @@ func dataSourceAwsLambdaLayerVersion() *schema.Resource {
 				ConflictsWith: []string{"version"},
 			},
 			"compatible_architectures": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
