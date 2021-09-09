@@ -107,6 +107,11 @@ resource "aws_s3_bucket" "source" {
   versioning {
     enabled = true
   }
+  lifecycle {
+    ignore_changes = [
+      replication_configuration
+    ]
+  }
 }
 
 aws_s3_bucket_replication_configuration replication {
@@ -126,6 +131,17 @@ aws_s3_bucket_replication_configuration replication {
 
 ```
 
+~> **NOTE:** To avoid conflicts always add the following lifecycle block to the `aws_s3_bucket` resource of the source bucket.
+
+```
+lifecycle {
+  ignore_changes = [
+    replication_configuration
+  ]
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -142,6 +158,7 @@ The `rules` object supports the following:
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
 Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
+* `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations (documented below).
 * `delete_marker_replication_status` - (Optional) Whether delete markers are replicated. The only valid value is `Enabled`. To disable, omit this argument. This argument is only valid with V2 replication configurations (i.e., when `filter` is used).
 * `destination` - (Required) Specifies the destination for the rule (documented below).
 * `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies (documented below).
@@ -153,6 +170,10 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 
 ~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
 
+The `existing_object_replication` object supports the following:
+
+* `status` - (Required) Whether the existing objects should be replicated. Either `Enabled` or `Disabled`. The object is ignored if status is not Enabled.
+
 The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
@@ -161,15 +182,32 @@ The `destination` object supports the following:
   `sse_kms_encrypted_objects` source selection criteria.
 * `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
 * `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
+* `replication_time` - (Optional) Must be used in conjunction with `metrics` (documented below).
+* `metrics` - (Optional) Must be used in conjunction with `replication_time` (documented below).
+
+The `replication_time` object supports the following:
+
+* `status` - (Required) The status of the Replica Modifications sync. Either `Enabled` or `Disabled`. The object is ignored if status is not Enabled.
+
+The `metrics` object supports the following:
+
+* `status` - (Required) The status of the Replica Modifications sync. Either `Enabled` or `Disabled`. The object is ignored if status is not Enabled.
 
 The `source_selection_criteria` object supports the following:
 
+* `replica_modifications` - (Optional) Keep object metadata such as tags, ACLs, and Object Lock settings replicated between 
+   replicas and source objects (documented below).
+  
 * `sse_kms_encrypted_objects` - (Optional) Match SSE-KMS encrypted objects (documented below). If specified, `replica_kms_key_id`
    in `destination` must be specified as well.
 
+The `replica_modifications` object supports the following:
+
+* `status` - (Required) The status of the Replica Modifications sync. Either `Enabled` or `Disabled`. The object is ignored if status is not Enabled.
+
 The `sse_kms_encrypted_objects` object supports the following:
 
-* `enabled` - (Required) Boolean which indicates if this criteria is enabled.
+* `status` - (Required) The status of the SSE KMS encryption. Either `Enabled` or `Disabled`. The object is ignored if status is not Enabled.
 
 The `filter` object supports the following:
 
