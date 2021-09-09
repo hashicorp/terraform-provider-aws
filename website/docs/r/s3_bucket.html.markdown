@@ -289,6 +289,10 @@ resource "aws_s3_bucket" "source" {
 }
 ```
 
+~> **NOTE:** See `aws_s3_bucket_replication_configuration` to support bi-directional replication configuration and additional features.
+
+
+
 ### Enable Default Server Side Encryption
 
 ```terraform
@@ -423,6 +427,16 @@ The `noncurrent_version_transition` object supports the following
 * `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent object versions to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
 
 The `replication_configuration` object supports the following:
+
+~> **NOTE:** See the `aws_s3_bucket_replication_configuration` resource documentation to avoid conflicts. Replication configuration can only be defined in one resource not both.  When using the independent replication configuration resource the following lifecycle rule is needed on the `aws_s3_bucket` resource.
+
+```
+lifecycle {
+  ignore_changes = [
+    replication_configuration
+  ]
+}
+```
 
 * `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
 * `rules` - (Required) Specifies the rules managing the replication (documented below).
