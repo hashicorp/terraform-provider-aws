@@ -20,8 +20,9 @@ func resourceAwsTransferAccess() *schema.Resource {
 		Read:   resourceAwsTransferAccessRead,
 		Update: resourceAwsTransferAccessUpdate,
 		Delete: resourceAwsTransferAccessDelete,
+
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -181,7 +182,7 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("external_id", access.ExternalId)
 	d.Set("home_directory", access.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
-		return fmt.Errorf("Error setting home_directory_mappings: %w", err)
+		return fmt.Errorf("error setting home_directory_mappings: %w", err)
 	}
 	d.Set("home_directory_type", access.HomeDirectoryType)
 	d.Set("policy", access.Policy)

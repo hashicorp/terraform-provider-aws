@@ -237,15 +237,17 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).transferconn
+
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
 
-		describe, err := finder.UserByID(conn, serverID, userName)
+		output, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *describe.User
+		*res = *output
 
 		return nil
 	}
@@ -262,7 +264,8 @@ func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
 
-		_, err := finder.UserByID(conn, serverID, userName)
+		_, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
