@@ -1141,9 +1141,11 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	var stepSummaries []*emr.StepSummary
 	states := []string{
 		"PENDING",
+		"CANCELLED",
 		"FAILED",
 		"CANCEL_PENDING",
 		"RUNNING",
+		"INTERRUPTED",
 	}
 	var stepStates []*string
 	for _, v := range states {
