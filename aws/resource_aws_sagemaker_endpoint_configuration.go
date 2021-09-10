@@ -637,7 +637,7 @@ func expandSagemakerEndpointConfigNotificationConfig(configured []interface{}) *
 		c.ErrorTopic = aws.String(v.(string))
 	}
 
-	if v, ok := m["sucess_topic"]; ok {
+	if v, ok := m["success_topic"]; ok {
 		c.SuccessTopic = aws.String(v.(string))
 	}
 
