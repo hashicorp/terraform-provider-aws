@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,10 +12,10 @@ import (
 
 func resourceAwsChimeVoiceConnectorLogging() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsChimeVoiceConnectorLoggingPut,
-		ReadContext:   resourceAwsChimeVoiceConnectorLoggingRead,
-		UpdateContext: resourceAwsChimeVoiceConnectorLoggingUpdate,
-		DeleteContext: resourceAwsChimeVoiceConnectorLoggingDelete,
+		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorLoggingCreate,
+		ReadWithoutTimeout:   resourceAwsChimeVoiceConnectorLoggingRead,
+		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorLoggingUpdate,
+		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorLoggingDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -37,7 +36,7 @@ func resourceAwsChimeVoiceConnectorLogging() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorLoggingPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsChimeVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -52,16 +51,15 @@ func resourceAwsChimeVoiceConnectorLoggingPut(ctx context.Context, d *schema.Res
 		return diag.Errorf("error creating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
 	}
 
-	d.SetId(fmt.Sprintf("logging-%s", vcId))
+	d.SetId(vcId)
 	return resourceAwsChimeVoiceConnectorLoggingRead(ctx, d, meta)
 }
 
 func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
-	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.GetVoiceConnectorLoggingConfigurationInput{
-		VoiceConnectorId: aws.String(vcId),
+		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, input)
@@ -72,20 +70,21 @@ func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.Re
 	}
 
 	if err != nil || resp.LoggingConfiguration == nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) logging configuration: %s", vcId, err)
+		return diag.Errorf("error getting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 	}
 
 	d.Set("enable_sip_logs", resp.LoggingConfiguration.EnableSIPLogs)
+	d.Set("voice_connector_id", d.Id())
+
 	return nil
 }
 
 func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
-	vcId := d.Get("voice_connector_id").(string)
 	if d.HasChange("enable_sip_logs") {
 		input := &chime.PutVoiceConnectorLoggingConfigurationInput{
-			VoiceConnectorId: aws.String(vcId),
+			VoiceConnectorId: aws.String(d.Id()),
 			LoggingConfiguration: &chime.LoggingConfiguration{
 				EnableSIPLogs: aws.Bool(d.Get("enable_sip_logs").(bool)),
 			},
@@ -97,7 +96,7 @@ func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.
 				d.SetId("")
 				return nil
 			}
-			return diag.Errorf("error updating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
+			return diag.Errorf("error updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -107,16 +106,15 @@ func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.
 func resourceAwsChimeVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).chimeconn
 
-	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
-		VoiceConnectorId: aws.String(vcId),
+		VoiceConnectorId: aws.String(d.Id()),
 		LoggingConfiguration: &chime.LoggingConfiguration{
 			EnableSIPLogs: aws.Bool(false),
 		},
 	}
 
 	if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-		return diag.Errorf("error deleting Chime Voice Connector (%s) logging configuration: %s", vcId, err)
+		return diag.Errorf("error deleting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 	}
 
 	return nil
