@@ -80,6 +80,9 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					testAccMatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
+					resource.TestCheckResourceAttr(resourceName, "creation_token", rName),
+					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
@@ -91,17 +94,16 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSEFSFileSystemConfigWithPerformanceMode,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem("aws_efs_file_system.test2", &desc),
-					resource.TestCheckResourceAttr(resourceName, "creation_token", "supercalifragilisticexpialidocious"),
-					resource.TestCheckResourceAttr(resourceName, "performance_mode", "maxIO"),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test2", "creation_token", "supercalifragilisticexpialidocious"),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test2", "performance_mode", "maxIO"),
 				),
 			},
 		},
@@ -123,15 +125,14 @@ func TestAccAWSEFSFileSystem_availabilityZoneName(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfigAvailabilityZoneName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_name", "data.aws_availability_zones.available", "names.0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -157,10 +158,9 @@ func TestAccAWSEFSFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSEFSFileSystemConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -212,10 +212,9 @@ func TestAccAWSEFSFileSystem_pagedTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -234,7 +233,7 @@ func TestAccAWSEFSFileSystem_kmsKey(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemConfigWithKmsKey(rInt),
+				Config: testAccAWSEFSFileSystemConfigWithKmsKey(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -242,10 +241,9 @@ func TestAccAWSEFSFileSystem_kmsKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -261,7 +259,7 @@ func TestAccAWSEFSFileSystem_kmsConfigurationWithoutEncryption(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSEFSFileSystemConfigWithKmsKeyNoEncryption(rInt),
+				Config:      testAccAWSEFSFileSystemConfigWithKmsKey(rInt, false),
 				ExpectError: regexp.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
 			},
 		},
@@ -295,10 +293,9 @@ func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -331,10 +328,9 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"creation_token"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -598,30 +594,17 @@ resource "aws_efs_file_system" "test2" {
 }
 `
 
-func testAccAWSEFSFileSystemConfigWithKmsKey(rInt int) string {
+func testAccAWSEFSFileSystemConfigWithKmsKey(rInt int, enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %d"
+  description = "Terraform acc test %[1]d"
 }
 
 resource "aws_efs_file_system" "test" {
-  encrypted  = true
+  encrypted  = %[2]t
   kms_key_id = aws_kms_key.test.arn
 }
-`, rInt)
-}
-
-func testAccAWSEFSFileSystemConfigWithKmsKeyNoEncryption(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description = "Terraform acc test %d"
-}
-
-resource "aws_efs_file_system" "test" {
-  encrypted  = false
-  kms_key_id = aws_kms_key.test.arn
-}
-`, rInt)
+`, rInt, enable)
 }
 
 func testAccAWSEFSFileSystemConfig_ThroughputMode(throughputMode string) string {
