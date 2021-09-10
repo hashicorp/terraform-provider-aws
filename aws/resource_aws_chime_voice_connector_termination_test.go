@@ -138,7 +138,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Chime voice connector group ID is set")
+			return fmt.Errorf("no Chime Voice Connector termination ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).chimeconn
