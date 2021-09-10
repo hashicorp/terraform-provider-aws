@@ -7,11 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -112,8 +115,13 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(efs.TransitionToIARules_Values(), false),
+						},
+						"transition_to_primary_storage_class": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(efs.TransitionToPrimaryStorageClassRules_Values(), false),
 						},
 					},
 				},
@@ -279,33 +287,15 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
-			log.Printf("[WARN] EFS file system (%s) could not be found.", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if hasEmptyFileSystems(resp) {
-		return fmt.Errorf("EFS file system %q could not be found.", d.Id())
-	}
-
-	var fs *efs.FileSystemDescription
-	for _, f := range resp.FileSystems {
-		if d.Id() == *f.FileSystemId {
-			fs = f
-			break
-		}
-	}
-	if fs == nil {
-		log.Printf("[WARN] EFS File System (%s) not found, removing from state", d.Id())
+	fs, err := finder.FileSystemByID(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EFS file system (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading EFS file system (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", fs.FileSystemArn)
@@ -359,27 +349,20 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 		FileSystemId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
 			return nil
 		}
 		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
 	}
 
 	if _, err := waiter.FileSystemDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for EFS file system (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
-	if fs != nil && len(fs.FileSystems) > 0 {
-		return false
-	}
-	return true
 }
 
 func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
@@ -394,6 +377,10 @@ func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []
 
 		if apiObject.TransitionToIA != nil {
 			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
+		}
+
+		if apiObject.TransitionToPrimaryStorageClass != nil {
+			tfMap["transition_to_primary_storage_class"] = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -416,6 +403,10 @@ func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.Lifecycle
 
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
 			apiObject.TransitionToIA = aws.String(v)
+		}
+
+		if v, ok := tfMap["transition_to_primary_storage_class"].(string); ok && v != "" {
+			apiObject.TransitionToPrimaryStorageClass = aws.String(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
