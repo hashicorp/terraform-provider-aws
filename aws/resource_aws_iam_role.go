@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -54,10 +55,11 @@ func resourceAwsIamRole() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
+					validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
 					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
 				),
 			},
@@ -161,15 +163,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
-
+	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 	request := &iam.CreateRoleInput{
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
@@ -287,6 +281,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set("name", role.RoleName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(role.RoleName)))
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)

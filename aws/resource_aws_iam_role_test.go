@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func init() {
@@ -225,9 +226,8 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_namePrefix(t *testing.T) {
+func TestAccAWSIAMRole_NameGenerated(t *testing.T) {
 	var conf iam.GetRoleOutput
-	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -237,18 +237,45 @@ func TestAccAWSIAMRole_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIAMRolePrefixNameConfig(rName),
+				Config: testAccAWSIAMRoleConfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
-					testAccCheckAWSRoleGeneratedNamePrefix(
-						resourceName, "test-role-"),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_NamePrefix(t *testing.T) {
+	var conf iam.GetRoleOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfigNamePrefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &conf),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -970,23 +997,6 @@ func testAccCheckAWSRoleDisappears(getRoleOutput *iam.GetRoleOutput) resource.Te
 	}
 }
 
-func testAccCheckAWSRoleGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources[resource]
-		if !ok {
-			return fmt.Errorf("Resource not found")
-		}
-		name, ok := r.Primary.Attributes["name"]
-		if !ok {
-			return fmt.Errorf("Name attr not found: %#v", r.Primary.Attributes)
-		}
-		if !strings.HasPrefix(name, prefix) {
-			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
-		}
-		return nil
-	}
-}
-
 // Attach inline policy out of band (outside of terraform)
 func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1298,12 +1308,41 @@ EOF
 `, rName)
 }
 
-func testAccAWSIAMRolePrefixNameConfig(rName string) string {
+func testAccAWSIAMRoleConfigNameGenerated() string {
+	return `
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+`
+}
+
+func testAccAWSIAMRoleConfigNamePrefix(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name_prefix = "test-role-%s"
+  name_prefix = %[1]q
   path        = "/"
 
   assume_role_policy = <<EOF
