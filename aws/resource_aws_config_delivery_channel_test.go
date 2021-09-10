@@ -345,8 +345,9 @@ resource "aws_sns_topic" "t" {
 }
 
 resource "aws_kms_key" "k" {
-  description = "tf-acc-test-awsconfig-%d"
+  description             = "tf-acc-test-awsconfig-%d"
   deletion_window_in_days = 7
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
