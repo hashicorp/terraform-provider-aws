@@ -1,4 +1,13 @@
 ## 3.59.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_transfer_access` ([#20342](https://github.com/hashicorp/terraform-provider-aws/issues/20342))
+
+ENHANCEMENTS:
+
+* resource/aws_transfer_server: Add `directory_id` argument to support Microsoft Active Directory (AD) authentication ([#20342](https://github.com/hashicorp/terraform-provider-aws/issues/20342))
+
 ## 3.58.0 (September 09, 2021)
 
 FEATURES:
