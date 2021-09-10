@@ -1073,7 +1073,60 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 			},
 		},
 	})
+}
 
+func TestAccAWSLambdaFunction_ArchitecturesWithLayer(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			// Ensure function with arm64 architecture can be created
+			{
+				Config: testAccAWSLambdaArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			// Ensure function architecture can be updated
+			{
+				Config: testAccAWSLambdaArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
@@ -2809,6 +2862,48 @@ resource "aws_lambda_function" "test" {
   architectures = ["x86_64"]
 }
 `, funcName)
+}
+
+func testAccAWSLambdaArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_layer_version" "test" {
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = "%s"
+  compatible_runtimes      = ["nodejs12.x"]
+  compatible_architectures = ["arm64", "x86_64"]
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  architectures = ["arm64"]
+  layers        = [aws_lambda_layer_version.test.arn]
+}
+`, layerName, funcName)
+}
+
+func testAccAWSLambdaArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_layer_version" "test" {
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = "%s"
+  compatible_runtimes      = ["nodejs12.x"]
+  compatible_architectures = ["arm64", "x86_64"]
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  architectures = ["x86_64"]
+  layers        = [aws_lambda_layer_version.test.arn]
+}
+`, layerName, funcName)
 }
 
 func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
