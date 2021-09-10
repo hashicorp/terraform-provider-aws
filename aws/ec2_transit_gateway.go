@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func decodeEc2TransitGatewayRouteID(id string) (string, string, error) {
@@ -185,34 +186,6 @@ func ec2DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewa
 	return output.Associations[0], nil
 }
 
-func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
-	if transitGatewayRouteTableID == "" {
-		return nil, nil
-	}
-
-	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("transit-gateway-attachment-id"),
-				Values: []*string{aws.String(transitGatewayAttachmentID)},
-			},
-		},
-		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	}
-
-	output, err := conn.GetTransitGatewayRouteTablePropagations(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.TransitGatewayRouteTablePropagations) == 0 {
-		return nil, nil
-	}
-
-	return output.TransitGatewayRouteTablePropagations[0], nil
-}
-
 func ec2DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
 		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
@@ -325,7 +298,7 @@ func ec2TransitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayR
 }
 
 func ec2TransitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, enablePropagation bool) error {
-	transitGatewayRouteTablePropagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayRouteTablePropagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 	if err != nil {
 		return fmt.Errorf("error determining EC2 Transit Gateway Attachment (%s) propagation to Route Table (%s): %s", transitGatewayAttachmentID, transitGatewayRouteTableID, err)
 	}
