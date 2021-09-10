@@ -299,7 +299,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
