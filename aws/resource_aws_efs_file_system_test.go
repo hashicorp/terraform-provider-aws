@@ -76,12 +76,11 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 			{
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					testAccMatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
-					testAccCheckEfsFileSystem(resourceName, &desc),
-					testAccCheckEfsFileSystemPerformanceMode(resourceName, "generalPurpose"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "size_in_bytes.#", "1"),
@@ -101,8 +100,8 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfigWithPerformanceMode,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem("aws_efs_file_system.test2", &desc),
-					testAccCheckEfsCreationToken("aws_efs_file_system.test2", "supercalifragilisticexpialidocious"),
-					testAccCheckEfsFileSystemPerformanceMode("aws_efs_file_system.test2", "maxIO"),
+					resource.TestCheckResourceAttr(resourceName, "creation_token", "supercalifragilisticexpialidocious"),
+					resource.TestCheckResourceAttr(resourceName, "performance_mode", "maxIO"),
 				),
 			},
 		},
@@ -460,62 +459,6 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 		}
 
 		*fDesc = *fs
-
-		return nil
-	}
-}
-
-func testAccCheckEfsCreationToken(resourceID string, expectedToken string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-			FileSystemId: aws.String(rs.Primary.ID),
-		})
-
-		fs := resp.FileSystems[0]
-		if *fs.CreationToken != expectedToken {
-			return fmt.Errorf("Creation Token mismatch.\nExpected: %s\nGiven: %v",
-				expectedToken, *fs.CreationToken)
-		}
-
-		return err
-	}
-}
-
-func testAccCheckEfsFileSystemPerformanceMode(resourceID string, expectedMode string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-			FileSystemId: aws.String(rs.Primary.ID),
-		})
-
-		fs := resp.FileSystems[0]
-		if *fs.PerformanceMode != expectedMode {
-			return fmt.Errorf("Performance Mode mismatch.\nExpected: %s\nGiven: %v",
-				expectedMode, *fs.PerformanceMode)
-		}
-
-		if err != nil {
-			return err
-		}
 
 		return nil
 	}
