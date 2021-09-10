@@ -1,0 +1,3 @@
+```release=note:bug
+resource/aws_emr_cluster: EMR steps with status 'Completed' are now filtered from ListSteps API
+```
