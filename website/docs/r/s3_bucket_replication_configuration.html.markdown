@@ -172,6 +172,8 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 
 The `existing_object_replication` object supports the following:
 
+~> **NOTE:** Replication for existing objects requires activation by AWS Support.  See [userguide/replication-what-is-isnot-replicated](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication)
+
 * `status` - (Required) Whether the existing objects should be replicated. Either `Enabled` or `Disabled`. The object is ignored if status is not Enabled.
 
 The `destination` object supports the following:
