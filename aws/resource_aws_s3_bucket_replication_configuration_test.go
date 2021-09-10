@@ -844,7 +844,7 @@ func TestAccAWSS3BucketReplicationConfig_schemaV2SameRegion(t *testing.T) {
 	})
 }
 
-const isExistingObjectReplicationBlocked = false
+const isExistingObjectReplicationBlocked = true
 
 func TestAccAWSS3BucketReplicationConfig_existingObjectReplication(t *testing.T) {
 	if isExistingObjectReplicationBlocked {
