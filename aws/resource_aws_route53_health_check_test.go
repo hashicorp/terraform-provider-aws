@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -412,7 +413,7 @@ func TestAccAWSRoute53HealthCheck_withRoutingControlArn(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
