@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSCloudfrontFieldLevelEncryptionProfile_basic(t *testing.T) {
@@ -74,6 +75,7 @@ func TestAccAWSCloudfrontFieldLevelEncryptionProfile_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudfrontFieldLevelEncryptionProfileExists(resourceName, &profile),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudfrontFieldLevelEncryptionProfile(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudfrontFieldLevelEncryptionProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,6 +92,10 @@ func testAccCheckCloudfrontFieldLevelEncryptionProfileDestroy(s *terraform.State
 		}
 
 		_, err := finder.FieldLevelEncryptionProfileByID(conn, rs.Primary.ID)
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err == nil {
 			return fmt.Errorf("cloudfront Field Level Encryption Profile was not deleted")
 		}

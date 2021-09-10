@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudfrontFieldLevelEncryptionProfile() *schema.Resource {
@@ -95,7 +97,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d *schema.ResourceData
 	conn := meta.(*AWSClient).cloudfrontconn
 
 	resp, err := finder.FieldLevelEncryptionProfileByID(conn, d.Id())
-	if isAWSErr(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Cloudfront Field Level Encryption Profile %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -154,6 +156,10 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileDelete(d *schema.ResourceDa
 
 	_, err := conn.DeleteFieldLevelEncryptionProfile(input)
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
+			return nil
+		}
+
 		return fmt.Errorf("error deleting Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
 	}
 
