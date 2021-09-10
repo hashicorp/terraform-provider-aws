@@ -191,7 +191,7 @@ resource "aws_lambda_layer_version" "test" {
 
 data "aws_lambda_layer_version" "test" {
   layer_name              = aws_lambda_layer_version.test.layer_name
-  compatible_architecture = "x86_64"	
+  compatible_architecture = "x86_64"
 }
 
 `, rName)
@@ -208,7 +208,7 @@ resource "aws_lambda_layer_version" "test" {
 
 data "aws_lambda_layer_version" "test" {
   layer_name              = aws_lambda_layer_version.test.layer_name
-  compatible_architecture = "arm64"	
+  compatible_architecture = "arm64"
 }
 `, rName)
 }
@@ -223,8 +223,8 @@ resource "aws_lambda_layer_version" "test" {
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name              =  aws_lambda_layer_version.test.layer_name
-  compatible_architecture = "arm64"	
+  layer_name              = aws_lambda_layer_version.test.layer_name
+  compatible_architecture = "arm64"
 }
 `, rName)
 }
@@ -238,7 +238,7 @@ resource "aws_lambda_layer_version" "test" {
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name         = aws_lambda_layer_version.test.layer_name
+  layer_name = aws_lambda_layer_version.test.layer_name
 }
 `, rName)
 }
