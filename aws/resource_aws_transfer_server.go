@@ -58,6 +58,11 @@ func resourceAwsTransferServer() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"directory_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -198,6 +203,14 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		input.Certificate = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("directory_id"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.DirectoryId = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("domain"); ok {
 		input.Domain = aws.String(v.(string))
 	}
@@ -316,6 +329,11 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", output.Arn)
 	d.Set("certificate", output.Certificate)
+	if output.IdentityProviderDetails != nil {
+		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
+	} else {
+		d.Set("directory_id", "")
+	}
 	d.Set("domain", output.Domain)
 	d.Set("endpoint", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
@@ -491,8 +509,12 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
-		if d.HasChanges("invocation_role", "url") {
+		if d.HasChanges("directory_id", "invocation_role", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
+
+			if attr, ok := d.GetOk("directory_id"); ok {
+				identityProviderDetails.DirectoryId = aws.String(attr.(string))
+			}
 
 			if attr, ok := d.GetOk("invocation_role"); ok {
 				identityProviderDetails.InvocationRole = aws.String(attr.(string))

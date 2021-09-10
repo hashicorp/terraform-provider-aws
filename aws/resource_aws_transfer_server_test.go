@@ -73,6 +73,7 @@ func testSweepTransferServers(region string) error {
 func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"Invalid server type: PUBLIC",
+		"InvalidServiceName: The Vpc Endpoint Service",
 	)
 }
 
@@ -819,6 +820,39 @@ func testAccAWSTransferServer_apiGateway_forceDestroy(t *testing.T) {
 	})
 }
 
+func testAccAWSTransferServer_directoryService(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSTransfer(t)
+			testAccPreCheckAWSDirectoryService(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_DIRECTORY_SERVICE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 	var s transfer.DescribedServer
 	var u transfer.DescribedUser
@@ -991,7 +1025,7 @@ func testAccPreCheckAWSTransfer(t *testing.T) {
 }
 
 func testAccAWSTransferServerConfigBaseVpc(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1012,6 +1046,22 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
+
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -1055,7 +1105,7 @@ resource "aws_eip" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSTransferServerConfigBaseLoggingRole(rName string) string {
@@ -1203,6 +1253,40 @@ resource "aws_transfer_server" "test" {
   force_destroy = %[1]t
 }
 `, forceDestroy))
+}
+
+func testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName string, forceDestroy bool) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		testAccAWSTransferServerConfigBaseDirectoryService(rName),
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  identity_provider_type = "AWS_DIRECTORY_SERVICE"
+  directory_id           = aws_directory_service_directory.test.id
+  logging_role           = aws_iam_role.test.arn
+
+  force_destroy = %[1]t
+}
+`, forceDestroy))
+}
+
+func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
+	return `
+resource "aws_directory_service_directory" "test" {
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+
+  vpc_settings {
+    vpc_id = aws_vpc.test.id
+
+    subnet_ids = [
+      aws_subnet.test.id,
+      aws_subnet.test2.id
+    ]
+  }
+}
+`
 }
 
 func testAccAWSTransferServerForceDestroyConfig(rName, publicKey string) string {
