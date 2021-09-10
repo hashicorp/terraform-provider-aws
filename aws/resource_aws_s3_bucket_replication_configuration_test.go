@@ -844,11 +844,11 @@ func TestAccAWSS3BucketReplicationConfig_schemaV2SameRegion(t *testing.T) {
 	})
 }
 
-const isExistingObjectReplicationBlocked = true
+const isExistingObjectReplicationBlocked = false
 
 func TestAccAWSS3BucketReplicationConfig_existingObjectReplication(t *testing.T) {
 	if isExistingObjectReplicationBlocked {
-		/*  https://aws.amazon.com/blogs/storage/replicating-existing-objects-between-s3-buckets/
+		/*  https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication
 		    A request to AWS Technical Support needs to be made in order to allow ExistingObjectReplication.
 			Once that request is approved, this can be unblocked for testing. */
 		return
