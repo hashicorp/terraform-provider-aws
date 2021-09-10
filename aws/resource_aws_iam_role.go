@@ -190,28 +190,25 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		request.Tags = tags.IgnoreAws().IamTags()
 	}
 
-	var createResp *iam.CreateRoleOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		createResp, err = iamconn.CreateRole(request)
-		// IAM users (referenced in Principal field of assume policy)
-		// can take ~30 seconds to propagate in AWS
-		if isAWSErr(err, "MalformedPolicyDocument", "Invalid principal in policy") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		createResp, err = iamconn.CreateRole(request)
-	}
+	outputRaw, err := tfresource.RetryWhen(
+		waiter.PropagationTimeout,
+		func() (interface{}, error) {
+			return iamconn.CreateRole(request)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return fmt.Errorf("Error creating IAM Role %s: %s", name, err)
+		return fmt.Errorf("error creating IAM Role (%s): %w", name, err)
 	}
 
-	roleName := aws.StringValue(createResp.Role.RoleName)
+	roleName := aws.StringValue(outputRaw.(*iam.CreateRoleOutput).Role.RoleName)
 
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
 		policies := expandIamInlinePolicies(roleName, v.(*schema.Set).List())
@@ -311,26 +308,22 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			PolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
 		}
 
-		err := resource.Retry(30*time.Second, func() *resource.RetryError {
-			var err error
-			_, err = iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
-			// IAM users (referenced in Principal field of assume policy)
-			// can take ~30 seconds to propagate in AWS
-			if isAWSErr(err, "MalformedPolicyDocument", "Invalid principal in policy") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		})
-		if isResourceTimeoutError(err) {
-			_, err = iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
-		}
+		_, err := tfresource.RetryWhen(
+			waiter.PropagationTimeout,
+			func() (interface{}, error) {
+				return iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
+			return fmt.Errorf("error updating IAM Role (%s) assume role policy: %w", d.Id(), err)
 		}
 	}
 
@@ -339,13 +332,11 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			RoleName:    aws.String(d.Id()),
 			Description: aws.String(d.Get("description").(string)),
 		}
+
 		_, err := iamconn.UpdateRoleDescription(roleDescriptionInput)
+
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
+			return fmt.Errorf("error updating IAM Role (%s) description: %w", d.Id(), err)
 		}
 	}
 
@@ -354,13 +345,11 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			RoleName:           aws.String(d.Id()),
 			MaxSessionDuration: aws.Int64(int64(d.Get("max_session_duration").(int))),
 		}
+
 		_, err := iamconn.UpdateRole(roleMaxDurationInput)
+
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error Updating IAM Role (%s) Max Session Duration: %s", d.Id(), err)
+			return fmt.Errorf("error updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
 		}
 	}
 
@@ -371,17 +360,21 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				PermissionsBoundary: aws.String(permissionsBoundary),
 				RoleName:            aws.String(d.Id()),
 			}
+
 			_, err := iamconn.PutRolePermissionsBoundary(input)
+
 			if err != nil {
-				return fmt.Errorf("error updating IAM Role permissions boundary: %s", err)
+				return fmt.Errorf("error updating IAM Role (%s) permissions boundary: %w", d.Id(), err)
 			}
 		} else {
 			input := &iam.DeleteRolePermissionsBoundaryInput{
 				RoleName: aws.String(d.Id()),
 			}
+
 			_, err := iamconn.DeleteRolePermissionsBoundary(input)
+
 			if err != nil {
-				return fmt.Errorf("error deleting IAM Role permissions boundary: %s", err)
+				return fmt.Errorf("error deleting IAM Role (%s) permissions boundary: %w", d.Id(), err)
 			}
 		}
 	}
@@ -473,9 +466,11 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err := deleteIamRole(conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
+
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting IAM Role (%s): %w", d.Id(), err)
 	}
