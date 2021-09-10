@@ -90,7 +90,7 @@ func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
 
 func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
-	var role iam.GetRoleOutput
+	var role iam.Role
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	iamRoleResourceName := "aws_iam_role.test"

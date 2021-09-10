@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
@@ -16,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -155,7 +156,7 @@ func testSweepIamRoles(region string) error {
 }
 
 func TestAccAWSIAMRole_basic(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
@@ -183,7 +184,7 @@ func TestAccAWSIAMRole_basic(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
@@ -227,7 +228,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_NameGenerated(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -254,7 +255,7 @@ func TestAccAWSIAMRole_NameGenerated(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_NamePrefix(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
@@ -282,7 +283,7 @@ func TestAccAWSIAMRole_NamePrefix(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_testNameChange(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
@@ -331,7 +332,7 @@ func TestAccAWSIAMRole_badJSON(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_disappears(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -355,7 +356,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
@@ -383,7 +384,7 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
-	var conf iam.GetRoleOutput
+	var conf iam.Role
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
@@ -430,7 +431,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -503,7 +504,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_tags(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
@@ -540,7 +541,7 @@ func TestAccAWSIAMRole_tags(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := acctest.RandomWithPrefix("tf-acc-test")
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -588,7 +589,7 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_policyBasicInlineEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
@@ -609,7 +610,7 @@ func TestAccAWSIAMRole_policyBasicInlineEmpty(t *testing.T) {
 }
 
 func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := acctest.RandomWithPrefix("tf-acc-test")
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -656,7 +657,7 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 // TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
 // out of band, it should be reattached.
 func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -689,7 +690,7 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testin
 // TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty: if a policy is removed
 // out of band, it should be recreated.
 func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -722,7 +723,7 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing
 // TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty: if managed_policies arg
 // exists and is non-empty, policy attached out of band should be removed
 func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := acctest.RandomWithPrefix("tf-acc-test")
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -756,7 +757,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing
 // TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
 // exists and is non-empty, policy added out of band should be removed
 func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := acctest.RandomWithPrefix("tf-acc-test")
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -791,7 +792,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.
 // TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent: if there is no
 // inline_policy attribute, out of band changes should be ignored.
 func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := acctest.RandomWithPrefix("tf-acc-test")
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -832,7 +833,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testi
 // TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent: if there is no
 // managed_policies attribute, out of band changes should be ignored.
 func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -864,7 +865,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent(t *test
 // TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
 // out of band with empty inline arg, should be removed
 func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -896,7 +897,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) 
 // TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
 // out of band with empty managed arg, should be detached
 func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T) {
-	var role iam.GetRoleOutput
+	var role iam.Role
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -926,35 +927,30 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T)
 }
 
 func testAccCheckAWSRoleDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role" {
 			continue
 		}
 
-		// Try to get role
-		_, err := iamconn.GetRole(&iam.GetRoleInput{
-			RoleName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			return fmt.Errorf("still exist.")
+		_, err := finder.RoleByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+
+		return fmt.Errorf("IAM Role %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAWSRoleExists(n string, res *iam.GetRoleOutput) resource.TestCheckFunc {
+func testAccCheckAWSRoleExists(n string, v *iam.Role) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -962,19 +958,18 @@ func testAccCheckAWSRoleExists(n string, res *iam.GetRoleOutput) resource.TestCh
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Role name is set")
+			return fmt.Errorf("No IAM Role ID is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		resp, err := iamconn.GetRole(&iam.GetRoleInput{
-			RoleName: aws.String(rs.Primary.ID),
-		})
+		output, err := finder.RoleByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *resp
+		*v = *output
 
 		return nil
 	}
@@ -1011,12 +1006,12 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
+func testAccCheckAWSRolePermissionsBoundary(role *iam.Role, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		actualPermissionsBoundaryArn := ""
 
-		if getRoleOutput.Role.PermissionsBoundary != nil {
-			actualPermissionsBoundaryArn = *getRoleOutput.Role.PermissionsBoundary.PermissionsBoundaryArn
+		if role.PermissionsBoundary != nil {
+			actualPermissionsBoundaryArn = *role.PermissionsBoundary.PermissionsBoundaryArn
 		}
 
 		if actualPermissionsBoundaryArn != expectedPermissionsBoundaryArn {
@@ -1027,13 +1022,13 @@ func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, ex
 	}
 }
 
-func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, policyName string) resource.TestCheckFunc {
+func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
 		var managedARN string
 		input := &iam.ListAttachedRolePoliciesInput{
-			RoleName: role.Role.RoleName,
+			RoleName: role.RoleName,
 		}
 
 		err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
@@ -1054,7 +1049,7 @@ func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, polic
 
 		_, err = conn.DetachRolePolicy(&iam.DetachRolePolicyInput{
 			PolicyArn: aws.String(managedARN),
-			RoleName:  role.Role.RoleName,
+			RoleName:  role.RoleName,
 		})
 
 		if err != nil {
@@ -1065,7 +1060,7 @@ func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, polic
 	}
 }
 
-func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.GetRoleOutput, policyName string) resource.TestCheckFunc {
+func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -1094,7 +1089,7 @@ func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.GetRoleOutput, polic
 
 		_, err = conn.AttachRolePolicy(&iam.AttachRolePolicyInput{
 			PolicyArn: aws.String(managedARN),
-			RoleName:  role.Role.RoleName,
+			RoleName:  role.RoleName,
 		})
 		if err != nil {
 			return err
@@ -1104,14 +1099,14 @@ func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.GetRoleOutput, polic
 	}
 }
 
-func testAccCheckAWSRolePolicyAddInlinePolicy(role *iam.GetRoleOutput, inlinePolicy string) resource.TestCheckFunc {
+func testAccCheckAWSRolePolicyAddInlinePolicy(role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
 		_, err := conn.PutRolePolicy(&iam.PutRolePolicyInput{
 			PolicyDocument: aws.String(testAccAWSRolePolicyExtraInlineConfig()),
 			PolicyName:     aws.String(inlinePolicy),
-			RoleName:       aws.String(*role.Role.RoleName),
+			RoleName:       role.RoleName,
 		})
 
 		if err != nil {
@@ -1121,13 +1116,13 @@ func testAccCheckAWSRolePolicyAddInlinePolicy(role *iam.GetRoleOutput, inlinePol
 	}
 }
 
-func testAccCheckAWSRolePolicyRemoveInlinePolicy(role *iam.GetRoleOutput, inlinePolicy string) resource.TestCheckFunc {
+func testAccCheckAWSRolePolicyRemoveInlinePolicy(role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
 		_, err := conn.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
 			PolicyName: aws.String(inlinePolicy),
-			RoleName:   aws.String(*role.Role.RoleName),
+			RoleName:   role.RoleName,
 		})
 
 		if err != nil {

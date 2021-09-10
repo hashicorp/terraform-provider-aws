@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -235,33 +236,11 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	request := &iam.GetRoleInput{
-		RoleName: aws.String(d.Id()),
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+		return finder.RoleByName(iamconn, d.Id())
+	}, d.IsNewResource())
 
-	var getResp *iam.GetRoleOutput
-
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		getResp, err = iamconn.GetRole(request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = iamconn.GetRole(request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -271,11 +250,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM Role (%s): %w", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.Role == nil {
-		return fmt.Errorf("error reading IAM Role (%s): empty response", d.Id())
-	}
-
-	role := getResp.Role
+	role := outputRaw.(*iam.Role)
 
 	d.Set("arn", role.Arn)
 	if err := d.Set("create_date", role.CreateDate.Format(time.RFC3339)); err != nil {
