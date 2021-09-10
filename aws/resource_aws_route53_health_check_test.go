@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -460,56 +462,44 @@ func testAccCheckRoute53HealthCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		lopts := &route53.ListHealthChecksInput{}
-		resp, err := conn.ListHealthChecks(lopts)
+		_, err := finder.HealthCheckByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
-		if len(resp.HealthChecks) == 0 {
-			return nil
-		}
 
-		for _, check := range resp.HealthChecks {
-			if *check.Id == rs.Primary.ID {
-				return fmt.Errorf("Record still exists: %#v", check)
-			}
-
-		}
-
+		return fmt.Errorf("Route53 Health Check %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckRoute53HealthCheckExists(n string, hCheck *route53.HealthCheck) resource.TestCheckFunc {
+func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No health check ID is set")
+			return fmt.Errorf("No Route53 Health Check ID is set")
 		}
 
-		lopts := &route53.ListHealthChecksInput{}
-		resp, err := conn.ListHealthChecks(lopts)
+		conn := testAccProvider.Meta().(*AWSClient).r53conn
+
+		output, err := finder.HealthCheckByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.HealthChecks) == 0 {
-			return fmt.Errorf("Health Check does not exist")
-		}
 
-		for _, check := range resp.HealthChecks {
-			if *check.Id == rs.Primary.ID {
-				*hCheck = *check
-				return nil
-			}
+		*v = *output
 
-		}
-		return fmt.Errorf("Health Check does not exist")
+		return nil
 	}
 }
 
