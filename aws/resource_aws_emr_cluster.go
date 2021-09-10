@@ -1139,8 +1139,19 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var stepSummaries []*emr.StepSummary
+	states := []string{
+		"PENDING",
+		"FAILED",
+		"CANCEL_PENDING",
+		"RUNNING",
+	}
+	var stepStates []*string
+	for _, v := range states {
+		stepStates = append(stepStates, &v)
+	}
 	listStepsInput := &emr.ListStepsInput{
-		ClusterId: aws.String(d.Id()),
+		ClusterId:  aws.String(d.Id()),
+		StepStates: stepStates,
 	}
 	err = emrconn.ListStepsPages(listStepsInput, func(page *emr.ListStepsOutput, lastPage bool) bool {
 		// ListSteps returns steps in reverse order (newest first)
