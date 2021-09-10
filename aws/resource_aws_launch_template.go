@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsLaunchTemplate() *schema.Resource {
@@ -214,7 +215,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"cpu_credits": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"standard", "unlimited"}, false),
+							ValidateFunc: validation.StringInSlice(tfec2.CpuCredits_Values(), false),
 						},
 					},
 				},
