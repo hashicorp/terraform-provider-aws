@@ -444,10 +444,11 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EFS file system ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).efsconn
+
 		fs, err := finder.FileSystemByID(conn, rs.Primary.ID)
 
 		if err != nil {

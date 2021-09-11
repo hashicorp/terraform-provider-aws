@@ -196,20 +196,18 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		return errors.New("encrypted must be set to true when kms_key_id is specified")
 	}
 
-	log.Printf("[DEBUG] EFS file system create options: %#v", *createOpts)
+	log.Printf("[DEBUG] Creating EFS file system: %s", createOpts)
 	fs, err := conn.CreateFileSystem(createOpts)
+
 	if err != nil {
-		return fmt.Errorf("Error creating EFS file system: %w", err)
+		return fmt.Errorf("error creating EFS file system: %w", err)
 	}
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
-	log.Printf("[INFO] EFS file system ID: %s", d.Id())
 
 	if _, err := waiter.FileSystemAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] EFS file system %q created.", d.Id())
 
 	_, hasLifecyclePolicy := d.GetOk("lifecycle_policy")
 	if hasLifecyclePolicy {
@@ -217,9 +215,9 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 			FileSystemId:      aws.String(d.Id()),
 			LifecyclePolicies: expandEfsFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
 		})
+
 		if err != nil {
-			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
-				d.Id(), err.Error())
+			return fmt.Errorf("error creating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -242,6 +240,7 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		_, err := conn.UpdateFileSystem(input)
+
 		if err != nil {
 			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
 		}
@@ -265,9 +264,9 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		_, err := conn.PutLifecycleConfiguration(input)
+
 		if err != nil {
-			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
-				d.Id(), err.Error())
+			return fmt.Errorf("error updating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -288,6 +287,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	fs, err := finder.FileSystemByID(conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS file system (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -330,8 +330,9 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 	}
 
 	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
@@ -348,11 +349,13 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-			return nil
-		}
-		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
+		return fmt.Errorf("error deleting EFS file system (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.FileSystemDeleted(conn, d.Id()); err != nil {
