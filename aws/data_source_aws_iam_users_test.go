@@ -95,7 +95,7 @@ func testAccAWSIAMUsersConfigDataSource_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   count = %[1]q
-  name = "%[2]s-${count.index}-user"
+  name  = "%[2]s-${count.index}-user"
 
   tags = {
     Seed = %[2]q
@@ -112,8 +112,8 @@ func testAccAWSIAMUsersConfigDataSource_pathPrefix(rCount, rName, rPathPrefix st
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   count = %[1]q
-  name = "%[2]s-${count.index}-user"
-  path = "/%[3]s/"
+  name  = "%[2]s-${count.index}-user"
+  path  = "/%[3]s/"
 }
 
 data "aws_iam_users" "test" {
