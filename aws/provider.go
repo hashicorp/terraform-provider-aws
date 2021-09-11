@@ -311,6 +311,7 @@ func Provider() *schema.Provider {
 			"aws_iam_server_certificate":                     dataSourceAwsIAMServerCertificate(),
 			"aws_iam_session_context":                        dataSourceAwsIAMSessionContext(),
 			"aws_iam_user":                                   dataSourceAwsIAMUser(),
+			"aws_iam_users":                                  dataSourceAwsIAMUsers(),
 			"aws_identitystore_group":                        dataSourceAwsIdentityStoreGroup(),
 			"aws_identitystore_user":                         dataSourceAwsIdentityStoreUser(),
 			"aws_imagebuilder_component":                     dataSourceAwsImageBuilderComponent(),
