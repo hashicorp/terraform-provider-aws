@@ -85,7 +85,6 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoint` - The DNS address of the DocDB instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 * `id` - The DocDB Cluster Identifier
-* `maintenance_window` - The instance maintenance window
 * `reader_endpoint` - A read-only endpoint for the DocDB cluster, automatically load-balanced across replicas
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

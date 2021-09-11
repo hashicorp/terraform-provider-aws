@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func BackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
@@ -26,11 +27,33 @@ func BackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	}
 
 	if output == nil || output.BackupPolicy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.BackupPolicy, nil
+}
+
+func FileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
+	input := &efs.DescribeFileSystemPolicyInput{
+		FileSystemId: aws.String(id),
+	}
+
+	output, err := conn.DescribeFileSystemPolicy(input)
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, efs.ErrCodePolicyNotFound) {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return output.BackupPolicy, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
