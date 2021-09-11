@@ -112,11 +112,14 @@ func TestAccAwsConnectContactFlow_filename(t *testing.T) {
 	})
 }
 
-func TestAccAwsConnectContactFlow_disappears(t *testing.T) {
+// Can't delete an contact flow. Test deletion of entire connect instance
+func TestAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
+	// var v2 connect.DescribeInstanceOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
+	resourceName2 := "aws_connect_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -128,7 +131,7 @@ func TestAccAwsConnectContactFlow_disappears(t *testing.T) {
 				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectContactFlow(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectInstance(), resourceName2),
 				),
 				ExpectNonEmptyPlan: true,
 			},
