@@ -253,12 +253,11 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	}
 	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
-	self_service_portal := ec2.SelfServicePortalDisabled
-	if result.ClientVpnEndpoints[0].SelfServicePortalUrl != nil && *(result.ClientVpnEndpoints[0].SelfServicePortalUrl) != "" {
-		self_service_portal = ec2.SelfServicePortalEnabled
+	if aws.StringValue(result.ClientVpnEndpoints[0].SelfServicePortalUrl) != "" {
+		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
+	} else {
+		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
 	}
-
-	d.Set("self_service_portal", self_service_portal)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
