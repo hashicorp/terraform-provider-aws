@@ -53,23 +53,17 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Default:  false,
 			},
 			"self_service_portal": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.SelfServicePortalDisabled,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.SelfServicePortalEnabled,
-					ec2.SelfServicePortalDisabled,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.SelfServicePortalDisabled,
+				ValidateFunc: validation.StringInSlice(ec2.SelfServicePortal_Values(), false),
 			},
 			"transport_protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.TransportProtocolUdp,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.TransportProtocolTcp,
-					ec2.TransportProtocolUdp,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.TransportProtocolUdp,
+				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
 			},
 			"authentication_options": {
 				Type:     schema.TypeList,
@@ -78,14 +72,10 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.ClientVpnAuthenticationTypeCertificateAuthentication,
-								ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication,
-								ec2.ClientVpnAuthenticationTypeFederatedAuthentication,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.ClientVpnAuthenticationType_Values(), false),
 						},
 						"saml_provider_arn": {
 							Type:         schema.TypeString,
