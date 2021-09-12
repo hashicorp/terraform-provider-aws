@@ -432,11 +432,11 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 		fedReq := &ec2.FederatedAuthenticationRequest{
 			SAMLProviderArn: aws.String(data["saml_provider_arn"].(string)),
 		}
-		
-		if v, ok := data.GetOk("self_service_saml_provider_arn"); ok {
-			fedReq.SelfServiceSAMLProviderArn = aws.String(v.(string))
-		}	
-		
+
+		if v, ok := data["self_service_saml_provider_arn"].(string); ok && v != "" {
+			fedReq.SelfServiceSAMLProviderArn = aws.String(v)
+		}
+
 		req.FederatedAuthentication = fedReq
 	}
 
