@@ -84,7 +84,7 @@ resource "aws_dms_replication_instance" "test" {
   vpc_security_group_ids = [
     "sg-12345678",
   ]
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.dms-access-for-endpoint-AmazonDMSRedshiftS3Role,
     aws_iam_role_policy_attachment.dms-cloudwatch-logs-role-AmazonDMSCloudWatchLogsRole,
