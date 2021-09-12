@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfcloudtrail "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudtrail"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -24,137 +25,42 @@ func resourceAwsCloudTrail() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"enable_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"s3_bucket_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_key_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cloud_watch_logs_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cloud_watch_logs_group_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"include_global_service_events": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"is_multi_region_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_organization_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"sns_topic_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable_log_file_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateArn,
-			},
-			"event_selector": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      5,
-				ConflictsWith: []string{"advanced_event_selector"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"read_write_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  cloudtrail.ReadWriteTypeAll,
-							ValidateFunc: validation.StringInSlice([]string{
-								cloudtrail.ReadWriteTypeAll,
-								cloudtrail.ReadWriteTypeReadOnly,
-								cloudtrail.ReadWriteTypeWriteOnly,
-							}, false),
-						},
-
-						"include_management_events": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-
-						"data_resource": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object", "AWS::Lambda::Function", "AWS::DynamoDB::Table"}, false),
-									},
-									"values": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 250,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"advanced_event_selector": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"event_selector"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1000),
-						},
 						"field_selector": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"readOnly",
-											"eventSource",
-											"eventName",
-											"eventCategory",
-											"resources.type",
-											"resources.ARN",
-										}, false),
+									"ends_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
 									},
 									"equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+									"field": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(tfcloudtrail.Field_Values(), false),
+									},
+									"not_ends_with": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
@@ -172,15 +78,6 @@ func resourceAwsCloudTrail() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									"starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
-										},
-									},
 									"not_starts_with": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -190,16 +87,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									"ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
-										},
-									},
-									"not_ends_with": {
+									"starts_with": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
@@ -211,6 +99,73 @@ func resourceAwsCloudTrail() *schema.Resource {
 								},
 							},
 						},
+						"name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1000),
+						},
+					},
+				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cloud_watch_logs_group_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"cloud_watch_logs_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"enable_log_file_validation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_logging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"event_selector": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"advanced_event_selector"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_resource": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(tfcloudtrail.ResourceType_Values(), false),
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 250,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"include_management_events": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"read_write_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cloudtrail.ReadWriteTypeAll,
+							ValidateFunc: validation.StringInSlice(cloudtrail.ReadWriteType_Values(), false),
+						},
 					},
 				},
 			},
@@ -218,12 +173,11 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"include_global_service_events": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
 			"insight_selector": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -237,6 +191,41 @@ func resourceAwsCloudTrail() *schema.Resource {
 					},
 				},
 			},
+			"is_multi_region_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"is_organization_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"s3_bucket_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"s3_key_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"sns_topic_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: SetTagsDiff,

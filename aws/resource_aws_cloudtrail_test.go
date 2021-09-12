@@ -638,8 +638,6 @@ func testAccAWSCloudTrail_advanced_event_selector(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						"field":    "resources.ARN",
 						"equals.#": "2",
-						"equals.0": "arn:aws:s3:::" + rName + "-1/foobar",
-						"equals.1": "arn:aws:s3:::" + rName + "-1/bar",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						"field":    "readOnly",
