@@ -71,6 +71,7 @@ POLICY
 ### Data Event Logging
 
 CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html) for certain services such as S3 bucket objects and Lambda function invocations. Additional information about data event configuration can be found in the following links:
+
 * [CloudTrail API DataResource documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DataResource.html) (for basic event selector).
 * [CloudTrail API AdvancedFieldSelector documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedFieldSelector.html) (for advanced event selector).
 
@@ -136,6 +137,7 @@ resource "aws_cloudtrail" "example" {
 ```
 
 #### Logging All S3 Bucket Object Events Except For Two S3 Buckets By Using Advanced Event Selectors
+
 ```terraform
 data "aws_s3_bucket" "not-important-bucket-1" {
   bucket = "not-important-bucket-1"
@@ -150,6 +152,7 @@ resource "aws_cloudtrail" "example" {
 
   advanced_event_selector {
     name = "Log all S3 buckets objects events except for two S3 buckets"
+
     field_selector {
       field  = "eventCategory"
       equals = ["Data"]
@@ -157,6 +160,7 @@ resource "aws_cloudtrail" "example" {
 
     field_selector {
       field = "resources.ARN"
+
       not_equals = [
         "${data.aws_s3_bucket.not-important-bucket-1.arn}/",
         "${data.aws_s3_bucket.not-important-bucket-2.arn}/"
@@ -171,11 +175,13 @@ resource "aws_cloudtrail" "example" {
 
   advanced_event_selector {
     name = "Log readOnly and writeOnly management events"
+
     field_selector {
       field  = "eventCategory"
       equals = ["Management"]
     }
   }
+}
 ```
 
 #### Logging Individual S3 Buckets And Specific Event Names By Using Advanced Event Selectors
@@ -198,6 +204,7 @@ resource "aws_cloudtrail" "example" {
 
   advanced_event_selector {
     name = "Log PutObject and DeleteObject events for two S3 buckets"
+
     field_selector {
       field  = "eventCategory"
       equals = ["Data"]
@@ -205,6 +212,7 @@ resource "aws_cloudtrail" "example" {
 
     field_selector {
       field = "eventName"
+
       equals = [
         "PutObject",
         "DeleteObject"
@@ -234,6 +242,7 @@ resource "aws_cloudtrail" "example" {
 
   advanced_event_selector {
     name = "Log Delete* events for one S3 bucket"
+
     field_selector {
       field  = "eventCategory"
       equals = ["Data"]
