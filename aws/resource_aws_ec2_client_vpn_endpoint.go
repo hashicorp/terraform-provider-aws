@@ -429,10 +429,15 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 	}
 
 	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeFederatedAuthentication {
-		req.FederatedAuthentication = &ec2.FederatedAuthenticationRequest{
-			SAMLProviderArn:            aws.String(data["saml_provider_arn"].(string)),
-			SelfServiceSAMLProviderArn: aws.String(data["self_service_saml_provider_arn"].(string)),
+		fedReq := &ec2.FederatedAuthenticationRequest{
+			SAMLProviderArn: aws.String(data["saml_provider_arn"].(string)),
 		}
+		
+		if v, ok := data.GetOk("self_service_saml_provider_arn"); ok {
+			fedReq.SelfServiceSAMLProviderArn = aws.String(v.(string))
+		}	
+		
+		req.FederatedAuthentication = fedReq
 	}
 
 	return req
