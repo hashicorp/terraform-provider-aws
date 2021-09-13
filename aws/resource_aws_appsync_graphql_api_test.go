@@ -1499,7 +1499,7 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 
   lambda_authorizer_config {
-    authorizer_uri = aws_lambda_function.test.arn
+    authorizer_uri                 = aws_lambda_function.test.arn
     identity_validation_expression = %q
   }
 }
@@ -1513,7 +1513,7 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 
   lambda_authorizer_config {
-    authorizer_uri = aws_lambda_function.test.arn
+    authorizer_uri                   = aws_lambda_function.test.arn
     authorizer_result_ttl_in_seconds = %q
   }
 }
