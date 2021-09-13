@@ -19,7 +19,7 @@ func TestAccAWSChimeVoiceConnectorLogging_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorLoggingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
@@ -45,7 +45,7 @@ func TestAccAWSChimeVoiceConnectorLogging_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorLoggingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
@@ -67,7 +67,7 @@ func TestAccAWSChimeVoiceConnectorLogging_update(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorLoggingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
