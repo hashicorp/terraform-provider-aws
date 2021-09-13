@@ -37,7 +37,7 @@ func testAccAWSEksNodeGroupNamesDataSourceConfig(rName string) string {
 	return composeConfig(
 		testAccAWSEksNodeGroupNamesConfig(rName),
 		`
-data "aws_eks_node_group_names" "test" {
+data "aws_eks_node_groups" "test" {
   cluster_name = aws_eks_cluster.test.name
 
   depends_on = [aws_eks_node_group.test_a, aws_eks_node_group.test_b]

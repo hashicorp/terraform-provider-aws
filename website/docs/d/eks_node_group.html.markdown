@@ -12,18 +12,10 @@ Retrieve information about an EKS Node Group.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_eks_node_group" "example" {
   cluster_name    = "example"
   node_group_name = "example"
-}
-
-output "node_group_arn" {
-  value = "${data.aws_eks_node_group.example.node_role_arn}"
-}
-
-output "subnet_ids" {
-  value = "${data.aws_eks_node_group.example.subnet_ids}"
 }
 ```
 
