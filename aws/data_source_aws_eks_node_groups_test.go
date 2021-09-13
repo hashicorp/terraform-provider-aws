@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSEksNodegroupNamesDataSource_basic(t *testing.T) {
+func TestAccAWSEksNodegroupsDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceResourceName := "data.aws_eks_node_group_names.test"
+	dataSourceResourceName := "data.aws_eks_node_groups.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -39,12 +39,14 @@ func testAccAWSEksNodeGroupNamesDataSourceConfig(rName string) string {
 		fmt.Sprintf(`
 data "aws_eks_node_group_names" "test" {
   cluster_name = aws_eks_cluster.test.name
+
+  depends_on = [aws_eks_node_group.test_a, aws_eks_node_group.test_b]
 }
 `))
 }
 
 func testAccAWSEksNodeGroupNamesConfig(rName string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test_a" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = "%[1]s-test-a"
@@ -82,5 +84,5 @@ resource "aws_eks_node_group" "test_b" {
 	  "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
 	]
   }
-`, rName)
+`, rName))
 }

@@ -27,17 +27,15 @@ func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) erro
 
 	var clusters []*string
 
-	err := conn.ListClustersPages(&eks.ListClustersInput{},
-		func(page *eks.ListClustersOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			clusters = append(clusters, page.Clusters...)
-
+	err := conn.ListClustersPages(&eks.ListClustersInput{}, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
-		},
-	)
+		}
+
+		clusters = append(clusters, page.Clusters...)
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return fmt.Errorf("error listing EKS Clusters: %w", err)

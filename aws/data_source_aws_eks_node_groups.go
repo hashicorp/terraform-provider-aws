@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -10,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func dataSourceAwsEksNodeGroupNames() *schema.Resource {
+func dataSourceAwsEksNodeGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEksNodeGroupNamesRead,
+		Read: dataSourceAwsEksNodeGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
@@ -24,13 +23,12 @@ func dataSourceAwsEksNodeGroupNames() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 		},
 	}
 }
 
-func dataSourceAwsEksNodeGroupNamesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEksNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).eksconn
 
 	clusterName := d.Get("cluster_name").(string)
@@ -39,21 +37,26 @@ func dataSourceAwsEksNodeGroupNamesRead(d *schema.ResourceData, meta interface{}
 		ClusterName: aws.String(clusterName),
 	}
 
-	log.Printf("[DEBUG] Reading EKS Node Groups: %s", input)
-	output, err := conn.ListNodegroups(input)
+	var nodegroups []*string
+
+	err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		nodegroups = append(nodegroups, page.Nodegroups...)
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing EKS Node Groups: %w", err)
 	}
-
-	if output == nil || output.Nodegroups == nil {
-		return fmt.Errorf("EKS Node Groups on cluster (%s) not found", clusterName)
-	}
-
-	nodeGroups := output.Nodegroups
 
 	d.SetId(clusterName)
+
 	d.Set("cluster_name", clusterName)
-	d.Set("names", nodeGroups)
+	d.Set("names", aws.StringValueSlice(nodegroups))
 
 	return nil
 }
