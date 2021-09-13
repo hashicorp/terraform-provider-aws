@@ -92,7 +92,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 						"subject_key": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          "NameID",
+							Default:          "",
 							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
 						},
 					},
