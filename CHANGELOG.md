@@ -5,7 +5,7 @@ FEATURES:
 * **New Resource:** `aws_transfer_access` ([#20342](https://github.com/hashicorp/terraform-provider-aws/issues/20342))
 
 ENHANCEMENTS:
-
+* resource/aws_storagegateway_smb_file_share: Improve documentation for adding active directory group. ([#20880](https://github.com/hashicorp/terraform-provider-aws/issues/20880))
 * resource/aws_config_delivery_channel: Add `s3_kms_key_arn` argument ([#20600](https://github.com/hashicorp/terraform-provider-aws/issues/20600))
 * resource/aws_ec2_managed_prefix_list: allow updating `max_entries`. ([#20797](https://github.com/hashicorp/terraform-provider-aws/issues/20797))
 * resource/aws_efs_file_system_policy: Add `bypass_policy_lockout_safety_check` argument ([#20838](https://github.com/hashicorp/terraform-provider-aws/issues/20838))
