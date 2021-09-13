@@ -23,4 +23,5 @@ data "aws_eks_cluster" "example" {
 
 ## Attributes Reference
 
-* `names` - The list of EKS clusters names
+* `id` - AWS Region.
+* `names` - Set of EKS clusters names

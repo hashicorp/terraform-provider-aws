@@ -1,8 +1,9 @@
 package aws
 
 import (
-	"log"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,20 +27,25 @@ func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) erro
 
 	var clusters []*string
 
-	log.Printf("[DEBUG] Listing EKS Clusters")
 	err := conn.ListClustersPages(&eks.ListClustersInput{},
 		func(page *eks.ListClustersOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
 			clusters = append(clusters, page.Clusters...)
-			return true
+
+			return !lastPage
 		},
 	)
 
+	if err != nil {
+		return fmt.Errorf("error listing EKS Clusters: %w", err)
+	}
+
 	d.SetId(meta.(*AWSClient).region)
 
-	if err != nil {
-		log.Printf("[DEBUG] There was an error while listing EKS Clusters: %v", err)
-	}
-	d.Set("names", clusters)
+	d.Set("names", aws.StringValueSlice(clusters))
 
 	return nil
 }

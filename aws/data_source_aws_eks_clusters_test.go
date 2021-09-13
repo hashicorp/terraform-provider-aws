@@ -10,7 +10,7 @@ import (
 
 func TestAccAWSEksClustersDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceResourceName := "data.aws_eks_clusters.clusters"
+	dataSourceResourceName := "data.aws_eks_clusters.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -21,44 +21,18 @@ func TestAccAWSEksClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAWSEksClustersDataSourceConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "names.0", rName),
+					testCheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSEksClustersDataSource_empty(t *testing.T) {
-	dataSourceResourceName := "data.aws_eks_clusters.clusters"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEksClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEksClustersDataSourceConfig_empty(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func testAccAWSEksClustersDataSourceConfig_Basic(rName1 string) string {
+func testAccAWSEksClustersDataSourceConfig_Basic(rName string) string {
 	return composeConfig(
-		testAccAWSEksClusterConfig_Required(rName1), `
-data "aws_eks_clusters" "clusters" {
+		testAccAWSEksClusterConfig_Required(rName), `
+data "aws_eks_clusters" "test" {
   depends_on = [aws_eks_cluster.test]
 }
 `)
-}
-
-func testAccAWSEksClustersDataSourceConfig_empty() string {
-	return `
-data "aws_eks_clusters" "clusters" {}
-`
 }
