@@ -216,7 +216,7 @@ func resourceAwsSagemakerWorkteamRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsSagemakerWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	if d.HasChangeExcept("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateWorkteamInput{
 			WorkteamName:      aws.String(d.Id()),
 			MemberDefinitions: expandSagemakerWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
