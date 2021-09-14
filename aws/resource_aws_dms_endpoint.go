@@ -120,6 +120,83 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
 						},
+						"include_control_details": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"include_null_and_empty": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"include_partition_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"include_table_alter_operations": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"include_transaction_details": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"message_format": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.MessageFormatValueJson,
+							ValidateFunc: validation.StringInSlice(dms.MessageFormatValue_Values(), false),
+						},
+						"message_max_bytes": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1000000,
+						},
+						"no_hex_prefix": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"partition_include_schema_table": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"sasl_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"security_protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dms.KafkaSecurityProtocol_Values(), false),
+						},
+						"ssl_ca_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"ssl_client_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"ssl_client_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"ssl_client_key_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"topic": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -221,9 +298,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_access_role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: validateArn,
 						},
 						"external_table_definition": {
 							Type:     schema.TypeString,
@@ -344,8 +422,24 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	case "kafka":
 		request.KafkaSettings = &dms.KafkaSettings{
-			Broker: aws.String(d.Get("kafka_settings.0.broker").(string)),
-			Topic:  aws.String(d.Get("kafka_settings.0.topic").(string)),
+			Broker:                      aws.String(d.Get("kafka_settings.0.broker").(string)),
+			Topic:                       aws.String(d.Get("kafka_settings.0.topic").(string)),
+			MessageFormat:               aws.String(d.Get("kafka_settings.0.message_format").(string)),
+			IncludeTransactionDetails:   aws.Bool(d.Get("kafka_settings.0.include_transaction_details").(bool)),
+			IncludePartitionValue:       aws.Bool(d.Get("kafka_settings.0.include_partition_value").(bool)),
+			PartitionIncludeSchemaTable: aws.Bool(d.Get("kafka_settings.0.partition_include_schema_table").(bool)),
+			IncludeTableAlterOperations: aws.Bool(d.Get("kafka_settings.0.include_table_alter_operations").(bool)),
+			IncludeControlDetails:       aws.Bool(d.Get("kafka_settings.0.include_control_details").(bool)),
+			MessageMaxBytes:             aws.Int64(int64(d.Get("kafka_settings.0.message_max_bytes").(int))),
+			IncludeNullAndEmpty:         aws.Bool(d.Get("kafka_settings.0.include_null_and_empty").(bool)),
+			SecurityProtocol:            aws.String(d.Get("kafka_settings.0.security_protocol").(string)),
+			SslClientCertificateArn:     aws.String(d.Get("kafka_settings.0.ssl_client_certificate_arn").(string)),
+			SslClientKeyArn:             aws.String(d.Get("kafka_settings.0.ssl_client_key_arn").(string)),
+			SslClientKeyPassword:        aws.String(d.Get("kafka_settings.0.ssl_client_key_password").(string)),
+			SslCaCertificateArn:         aws.String(d.Get("kafka_settings.0.ssl_ca_certificate_arn").(string)),
+			SaslUsername:                aws.String(d.Get("kafka_settings.0.sasl_username").(string)),
+			SaslPassword:                aws.String(d.Get("kafka_settings.0.sasl_password").(string)),
+			NoHexPrefix:                 aws.Bool(d.Get("kafka_settings.0.no_hex_prefix").(bool)),
 		}
 	case "kinesis":
 		request.KinesisSettings = &dms.KinesisSettings{
@@ -573,10 +667,42 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	case "kafka":
 		if d.HasChanges(
 			"kafka_settings.0.broker",
-			"kafka_settings.0.topic") {
+			"kafka_settings.0.topic",
+			"kafka_settings.0.message_format",
+			"kafka_settings.0.include_transaction_details",
+			"kafka_settings.0.include_partition_value",
+			"kafka_settings.0.partition_include_schema_table",
+			"kafka_settings.0.include_table_alter_operations",
+			"kafka_settings.0.include_control_details",
+			"kafka_settings.0.message_max_bytes",
+			"kafka_settings.0.include_null_and_empty",
+			"kafka_settings.0.security_protocol",
+			"kafka_settings.0.ssl_client_certificate_arn",
+			"kafka_settings.0.ssl_client_key_arn",
+			"kafka_settings.0.ssl_client_key_password",
+			"kafka_settings.0.ssl_ca_certificate_arn",
+			"kafka_settings.0.sasl_username",
+			"kafka_settings.0.sasl_password",
+			"kafka_settings.0.no_hex_prefix") {
 			request.KafkaSettings = &dms.KafkaSettings{
-				Broker: aws.String(d.Get("kafka_settings.0.broker").(string)),
-				Topic:  aws.String(d.Get("kafka_settings.0.topic").(string)),
+				Broker:                      aws.String(d.Get("kafka_settings.0.broker").(string)),
+				Topic:                       aws.String(d.Get("kafka_settings.0.topic").(string)),
+				MessageFormat:               aws.String(d.Get("kafka_settings.0.message_format").(string)),
+				IncludeTransactionDetails:   aws.Bool(d.Get("kafka_settings.0.include_transaction_details").(bool)),
+				IncludePartitionValue:       aws.Bool(d.Get("kafka_settings.0.include_partition_value").(bool)),
+				PartitionIncludeSchemaTable: aws.Bool(d.Get("kafka_settings.0.partition_include_schema_table").(bool)),
+				IncludeTableAlterOperations: aws.Bool(d.Get("kafka_settings.0.include_table_alter_operations").(bool)),
+				IncludeControlDetails:       aws.Bool(d.Get("kafka_settings.0.include_control_details").(bool)),
+				MessageMaxBytes:             aws.Int64(int64(d.Get("kafka_settings.0.message_max_bytes").(int))),
+				IncludeNullAndEmpty:         aws.Bool(d.Get("kafka_settings.0.include_null_and_empty").(bool)),
+				SecurityProtocol:            aws.String(d.Get("kafka_settings.0.security_protocol").(string)),
+				SslClientCertificateArn:     aws.String(d.Get("kafka_settings.0.ssl_client_certificate_arn").(string)),
+				SslClientKeyArn:             aws.String(d.Get("kafka_settings.0.ssl_client_key_arn").(string)),
+				SslClientKeyPassword:        aws.String(d.Get("kafka_settings.0.ssl_client_key_password").(string)),
+				SslCaCertificateArn:         aws.String(d.Get("kafka_settings.0.ssl_ca_certificate_arn").(string)),
+				SaslUsername:                aws.String(d.Get("kafka_settings.0.sasl_username").(string)),
+				SaslPassword:                aws.String(d.Get("kafka_settings.0.sasl_password").(string)),
+				NoHexPrefix:                 aws.Bool(d.Get("kafka_settings.0.no_hex_prefix").(bool)),
 			}
 			request.EngineName = aws.String(d.Get("engine_name").(string))
 			hasChanges = true
@@ -788,8 +914,24 @@ func flattenDmsKafkaSettings(settings *dms.KafkaSettings) []map[string]interface
 	}
 
 	m := map[string]interface{}{
-		"broker": aws.StringValue(settings.Broker),
-		"topic":  aws.StringValue(settings.Topic),
+		"broker":                         aws.StringValue(settings.Broker),
+		"topic":                          aws.StringValue(settings.Topic),
+		"message_format":                 aws.StringValue(settings.MessageFormat),
+		"include_transaction_details":    aws.BoolValue(settings.IncludeTransactionDetails),
+		"include_partition_value":        aws.BoolValue(settings.IncludePartitionValue),
+		"partition_include_schema_table": aws.BoolValue(settings.PartitionIncludeSchemaTable),
+		"include_table_alter_operations": aws.BoolValue(settings.IncludeTableAlterOperations),
+		"include_control_details":        aws.BoolValue(settings.IncludeControlDetails),
+		"message_max_bytes":              aws.Int64Value(settings.MessageMaxBytes),
+		"include_null_and_empty":         aws.BoolValue(settings.IncludeNullAndEmpty),
+		"security_protocol":              aws.StringValue(settings.SecurityProtocol),
+		"ssl_client_certificate_arn":     aws.StringValue(settings.SslClientCertificateArn),
+		"ssl_client_key_arn":             aws.StringValue(settings.SslClientKeyArn),
+		"ssl_client_key_password":        aws.StringValue(settings.SslClientKeyPassword),
+		"ssl_ca_certificate_arn":         aws.StringValue(settings.SslCaCertificateArn),
+		"sasl_username":                  aws.StringValue(settings.SaslUsername),
+		"sasl_password":                  aws.StringValue(settings.SaslPassword),
+		"no_hex_prefix":                  aws.BoolValue(settings.NoHexPrefix),
 	}
 
 	return []map[string]interface{}{m}
