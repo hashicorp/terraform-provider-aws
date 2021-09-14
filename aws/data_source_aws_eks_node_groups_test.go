@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/eks"
