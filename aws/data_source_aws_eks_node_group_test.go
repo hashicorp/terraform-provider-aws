@@ -17,6 +17,7 @@ func TestAccAWSEksNodegroupDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -55,9 +56,7 @@ func TestAccAWSEksNodegroupDataSource_basic(t *testing.T) {
 }
 
 func testAccAWSEksNodeGroupDataSourceConfig(rName string) string {
-	return composeConfig(
-		testAccAWSEksNodeGroupConfigNodeGroupName(rName),
-		fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigNodeGroupName(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
