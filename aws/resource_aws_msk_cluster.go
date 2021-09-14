@@ -6,15 +6,20 @@ import (
 	"log"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/waiter"
+	mskwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -28,9 +33,9 @@ func resourceAwsMskCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ClusterCreateTimeout),
-			Update: schema.DefaultTimeout(waiter.ClusterUpdateTimeout),
-			Delete: schema.DefaultTimeout(waiter.ClusterDeleteTimeout),
+			Create: schema.DefaultTimeout(120 * time.Minute),
+			Update: schema.DefaultTimeout(120 * time.Minute),
+			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -421,7 +426,7 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(waiter.ClusterCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(mskwaiter.ClusterCreateTimeout, func() *resource.RetryError {
 		out, err := conn.DescribeCluster(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -461,16 +466,16 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	out, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	})
+	cluster, err := finder.ClusterByARN(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("failed lookup cluster %s: %s", d.Id(), err)
+		return fmt.Errorf("error reading MSK Cluster (%s): %w", d.Id(), err)
 	}
 
 	brokerOut, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
@@ -486,8 +491,6 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed requesting list nodes info for %q : %w", d.Id(), err)
 	}
-
-	cluster := out.ClusterInfo
 
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
@@ -719,20 +722,26 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 
-	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
+	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
 	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	})
-	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
+
+	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
+	if err != nil {
+		return fmt.Errorf("error deleting MSK Cluster (%s): %w", d.Id(), err)
+	}
 
-	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
+	_, err = waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for MSK Cluster (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
@@ -1241,34 +1250,6 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
-	input := &kafka.DescribeClusterInput{
-		ClusterArn: aws.String(arn),
-	}
-	err := resource.Retry(waiter.ClusterDeleteTimeout, func() *resource.RetryError {
-		_, err := conn.DescribeCluster(input)
-
-		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the cluster %q to be deleted", arn))
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DescribeCluster(input)
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for MSK cluster to be deleted: %s", err)
-	}
-	return nil
-}
-
 func mskClusterOperationRefreshFunc(conn *kafka.Kafka, clusterOperationARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &kafka.DescribeClusterOperationInput{
@@ -1302,7 +1283,7 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
 		Target:  []string{"UPDATE_COMPLETE"},
 		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: waiter.ClusterUpdateTimeout,
+		Timeout: mskwaiter.ClusterUpdateTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)

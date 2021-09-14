@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -26,32 +28,41 @@ func testSweepMskClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.(*AWSClient).kafkaconn
+	input := &kafka.ListClustersInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
-	out, err := conn.ListClusters(&kafka.ListClustersInput{})
+	err = conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cluster := range page.ClusterInfoList {
+			r := resourceAwsMskCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(cluster.ClusterArn))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping MSK Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] skipping msk cluster domain sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving MSK clusters: %s", err)
+		return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
 	}
 
-	for _, cluster := range out.ClusterInfoList {
-		log.Printf("[INFO] Deleting Msk cluster: %s", *cluster.ClusterName)
-		_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-			ClusterArn: cluster.ClusterArn,
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete MSK cluster %s: %s", *cluster.ClusterName, err)
-			continue
-		}
-		err = resourceAwsMskClusterDeleteWaiter(conn, *cluster.ClusterArn)
-		if err != nil {
-			log.Printf("[ERROR] failed to wait for deletion of MSK cluster %s: %s", *cluster.ClusterName, err)
-		}
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
 	}
+
 	return nil
 }
 
@@ -904,28 +915,30 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 }
 
 func testAccCheckMskClusterDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_cluster" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
-		opts := &kafka.DescribeClusterInput{
-			ClusterArn: aws.String(rs.Primary.ID),
+		_, err := finder.ClusterByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeCluster(opts)
 		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-				continue
-			}
 			return err
 		}
+
+		return fmt.Errorf("MSK Cluster %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource.TestCheckFunc {
+func testAccCheckMskClusterExists(n string, v *kafka.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -933,18 +946,19 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cluster arn is set")
+			return fmt.Errorf("No MSK Cluster ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
-		resp, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
-			ClusterArn: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.ClusterByARN(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Error describing cluster: %s", err.Error())
+			return err
 		}
 
-		*cluster = *resp.ClusterInfo
+		*v = *output
+
 		return nil
 	}
 }
