@@ -347,8 +347,8 @@ resource "aws_iam_service_linked_role" "emrcontainers" {
 }
 
 provider "kubernetes" {
-  host                   =  aws_eks_cluster.test.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.test.certificate_authority.0.data)
+  host                   = aws_eks_cluster.test.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.test.certificate_authority[0].data)
   exec {
     api_version = "client.authentication.k8s.io/v1alpha1"
     args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.test.id]
@@ -358,56 +358,56 @@ provider "kubernetes" {
 
 resource "kubernetes_role" "emrcontainers_role" {
   metadata {
-    name = "emr-containers"
+    name      = "emr-containers"
     namespace = "default"
   }
 
   rule {
-    api_groups     = [""]
-    resources      = ["namespaces"]
-    verbs          = ["get"]
+    api_groups = [""]
+    resources  = ["namespaces"]
+    verbs      = ["get"]
   }
 
   rule {
     api_groups = [""]
-    resources = ["serviceaccounts", "services", "configmaps", "events", "pods", "pods/log"]
-    verbs = ["get", "list", "watch", "describe", "create", "edit", "delete", "deletecollection", "annotate", "patch", "label"]
+    resources  = ["serviceaccounts", "services", "configmaps", "events", "pods", "pods/log"]
+    verbs      = ["get", "list", "watch", "describe", "create", "edit", "delete", "deletecollection", "annotate", "patch", "label"]
   }
 
   rule {
     api_groups = [""]
-    resources = ["secrets"]
-    verbs = ["create", "patch", "delete", "watch"]
+    resources  = ["secrets"]
+    verbs      = ["create", "patch", "delete", "watch"]
   }
 
   rule {
     api_groups = ["apps"]
-    resources = ["statefulsets", "deployments"]
-    verbs = ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
+    resources  = ["statefulsets", "deployments"]
+    verbs      = ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
   }
 
   rule {
     api_groups = ["batch"]
-    resources = ["jobs"]
-    verbs = ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
+    resources  = ["jobs"]
+    verbs      = ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
   }
 
   rule {
     api_groups = ["extensions"]
-    resources = ["ingresses"]
-    verbs = ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
+    resources  = ["ingresses"]
+    verbs      = ["get", "list", "watch", "describe", "create", "edit", "delete", "annotate", "patch", "label"]
   }
 
   rule {
     api_groups = ["rbac.authorization.k8s.io"]
-    resources = ["roles", "rolebindings"]
-    verbs = ["get", "list", "watch", "describe", "create", "edit", "delete", "deletecollection", "annotate", "patch", "label"]
+    resources  = ["roles", "rolebindings"]
+    verbs      = ["get", "list", "watch", "describe", "create", "edit", "delete", "deletecollection", "annotate", "patch", "label"]
   }
 }
 
 resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
   metadata {
-    name = "emr-containers"
+    name      = "emr-containers"
     namespace = "default"
   }
 
@@ -425,12 +425,12 @@ resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
 
 resource "kubernetes_config_map" "aws_auth" {
   metadata {
-    name = "aws-auth"
+    name      = "aws-auth"
     namespace = "kube-system"
   }
 
   data = {
-mapRoles = <<EOF
+    mapRoles = <<EOF
 - rolearn: ${aws_iam_role.node.arn}
   username: system:node:{{EC2PrivateDNSName}}
   groups:
@@ -441,7 +441,6 @@ mapRoles = <<EOF
 EOF
   }
 }
-
 `, rName)
 }
 
