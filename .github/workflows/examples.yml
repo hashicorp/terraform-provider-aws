@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/examples.yml
       - .go-version
+      - .tflint.hcl
       - examples/**
       - tools/go.mod
 
@@ -46,6 +47,7 @@ jobs:
       run: cd tools && go install github.com/terraform-linters/tflint
     - name: terraform
       run: |
+        TFLINT_CONFIG="$(pwd -P)/.tflint.hcl"
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
           pushd "$DIR"
           if [ -f terraform.template.tfvars ]; then
@@ -59,11 +61,14 @@ jobs:
           # Catch errors
           terraform validate
           # Terraform syntax checks
-          tflint \
+          # We don't want to exit on the first tflint error
+          set +e
+          tflint --config=$TFLINT_CONFIG \
             --enable-rule=terraform_deprecated_interpolation \
             --enable-rule=terraform_deprecated_index \
             --enable-rule=terraform_unused_declarations \
             --enable-rule=terraform_comment_syntax \
             --enable-rule=terraform_required_version
+          set -e
           popd
         done
