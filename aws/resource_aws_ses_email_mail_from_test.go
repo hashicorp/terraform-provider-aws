@@ -12,7 +12,7 @@ import (
 
 func TestAccAWSSESEmailMailFrom_basic(t *testing.T) {
 	dn := testAccRandomDomain()
-	email := testAccDefaultEmailAddress
+	email := testAccRandomEmailAddress(dn.String())
 	mailFromDomain1 := dn.Subdomain("bounce1").String()
 	mailFromDomain2 := dn.Subdomain("bounce2").String()
 	resourceName := "aws_ses_email_mail_from.test"
@@ -52,9 +52,9 @@ func TestAccAWSSESEmailMailFrom_basic(t *testing.T) {
 
 func TestAccAWSSESEmailMailFrom_disappears(t *testing.T) {
 	dn := testAccRandomDomain()
-	email := testAccDefaultEmailAddress
+	email := testAccRandomEmailAddress(dn.String())
 	mailFromDomain := dn.Subdomain("bounce").String()
-	resourceName := "aws_ses_domain_mail_from.test"
+	resourceName := "aws_ses_email_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
@@ -76,7 +76,7 @@ func TestAccAWSSESEmailMailFrom_disappears(t *testing.T) {
 
 func TestAccAWSSESEmailMailFrom_disappears_Identity(t *testing.T) {
 	dn := testAccRandomDomain()
-	email := testAccDefaultEmailAddress
+	email := testAccRandomEmailAddress(dn.String())
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_email_mail_from.test"
 
@@ -99,7 +99,9 @@ func TestAccAWSSESEmailMailFrom_disappears_Identity(t *testing.T) {
 }
 
 func TestAccAWSSESEmailMailFrom_behaviorOnMxFailure(t *testing.T) {
-	email := testAccDefaultEmailAddress
+	dn := testAccRandomDomain()
+	email := testAccRandomEmailAddress(dn.String())
+	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_email_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -109,14 +111,14 @@ func TestAccAWSSESEmailMailFrom_behaviorOnMxFailure(t *testing.T) {
 		CheckDestroy: testAccCheckSESEmailMailFromDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSESEmailMailFromConfig_behaviorOnMxFailure(email, ses.BehaviorOnMXFailureUseDefaultValue),
+				Config: testAccAwsSESEmailMailFromConfig_behaviorOnMxFailure(email, ses.BehaviorOnMXFailureUseDefaultValue, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESEmailMailFromExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
 				),
 			},
 			{
-				Config: testAccAwsSESEmailMailFromConfig_behaviorOnMxFailure(email, ses.BehaviorOnMXFailureRejectMessage),
+				Config: testAccAwsSESEmailMailFromConfig_behaviorOnMxFailure(email, ses.BehaviorOnMXFailureRejectMessage, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESEmailMailFromExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureRejectMessage),
@@ -216,7 +218,7 @@ resource "aws_ses_email_mail_from" "test" {
 `, email, mailFromDomain)
 }
 
-func testAccAwsSESEmailMailFromConfig_behaviorOnMxFailure(email, behaviorOnMxFailure string) string {
+func testAccAwsSESEmailMailFromConfig_behaviorOnMxFailure(email, behaviorOnMxFailure, mailFromDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
   email = "%s"
@@ -225,7 +227,7 @@ resource "aws_ses_email_identity" "test" {
 resource "aws_ses_email_mail_from" "test" {
   behavior_on_mx_failure = "%s"
   email                  = aws_ses_email_identity.test.email
-  mail_from_domain       = "bounce.${aws_ses_domain_identity.test.domain}"
+  mail_from_domain       = "%s"
 }
-`, email, behaviorOnMxFailure)
+`, email, behaviorOnMxFailure, mailFromDomain)
 }
