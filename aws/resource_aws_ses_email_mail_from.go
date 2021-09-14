@@ -9,18 +9,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAwsSesIdentityMailFrom() *schema.Resource {
+func resourceAwsSesEmailMailFrom() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesIdentityMailFromSet,
-		Read:   resourceAwsSesIdentityMailFromRead,
-		Update: resourceAwsSesIdentityMailFromSet,
-		Delete: resourceAwsSesIdentityMailFromDelete,
+		Create: resourceAwsSesEmailMailFromSet,
+		Read:   resourceAwsSesEmailMailFromRead,
+		Update: resourceAwsSesEmailMailFromSet,
+		Delete: resourceAwsSesEmailMailFromDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"identity": {
+			"email": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -38,16 +38,16 @@ func resourceAwsSesIdentityMailFrom() *schema.Resource {
 	}
 }
 
-func resourceAwsSesIdentityMailFromSet(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesEmailMailFromSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
-	identityName := d.Get("identity").(string)
+	emailName := d.Get("email").(string)
 	mailFromDomain := d.Get("mail_from_domain").(string)
 
 	input := &ses.SetIdentityMailFromDomainInput{
 		BehaviorOnMXFailure: aws.String(behaviorOnMxFailure),
-		Identity:            aws.String(identityName),
+		Identity:            aws.String(emailName),
 		MailFromDomain:      aws.String(mailFromDomain),
 	}
 
@@ -56,60 +56,60 @@ func resourceAwsSesIdentityMailFromSet(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error setting MAIL FROM domain: %s", err)
 	}
 
-	d.SetId(identityName)
+	d.SetId(emailName)
 
-	return resourceAwsSesIdentityMailFromRead(d, meta)
+	return resourceAwsSesEmailMailFromRead(d, meta)
 }
 
-func resourceAwsSesIdentityMailFromRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesEmailMailFromRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
-	identityName := d.Id()
+	emailName := d.Id()
 
 	readOpts := &ses.GetIdentityMailFromDomainAttributesInput{
 		Identities: []*string{
-			aws.String(identityName),
+			aws.String(emailName),
 		},
 	}
 
 	out, err := conn.GetIdentityMailFromDomainAttributes(readOpts)
 
 	if err != nil {
-		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: %s", identityName, err)
+		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: %s", emailName, err)
 	}
 
 	if out == nil {
-		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: empty response", identityName)
+		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: empty response", emailName)
 	}
 
-	attributes, ok := out.MailFromDomainAttributes[identityName]
+	attributes, ok := out.MailFromDomainAttributes[emailName]
 
 	if !ok {
-		log.Printf("[WARN] SES Domain Identity (%s) not found, removing from state", identityName)
+		log.Printf("[WARN] SES Domain Identity (%s) not found, removing from state", emailName)
 		d.SetId("")
 		return nil
 	}
 
 	d.Set("behavior_on_mx_failure", attributes.BehaviorOnMXFailure)
-	d.Set("identity", identityName)
+	d.Set("email", emailName)
 	d.Set("mail_from_domain", attributes.MailFromDomain)
 
 	return nil
 }
 
-func resourceAwsSesIdentityMailFromDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesEmailMailFromDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
-	identityName := d.Id()
+	emailName := d.Id()
 
 	deleteOpts := &ses.SetIdentityMailFromDomainInput{
-		Identity:       aws.String(identityName),
+		Identity:       aws.String(emailName),
 		MailFromDomain: nil,
 	}
 
 	_, err := conn.SetIdentityMailFromDomain(deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting SES domain identity: %s", err)
+		return fmt.Errorf("Error deleting SES email identity: %s", err)
 	}
 
 	return nil
