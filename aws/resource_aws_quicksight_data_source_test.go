@@ -16,8 +16,8 @@ import (
 func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.default"
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rId1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rId := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,11 +25,11 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightDataSourceConfig(rId1, rName1),
+				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId1),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId1)),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId)),
 				),
 			},
 			{

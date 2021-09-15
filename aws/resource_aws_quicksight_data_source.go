@@ -588,7 +588,7 @@ func resourceAwsQuickSightDataSourceCreate(ctx context.Context, d *schema.Resour
 
 	_, err := conn.CreateDataSource(params)
 	if err != nil {
-		return diag.Errorf("Error creating QuickSight Data Source: %s", err)
+		return diag.Errorf("error creating QuickSight Data Source: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
@@ -638,7 +638,7 @@ func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.Resource
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("Error describing QuickSight Data Source (%s): %s", d.Id(), err)
+		return diag.Errorf("error describing QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
 	permsResp, err := conn.DescribeDataSourcePermissions(&quicksight.DescribeDataSourcePermissionsInput{
@@ -647,7 +647,7 @@ func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.Resource
 	})
 
 	if err != nil {
-		return diag.Errorf("Error describing QuickSight Data Source permissions (%s): %s", d.Id(), err)
+		return diag.Errorf("error describing QuickSight Data Source permissions (%s): %s", d.Id(), err)
 	}
 
 	dataSource := dataSourceResp.DataSource
@@ -658,7 +658,7 @@ func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.Resource
 	d.Set("aws_account_id", awsAccountId)
 
 	if err := d.Set("permission", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("Error setting permission error: %#v", err)
+		return diag.Errorf("error setting permission error: %#v", err)
 	}
 
 	params := map[string]interface{}{}
@@ -916,7 +916,7 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 
 			_, err := conn.UpdateDataSourcePermissions(params)
 			if err != nil {
-				return diag.Errorf("Error updating QuickSight Data Source permissions: %s", err)
+				return diag.Errorf("error updating QuickSight Data Source (%s) permissions: %s", aws.String(dataSourceId), err)
 			}
 		}
 	}
@@ -937,7 +937,7 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 				TagKeys:     tagKeysQuickSight(r),
 			})
 			if err != nil {
-				return diag.Errorf("Error deleting QuickSight Data Source tags: %s", err)
+				return diag.Errorf("error deleting QuickSight Data Source (%s) tags: %s", d.Id(), err)
 			}
 		}
 
@@ -947,7 +947,7 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 				Tags:        c,
 			})
 			if err != nil {
-				return diag.Errorf("Error updating QuickSight Data Source tags: %s", err)
+				return diag.Errorf("error updating QuickSight Data Source (%s) tags: %s", d.Id(), err)
 			}
 		}
 	}
@@ -963,7 +963,7 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("Error updating QuickSight Data Source %s: %s", d.Id(), err)
+		return diag.Errorf("error updating QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsQuickSightDataSourceRead(ctx, d, meta)
@@ -986,7 +986,7 @@ func resourceAwsQuickSightDataSourceDelete(ctx context.Context, d *schema.Resour
 		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return diag.Errorf("Error deleting QuickSight Data Source %s: %s", d.Id(), err)
+		return diag.Errorf("error deleting QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
 	return nil
