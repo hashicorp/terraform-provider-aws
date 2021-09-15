@@ -394,7 +394,7 @@ func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
