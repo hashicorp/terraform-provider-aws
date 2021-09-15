@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,7 +21,7 @@ func dataSourceAwsCloudFormationResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"resource_model": {
+			"properties": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,9 +43,9 @@ func dataSourceAwsCloudFormationResource() *schema.Resource {
 }
 
 func dataSourceAwsCloudformationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*AWSClient).cloudcontrolapiconn
 
-	input := &cloudformation.GetResourceInput{}
+	input := &cloudcontrolapi.GetResourceInput{}
 
 	if v, ok := d.GetOk("identifier"); ok {
 		input.Identifier = aws.String(v.(string))
@@ -75,7 +75,7 @@ func dataSourceAwsCloudformationResourceRead(ctx context.Context, d *schema.Reso
 
 	d.SetId(aws.StringValue(output.ResourceDescription.Identifier))
 
-	d.Set("resource_model", output.ResourceDescription.ResourceModel)
+	d.Set("properties", output.ResourceDescription.Properties)
 
 	return nil
 }

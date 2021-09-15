@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func ResourceRequestStatusProgressEventOperationStatus(ctx context.Context, conn *cloudformation.CloudFormation, requestToken string) resource.StateRefreshFunc {
+func ResourceRequestStatusProgressEventOperationStatus(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &cloudformation.GetResourceRequestStatusInput{
+		input := &cloudcontrolapi.GetResourceRequestStatusInput{
 			RequestToken: aws.String(requestToken),
 		}
 

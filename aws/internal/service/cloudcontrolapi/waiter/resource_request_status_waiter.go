@@ -6,24 +6,24 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func ResourceRequestStatusProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudformation.CloudFormation, requestToken string, timeout time.Duration) (*cloudformation.ProgressEvent, error) {
+func ResourceRequestStatusProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string, timeout time.Duration) (*cloudcontrolapi.ProgressEvent, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			cloudformation.OperationStatusInProgress,
-			cloudformation.OperationStatusPending,
+			cloudcontrolapi.OperationStatusInProgress,
+			cloudcontrolapi.OperationStatusPending,
 		},
-		Target:  []string{cloudformation.OperationStatusSuccess},
+		Target:  []string{cloudcontrolapi.OperationStatusSuccess},
 		Refresh: ResourceRequestStatusProgressEventOperationStatus(ctx, conn, requestToken),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudformation.ProgressEvent); ok {
+	if output, ok := outputRaw.(*cloudcontrolapi.ProgressEvent); ok {
 		if err != nil && output != nil {
 			newErr := fmt.Errorf("%s", output)
 

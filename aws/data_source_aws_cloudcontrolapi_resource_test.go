@@ -24,7 +24,7 @@ func TestAccAwsCloudformationResourceDataSource_basic(t *testing.T) {
 				Config: testAccAwsCloudformationResourceDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_model", resourceName, "resource_model"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "properties", resourceName, "properties"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type_name", resourceName, "type_name"),
 				),
 			},

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	cfschema "github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -18,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mattbaird/jsonpatch"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/waiter"
 )
 
 func resourceAwsCloudFormationResource() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsCloudFormationResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"resource_model": {
+			"properties": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +69,7 @@ func resourceAwsCloudFormationResource() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsCloudFormationResourceCustomizeDiffGetSchema,
 			resourceAwsCloudFormationResourceCustomizeDiffSchemaDiff,
-			customdiff.ComputedIf("resource_model", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("properties", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("desired_state")
 			}),
 		),
@@ -76,9 +77,9 @@ func resourceAwsCloudFormationResource() *schema.Resource {
 }
 
 func resourceAwsCloudFormationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*AWSClient).cloudcontrolapiconn
 
-	input := &cloudformation.CreateResourceInput{
+	input := &cloudcontrolapi.CreateResourceInput{
 		ClientToken: aws.String(resource.UniqueId()),
 	}
 
@@ -126,9 +127,9 @@ func resourceAwsCloudFormationResourceCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsCloudFormationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*AWSClient).cloudcontrolapiconn
 
-	input := &cloudformation.GetResourceInput{
+	input := &cloudcontrolapi.GetResourceInput{
 		Identifier: aws.String(d.Id()),
 	}
 
@@ -146,7 +147,7 @@ func resourceAwsCloudFormationResourceRead(ctx context.Context, d *schema.Resour
 
 	output, err := conn.GetResourceWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, cloudcontrolapi.ErrCodeResourceNotFoundException) {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource (%s): not found after creation", d.Id()))
 		}
@@ -164,13 +165,13 @@ func resourceAwsCloudFormationResourceRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource (%s): empty response", d.Id()))
 	}
 
-	d.Set("resource_model", output.ResourceDescription.ResourceModel)
+	d.Set("properties", output.ResourceDescription.Properties)
 
 	return nil
 }
 
 func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*AWSClient).cloudcontrolapiconn
 
 	if d.HasChange("desired_state") {
 		oldRaw, newRaw := d.GetChange("desired_state")
@@ -187,7 +188,7 @@ func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.Reso
 			}
 		}
 
-		input := &cloudformation.UpdateResourceInput{
+		input := &cloudcontrolapi.UpdateResourceInput{
 			ClientToken:   aws.String(resource.UniqueId()),
 			Identifier:    aws.String(d.Id()),
 			PatchDocument: aws.String(patchDocument),
@@ -224,9 +225,9 @@ func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsCloudFormationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*AWSClient).cloudcontrolapiconn
 
-	input := &cloudformation.DeleteResourceInput{
+	input := &cloudcontrolapi.DeleteResourceInput{
 		ClientToken: aws.String(resource.UniqueId()),
 		Identifier:  aws.String(d.Id()),
 	}
@@ -255,7 +256,7 @@ func resourceAwsCloudFormationResourceDelete(ctx context.Context, d *schema.Reso
 
 	progressEvent, err := waiter.ResourceRequestStatusProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
 
-	if progressEvent != nil && aws.StringValue(progressEvent.ErrorCode) == cloudformation.HandlerErrorCodeNotFound {
+	if progressEvent != nil && aws.StringValue(progressEvent.ErrorCode) == cloudcontrolapi.HandlerErrorCodeNotFound {
 		return nil
 	}
 

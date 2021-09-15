@@ -45,4 +45,4 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `resource_model` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudformation_resource.example.resource_model)["example"]`.
+* `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudformation_resource.example.properties)["example"]`.

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,7 +19,7 @@ func TestAccAwsCloudformationResource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAwsCloudformationResource_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +61,7 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueAdded(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueRemoved(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueUpdate(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -140,7 +140,7 @@ func TestAccAwsCloudformationResource_DesiredState_CreateOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -166,7 +166,7 @@ func TestAccAwsCloudformationResource_DesiredState_IntegerValueAdded(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +192,7 @@ func TestAccAwsCloudformationResource_DesiredState_IntegerValueRemoved(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -218,7 +218,7 @@ func TestAccAwsCloudformationResource_DesiredState_IntegerValueUpdate(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -243,7 +243,7 @@ func TestAccAwsCloudformationResource_DesiredState_InvalidPropertyName(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -260,7 +260,7 @@ func TestAccAwsCloudformationResource_DesiredState_InvalidPropertyValue(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -278,7 +278,7 @@ func TestAccAwsCloudformationResource_DesiredState_ObjectValueAdded(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -304,7 +304,7 @@ func TestAccAwsCloudformationResource_DesiredState_ObjectValueRemoved(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -330,7 +330,7 @@ func TestAccAwsCloudformationResource_DesiredState_ObjectValueUpdate(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -362,7 +362,7 @@ func TestAccAwsCloudformationResource_DesiredState_StringValueAdded(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -388,7 +388,7 @@ func TestAccAwsCloudformationResource_DesiredState_StringValueRemoved(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -414,7 +414,7 @@ func TestAccAwsCloudformationResource_DesiredState_StringValueUpdate(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -440,7 +440,7 @@ func TestAccAwsCloudformationResource_ResourceSchema(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -455,21 +455,21 @@ func TestAccAwsCloudformationResource_ResourceSchema(t *testing.T) {
 }
 
 func testAccCheckAwsCloudformationResourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cfconn
+	conn := testAccProvider.Meta().(*AWSClient).cloudcontrolapiconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_resource" {
 			continue
 		}
 
-		input := &cloudformation.GetResourceInput{
+		input := &cloudcontrolapi.GetResourceInput{
 			Identifier: aws.String(rs.Primary.ID),
 			TypeName:   aws.String(rs.Primary.Attributes["type_name"]),
 		}
 
 		_, err := conn.GetResource(input)
 
-		if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, cloudcontrolapi.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -477,7 +477,7 @@ func testAccCheckAwsCloudformationResourceDestroy(s *terraform.State) error {
 		// "not found" errors, instead returning a HandlerFailureException.
 		// These should be reported and fixed upstream over time, but for now
 		// work around the issue only in CheckDestroy.
-		if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeHandlerFailureException, "not found") {
+		if tfawserr.ErrMessageContains(err, cloudcontrolapi.ErrCodeHandlerFailureException, "not found") {
 			continue
 		}
 
