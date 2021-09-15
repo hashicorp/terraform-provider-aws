@@ -168,7 +168,7 @@ func resourceAwsNeptuneClusterEndpointRead(d *schema.ResourceData, meta interfac
 func resourceAwsNeptuneClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
 
-	if d.HasChangeExcept("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		req := &neptune.ModifyDBClusterEndpointInput{
 			DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
 		}

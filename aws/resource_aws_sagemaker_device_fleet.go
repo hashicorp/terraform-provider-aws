@@ -171,7 +171,7 @@ func resourceAwsSagemakerDeviceFleetRead(d *schema.ResourceData, meta interface{
 func resourceAwsSagemakerDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	if d.HasChangeExcept("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDeviceFleetInput{
 			DeviceFleetName:    aws.String(d.Id()),
 			EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
