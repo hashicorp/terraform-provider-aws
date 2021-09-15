@@ -509,7 +509,7 @@ resource "aws_sns_topic_policy" "test" {
         "Sid" : "%[1]s",
         "Effect" : "Allow",
         "Principal" : {
-          "Service": "sagemaker.amazonaws.com"
+          "Service" : "sagemaker.amazonaws.com"
         },
         "Action" : [
           "sns:Publish"
