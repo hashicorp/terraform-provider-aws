@@ -24,6 +24,22 @@ func ClusterState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	}
 }
 
+func ClusterOperationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.ClusterOperationByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.OperationState), nil
+	}
+}
+
 func ConfigurationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.ConfigurationByARN(conn, arn)

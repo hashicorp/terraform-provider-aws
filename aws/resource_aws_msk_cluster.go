@@ -388,10 +388,11 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
 		BrokerNodeGroupInfo:  expandMskClusterBrokerNodeGroupInfo(d.Get("broker_node_group_info").([]interface{})),
 		ClientAuthentication: expandMskClusterClientAuthentication(d.Get("client_authentication").([]interface{})),
-		ClusterName:          aws.String(d.Get("cluster_name").(string)),
+		ClusterName:          aws.String(name),
 		ConfigurationInfo:    expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
 		EncryptionInfo:       expandMskClusterEncryptionInfo(d.Get("encryption_info").([]interface{})),
 		EnhancedMonitoring:   aws.String(d.Get("enhanced_monitoring").(string)),
@@ -402,60 +403,21 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 		Tags:                 tags.IgnoreAws().KafkaTags(),
 	}
 
-	out, err := conn.CreateCluster(input)
+	output, err := conn.CreateCluster(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating MSK cluster: %s", err)
+		return fmt.Errorf("error creating MSK Cluster (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.ClusterArn))
+	d.SetId(aws.StringValue(output.ClusterArn))
 
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be created", d.Id())
-	err = waitForMskClusterCreation(conn, d.Id())
+	_, err = waiter.ClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
 	if err != nil {
-		return fmt.Errorf("error waiting for MSK cluster creation (%s): %s", d.Id(), err)
+		return fmt.Errorf("error waiting for MSK Cluster (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAwsMskClusterRead(d, meta)
-}
-
-func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
-	input := &kafka.DescribeClusterInput{
-		ClusterArn: aws.String(arn),
-	}
-	err := resource.Retry(mskwaiter.ClusterCreateTimeout, func() *resource.RetryError {
-		out, err := conn.DescribeCluster(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if out.ClusterInfo != nil {
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateFailed {
-				return resource.NonRetryableError(fmt.Errorf("Cluster creation failed with cluster state %q", kafka.ClusterStateFailed))
-			}
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateActive {
-				return nil
-			}
-		}
-		return resource.RetryableError(fmt.Errorf("%q: cluster still creating", arn))
-	})
-	if isResourceTimeoutError(err) {
-		out, err := conn.DescribeCluster(input)
-		if err != nil {
-			return fmt.Errorf("Error describing MSK cluster state: %s", err)
-		}
-		if out.ClusterInfo != nil {
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateFailed {
-				return fmt.Errorf("Cluster creation failed with cluster state %q", kafka.ClusterStateFailed)
-			}
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateActive {
-				return nil
-			}
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for MSK cluster creation: %s", err)
-	}
-	return nil
 }
 
 func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
@@ -565,17 +527,15 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateBrokerStorage(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: empty response", d.Id())
+			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -732,7 +692,7 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting MSK Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for MSK Cluster (%s) delete: %w", d.Id(), err)

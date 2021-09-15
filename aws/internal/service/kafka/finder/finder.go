@@ -33,6 +33,31 @@ func ClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
 	return output.ClusterInfo, nil
 }
 
+func ClusterOperationByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterOperationInfo, error) {
+	input := &kafka.DescribeClusterOperationInput{
+		ClusterOperationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeClusterOperation(input)
+
+	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ClusterOperationInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ClusterOperationInfo, nil
+}
+
 func ConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
 	input := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(arn),
