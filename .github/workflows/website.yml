@@ -96,8 +96,17 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd tools && go install github.com/katbyte/terrafmt
+
       - run: cd tools && go install github.com/terraform-linters/tflint
+
+      - uses: actions/cache@v2
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
       - run: tflint --init
+
       - run: |
           exit_code=0
 

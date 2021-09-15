@@ -49,8 +49,16 @@ jobs:
         terraform_version: ${{ matrix.terraform_version }}
         # Needed to use the output of `terraform validate -json`
         terraform_wrapper: false
+
     - name: install tflint
       run: cd tools && go install github.com/terraform-linters/tflint
+
+    - uses: actions/cache@v2
+      name: Cache plugin dir
+      with:
+        path: ~/.tflint.d/plugins
+        key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
     - name: terraform
       run: |
         TFLINT_CONFIG="$(pwd -P)/.tflint.hcl"
