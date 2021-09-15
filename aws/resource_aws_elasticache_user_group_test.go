@@ -202,26 +202,8 @@ func testAccCheckAWSElasticacheUserGroupExistsWithProvider(n string, v *elastica
 
 func testAccAWSElasticacheUserGroupConfigBasic(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
-resource "aws_elasticache_user" "test" {
-  user_id       = %[1]q
-  user_name     = "default"
-  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-  engine        = "REDIS"
-  passwords     = ["password123456789"]
-}
-
-resource "aws_elasticache_user_group" "test" {
-  user_group_id = %[1]q
-  engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test.user_id]
-}
-`, rName))
-}
-
-func testAccAWSElasticacheUserGroupConfigMultiple(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
-resource "aws_elasticache_user" "test" {
-  user_id       = %[1]q
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
   engine        = "REDIS"
@@ -239,7 +221,33 @@ resource "aws_elasticache_user" "test2" {
 resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
   engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test.user_id, aws_elasticache_user.test2.user_id]
+  user_ids      = [aws_elasticache_user.test1.user_id]
+}
+`, rName))
+}
+
+func testAccAWSElasticacheUserGroupConfigMultiple(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user" "test2" {
+  user_id       = "%[1]s-2"
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[1]q
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test1.user_id, aws_elasticache_user.test2.user_id]
 }
 `, rName))
 }
