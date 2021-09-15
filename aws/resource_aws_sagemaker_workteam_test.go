@@ -509,10 +509,10 @@ resource "aws_sns_topic_policy" "test" {
         "Sid" : "%[1]s",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "*"
+          "Service": "sagemaker.amazonaws.com"
         },
         "Action" : [
-          "sns:publish"
+          "sns:Publish"
         ],
         "Resource" : "${aws_sns_topic.test.arn}"
       }
