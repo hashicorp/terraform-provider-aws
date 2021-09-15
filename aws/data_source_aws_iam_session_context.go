@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/finder"
@@ -70,9 +69,9 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		role, err = finder.Role(conn, roleName)
+		role, err = finder.RoleByName(conn, roleName)
 
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			return resource.RetryableError(err)
 		}
 
@@ -84,7 +83,7 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = finder.Role(conn, roleName)
+		role, err = finder.RoleByName(conn, roleName)
 	}
 
 	if err != nil {

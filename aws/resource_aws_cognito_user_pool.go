@@ -1357,6 +1357,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["email_sending_account"] = aws.StringValue(s.EmailSendingAccount)
 	}
 
+	if s.ConfigurationSet != nil {
+		m["configuration_set"] = aws.StringValue(s.ConfigurationSet)
+	}
+
 	if len(m) > 0 {
 		return []map[string]interface{}{m}
 	}

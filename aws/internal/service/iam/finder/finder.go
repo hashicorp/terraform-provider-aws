@@ -1,10 +1,11 @@
 package finder
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // GroupAttachedPolicy returns the AttachedPolicy corresponding to the specified group and policy ARN.
@@ -112,20 +113,26 @@ func Policies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error
 	return results, err
 }
 
-// Role returns a role's ARN given the role name
-func Role(conn *iam.IAM, name string) (*iam.Role, error) {
+func RoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(name),
 	}
 
 	output, err := conn.GetRole(input)
 
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("getting IAM Role (%s): %w", name, err)
+		return nil, err
 	}
 
 	if output == nil || output.Role == nil {
-		return nil, fmt.Errorf("getting IAM Role (%s): empty response", name)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Role, nil

@@ -44,6 +44,14 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:       testAccAwsEc2ManagedPrefixListConfigUpdated(rName),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAwsEc2ManagedPrefixListExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "2"),
+				),
+			},
 		},
 	})
 }
@@ -438,6 +446,16 @@ func testAccAwsEc2ManagedPrefixListConfig_Name(rName string) string {
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
   max_entries    = 1
+  name           = %[1]q
+}
+`, rName)
+}
+
+func testAccAwsEc2ManagedPrefixListConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 2
   name           = %[1]q
 }
 `, rName)
