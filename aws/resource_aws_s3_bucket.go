@@ -2585,7 +2585,7 @@ func rulesHash(v interface{}) int {
 	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
 
-		if v, ok := m["delete_marker_replication_status"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
+		if v, ok := m["delete_marker_replication"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 	}

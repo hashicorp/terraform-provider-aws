@@ -96,13 +96,13 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
-										MaxItems: 1,
+										MaxItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"status": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{s3.MetricsStatusEnabled}, false),
+													ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
 												},
 												"event_threshold": {
 													Type:     schema.TypeList,
@@ -126,13 +126,13 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
-										MaxItems: 1,
+										MaxItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"status": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{s3.ReplicationTimeStatusEnabled}, false),
+													ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
 												},
 												"time": {
 													Type:     schema.TypeList,
@@ -172,7 +172,7 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 												"status": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{s3.SseKmsEncryptedObjectsStatusEnabled}, false),
+													ValidateFunc: validation.StringInSlice(s3.SseKmsEncryptedObjectsStatus_Values(), false),
 												},
 											},
 										},
@@ -187,7 +187,7 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 												"status": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{s3.ReplicaModificationsStatusEnabled}, false),
+													ValidateFunc: validation.StringInSlice(s3.ReplicaModificationsStatus_Values(), false),
 												},
 											},
 										},
@@ -235,15 +235,25 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 									"status": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{s3.ExistingObjectReplicationStatusEnabled}, false),
+										ValidateFunc: validation.StringInSlice(s3.ExistingObjectReplicationStatus_Values(), false),
 									},
 								},
 							},
 						},
-						"delete_marker_replication_status": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{s3.DeleteMarkerReplicationStatusEnabled}, false),
+						"delete_marker_replication": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(s3.DeleteMarkerReplicationStatus_Values(), false),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -391,7 +401,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 		if v.ExistingObjectReplication != nil {
 			status := make(map[string]interface{})
 			status["status"] = aws.StringValue(v.ExistingObjectReplication.Status)
-			t["existing_object_replication"] = status
+			t["existing_object_replication"] = []interface{}{status}
 		}
 
 		if v.ID != nil {
@@ -431,8 +441,10 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 			}
 			t["filter"] = []interface{}{m}
 
-			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil && aws.StringValue(v.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
-				t["delete_marker_replication_status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil {
+				status := make(map[string]interface{})
+				status["status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+				t["delete_marker_replication"] = []interface{}{status}
 			}
 		}
 
@@ -573,13 +585,11 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
 			}
 
-			if dmr, ok := rr["delete_marker_replication_status"].(string); ok && dmr != "" {
+			dmr, ok := rr["delete_marker_replication"].([]interface{})
+			if ok && len(dmr) > 0 {
+				s := dmr[0].(map[string]interface{})
 				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-					Status: aws.String(dmr),
-				}
-			} else {
-				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+					Status: aws.String(s["status"].(string)),
 				}
 			}
 		} else {

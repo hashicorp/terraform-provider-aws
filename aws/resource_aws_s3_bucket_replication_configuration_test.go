@@ -1479,7 +1479,9 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
       prefix = "foo"
     }
 
-    delete_marker_replication_status = "Enabled"
+    delete_marker_replication {
+	  status = "Enabled"
+	}
 
     destination {
       bucket        = aws_s3_bucket.destination.arn
@@ -1628,7 +1630,9 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
       prefix = "testprefix"
     }
 
-    delete_marker_replication_status = "Enabled"
+    delete_marker_replication {
+	  status = "Enabled"
+	}
 
     destination {
       bucket        = aws_s3_bucket.destination.arn
@@ -1701,7 +1705,9 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
       status = "Enabled"
     }
 
-    delete_marker_replication_status = "Enabled"
+    delete_marker_replication {
+	  status = "Enabled"
+	}
 
     destination {
       bucket        = aws_s3_bucket.destination.arn
