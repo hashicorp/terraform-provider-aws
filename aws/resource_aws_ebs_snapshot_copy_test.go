@@ -254,6 +254,11 @@ resource "aws_ebs_snapshot" "test" {
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
+  }
 }
 `
 
@@ -291,6 +296,11 @@ resource "aws_ebs_snapshot_copy" "test" {
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfig"
     "%s" = "%s"
+  }
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
   }
 }
 `, tagKey1, tagValue1)
@@ -331,6 +341,11 @@ resource "aws_ebs_snapshot_copy" "test" {
     Name = "testAccAwsEbsSnapshotCopyConfig"
     "%s" = "%s"
     "%s" = "%s"
+  }
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
@@ -373,6 +388,11 @@ resource "aws_ebs_snapshot_copy" "test" {
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithDescription"
+  }
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
   }
 }
 `
@@ -417,6 +437,11 @@ resource "aws_ebs_snapshot_copy" "test" {
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithRegions"
+  }
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
   }
 }
 `
@@ -463,6 +488,11 @@ resource "aws_ebs_snapshot_copy" "test" {
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithKms"
+  }
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
   }
 }
 `
