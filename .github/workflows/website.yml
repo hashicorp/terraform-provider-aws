@@ -6,7 +6,7 @@ on:
   push:
     branches:
       - main
-      - 'release/**'
+      - "release/**"
   pull_request:
     paths:
       - .github/workflows/website.yml
@@ -25,27 +25,27 @@ jobs:
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.markdown
         with:
-          use-quiet-mode: 'yes'
-          use-verbose-mode: 'yes'
-          config-file: '.markdownlinkcheck.json'
-          folder-path: 'website/docs'
-          file-extension: '.markdown'
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".markdownlinkcheck.json"
+          folder-path: "website/docs"
+          file-extension: ".markdown"
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.md
         with:
-          use-quiet-mode: 'yes'
-          use-verbose-mode: 'yes'
-          config-file: '.markdownlinkcheck.json'
-          folder-path: 'website/docs'
-          file-extension: '.md'
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".markdownlinkcheck.json"
+          folder-path: "website/docs"
+          file-extension: ".md"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: avto-dev/markdown-lint@v1
         with:
-          config: '.markdownlint.yml'
-          args: 'website/docs'
+          config: ".markdownlint.yml"
+          args: "website/docs"
   misspell:
     runs-on: ubuntu-latest
     steps:
