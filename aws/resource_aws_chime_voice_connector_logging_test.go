@@ -19,7 +19,7 @@ func TestAccAWSChimeVoiceConnectorLogging_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorLoggingDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
@@ -45,7 +45,7 @@ func TestAccAWSChimeVoiceConnectorLogging_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorLoggingDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
@@ -67,7 +67,7 @@ func TestAccAWSChimeVoiceConnectorLogging_update(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorLoggingDestroy,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
@@ -146,31 +146,4 @@ func testAccCheckAWSChimeVoiceConnectorLoggingExists(name string) resource.TestC
 
 		return nil
 	}
-}
-
-func testAccCheckAWSChimeVoiceConnectorLoggingDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_chime_voice_connector_logging" {
-			continue
-		}
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
-		input := &chime.GetVoiceConnectorLoggingConfigurationInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetVoiceConnectorLoggingConfiguration(input)
-
-		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.LoggingConfiguration != nil {
-			return fmt.Errorf("error Chime Voice Connector logging configuration still exists")
-		}
-	}
-
-	return nil
 }
