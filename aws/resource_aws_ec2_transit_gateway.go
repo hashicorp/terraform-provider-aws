@@ -269,8 +269,16 @@ func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}
 		oldTransitGatewayCidrBlocks, newTransitGatewayCidrBlocks := d.GetChange("transit_gateway_cidr_blocks")
 
 		transitGatewayModified = true
-		options.AddTransitGatewayCidrBlocks = expandStringSet(newTransitGatewayCidrBlocks.(*schema.Set))
-		options.RemoveTransitGatewayCidrBlocks = expandStringSet(oldTransitGatewayCidrBlocks.(*schema.Set))
+
+		AddTransitGatewayCidrBlocks := expandStringSet(newTransitGatewayCidrBlocks.(*schema.Set))
+		if len(AddTransitGatewayCidrBlocks) > 0 {
+			options.AddTransitGatewayCidrBlocks = AddTransitGatewayCidrBlocks
+		}
+
+		RemoveTransitGatewayCidrBlocks := expandStringSet(oldTransitGatewayCidrBlocks.(*schema.Set))
+		if len(RemoveTransitGatewayCidrBlocks) > 0 {
+			options.RemoveTransitGatewayCidrBlocks = RemoveTransitGatewayCidrBlocks
+		}
 	}
 
 	if transitGatewayModified {
