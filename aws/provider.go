@@ -1387,6 +1387,7 @@ func init() {
 		"budgets",
 		"chime",
 		"cloud9",
+		"cloudcontrolapi",
 		"cloudformation",
 		"cloudfront",
 		"cloudhsm",
