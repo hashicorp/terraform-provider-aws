@@ -69,7 +69,6 @@ func resourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"broker_node_group_info": {
 				Type:     schema.TypeList,
