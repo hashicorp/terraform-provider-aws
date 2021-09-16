@@ -229,7 +229,7 @@ The `replication_configuration` resource supports the following:
 * `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
 * `rules` - (Required) Specifies the rules managing the replication [documented below](#rules).
 
-### rules 
+### rules
 
 ~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
 
@@ -268,7 +268,7 @@ existing_object_replication {
 
 ~> **NOTE:** This configuration format differs from that of `aws_s3_bucket`.
 
-~> **NOTE:** This argument is only available with V2 replication configurations. 
+~> **NOTE:** This argument is only available with V2 replication configurations.
 
 The `delete_marker_replication` object supports the following:
 
@@ -281,7 +281,7 @@ delete_marker_replication {
 * `status` - (Required) Whether delete markers should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 
-### destination 
+### destination
 The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the objects identified by the rule.
@@ -306,7 +306,7 @@ replication_time {
 
 The `replication_time` object supports the following:
 
-* `status` - (Required) The status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`. 
+* `status` - (Required) The status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`.
 * `time` - (Required) The replication time `minutes` to be configured.  The `minutes` value is expected to be an integer.
 
 ### metrics
@@ -322,7 +322,7 @@ metrics {
 
 The `metrics` object supports the following:
 
-* `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`. 
+* `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`.
 * `event_threshold` - (Required) The time in `minutes` specifying the operation missed threshold event.  The `minutes` value is expected to be an integer.
 
 ### source_selection_criteria
@@ -342,7 +342,7 @@ source_selection_criteria {
 
   ~> **NOTE:** `sse_kms_encrypted_objects` configuration format differs here from the configuration in the `aws_s3_bucket` resource.
 
-* `replica_modifications` - (Optional) Keep object metadata such as tags, ACLs, and Object Lock settings replicated between 
+* `replica_modifications` - (Optional) Keep object metadata such as tags, ACLs, and Object Lock settings replicated between
    replicas and source objects. The `status` value is required to be either `"Enabled"` or `"Disabled"`.
 
 * `sse_kms_encrypted_objects` - (Optional) Match SSE-KMS encrypted objects (documented below). If specified, `replica_kms_key_id`
