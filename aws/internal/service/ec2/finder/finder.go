@@ -549,6 +549,10 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 }
 
 func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	if transitGatewayRouteTableID == "" {
+		return nil, nil
+	}
+
 	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -580,7 +584,11 @@ func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTable
 		return !lastPage
 	})
 
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // VpcAttribute looks up a VPC attribute.

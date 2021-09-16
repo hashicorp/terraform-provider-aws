@@ -6,11 +6,18 @@ import (
 
 func TestAccAWSTransfer_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"Access": {
+			"disappears": testAccAWSTransferAccess_disappears,
+			"EFSBasic":   testAccAWSTransferAccess_efs_basic,
+			"S3Basic":    testAccAWSTransferAccess_s3_basic,
+			"S3Policy":   testAccAWSTransferAccess_s3_policy,
+		},
 		"Server": {
 			"basic":                         testAccAWSTransferServer_basic,
 			"disappears":                    testAccAWSTransferServer_disappears,
 			"APIGateway":                    testAccAWSTransferServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccAWSTransferServer_apiGateway_forceDestroy,
+			"DirectoryService":              testAccAWSTransferServer_directoryService,
 			"Domain":                        testAccAWSTransferServer_domain,
 			"ForceDestroy":                  testAccAWSTransferServer_forceDestroy,
 			"HostKey":                       testAccAWSTransferServer_hostKey,
