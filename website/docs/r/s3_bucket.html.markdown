@@ -178,6 +178,8 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using replication configuration
 
+~> **NOTE:** See `aws_s3_bucket_replication_configuration` to support bi-directional replication configuration and additional features.
+
 ```terraform
 provider "aws" {
   region = "eu-west-1"
@@ -288,10 +290,6 @@ resource "aws_s3_bucket" "source" {
   }
 }
 ```
-
-~> **NOTE:** See `aws_s3_bucket_replication_configuration` to support bi-directional replication configuration and additional features.
-
-
 
 ### Enable Default Server Side Encryption
 

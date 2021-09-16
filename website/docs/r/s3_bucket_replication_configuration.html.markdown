@@ -133,9 +133,9 @@ aws_s3_bucket_replication_configuration replication {
 
 ### Bi-Directional Replication
 
-```
+```terraform
 
-...
+#...
 
 resource "aws_s3_bucket" "east" {
   bucket = "tf-test-bucket-east-12345"
@@ -199,17 +199,18 @@ aws_s3_bucket_replication_configuration "west_to_east" {
 
 ## Usage Notes
 
-This resource implements the same features that are provided by the `replication_configuration` object of the `aws_s3_bucket` resource.  To avoid conflicts or unexpected apply results a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Faliure to add the `lifecycle` configuation to the `aws_s3_bucket` will result in conflicting state results.
-
 ~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket.
 
-```
+This resource implements the same features that are provided by the `replication_configuration` object of the `aws_s3_bucket` resource.  To avoid conflicts or unexpected apply results a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Faliure to add the `lifecycle` configuation to the `aws_s3_bucket` will result in conflicting state results.
+
+```terraform
 lifecycle {
   ignore_changes = [
     replication_configuration
   ]
 }
 ```
+
 The `aws_s3_bucket_replication_configuration` resource provides the following features that are not available in the `aws_s3_bucket` resource:
 
 * `replica_modifications` - Added to the `source_selection_criteria` configuration object [documented below](#source_selection_criteria)
@@ -248,51 +249,53 @@ With the `filter` attribute, you can specify object filters based on the object 
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria [documented below](#source_selection_criteria).
 * `status` - (Required) The status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
 
-### exiting_object_replication
+### existing_object_replication
 
 ~> **NOTE:** Replication for existing objects requires activation by AWS Support.  See [userguide/replication-what-is-isnot-replicated](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication)
 
 The `existing_object_replication` object supports the following:
 
-```
+```terraform
 existing_object_replication {
   status = "Enabled"
 }
 ```
-* `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
+
+* `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 
 ### delete_marker_replication
 
-~> **NOTE:** This configuration format differes from that of `aws_s3_bucket`.
+~> **NOTE:** This configuration format differs from that of `aws_s3_bucket`.
 
 ~> **NOTE:** This argument is only available with V2 replication configurations. 
 
 The `delete_marker_replication` object supports the following:
 
-```
+```terraform
 delete_marker_replication {
   status = "Enabled"
 }
 ```
-* `status` - (Required) Whether delete markers should be replicated. Either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
+
+* `status` - (Required) Whether delete markers should be replicated. Either `"Enabled"` or `"Disabled"`.
 
 
 ### destination 
 The `destination` object supports the following:
 
-* `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
-* `storage_class` - (Optional) The class of storage used to store the object. Can be `STANDARD`, `REDUCED_REDUNDANCY`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the objects identified by the rule.
+* `storage_class` - (Optional) The class of storage used to store the object. Can be `STANDARD`, `REDUCED_REDUNDANCY`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`. By default, Amazon S3 uses the storage class of the source object to create the object replica.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
-* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
-* `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
+* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Specify this only in a cross-account scenario (where source and destination bucket owners are not the same), and you want to change replica ownership to the AWS account that owns the destination bucket. If this is not specified in the replication configuration, the replicas are owned by same AWS account that owns the source object. Must be used in conjunction with `account_id` owner override configuration.
+* `account_id` - (Optional) The Account ID to specify the replica ownership. Must be used in conjunction with `access_control_translation` override configuration.
 * `replication_time` - (Optional) Replication Time Control must be used in conjunction with `metrics` [documented below](#replication_time).
 * `metrics` - (Optional) Metrics must be used in conjunction with `replication_time` [documented below](#metrics).
 
 ### replication_time
 
-```
+```terraform
 replication_time {
   status = "Enabled"
   time {
@@ -303,12 +306,12 @@ replication_time {
 
 The `replication_time` object supports the following:
 
-* `status` - (Required) The status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
+* `status` - (Required) The status of the Replication Time Control. Either `"Enabled"` or `"Disabled"`. 
 * `time` - (Required) The replication time `minutes` to be configured.  The `minutes` value is expected to be an integer.
 
 ### metrics
 
-```
+```terraform
 metrics {
   status = "Enabled"
   event_threshold {
@@ -319,13 +322,14 @@ metrics {
 
 The `metrics` object supports the following:
 
-* `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
+* `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`. 
 * `event_threshold` - (Required) The time in `minutes` specifying the operation missed threshold event.  The `minutes` value is expected to be an integer.
 
 ### source_selection_criteria
 
 The `source_selection_criteria` object supports the following:
-```
+
+```terraform
 source_selection_criteria {
   replica_modification {
     status = "Enabled"
@@ -336,13 +340,14 @@ source_selection_criteria {
 }
 ```
 
+  ~> **NOTE:** `sse_kms_encrypted_objects` configuration format differs here from the configuration in the `aws_s3_bucket` resource.
+
 * `replica_modifications` - (Optional) Keep object metadata such as tags, ACLs, and Object Lock settings replicated between 
-   replicas and source objects. The `status` value is required to be either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
+   replicas and source objects. The `status` value is required to be either `"Enabled"` or `"Disabled"`.
 
 * `sse_kms_encrypted_objects` - (Optional) Match SSE-KMS encrypted objects (documented below). If specified, `replica_kms_key_id`
-   in `destination` must be specified as well. The `status` value is required to be either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`. 
+   in `destination` must be specified as well. The `status` value is required to be either `"Enabled"` or `"Disabled"`.
 
-  ~> **NOTE:** `sse_kms_encrypted_objects` configuration format differs here from the configuration in the `aws_s3_bucket` resource.
 
 ### filter
 
