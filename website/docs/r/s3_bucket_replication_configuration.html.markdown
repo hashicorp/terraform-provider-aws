@@ -239,7 +239,7 @@ The `rules` object supports the following:
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.  Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
 * `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations [documented below](#existing_object_replication).
-* `delete_marker_replication_status` - (Optional) Whether delete markers are replicated. The only valid value is `"Enabled"`. To disable, omit this argument. This argument is only valid with V2 replication configurations (i.e., when `filter` is used).
+* `delete_marker_replication` - (Optional) Whether delete markers are replicated. This argument is only valid with V2 replication configurations (i.e., when `filter` is used)[documented below](#delete_marker_replication).
 * `destination` - (Required) Specifies the destination for the rule [documented below](#destination).
 * `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter).
 * `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
@@ -260,6 +260,22 @@ existing_object_replication {
 }
 ```
 * `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
+
+
+### delete_marker_replication
+
+~> **NOTE:** This configuration format differes from that of `aws_s3_bucket`.
+
+~> **NOTE:** This argument is only available with V2 replication configurations. 
+
+The `delete_marker_replication` object supports the following:
+
+```
+delete_marker_replication {
+  status = "Enabled"
+}
+```
+* `status` - (Required) Whether delete markers should be replicated. Either `"Enabled"` or `"Disabled"`. The object is ignored if status is not `"Enabled"`.
 
 
 ### destination 
