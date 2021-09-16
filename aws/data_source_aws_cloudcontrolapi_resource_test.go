@@ -11,8 +11,8 @@ import (
 
 func TestAccAwsCloudControlApiResourceDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_cloudformation_resource.test"
-	resourceName := "aws_cloudformation_resource.test"
+	dataSourceName := "data.aws_cloudcontrolapi_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -34,7 +34,7 @@ func TestAccAwsCloudControlApiResourceDataSource_basic(t *testing.T) {
 
 func testAccAwsCloudControlApiResourceDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -42,9 +42,9 @@ resource "aws_cloudformation_resource" "test" {
   })
 }
 
-data "aws_cloudformation_resource" "test" {
-  identifier = aws_cloudformation_resource.test.id
-  type_name  = aws_cloudformation_resource.test.type_name
+data "aws_cloudcontrolapi_resource" "test" {
+  identifier = aws_cloudcontrolapi_resource.test.id
+  type_name  = aws_cloudcontrolapi_resource.test.type_name
 }
 `, rName)
 }

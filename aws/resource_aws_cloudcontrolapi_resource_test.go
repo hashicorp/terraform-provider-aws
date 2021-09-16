@@ -16,7 +16,7 @@ import (
 
 func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -37,7 +37,7 @@ func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
 
 func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -58,7 +58,7 @@ func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
 
 func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -84,7 +84,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing
 
 func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -110,7 +110,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testi
 
 func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -137,7 +137,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testin
 func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -163,7 +163,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
 
 func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -189,7 +189,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing
 
 func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -215,7 +215,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testi
 
 func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -275,7 +275,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *test
 
 func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -301,7 +301,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.
 
 func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -327,7 +327,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testin
 
 func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -359,7 +359,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing
 
 func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -385,7 +385,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.
 
 func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -411,7 +411,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testin
 
 func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -437,7 +437,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing
 
 func TestAccAwsCloudControlApiResource_ResourceSchema(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_resource.test"
+	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -459,7 +459,7 @@ func testAccCheckAwsCloudControlApiResourceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudcontrolapiconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudformation_resource" {
+		if rs.Type != "aws_cloudcontrolapi_resource" {
 			continue
 		}
 
@@ -492,7 +492,7 @@ func testAccCheckAwsCloudControlApiResourceDestroy(s *terraform.State) error {
 
 func testAccAwsCloudControlApiResourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -504,7 +504,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValue(rName string, booleanValue bool) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::ApiGateway::ApiKey"
 
   desired_state = jsonencode({
@@ -518,7 +518,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValueRemoved(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::ApiGateway::ApiKey"
 
   desired_state = jsonencode({
@@ -531,7 +531,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateCreateOnly(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -543,7 +543,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValue(rName string, integerValue int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -556,7 +556,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValueRemoved(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -568,7 +568,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyName(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -580,7 +580,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyValue(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
 
   desired_state = jsonencode({
@@ -592,7 +592,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName string, key1 string, value1 string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::ECS::Cluster"
 
   desired_state = jsonencode({
@@ -610,7 +610,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateObjectValueRemoved(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::ECS::Cluster"
 
   desired_state = jsonencode({
@@ -622,7 +622,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateStringValue(rName string, stringValue string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Athena::WorkGroup"
 
   desired_state = jsonencode({
@@ -635,7 +635,7 @@ resource "aws_cloudformation_resource" "test" {
 
 func testAccAwsCloudControlApiResourceConfigDesiredStateStringValueRemoved(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Athena::WorkGroup"
 
   desired_state = jsonencode({
@@ -652,7 +652,7 @@ data "aws_cloudformation_type" "test" {
   type_name = "AWS::Logs::LogGroup"
 }
 
-resource "aws_cloudformation_resource" "test" {
+resource "aws_cloudcontrolapi_resource" "test" {
   schema    = data.aws_cloudformation_type.test.schema
   type_name = data.aws_cloudformation_type.test.type_name
 

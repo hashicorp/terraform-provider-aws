@@ -1,19 +1,19 @@
 ---
-subcategory: "CloudFormation"
+subcategory: "Cloud Control API"
 layout: "aws"
-page_title: "AWS: aws_cloudformation_resource"
+page_title: "AWS: aws_cloudcontrolapi_resource"
 description: |-
-    Manages a CloudFormation Resource.
+    Manages a Cloud Control API Resource.
 ---
 
-# Resource: aws_cloudformation_resource
+# Resource: aws_cloudcontrolapi_resource
 
-Manages a CloudFormation Resource. The configuration and lifecycle handling of these resources is proxied through CloudFormation handlers to the backend service.
+Manages a Cloud Control API Resource. The configuration and lifecycle handling of these resources is proxied through Cloud Control API handlers to the backend service.
 
 ## Example Usage
 
 ```terraform
-resource "aws_cloudformation_resource" "example" {
+resource "aws_cloudcontrolapi_resource" "example" {
   type_name = "AWS::ECS::Cluster"
 
   desired_state = jsonencode({
@@ -45,4 +45,4 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudformation_resource.example.properties)["example"]`.
+* `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudcontrolapi_resource.example.properties)["example"]`.
