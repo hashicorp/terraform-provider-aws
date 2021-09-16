@@ -106,11 +106,8 @@ resource "aws_lambda_function" "lambda" {
   function_name = "mylambda"
   role          = aws_iam_role.role.arn
   handler       = "lambda.lambda_handler"
-  runtime       = "python2.7"
+  runtime       = "python3.6"
 
-  # The filebase64sha256() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
-  # source_code_hash = "${base64sha256(file("lambda.zip"))}"
   source_code_hash = filebase64sha256("lambda.zip")
 }
 
