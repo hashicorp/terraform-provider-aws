@@ -22,12 +22,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/waiter"
 )
 
-func resourceAwsCloudFormationResource() *schema.Resource {
+func resourceAwsCloudControlApiResource() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsCloudFormationResourceCreate,
-		DeleteContext: resourceAwsCloudFormationResourceDelete,
-		ReadContext:   resourceAwsCloudFormationResourceRead,
-		UpdateContext: resourceAwsCloudFormationResourceUpdate,
+		CreateContext: resourceAwsCloudControlApiResourceCreate,
+		DeleteContext: resourceAwsCloudControlApiResourceDelete,
+		ReadContext:   resourceAwsCloudControlApiResourceRead,
+		UpdateContext: resourceAwsCloudControlApiResourceUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Hour),
@@ -67,8 +67,8 @@ func resourceAwsCloudFormationResource() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsCloudFormationResourceCustomizeDiffGetSchema,
-			resourceAwsCloudFormationResourceCustomizeDiffSchemaDiff,
+			resourceAwsCloudControlApiResourceCustomizeDiffGetSchema,
+			resourceAwsCloudControlApiResourceCustomizeDiffSchemaDiff,
 			customdiff.ComputedIf("properties", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("desired_state")
 			}),
@@ -76,7 +76,7 @@ func resourceAwsCloudFormationResource() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFormationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
 	input := &cloudcontrolapi.CreateResourceInput{
@@ -123,10 +123,10 @@ func resourceAwsCloudFormationResourceCreate(ctx context.Context, d *schema.Reso
 		d.SetId(aws.StringValue(output.ProgressEvent.Identifier))
 	}
 
-	return resourceAwsCloudFormationResourceRead(ctx, d, meta)
+	return resourceAwsCloudControlApiResourceRead(ctx, d, meta)
 }
 
-func resourceAwsCloudFormationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
 	input := &cloudcontrolapi.GetResourceInput{
@@ -170,7 +170,7 @@ func resourceAwsCloudFormationResourceRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
 	if d.HasChange("desired_state") {
@@ -221,10 +221,10 @@ func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	return resourceAwsCloudFormationResourceRead(ctx, d, meta)
+	return resourceAwsCloudControlApiResourceRead(ctx, d, meta)
 }
 
-func resourceAwsCloudFormationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsCloudControlApiResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
 	input := &cloudcontrolapi.DeleteResourceInput{
@@ -267,7 +267,7 @@ func resourceAwsCloudFormationResourceDelete(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAwsCloudFormationResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsCloudControlApiResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
 	resourceSchema := diff.Get("schema").(string)
@@ -299,7 +299,7 @@ func resourceAwsCloudFormationResourceCustomizeDiffGetSchema(ctx context.Context
 	return nil
 }
 
-func resourceAwsCloudFormationResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsCloudControlApiResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	oldDesiredStateRaw, newDesiredStateRaw := diff.GetChange("desired_state")
 	newSchema := diff.Get("schema").(string)
 

@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func dataSourceAwsCloudFormationResource() *schema.Resource {
+func dataSourceAwsCloudControlApiResource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsCloudformationResourceRead,
+		ReadContext: dataSourceAwsCloudControlApiResourceRead,
 
 		Schema: map[string]*schema.Schema{
 			"identifier": {
@@ -42,7 +42,7 @@ func dataSourceAwsCloudFormationResource() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudformationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
 	input := &cloudcontrolapi.GetResourceInput{}

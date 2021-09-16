@@ -4,24 +4,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAwsCloudformationResourceDataSource_basic(t *testing.T) {
+func TestAccAwsCloudControlApiResourceDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_cloudformation_resource.test"
 	resourceName := "aws_cloudformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceDataSourceConfig(rName),
+				Config: testAccAwsCloudControlApiResourceDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "properties", resourceName, "properties"),
@@ -32,7 +32,7 @@ func TestAccAwsCloudformationResourceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsCloudformationResourceDataSourceConfig(rName string) string {
+func testAccAwsCloudControlApiResourceDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"

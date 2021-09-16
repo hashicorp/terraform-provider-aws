@@ -7,13 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsCloudformationResource_basic(t *testing.T) {
+func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -21,12 +22,12 @@ func TestAccAwsCloudformationResource_basic(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfig(rName),
+				Config: testAccAwsCloudControlApiResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`^\{.*\}$`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`^\{.*\}$`)),
 					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
 				),
 			},
@@ -34,7 +35,7 @@ func TestAccAwsCloudformationResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationResource_disappears(t *testing.T) {
+func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -42,12 +43,12 @@ func TestAccAwsCloudformationResource_disappears(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfig(rName),
+				Config: testAccAwsCloudControlApiResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationResource(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudControlApiResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -55,7 +56,7 @@ func TestAccAwsCloudformationResource_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_BooleanValueAdded(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -63,25 +64,25 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueAdded(t *testing.
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":false`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":false`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValue(rName, true),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValue(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":true`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_BooleanValueRemoved(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -89,25 +90,25 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueRemoved(t *testin
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValue(rName, true),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValue(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":true`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":false`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":false`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_BooleanValueUpdate(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -115,25 +116,25 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueUpdate(t *testing
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValue(rName, true),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValue(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":true`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValue(rName, false),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValue(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":false`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Enabled":false`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_CreateOnly(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
@@ -142,25 +143,25 @@ func TestAccAwsCloudformationResource_DesiredState_CreateOnly(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateCreateOnly(rName1),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateCreateOnly(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"LogGroupName":"`+rName1+`"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":"`+rName1+`"`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateCreateOnly(rName2),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateCreateOnly(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"LogGroupName":"`+rName2+`"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":"`+rName2+`"`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_IntegerValueAdded(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -168,25 +169,25 @@ func TestAccAwsCloudformationResource_DesiredState_IntegerValueAdded(t *testing.
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateIntegerValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"LogGroupName":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateIntegerValue(rName, 14),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValue(rName, 14),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"RetentionInDays":14`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":14`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_IntegerValueRemoved(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -194,25 +195,25 @@ func TestAccAwsCloudformationResource_DesiredState_IntegerValueRemoved(t *testin
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateIntegerValue(rName, 14),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValue(rName, 14),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"RetentionInDays":14`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":14`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateIntegerValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"LogGroupName":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"LogGroupName":`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_IntegerValueUpdate(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -220,59 +221,59 @@ func TestAccAwsCloudformationResource_DesiredState_IntegerValueUpdate(t *testing
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateIntegerValue(rName, 7),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValue(rName, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"RetentionInDays":7`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":7`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateIntegerValue(rName, 14),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValue(rName, 14),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"RetentionInDays":14`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"RetentionInDays":14`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_InvalidPropertyName(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyName(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsCloudformationResourceConfigDesiredStateInvalidPropertyName(rName),
+				Config:      testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyName(rName),
 				ExpectError: regexp.MustCompile(`\(root\): Additional property InvalidName is not allowed`),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_InvalidPropertyValue(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsCloudformationResourceConfigDesiredStateInvalidPropertyValue(rName),
+				Config:      testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyValue(rName),
 				ExpectError: regexp.MustCompile(`LogGroupName: Does not match pattern`),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_ObjectValueAdded(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -280,25 +281,25 @@ func TestAccAwsCloudformationResource_DesiredState_ObjectValueAdded(t *testing.T
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Value":"value1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1"`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_ObjectValueRemoved(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -306,25 +307,25 @@ func TestAccAwsCloudformationResource_DesiredState_ObjectValueRemoved(t *testing
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Value":"value1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1"`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_ObjectValueUpdate(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -332,31 +333,31 @@ func TestAccAwsCloudformationResource_DesiredState_ObjectValueUpdate(t *testing.
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Value":"value1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1"`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValue1(rName, "key1", "value1updated"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName, "key1", "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Value":"value1updated"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value1updated"`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateObjectValue1(rName, "key2", "value2"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Value":"value2"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Value":"value2"`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_StringValueAdded(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -364,25 +365,25 @@ func TestAccAwsCloudformationResource_DesiredState_StringValueAdded(t *testing.T
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateStringValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateStringValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateStringValue(rName, "description1"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateStringValue(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Description":"description1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description1"`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_StringValueRemoved(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -390,25 +391,25 @@ func TestAccAwsCloudformationResource_DesiredState_StringValueRemoved(t *testing
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateStringValue(rName, "description1"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateStringValue(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Description":"description1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description1"`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateStringValueRemoved(rName),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateStringValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Name":`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_DesiredState_StringValueUpdate(t *testing.T) {
+func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
@@ -416,36 +417,36 @@ func TestAccAwsCloudformationResource_DesiredState_StringValueUpdate(t *testing.
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateStringValue(rName, "description1"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateStringValue(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Description":"description1"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description1"`)),
 				),
 			},
 			{
-				Config: testAccAwsCloudformationResourceConfigDesiredStateStringValue(rName, "description2"),
+				Config: testAccAwsCloudControlApiResourceConfigDesiredStateStringValue(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Description":"description2"`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`"Description":"description2"`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAwsCloudformationResource_ResourceSchema(t *testing.T) {
+func TestAccAwsCloudControlApiResource_ResourceSchema(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID, cloudformation.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsCloudformationResourceDestroy,
+		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCloudformationResourceConfigResourceSchema(rName),
+				Config: testAccAwsCloudControlApiResourceConfigResourceSchema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "schema", "data.aws_cloudformation_type.test", "schema"),
 				),
@@ -454,7 +455,7 @@ func TestAccAwsCloudformationResource_ResourceSchema(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsCloudformationResourceDestroy(s *terraform.State) error {
+func testAccCheckAwsCloudControlApiResourceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudcontrolapiconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -489,7 +490,7 @@ func testAccCheckAwsCloudformationResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsCloudformationResourceConfig(rName string) string {
+func testAccAwsCloudControlApiResourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
@@ -501,7 +502,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateBooleanValue(rName string, booleanValue bool) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValue(rName string, booleanValue bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::ApiGateway::ApiKey"
@@ -515,7 +516,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName, booleanValue)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateBooleanValueRemoved(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateBooleanValueRemoved(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::ApiGateway::ApiKey"
@@ -528,7 +529,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateCreateOnly(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateCreateOnly(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
@@ -540,7 +541,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateIntegerValue(rName string, integerValue int) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValue(rName string, integerValue int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
@@ -553,7 +554,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName, integerValue)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateIntegerValueRemoved(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateIntegerValueRemoved(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
@@ -565,7 +566,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateInvalidPropertyName(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
@@ -577,7 +578,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateInvalidPropertyValue(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyValue(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
@@ -589,7 +590,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateObjectValue1(rName string, key1 string, value1 string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateObjectValue1(rName string, key1 string, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::ECS::Cluster"
@@ -607,7 +608,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName, key1, value1)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateObjectValueRemoved(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateObjectValueRemoved(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::ECS::Cluster"
@@ -619,7 +620,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateStringValue(rName string, stringValue string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateStringValue(rName string, stringValue string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Athena::WorkGroup"
@@ -632,7 +633,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName, stringValue)
 }
 
-func testAccAwsCloudformationResourceConfigDesiredStateStringValueRemoved(rName string) string {
+func testAccAwsCloudControlApiResourceConfigDesiredStateStringValueRemoved(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::Athena::WorkGroup"
@@ -644,7 +645,7 @@ resource "aws_cloudformation_resource" "test" {
 `, rName)
 }
 
-func testAccAwsCloudformationResourceConfigResourceSchema(rName string) string {
+func testAccAwsCloudControlApiResourceConfigResourceSchema(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudformation_type" "test" {
   type      = "RESOURCE"
