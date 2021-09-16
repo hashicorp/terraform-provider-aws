@@ -6216,6 +6216,23 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_Monitoring_SourceOnly(rName string) string {
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+`, rName))
+}
+
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName string, deletionProtection bool) string {
 	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -6361,23 +6378,6 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, monitoringInterval))
-}
-
-func testAccAWSDBInstanceConfig_ReplicateSourceDb_Monitoring_SourceOnly(rName string) string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_db_instance" "source" {
-  allocated_storage       = 5
-  backup_retention_period = 1
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  identifier              = "%[1]s-source"
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
-  username                = "tfacctest"
-  skip_final_snapshot     = true
-}
-`, rName))
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_MultiAZ(rName string, multiAz bool) string {
