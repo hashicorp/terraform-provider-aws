@@ -51,6 +51,14 @@ The following arguments are supported:
 * `source_region` The region of the source snapshot.
 * `tags` - A map of tags for the snapshot. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+### Timeouts
+
+`aws_ebs_snapshot_copy` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating the ebs snapshot copy
+- `delete` - (Default `10 minutes`) Used for deleting the ebs snapshot copy
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
