@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfcloudformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -61,7 +62,7 @@ const (
 	StackSetUpdatedDefaultTimeout = 30 * time.Minute
 )
 
-func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID string, timeout time.Duration) error {
+func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudformation.StackSetOperationStatusRunning},
 		Target:  []string{cloudformation.StackSetOperationStatusSucceeded},
@@ -70,10 +71,37 @@ func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetNam
 		Delay:   stackSetOperationDelay,
 	}
 
-	log.Printf("[DEBUG] Waiting for CloudFormation StackSet (%s) operation: %s", stackSetName, operationID)
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForState()
 
-	return err
+	if output, ok := outputRaw.(*cloudformation.StackSetOperation); ok {
+		if status := aws.StringValue(output.Status); status == cloudformation.StackSetOperationStatusFailed {
+			input := &cloudformation.ListStackSetOperationResultsInput{
+				OperationId:  aws.String(operationID),
+				StackSetName: aws.String(stackSetName),
+			}
+			var summaries []*cloudformation.StackSetOperationResultSummary
+
+			err := conn.ListStackSetOperationResultsPages(input, func(page *cloudformation.ListStackSetOperationResultsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				summaries = append(summaries, page.Summaries...)
+
+				return !lastPage
+			})
+
+			if err != nil {
+				return nil, fmt.Errorf("error listing CloudFormation Stack Set (%s) Operation (%s) results: %w", stackSetName, operationID, err)
+			}
+
+			tfresource.SetLastError(err, fmt.Errorf("Operation (%s) Results:\n%w", operationID, tfcloudformation.StackSetOperationError(summaries)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 const (
@@ -252,16 +280,8 @@ func TypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudform
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*cloudformation.DescribeTypeRegistrationOutput); ok {
-		if err != nil && output != nil {
-			newErr := errors.New(aws.StringValue(output.Description))
-
-			var te *resource.TimeoutError
-			var use *resource.UnexpectedStateError
-			if ok := errors.As(err, &te); ok && te.LastError == nil {
-				te.LastError = newErr
-			} else if ok := errors.As(err, &use); ok && use.LastError == nil {
-				use.LastError = newErr
-			}
+		if status := aws.StringValue(output.ProgressStatus); status == cloudformation.RegistrationStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Description)))
 		}
 
 		return output, err

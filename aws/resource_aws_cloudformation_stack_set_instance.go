@@ -105,7 +105,7 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 
 		d.SetId(fmt.Sprintf("%s,%s,%s", stackSetName, accountID, region))
 
-		err = waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
+		_, err = waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			// IAM eventual consistency
@@ -157,7 +157,7 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 
 		d.SetId(fmt.Sprintf("%s,%s,%s", stackSetName, accountID, region))
 
-		err = waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
+		_, err = waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) creation: %w", d.Id(), err)
@@ -253,7 +253,7 @@ func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("error updating CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		if err := waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -293,7 +293,7 @@ func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, met
 		return fmt.Errorf("error deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %s", d.Id(), err)
 	}
 
