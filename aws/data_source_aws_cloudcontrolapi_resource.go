@@ -6,10 +6,10 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/finder"
 )
 
 func dataSourceAwsCloudControlApiResource() *schema.Resource {
@@ -45,37 +45,21 @@ func dataSourceAwsCloudControlApiResource() *schema.Resource {
 func dataSourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
-	input := &cloudcontrolapi.GetResourceInput{}
-
-	if v, ok := d.GetOk("identifier"); ok {
-		input.Identifier = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("role_arn"); ok {
-		input.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("type_name"); ok {
-		input.TypeName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("type_version_id"); ok {
-		input.TypeVersionId = aws.String(v.(string))
-	}
-
-	output, err := conn.GetResourceWithContext(ctx, input)
+	identifier := d.Get("identifier").(string)
+	resourceDescription, err := finder.ResourceByID(ctx, conn,
+		identifier,
+		d.Get("type_name").(string),
+		d.Get("type_version_id").(string),
+		d.Get("role_arn").(string),
+	)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource: %w", err))
+		return diag.FromErr(fmt.Errorf("error reading Cloud Control API Resource (%s): %w", identifier, err))
 	}
 
-	if output == nil || output.ResourceDescription == nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource: empty response"))
-	}
+	d.SetId(aws.StringValue(resourceDescription.Identifier))
 
-	d.SetId(aws.StringValue(output.ResourceDescription.Identifier))
-
-	d.Set("properties", output.ResourceDescription.Properties)
+	d.Set("properties", resourceDescription.Properties)
 
 	return nil
 }

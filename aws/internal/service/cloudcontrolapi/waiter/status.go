@@ -6,24 +6,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func ResourceRequestStatusProgressEventOperationStatus(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) resource.StateRefreshFunc {
+func ProgressEventOperationStatus(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &cloudcontrolapi.GetResourceRequestStatusInput{
-			RequestToken: aws.String(requestToken),
-		}
+		output, err := finder.ProgressEventByRequestToken(ctx, conn, requestToken)
 
-		output, err := conn.GetResourceRequestStatusWithContext(ctx, input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || output.ProgressEvent == nil {
-			return nil, "", nil
-		}
-
-		return output.ProgressEvent, aws.StringValue(output.ProgressEvent.OperationStatus), nil
+		return output, aws.StringValue(output.OperationStatus), nil
 	}
 }

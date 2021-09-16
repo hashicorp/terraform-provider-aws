@@ -1,17 +1,18 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
@@ -463,28 +464,17 @@ func testAccCheckAwsCloudControlApiResourceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &cloudcontrolapi.GetResourceInput{
-			Identifier: aws.String(rs.Primary.ID),
-			TypeName:   aws.String(rs.Primary.Attributes["type_name"]),
-		}
+		_, err := finder.ResourceByID(context.TODO(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
-		_, err := conn.GetResource(input)
-
-		if tfawserr.ErrCodeEquals(err, cloudcontrolapi.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		// Temporary: Some CloudFormation Resources do not correctly re-map
-		// "not found" errors, instead returning a HandlerFailureException.
-		// These should be reported and fixed upstream over time, but for now
-		// work around the issue only in CheckDestroy.
-		if tfawserr.ErrMessageContains(err, cloudcontrolapi.ErrCodeHandlerFailureException, "not found") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudFormation Resource (%s): %w", rs.Primary.ID, err)
+			return err
 		}
+
+		return fmt.Errorf("Cloud Control API Resource %s still exists", rs.Primary.ID)
 	}
 
 	return nil

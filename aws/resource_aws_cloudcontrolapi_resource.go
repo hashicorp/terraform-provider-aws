@@ -10,16 +10,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	cfschema "github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mattbaird/jsonpatch"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudcontrolapi/waiter"
+	cffinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudControlApiResource() *schema.Resource {
@@ -79,20 +80,15 @@ func resourceAwsCloudControlApiResource() *schema.Resource {
 func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
+	typeName := d.Get("type_name").(string)
 	input := &cloudcontrolapi.CreateResourceInput{
-		ClientToken: aws.String(resource.UniqueId()),
-	}
-
-	if v, ok := d.GetOk("desired_state"); ok {
-		input.DesiredState = aws.String(v.(string))
+		ClientToken:  aws.String(resource.UniqueId()),
+		DesiredState: aws.String(d.Get("desired_state").(string)),
+		TypeName:     aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("type_name"); ok {
-		input.TypeName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("type_version_id"); ok {
@@ -102,20 +98,20 @@ func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.Res
 	output, err := conn.CreateResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating CloudFormation Resource: %w", err))
+		return diag.FromErr(fmt.Errorf("error creating Cloud Control API Resource (%s): %w", typeName, err))
 	}
 
 	if output == nil || output.ProgressEvent == nil {
-		return diag.FromErr(fmt.Errorf("error creating CloudFormation Resource: empty response"))
+		return diag.FromErr(fmt.Errorf("error creating Cloud Control API Resource (%s): empty result", typeName))
 	}
 
 	// Always try to capture the identifier before returning errors
 	d.SetId(aws.StringValue(output.ProgressEvent.Identifier))
 
-	output.ProgressEvent, err = waiter.ResourceRequestStatusProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
+	output.ProgressEvent, err = waiter.ProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for CloudForamtion Resource (%s) creation: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) create: %w", d.Id(), err))
 	}
 
 	// Some resources do not set the identifier until after creation
@@ -129,43 +125,24 @@ func resourceAwsCloudControlApiResourceCreate(ctx context.Context, d *schema.Res
 func resourceAwsCloudControlApiResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudcontrolapiconn
 
-	input := &cloudcontrolapi.GetResourceInput{
-		Identifier: aws.String(d.Id()),
-	}
+	resourceDescription, err := finder.ResourceByID(ctx, conn,
+		d.Id(),
+		d.Get("type_name").(string),
+		d.Get("type_version_id").(string),
+		d.Get("role_arn").(string),
+	)
 
-	if v, ok := d.GetOk("role_arn"); ok {
-		input.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("type_name"); ok {
-		input.TypeName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("type_version_id"); ok {
-		input.TypeVersionId = aws.String(v.(string))
-	}
-
-	output, err := conn.GetResourceWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudcontrolapi.ErrCodeResourceNotFoundException) {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource (%s): not found after creation", d.Id()))
-		}
-
-		log.Printf("[WARN] CloudFormation Resource (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Cloud Control API Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error reading Cloud Control API Resource (%s): %w", d.Id(), err))
 	}
 
-	if output == nil || output.ResourceDescription == nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Resource (%s): empty response", d.Id()))
-	}
-
-	d.Set("properties", output.ResourceDescription.Properties)
+	d.Set("properties", resourceDescription.Properties)
 
 	return nil
 }
@@ -192,14 +169,11 @@ func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.Res
 			ClientToken:   aws.String(resource.UniqueId()),
 			Identifier:    aws.String(d.Id()),
 			PatchDocument: aws.String(patchDocument),
+			TypeName:      aws.String(d.Get("type_name").(string)),
 		}
 
 		if v, ok := d.GetOk("role_arn"); ok {
 			input.RoleArn = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("type_name"); ok {
-			input.TypeName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("type_version_id"); ok {
@@ -209,15 +183,15 @@ func resourceAwsCloudControlApiResourceUpdate(ctx context.Context, d *schema.Res
 		output, err := conn.UpdateResourceWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating CloudFormation Resource (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error updating Cloud Control API Resource (%s): %w", d.Id(), err))
 		}
 
 		if output == nil || output.ProgressEvent == nil {
-			return diag.FromErr(fmt.Errorf("error updating CloudFormation Resource (%s): empty reponse", d.Id()))
+			return diag.FromErr(fmt.Errorf("error updating Cloud Control API Resource (%s): empty result", d.Id()))
 		}
 
-		if _, err := waiter.ResourceRequestStatusProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Resource (%s) update: %w", d.Id(), err))
+		if _, err := waiter.ProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) update: %w", d.Id(), err))
 		}
 	}
 
@@ -230,14 +204,11 @@ func resourceAwsCloudControlApiResourceDelete(ctx context.Context, d *schema.Res
 	input := &cloudcontrolapi.DeleteResourceInput{
 		ClientToken: aws.String(resource.UniqueId()),
 		Identifier:  aws.String(d.Id()),
+		TypeName:    aws.String(d.Get("type_name").(string)),
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("type_name"); ok {
-		input.TypeName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("type_version_id"); ok {
@@ -247,21 +218,21 @@ func resourceAwsCloudControlApiResourceDelete(ctx context.Context, d *schema.Res
 	output, err := conn.DeleteResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting CloudFormation Resource (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error deleting Cloud Control API Resource (%s): %w", d.Id(), err))
 	}
 
 	if output == nil || output.ProgressEvent == nil {
-		return diag.FromErr(fmt.Errorf("error deleting CloudFormation Resource (%s): empty response", d.Id()))
+		return diag.FromErr(fmt.Errorf("error deleting Cloud Control API Resource (%s): empty result", d.Id()))
 	}
 
-	progressEvent, err := waiter.ResourceRequestStatusProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
+	progressEvent, err := waiter.ProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
 
 	if progressEvent != nil && aws.StringValue(progressEvent.ErrorCode) == cloudcontrolapi.HandlerErrorCodeNotFound {
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Resource (%s) deletion: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) delete: %w", d.Id(), err))
 	}
 
 	return nil
@@ -271,25 +242,17 @@ func resourceAwsCloudControlApiResourceCustomizeDiffGetSchema(ctx context.Contex
 	conn := meta.(*AWSClient).cfconn
 
 	resourceSchema := diff.Get("schema").(string)
-	typeName := diff.Get("type_name").(string)
 
 	if resourceSchema != "" {
 		return nil
 	}
 
-	input := &cloudformation.DescribeTypeInput{
-		Type:     aws.String(cloudformation.RegistryTypeResource),
-		TypeName: aws.String(typeName),
-	}
+	typeName := diff.Get("type_name").(string)
 
-	output, err := conn.DescribeTypeWithContext(ctx, input)
+	output, err := cffinder.TypeByName(ctx, conn, typeName)
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudFormation Type (%s): %w", typeName, err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("error describing CloudFormation Type (%s): empty reponse", typeName)
+		return fmt.Errorf("error reading CloudFormation Type (%s): %w", typeName, err)
 	}
 
 	if err := diff.SetNew("schema", output.Schema); err != nil {
