@@ -2,7 +2,6 @@ package waiter
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -13,23 +12,17 @@ import (
 
 func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
-			ChangeSetName: aws.String(changeSetName),
-			StackName:     aws.String(stackID),
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to describe CloudFormation change set: %s", err)
-			return nil, "", err
-		}
+		output, err := finder.ChangeSetByStackIDAndChangeSetName(conn, stackID, changeSetName)
 
-		if resp == nil {
-			log.Printf("[WARN] Describing CloudFormation change set returned no response")
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		status := aws.StringValue(resp.Status)
+		if err != nil {
+			return nil, "", err
+		}
 
-		return resp, status, err
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 

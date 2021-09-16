@@ -130,11 +130,13 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	stack, err := cffinder.StackByID(cfConn, d.Id())
+
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
 	}

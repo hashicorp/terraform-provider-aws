@@ -16,32 +16,28 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for a Change Set to be Created
 	ChangeSetCreatedTimeout = 5 * time.Minute
 )
 
 func ChangeSetCreated(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
 	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			cloudformation.ChangeSetStatusCreatePending,
-			cloudformation.ChangeSetStatusCreateInProgress,
-		},
-		Target: []string{
-			cloudformation.ChangeSetStatusCreateComplete,
-		},
+		Pending: []string{cloudformation.ChangeSetStatusCreateInProgress, cloudformation.ChangeSetStatusCreatePending},
+		Target:  []string{cloudformation.ChangeSetStatusCreateComplete},
 		Timeout: ChangeSetCreatedTimeout,
 		Refresh: ChangeSetStatus(conn, stackID, changeSetName),
 	}
+
 	outputRaw, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
+
+	if output, ok := outputRaw.(*cloudformation.DescribeChangeSetOutput); ok {
+		if status := aws.StringValue(output.Status); status == cloudformation.ChangeSetStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+		}
+
+		return output, err
 	}
 
-	changeSet, ok := outputRaw.(*cloudformation.DescribeChangeSetOutput)
-	if !ok {
-		return nil, err
-	}
-	return changeSet, err
+	return nil, err
 }
 
 const (
@@ -280,10 +276,6 @@ func TypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudform
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*cloudformation.DescribeTypeRegistrationOutput); ok {
-		if status := aws.StringValue(output.ProgressStatus); status == cloudformation.RegistrationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Description)))
-		}
-
 		return output, err
 	}
 

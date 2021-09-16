@@ -11,6 +11,32 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+func ChangeSetByStackIDAndChangeSetName(conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
+	input := &cloudformation.DescribeChangeSetInput{
+		ChangeSetName: aws.String(changeSetName),
+		StackName:     aws.String(stackID),
+	}
+
+	output, err := conn.DescribeChangeSet(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeChangeSetNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func StackByID(conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(id),
