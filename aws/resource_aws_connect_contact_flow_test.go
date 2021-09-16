@@ -272,5 +272,5 @@ resource "aws_connect_contact_flow" "test" {
     "Method" = "%[3]s"
   }
 }
-`, rName, rName, label, filepath)
+`, rName, rName2, label, filepath)
 }
