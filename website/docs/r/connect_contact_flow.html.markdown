@@ -14,12 +14,7 @@ Provides an Amazon Connect Contact Flow resource. For more information see
 This resource embeds or references Contact Flows specified in Amazon Connect Contact Flow Language. For more information see
 [Amazon Connect Flow language](https://docs.aws.amazon.com/connect/latest/adminguide/flow-language.html)
 
-~> **WARN:** Contact Flows exported from the Console [Contact Flow import/export](https://docs.aws.amazon.com/connect/latest/adminguide/contact-flow-import-export.html) are not in the Amazon Connect Contact Flow Laungege and can not be used with this resource. Instead the recommendation is to use the AWS CLI [`describe-contact-flow`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/connect/describe-contact-flow.html). See example below which uses `jq` to extract the `Content` attribute and saves it to a local file.
-
-```
-aws connect describe-contact-flow --instance-id 1b3c5d8-1b3c-1b3c-1b3c-1b3c5d81b3c5 --contact-flow-id c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5 --region us-west-2 | jq '.ContactFlow.Content | fromjson' > contact_flow.json
-```
-
+~> **WARN:** Contact Flows exported from the Console [Contact Flow import/export](https://docs.aws.amazon.com/connect/latest/adminguide/contact-flow-import-export.html) are not in the Amazon Connect Contact Flow Laungege and can not be used with this resource. Instead the recommendation is to use the AWS CLI [`describe-contact-flow`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/connect/describe-contact-flow.html). See example below which uses `jq` to extract the `Content` attribute and saves it to a local file. `aws connect describe-contact-flow --instance-id 1b3c5d8-1b3c-1b3c-1b3c-1b3c5d81b3c5 --contact-flow-id c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5 --region us-west-2 | jq '.ContactFlow.Content | fromjson' > contact_flow.json`
 
 ~> **NOTE:** Due to The behaviour of Amazon Connect you cannot delete contact flows [Create a new contact flow](https://docs.aws.amazon.com/connect/latest/adminguide/create-contact-flow.html), instead the recommendation is to prefix the Contact Flow with `zzTrash`.
 
@@ -86,7 +81,6 @@ resource "aws_connect_contact_flow" "test" {
 ```
 
 ## Argument Reference
-
 
 The following arguments are supported:
 
