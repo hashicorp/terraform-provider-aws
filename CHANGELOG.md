@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_db_instance: Fix updating `license_model`. ([#20779](https://github.com/hashicorp/terraform-provider-aws/issues/20779))
 * resource/aws_iam_role: Change `name_prefix` validation to a range of 1 to 38 characters ([#20785](https://github.com/hashicorp/terraform-provider-aws/issues/20785))
 * resource/aws_imagebuilder_distribution_configuration: Improve validation error message of `name` argument ([#20842](https://github.com/hashicorp/terraform-provider-aws/issues/20842))
+* resource/aws_kms_key: Extends timeouts for policy and tag propagation to 5 minutes each ([#20914](https://github.com/hashicorp/terraform-provider-aws/issues/20914))
 * resource/aws_route53_health_check: Fix update for `ip_address` ([#20795](https://github.com/hashicorp/terraform-provider-aws/issues/20795))
 
 ## 3.58.0 (September 09, 2021)
