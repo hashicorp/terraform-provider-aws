@@ -221,7 +221,7 @@ The `aws_s3_bucket_replication_configuration` resource provides the following fe
 Replication for existing objects requires activation by AWS Support.  See [userguide/replication-what-is-isnot-replicated](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication)
 
 
-## Attributes Reference
+## Argument Reference
 
 The `replication_configuration` resource supports the following:
 
@@ -356,6 +356,12 @@ The `filter` object supports the following:
 * `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
 * `tags` - (Optional)  A map of tags that identifies subset of objects to which the rule applies.
 The rule applies only to objects having all the tags in its tagset.
+
+## Attribute Reference 
+
+In addition to all arguments above, the following attributes are exported:
+
+* id - Resource id is the s3 source bucket name.
 
 ## Import
 
