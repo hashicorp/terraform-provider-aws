@@ -1429,6 +1429,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"hec_token": {
 							Type:     schema.TypeString,
 							Required: true,
+							Sensitive: true,
 						},
 
 						"s3_backup_mode": {
