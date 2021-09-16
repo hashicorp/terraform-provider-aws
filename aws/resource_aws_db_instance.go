@@ -672,7 +672,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
-
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
