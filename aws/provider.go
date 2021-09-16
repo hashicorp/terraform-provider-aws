@@ -786,6 +786,7 @@ func Provider() *schema.Provider {
 			"aws_flow_log":                                         resourceAwsFlowLog(),
 			"aws_fsx_backup":                                       resourceAwsFsxBackup(),
 			"aws_fsx_lustre_file_system":                           resourceAwsFsxLustreFileSystem(),
+			"aws_fsx_ontap_file_system":                            resourceAwsFsxOntapFileSystem(),
 			"aws_fsx_windows_file_system":                          resourceAwsFsxWindowsFileSystem(),
 			"aws_fms_admin_account":                                resourceAwsFmsAdminAccount(),
 			"aws_fms_policy":                                       resourceAwsFmsPolicy(),
