@@ -221,7 +221,7 @@ The `aws_s3_bucket_replication_configuration` resource provides the following fe
 Replication for existing objects requires activation by AWS Support.  See [userguide/replication-what-is-isnot-replicated](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication)
 
 
-## Argument Reference
+## Attributes Reference
 
 The `replication_configuration` resource supports the following:
 

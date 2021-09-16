@@ -347,7 +347,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 	r := replication.ReplicationConfiguration
 	// set role
 	if r.Role != nil && aws.StringValue(r.Role) != "" {
-		d.Set("role", aws.StringValue(r.Role))
+		d.Set("role", r.Role)
 	}
 
 	rules := make([]interface{}, 0, len(r.Rules))
