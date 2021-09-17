@@ -51,15 +51,15 @@ resource "aws_connect_instance" "test" {
 
 The following arguments are supported:
 
-* `auto_resolve_best_voices_enabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`
-* `contact_flow_logs_enabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`
-* `contact_lens_enabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`
+* `auto_resolve_best_voices_enabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
+* `contact_flow_logs_enabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
+* `contact_lens_enabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.
 * `directory_id` - (Optional) The identifier for the directory if identity_management_type is `EXISTING_DIRECTORY`.
-* `early_media_enabled` - (Optional) Specifies whether early media for outbound calls is enabled . Defaults to `true` if outbound calls is enabled
+* `early_media_enabled` - (Optional) Specifies whether early media for outbound calls is enabled . Defaults to `true` if outbound calls is enabled.
 * `identity_management_type` - Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
 * `inbound_calls_enabled` - Specifies whether inbound calls are enabled.
-* `instance_alias` - (Optional) Specifies the name of the instance
-* `outbound_calls_enabled` -  Specifies whether outbound calls are enabled. 
+* `instance_alias` - (Optional) Specifies the name of the instance.
+* `outbound_calls_enabled` -  Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ### Timeouts
