@@ -25,11 +25,13 @@ func resourceAwsConnectInstance() *schema.Resource {
 		ReadContext:   resourceAwsConnectInstanceRead,
 		UpdateContext: resourceAwsConnectInstanceUpdate,
 		DeleteContext: resourceAwsConnectInstanceDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.ConnectInstanceCreatedTimeout),
+			Delete: schema.DefaultTimeout(waiter.ConnectInstanceDeletedTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

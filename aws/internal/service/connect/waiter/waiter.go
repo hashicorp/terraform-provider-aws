@@ -12,7 +12,7 @@ import (
 const (
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
 	ConnectInstanceCreatedTimeout = 5 * time.Minute
-	ConnectInstanceDeletedTimeout = 2 * time.Minute
+	ConnectInstanceDeletedTimeout = 5 * time.Minute
 )
 
 func InstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
