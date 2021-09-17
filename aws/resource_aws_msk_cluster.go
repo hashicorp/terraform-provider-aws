@@ -65,11 +65,6 @@ func resourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"broker_client_vpc_ip_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"broker_node_group_info": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -444,22 +439,11 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed requesting bootstrap broker info for %q : %s", d.Id(), err)
 	}
 
-	nodesOut, err := conn.ListNodes(&kafka.ListNodesInput{
-		ClusterArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("failed requesting list nodes info for %q : %w", d.Id(), err)
-	}
-
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
 	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
-
-	if err := d.Set("broker_client_vpc_ip_addresses", flattenMskNodeInfoListBrokerIpAddresses(nodesOut)); err != nil {
-		return fmt.Errorf("error setting broker_client_vpc_ip_addresses: %w", err)
-	}
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %s", err)
@@ -1037,18 +1021,6 @@ func flattenMskEncryptionInTransit(eit *kafka.EncryptionInTransit) []map[string]
 	}
 
 	return []map[string]interface{}{m}
-}
-
-func flattenMskNodeInfoListBrokerIpAddresses(l *kafka.ListNodesOutput) *schema.Set {
-	ips := []interface{}{}
-
-	if l != nil {
-		for _, v := range l.NodeInfoList {
-			ips = append(ips, aws.StringValue(v.BrokerNodeInfo.ClientVpcIpAddress))
-		}
-	}
-
-	return schema.NewSet(schema.HashString, ips)
 }
 
 func flattenMskSasl(sasl *kafka.Sasl) []map[string]interface{} {
