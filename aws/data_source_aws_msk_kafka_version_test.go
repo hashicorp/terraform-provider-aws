@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/kafka"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSMskKafkaVersion_basic(t *testing.T) {
+func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_msk_kafka_version.test"
 	version := "2.4.1.1"
 
@@ -29,7 +29,7 @@ func TestAccAWSMskKafkaVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskKafkaVersion_preferred(t *testing.T) {
+func TestAccAWSMskKafkaVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_msk_kafka_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
