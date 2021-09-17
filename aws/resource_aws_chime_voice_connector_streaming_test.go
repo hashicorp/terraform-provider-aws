@@ -103,7 +103,7 @@ resource "aws_chime_voice_connector" "chime" {
 }
 
 resource "aws_chime_voice_connector_streaming" "test" {
-  voice_connector_id             = aws_chime_voice_connector.chime.id
+  voice_connector_id = aws_chime_voice_connector.chime.id
 
   disabled                       = false
   data_retention                 = 5
@@ -120,7 +120,7 @@ resource "aws_chime_voice_connector" "chime" {
 }
 
 resource "aws_chime_voice_connector_streaming" "test" {
-  voice_connector_id             = aws_chime_voice_connector.chime.id
+  voice_connector_id = aws_chime_voice_connector.chime.id
 
   disabled                       = false
   data_retention                 = 2
