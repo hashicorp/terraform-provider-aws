@@ -74,8 +74,6 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
-	deploymentType := fsx.OntapDeploymentTypeMultiAz1
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
@@ -97,12 +95,42 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", deploymentType),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.testt", "default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "512"),
 					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test1", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxOntapFileSystem_endpointIpAddressRange(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigEndpointIpAddressRange(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_ip_address_range", "198.19.255.0/24"),
 				),
 			},
 			{
@@ -167,6 +195,34 @@ func TestAccAWSFsxOntapFileSystem_SecurityGroupIds(t *testing.T) {
 					testAccCheckFsxOntapFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
+	var filesystem1 fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigRouteTable(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 		},
 	})
@@ -504,6 +560,35 @@ resource "aws_fsx_ontap_file_system" "test" {
 `)
 }
 
+func testAccAwsFsxOntapFileSystemConfigEndpointIpAddressRange() string {
+	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity          = 1024
+  subnet_ids                = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type           = "MULTI_AZ_1"
+  throughput_capacity       = 512
+  preferred_subnet_id       = aws_subnet.test1.id
+  endpoint_ip_address_range = "198.19.255.0/24"
+}
+`)
+}
+
+func testAccAwsFsxOntapFileSystemConfigRouteTable() string {
+	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = [aws_route_table.test.id]
+}
+`)
+}
+
 func testAccAwsFsxOntapFileSystemConfigSecurityGroupIds1() string {
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_security_group" "test1" {
@@ -577,10 +662,12 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_fsx_ontap_file_system" "test" {
-  security_group_ids = [aws_security_group.test1.id, aws_security_group.test2.id]
-  storage_capacity   = 1024
-  subnet_ids         = [aws_subnet.test1.id]
-  deployment_type    = "MULTI_AZ_1"
+  security_group_ids  = [aws_security_group.test1.id, aws_security_group.test2.id]
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test1.id
 }
 `)
 }
@@ -588,9 +675,11 @@ resource "aws_fsx_ontap_file_system" "test" {
 func testAccAwsFsxOntapFileSystemConfigStorageCapacity(storageCapacity int) string {
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
-  storage_capacity = %[1]d
-  subnet_ids       = [aws_subnet.test1.id]
-  deployment_type  = "MULTI_AZ_1"
+  storage_capacity    = %[1]d
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test1.id
 }
 `, storageCapacity))
 }

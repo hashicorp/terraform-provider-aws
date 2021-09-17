@@ -40,14 +40,49 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"automatic_backup_retention_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntBetween(0, 90),
+			},
 			"backup_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"daily_automatic_backup_start_time": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(5, 5),
+					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+				),
+			},
+			"deployment_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(fsx.OntapDeploymentType_Values(), false),
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"endpoint_ip_address_range": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateIpv4CIDRNetworkAddress,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"network_interface_ids": {
 				// As explained in https://docs.aws.amazon.com/fsx/latest/OntapGuide/mounting-on-premises.html, the first
@@ -72,10 +107,24 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"route_table_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 50,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1024, 192*1024),
+			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.StorageTypeSsd,
+				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
 			},
 			"subnet_ids": {
 				Type:     schema.TypeList,
@@ -87,6 +136,12 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
+			"throughput_capacity": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntInSlice([]int{512, 1024, 2048}),
+			},
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -99,47 +154,6 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 					validation.StringLenBetween(7, 7),
 					validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
 				),
-			},
-			"deployment_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(fsx.OntapDeploymentType_Values(), false),
-			},
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
-			},
-			"automatic_backup_retention_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(0, 90),
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
-				),
-			},
-			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      fsx.StorageTypeSsd,
-				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
-			},
-			"throughput_capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{512, 1024, 2048}),
 			},
 		},
 
@@ -194,6 +208,10 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		backupInput.KmsKeyId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_range"); ok {
+		input.OntapConfiguration.EndpointIpAddressRange = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
 		input.OntapConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
@@ -201,6 +219,10 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("route_table_ids"); ok {
+		input.OntapConfiguration.RouteTableIds = expandStringSet(v.(*schema.Set))
 	}
 
 	if len(tags) > 0 {
@@ -313,6 +335,15 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("deployment_type", ontapConfig.DeploymentType)
 	d.Set("storage_type", filesystem.StorageType)
+	d.Set("vpc_id", filesystem.VpcId)
+	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
+	d.Set("automatic_backup_retention_days", ontapConfig.AutomaticBackupRetentionDays)
+	d.Set("daily_automatic_backup_start_time", ontapConfig.DailyAutomaticBackupStartTime)
+	d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
+	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
+	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
+	d.Set("owner_id", filesystem.OwnerId)
+	d.Set("storage_capacity", filesystem.StorageCapacity)
 
 	if filesystem.KmsKeyId != nil {
 		d.Set("kms_key_id", filesystem.KmsKeyId)
@@ -322,10 +353,11 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting network_interface_ids: %w", err)
 	}
 
-	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("storage_capacity", filesystem.StorageCapacity)
-
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
+		return fmt.Errorf("error setting subnet_ids: %w", err)
+	}
+
+	if err := d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
@@ -339,13 +371,6 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("vpc_id", filesystem.VpcId)
-	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
-	d.Set("automatic_backup_retention_days", ontapConfig.AutomaticBackupRetentionDays)
-	d.Set("daily_automatic_backup_start_time", ontapConfig.DailyAutomaticBackupStartTime)
-	d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
-	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
 
 	return nil
 }
