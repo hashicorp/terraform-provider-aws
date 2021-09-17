@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
+func testAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
@@ -25,10 +25,10 @@ func TestAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2TransitGatewayRouteTables_Filter(t *testing.T) {
+func testAccDataSourceAwsEc2TransitGatewayRouteTables_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
