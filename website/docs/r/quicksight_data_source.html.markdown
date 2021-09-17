@@ -42,7 +42,7 @@ of several sub-resources - these resources are laid out below.
 
  * `parameters` - (Required) The [parameters](#parameters-arguments) used to connect to this data source (exactly one).
 
- * `credentials` - (Optional) TODO
+ * `credentials` - (Optional) The credentials Amazon QuickSight that uses to connect to your underlying source. Currently, only credentials based on user name and password are supported.
 
 #### Parameters Arguments
 
