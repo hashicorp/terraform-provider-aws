@@ -255,7 +255,7 @@ func resourceAwsCloudControlApiResourceCustomizeDiffGetSchema(ctx context.Contex
 		return fmt.Errorf("error reading CloudFormation Type (%s): %w", typeName, err)
 	}
 
-	if err := diff.SetNew("schema", output.Schema); err != nil {
+	if err := diff.SetNew("schema", cfschema.Sanitize(aws.StringValue(output.Schema))); err != nil {
 		return fmt.Errorf("error setting schema diff: %w", err)
 	}
 
