@@ -64,6 +64,10 @@ func testSweepEksAddon(region string) error {
 				return !lastPage
 			})
 
+			if testSweepSkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Add-Ons (%s): %w", region, err))
 			}
@@ -74,7 +78,7 @@ func testSweepEksAddon(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping EKS Add-Ons sweep for %s: %w", region, err))
-		return sweeperErrs // In case we have completed some pages, but had errors
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {

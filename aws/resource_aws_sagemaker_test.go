@@ -2,7 +2,21 @@ package aws
 
 import (
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+func init() {
+	RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkipSagemaker)
+}
+
+func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"is not supported in region",
+		"is not supported for the chosen region",
+	)
+}
 
 // Tests are serialized as SagmMaker Domain resources are limited to 1 per account by default.
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.

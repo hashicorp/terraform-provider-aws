@@ -301,7 +301,6 @@ resource "aws_acm_certificate_validation" "existing" {
   certificate_arn         = aws_acm_certificate.existing.arn
   validation_record_fqdns = aws_route53_record.existing[*].fqdn
 }
-
 ```
 
 It will receive errors like the below after upgrading:
@@ -579,6 +578,96 @@ Plan: 5 to add, 0 to change, 1 to destroy.
 ```
 
 Once applied, no differences should be shown and no additional steps should be necessary.
+
+Alternatively, if you are referencing a subset of `domain_validation_options`, there is another method of upgrading from v2 to v3 without having to move state. Given the scenario below...
+
+```
+data "aws_route53_zone" "public_root_domain" {
+  name = var.public_root_domain
+}
+
+resource "aws_acm_certificate" "existing" {
+  domain_name = "existing.${var.public_root_domain}"
+  subject_alternative_names = [
+    "existing1.${var.public_root_domain}",
+    "existing2.${var.public_root_domain}",
+    "existing3.${var.public_root_domain}",
+  ]
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "existing_1" {
+  allow_overwrite = true
+  name            = aws_acm_certificate.existing.domain_validation_options[0].resource_record_name
+  records         = [aws_acm_certificate.existing.domain_validation_options[0].resource_record_value]
+  ttl             = 60
+  type            = aws_acm_certificate.existing.domain_validation_options[0].resource_record_type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_1" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_1.fqdn
+}
+
+resource "aws_route53_record" "existing_3" {
+  allow_overwrite = true
+  name            = aws_acm_certificate.existing.domain_validation_options[2].resource_record_name
+  records         = [aws_acm_certificate.existing.domain_validation_options[2].resource_record_value]
+  ttl             = 60
+  type            = aws_acm_certificate.existing.domain_validation_options[2].resource_record_type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_3" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_3.fqdn
+}
+```
+
+You can perform a conversion of the new `domain_validation_options` object into a map, to allow you to perform a lookup by the domain name in place of an index number.
+
+```
+locals {
+  existing_domain_validation_options = {
+    for dvo in aws_acm_certificate.cloudfront_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+}
+
+resource "aws_route53_record" "existing_1" {
+  allow_overwrite = true
+  name            = local.existing_domain_validation_options["existing1.${var.public_root_domain}"].name
+  records         = [local.existing_domain_validation_options["existing1.${var.public_root_domain}"].record]
+  ttl             = 60
+  type            = local.existing_domain_validation_options["existing1.${var.public_root_domain}"].type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_1" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_1.fqdn
+}
+
+resource "aws_route53_record" "existing_3" {
+  allow_overwrite = true
+  name            = local.existing_domain_validation_options["existing3.${var.public_root_domain}"].name
+  records         = [local.existing_domain_validation_options["existing3.${var.public_root_domain}"].record]
+  ttl             = 60
+  type            = local.existing_domain_validation_options["existing3.${var.public_root_domain}"].type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_3" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_3.fqdn
+}
+```
+
+Performing a plan against these resources will not cause any change in state, since underlying resources have not changed.
 
 ### subject_alternative_names Changed from List to Set
 
@@ -1071,6 +1160,10 @@ resource "aws_glue_job" "example" {
 ### ses_smtp_password Attribute Removal
 
 In many regions today and in all regions after October 1, 2020, the [SES API will only accept version 4 signatures](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-ses-api-authentication.html). If referencing the `ses_smtp_password` attribute, switch your Terraform configuration to the `ses_smtp_password_v4` attribute instead. Please note that this signature is based on the region of the Terraform AWS Provider. If you need the SES v4 password in multiple regions, it may require using [multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
+
+Depending on when the `aws_iam_access_key` resource was created, it may not have a `ses_smtp_password_v4` attribute for you to use. If this is the case you will need to [taint](/docs/commands/taint.html) the resource so that it can be recreated with the new value.
+
+Alternatively, you can stage the change by creating a new `aws_iam_access_key` resource and change any downstream dependencies to use the new `ses_smtp_password_v4` attribute. Once dependents have been updated with the new resource you can remove the old one.
 
 ## Resource: aws_iam_instance_profile
 

@@ -159,7 +159,7 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).elasticacheconn
 	hasChange := false
 
-	if d.HasChangeExcept("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		req := &elasticache.ModifyUserInput{
 			UserId: aws.String(d.Id()),
 		}

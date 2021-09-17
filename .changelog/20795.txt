@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53_health_check: Add plan time validation for `regions`
+```
+
+```release-note:bug
+resource/aws_route53_health_check: Fix update for `ip_address`
+```

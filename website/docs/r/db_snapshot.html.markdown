@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Specifies the status of this DB snapshot.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `vpc_id` - Specifies the storage type associated with DB snapshot.
+* `vpc_id` - Provides the VPC ID associated with the DB snapshot.
 
 ## Timeouts
 

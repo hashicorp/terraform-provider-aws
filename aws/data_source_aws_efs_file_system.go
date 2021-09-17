@@ -90,6 +90,8 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	efsconn := meta.(*AWSClient).efsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
 	describeEfsOpts := &efs.DescribeFileSystemsInput{}
 
 	if v, ok := d.GetOk("creation_token"); ok {
@@ -110,11 +112,33 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		return errors.New("error reading EFS FileSystem: empty output")
 	}
 
-	if len(describeResp.FileSystems) > 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(describeResp.FileSystems))
+	var results []*efs.FileSystemDescription
+
+	if len(tagsToMatch) > 0 {
+
+		var fileSystems []*efs.FileSystemDescription
+
+		for _, fileSystem := range describeResp.FileSystems {
+
+			tags := keyvaluetags.EfsKeyValueTags(fileSystem.Tags)
+
+			if !tags.ContainsAll(tagsToMatch) {
+				continue
+			}
+
+			fileSystems = append(fileSystems, fileSystem)
+		}
+
+		results = fileSystems
+	} else {
+		results = describeResp.FileSystems
 	}
 
-	fs := describeResp.FileSystems[0]
+	if len(results) > 1 {
+		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+	}
+
+	fs := results[0]
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)

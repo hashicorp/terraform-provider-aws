@@ -1106,6 +1106,10 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 			return resource.RetryableError(err)
 		}
 
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "unable to assume role (sts:AssumeRole) on resource") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}

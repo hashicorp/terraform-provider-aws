@@ -5,7 +5,34 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+func AccessByServerIDAndExternalID(conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
+	input := &transfer.DescribeAccessInput{
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
+	}
+
+	output, err := conn.DescribeAccess(input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Access == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Access, nil
+}
 
 func ServerByID(conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
 	input := &transfer.DescribeServerInput{
@@ -26,18 +53,15 @@ func ServerByID(conn *transfer.Transfer, id string) (*transfer.DescribedServer, 
 	}
 
 	if output == nil || output.Server == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Server, nil
 }
 
-func UserByID(conn *transfer.Transfer, serverId, userName string) (*transfer.DescribeUserOutput, error) {
+func UserByServerIDAndUserName(conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
 	input := &transfer.DescribeUserInput{
-		ServerId: aws.String(serverId),
+		ServerId: aws.String(serverID),
 		UserName: aws.String(userName),
 	}
 
@@ -55,11 +79,8 @@ func UserByID(conn *transfer.Transfer, serverId, userName string) (*transfer.Des
 	}
 
 	if output == nil || output.User == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.User, nil
 }

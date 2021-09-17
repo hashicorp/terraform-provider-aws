@@ -21,7 +21,7 @@ resource "aws_lambda_function" "default" {
   function_name    = "terraform_lambda_alexa_example"
   role             = aws_iam_role.default.arn
   handler          = "lambda_function.lambda_handler"
-  runtime          = "python2.7"
+  runtime          = "python3.6"
 }
 
 resource "aws_iam_role" "default" {

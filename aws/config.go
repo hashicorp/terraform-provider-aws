@@ -733,6 +733,16 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.chimeconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// When calling CreateVoiceConnector across multiple resources,
+		// the API can randomly return a BadRequestException without explanation
+		if r.Operation.Name == "CreateVoiceConnector" {
+			if tfawserr.ErrMessageContains(r.Error, chime.ErrCodeBadRequestException, "Service received a bad request") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.cloudhsmv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 			r.Retryable = aws.Bool(true)
@@ -776,6 +786,12 @@ func (c *Config) Client() (interface{}, error) {
 			} else {
 				r.Retryable = aws.Bool(false)
 			}
+		}
+	})
+
+	client.cfconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if isAWSErr(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
+			r.Retryable = aws.Bool(true)
 		}
 	})
 
