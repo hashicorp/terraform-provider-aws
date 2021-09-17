@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfcloudtrail "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudtrail"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -24,48 +25,97 @@ func resourceAwsCloudTrail() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"advanced_event_selector": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"event_selector"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"field_selector": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ends_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+									"equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+									"field": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(tfcloudtrail.Field_Values(), false),
+									},
+									"not_ends_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+									"not_equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+									"not_starts_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+									"starts_with": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+									},
+								},
+							},
+						},
+						"name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1000),
+						},
+					},
+				},
 			},
-			"enable_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"s3_bucket_name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_key_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cloud_watch_logs_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"cloud_watch_logs_group_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"include_global_service_events": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"is_multi_region_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_organization_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"sns_topic_name": {
+			"cloud_watch_logs_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -74,34 +124,18 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateArn,
+			"enable_logging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"event_selector": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      5,
+				ConflictsWith: []string{"advanced_event_selector"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"read_write_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  cloudtrail.ReadWriteTypeAll,
-							ValidateFunc: validation.StringInSlice([]string{
-								cloudtrail.ReadWriteTypeAll,
-								cloudtrail.ReadWriteTypeReadOnly,
-								cloudtrail.ReadWriteTypeWriteOnly,
-							}, false),
-						},
-
-						"include_management_events": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-
 						"data_resource": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -110,7 +144,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object", "AWS::Lambda::Function", "AWS::DynamoDB::Table"}, false),
+										ValidateFunc: validation.StringInSlice(tfcloudtrail.ResourceType_Values(), false),
 									},
 									"values": {
 										Type:     schema.TypeList,
@@ -121,6 +155,17 @@ func resourceAwsCloudTrail() *schema.Resource {
 								},
 							},
 						},
+						"include_management_events": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"read_write_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cloudtrail.ReadWriteTypeAll,
+							ValidateFunc: validation.StringInSlice(cloudtrail.ReadWriteType_Values(), false),
+						},
 					},
 				},
 			},
@@ -128,12 +173,11 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"include_global_service_events": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
 			"insight_selector": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -147,6 +191,41 @@ func resourceAwsCloudTrail() *schema.Resource {
 					},
 				},
 			},
+			"is_multi_region_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"is_organization_trail": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"s3_bucket_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"s3_key_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"sns_topic_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: SetTagsDiff,
@@ -232,6 +311,12 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	// Event Selectors
 	if _, ok := d.GetOk("event_selector"); ok {
 		if err := cloudTrailSetEventSelectors(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if _, ok := d.GetOk("advanced_event_selector"); ok {
+		if err := cloudTrailSetAdvancedEventSelectors(conn, d); err != nil {
 			return err
 		}
 	}
@@ -328,6 +413,10 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("event_selector", flattenAwsCloudTrailEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
+		return err
+	}
+
+	if err := d.Set("advanced_event_selector", flattenAwsCloudTrailAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
 		return err
 	}
 
@@ -429,6 +518,13 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	if !d.IsNewResource() && d.HasChange("event_selector") {
 		log.Printf("[DEBUG] Updating event selector on CloudTrail: %s", input)
 		if err := cloudTrailSetEventSelectors(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
+		log.Printf("[DEBUG] Updating advanced event selector on CloudTrail: %s", input)
+		if err := cloudTrailSetAdvancedEventSelectors(conn, d); err != nil {
 			return err
 		}
 	}
@@ -600,6 +696,161 @@ func flattenAwsCloudTrailEventSelectorDataResource(configured []*cloudtrail.Data
 	}
 
 	return dataResources
+}
+
+func cloudTrailSetAdvancedEventSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
+	input := &cloudtrail.PutEventSelectorsInput{
+		TrailName: aws.String(d.Id()),
+	}
+
+	advancedEventSelectors := expandAwsCloudTrailAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+
+	input.AdvancedEventSelectors = advancedEventSelectors
+
+	if err := input.Validate(); err != nil {
+		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+	}
+
+	_, err := conn.PutEventSelectors(input)
+	if err != nil {
+		return fmt.Errorf("Error set advanced event selector on CloudTrail (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func expandAwsCloudTrailAdvancedEventSelector(configured []interface{}) []*cloudtrail.AdvancedEventSelector {
+	advancedEventSelectors := make([]*cloudtrail.AdvancedEventSelector, 0, len(configured))
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+		fieldSelectors := expandAwsCloudTrailAdvancedEventSelectorFieldSelector(data["field_selector"].(*schema.Set))
+
+		aes := &cloudtrail.AdvancedEventSelector{
+			Name:           aws.String(data["name"].(string)),
+			FieldSelectors: fieldSelectors,
+		}
+
+		advancedEventSelectors = append(advancedEventSelectors, aes)
+
+	}
+
+	return advancedEventSelectors
+
+}
+
+func expandAwsCloudTrailAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtrail.AdvancedFieldSelector {
+	fieldSelectors := make([]*cloudtrail.AdvancedFieldSelector, 0, configured.Len())
+
+	for _, raw := range configured.List() {
+		data := raw.(map[string]interface{})
+		fieldSelector := &cloudtrail.AdvancedFieldSelector{
+			Field: aws.String(data["field"].(string)),
+		}
+
+		if v, ok := data["equals"]; ok && len(v.([]interface{})) > 0 {
+			equals := make([]*string, len(v.([]interface{})))
+			for i, vv := range v.([]interface{}) {
+				str := vv.(string)
+				equals[i] = aws.String(str)
+			}
+			fieldSelector.Equals = equals
+		}
+
+		if v, ok := data["not_equals"]; ok && len(v.([]interface{})) > 0 {
+			notEquals := make([]*string, len(v.([]interface{})))
+			for i, vv := range v.([]interface{}) {
+				str := vv.(string)
+				notEquals[i] = aws.String(str)
+			}
+			fieldSelector.NotEquals = notEquals
+		}
+
+		if v, ok := data["starts_with"]; ok && len(v.([]interface{})) > 0 {
+			startsWith := make([]*string, len(v.([]interface{})))
+			for i, vv := range v.([]interface{}) {
+				str := vv.(string)
+				startsWith[i] = aws.String(str)
+			}
+			fieldSelector.StartsWith = startsWith
+		}
+
+		if v, ok := data["not_starts_with"]; ok && len(v.([]interface{})) > 0 {
+			notStartsWith := make([]*string, len(v.([]interface{})))
+			for i, vv := range v.([]interface{}) {
+				str := vv.(string)
+				notStartsWith[i] = aws.String(str)
+			}
+			fieldSelector.NotStartsWith = notStartsWith
+		}
+
+		if v, ok := data["ends_with"]; ok && len(v.([]interface{})) > 0 {
+			endsWith := make([]*string, len(v.([]interface{})))
+			for i, vv := range v.([]interface{}) {
+				str := vv.(string)
+				endsWith[i] = aws.String(str)
+			}
+			fieldSelector.EndsWith = endsWith
+		}
+
+		if v, ok := data["not_ends_with"]; ok && len(v.([]interface{})) > 0 {
+			notEndsWith := make([]*string, len(v.([]interface{})))
+			for i, vv := range v.([]interface{}) {
+				str := vv.(string)
+				notEndsWith[i] = aws.String(str)
+			}
+			fieldSelector.NotEndsWith = notEndsWith
+		}
+
+		fieldSelectors = append(fieldSelectors, fieldSelector)
+	}
+
+	return fieldSelectors
+}
+
+func flattenAwsCloudTrailAdvancedEventSelector(configured []*cloudtrail.AdvancedEventSelector) []map[string]interface{} {
+	advancedEventSelectors := make([]map[string]interface{}, 0, len(configured))
+
+	for _, raw := range configured {
+		item := make(map[string]interface{})
+		item["name"] = aws.StringValue(raw.Name)
+		item["field_selector"] = flattenAwsCloudTrailAdvancedEventSelectorFieldSelector(raw.FieldSelectors)
+
+		advancedEventSelectors = append(advancedEventSelectors, item)
+	}
+
+	return advancedEventSelectors
+}
+
+func flattenAwsCloudTrailAdvancedEventSelectorFieldSelector(configured []*cloudtrail.AdvancedFieldSelector) []map[string]interface{} {
+	fieldSelectors := make([]map[string]interface{}, 0, len(configured))
+
+	for _, raw := range configured {
+		item := make(map[string]interface{})
+		item["field"] = aws.StringValue(raw.Field)
+		if raw.Equals != nil {
+			item["equals"] = flattenStringList(raw.Equals)
+		}
+		if raw.NotEquals != nil {
+			item["not_equals"] = flattenStringList(raw.NotEquals)
+		}
+		if raw.StartsWith != nil {
+			item["starts_with"] = flattenStringList(raw.StartsWith)
+		}
+		if raw.NotStartsWith != nil {
+			item["not_starts_with"] = flattenStringList(raw.NotStartsWith)
+		}
+		if raw.EndsWith != nil {
+			item["ends_with"] = flattenStringList(raw.EndsWith)
+		}
+		if raw.NotEndsWith != nil {
+			item["not_ends_with"] = flattenStringList(raw.NotEndsWith)
+		}
+
+		fieldSelectors = append(fieldSelectors, item)
+	}
+
+	return fieldSelectors
 }
 
 func cloudTrailSetInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {

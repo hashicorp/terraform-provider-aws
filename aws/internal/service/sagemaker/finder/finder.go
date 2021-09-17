@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // CodeRepositoryByName returns the code repository corresponding to the specified name.
@@ -103,10 +104,7 @@ func DeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.Describ
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -150,10 +148,7 @@ func FeatureGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -239,10 +234,7 @@ func WorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workfor
 	}
 
 	if output == nil || output.Workforce == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Workforce, nil
@@ -267,10 +259,7 @@ func WorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam
 	}
 
 	if output == nil || output.Workteam == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Workteam, nil
@@ -295,10 +284,32 @@ func HumanTaskUiByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 	}
 
 	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func EndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
+	input := &sagemaker.DescribeEndpointConfigInput{
+		EndpointConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpointConfig(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Could not find endpoint configuration") {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
