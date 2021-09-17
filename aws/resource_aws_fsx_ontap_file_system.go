@@ -70,6 +70,48 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"intercluster": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dns_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_addresses": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"management": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dns_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_addresses": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"endpoint_ip_address_range": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -361,6 +403,10 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
+	if err := d.Set("endpoints", flattenFsxOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+		return fmt.Errorf("error setting endpoints: %w", err)
+	}
+
 	tags := keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -398,4 +444,36 @@ func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
+}
+
+func flattenFsxOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.Intercluster != nil {
+		m["intercluster"] = flattenFsxOntapFileSystemEndpoint(rs.Intercluster)
+	}
+	if rs.Management != nil {
+		m["management"] = flattenFsxOntapFileSystemEndpoint(rs.Management)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFsxOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.DNSName != nil {
+		m["dns_name"] = aws.StringValue(rs.DNSName)
+	}
+	if rs.IpAddresses != nil {
+		m["ip_addresses"] = flattenStringSet(rs.IpAddresses)
+	}
+
+	return []interface{}{m}
 }
