@@ -46,6 +46,7 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level - 1),
 				"or_statement":                          wafv2StatementSchema(level - 1),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -74,6 +75,7 @@ func wafv2StatementSchema(level int) *schema.Schema {
 								"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 								"not_statement":                         wafv2StatementSchema(level - 1),
 								"or_statement":                          wafv2StatementSchema(level - 1),
+								"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
 								"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 								"size_constraint_statement":             wafv2SizeConstraintSchema(),
 								"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -200,6 +202,54 @@ func wafv2IpSetReferenceStatementSchema() *schema.Schema {
 						},
 					},
 				},
+			},
+		},
+	}
+}
+
+func wafv2RateBasedStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required field
+				"aggregate_key_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
+				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
+				"limit": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(100, 2000000000),
+				},
+				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
+			},
+		},
+	}
+}
+
+func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"and_statement":                         wafv2StatementSchema(level),
+				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
+				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+				"not_statement":                         wafv2StatementSchema(level),
+				"or_statement":                          wafv2StatementSchema(level),
+				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
+				"size_constraint_statement":             wafv2SizeConstraintSchema(),
+				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
+				"xss_match_statement":                   wafv2XssMatchStatementSchema(),
 			},
 		},
 	}
@@ -772,6 +822,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["rate_based_statement"]; ok {
+		statement.RateBasedStatement = expandWafv2RateBasedStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
@@ -1228,6 +1282,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.OrStatement != nil {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
+	}
+
+	if s.RateBasedStatement != nil {
+		m["rate_based_statement"] = flattenWafv2RateBasedStatement(s.RateBasedStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {

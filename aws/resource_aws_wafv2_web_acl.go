@@ -413,54 +413,6 @@ func wafv2ExcludedRuleSchema() *schema.Schema {
 	}
 }
 
-func wafv2RateBasedStatementSchema(level int) *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required field
-				"aggregate_key_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
-				},
-				"forwarded_ip_config": wafv2ForwardedIPConfig(),
-				"limit": {
-					Type:         schema.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IntBetween(100, 2000000000),
-				},
-				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
-			},
-		},
-	}
-}
-
-func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"and_statement":                         wafv2StatementSchema(level),
-				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
-				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
-				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
-				"not_statement":                         wafv2StatementSchema(level),
-				"or_statement":                          wafv2StatementSchema(level),
-				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
-				"size_constraint_statement":             wafv2SizeConstraintSchema(),
-				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
-				"xss_match_statement":                   wafv2XssMatchStatementSchema(),
-			},
-		},
-	}
-}
-
 func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
