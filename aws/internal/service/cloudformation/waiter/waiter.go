@@ -67,7 +67,7 @@ func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetNam
 		Delay:   stackSetOperationDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, waitErr := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*cloudformation.StackSetOperation); ok {
 		if status := aws.StringValue(output.Status); status == cloudformation.StackSetOperationStatusFailed {
@@ -77,7 +77,7 @@ func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetNam
 			}
 			var summaries []*cloudformation.StackSetOperationResultSummary
 
-			err := conn.ListStackSetOperationResultsPages(input, func(page *cloudformation.ListStackSetOperationResultsOutput, lastPage bool) bool {
+			listErr := conn.ListStackSetOperationResultsPages(input, func(page *cloudformation.ListStackSetOperationResultsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -87,17 +87,17 @@ func StackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetNam
 				return !lastPage
 			})
 
-			if err != nil {
-				return nil, fmt.Errorf("error listing CloudFormation Stack Set (%s) Operation (%s) results: %w", stackSetName, operationID, err)
+			if listErr == nil {
+				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, tfcloudformation.StackSetOperationError(summaries)))
+			} else {
+				tfresource.SetLastError(waitErr, fmt.Errorf("error listing CloudFormation Stack Set (%s) Operation (%s) results: %w", stackSetName, operationID, listErr))
 			}
-
-			tfresource.SetLastError(err, fmt.Errorf("Operation (%s) Results:\n%w", operationID, tfcloudformation.StackSetOperationError(summaries)))
 		}
 
-		return output, err
+		return output, waitErr
 	}
 
-	return nil, err
+	return nil, waitErr
 }
 
 const (

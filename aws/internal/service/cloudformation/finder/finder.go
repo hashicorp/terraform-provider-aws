@@ -75,6 +75,58 @@ func StackByID(conn *cloudformation.CloudFormation, id string) (*cloudformation.
 	return stack, nil
 }
 
+func StackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, accountID, region string) (*cloudformation.StackInstance, error) {
+	input := &cloudformation.DescribeStackInstanceInput{
+		StackInstanceAccount: aws.String(accountID),
+		StackInstanceRegion:  aws.String(region),
+		StackSetName:         aws.String(stackSetName),
+	}
+
+	output, err := conn.DescribeStackInstance(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException) || tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StackInstance == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.StackInstance, nil
+}
+
+func StackSetByName(conn *cloudformation.CloudFormation, name string) (*cloudformation.StackSet, error) {
+	input := &cloudformation.DescribeStackSetInput{
+		StackSetName: aws.String(name),
+	}
+
+	output, err := conn.DescribeStackSet(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StackSet == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.StackSet, nil
+}
+
 func StackSetOperationByStackSetNameAndOperationID(conn *cloudformation.CloudFormation, stackSetName, operationID string) (*cloudformation.StackSetOperation, error) {
 	input := &cloudformation.DescribeStackSetOperationInput{
 		OperationId:  aws.String(operationID),
