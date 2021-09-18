@@ -197,6 +197,7 @@ func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iop	s", "3072"),
 				),
 			},
 			{
@@ -294,7 +295,7 @@ func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_StorageCapacity(t *testing.T) {
+func TestAccAWSFsxOntapFileSystem_storageCapacity(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -460,7 +461,7 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_KmsKeyId(t *testing.T) {
+func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	kmsKeyResourceName1 := "aws_kms_key.test1"
@@ -669,6 +670,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
+	iops = 3072
   }
 }
 `)
@@ -685,7 +687,8 @@ resource "aws_fsx_ontap_file_system" "test" {
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
-  preferred_subnet_id = [aws_route_table.test.id]
+  preferred_subnet_id = aws_subnet.test1.id
+  route_table_ids     = [aws_route_table.test.id]
 }
 `)
 }
@@ -765,7 +768,7 @@ resource "aws_security_group" "test2" {
 resource "aws_fsx_ontap_file_system" "test" {
   security_group_ids  = [aws_security_group.test1.id, aws_security_group.test2.id]
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
   preferred_subnet_id = aws_subnet.test1.id
