@@ -1069,6 +1069,13 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaUpdatedResourceName, "arn"),
 				),
 			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_Name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+				),
+			},
 		},
 	})
 }
