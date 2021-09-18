@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
@@ -113,6 +114,34 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+	pass := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigFsxAdminPassword(pass),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "fsx_admin_password", pass),
 				),
 			},
 			{
@@ -630,6 +659,19 @@ resource "aws_fsx_ontap_file_system" "test" {
   preferred_subnet_id = aws_subnet.test1.id
 }
 `)
+}
+
+func testAccAwsFsxOntapFileSystemConfigFsxAdminPassword(pass string) string {
+	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test1.id
+  fsx_admin_password  = %[1]q
+}
+`, pass))
 }
 
 func testAccAwsFsxOntapFileSystemConfigEndpointIpAddressRange() string {

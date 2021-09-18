@@ -141,6 +141,12 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateIpv4CIDRNetworkAddress,
 			},
+			"fsx_admin_password": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(8, 50),
+			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -284,6 +290,10 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		input.OntapConfiguration.DiskIopsConfiguration = expandFsxOntapFileDiskIopsConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("fsx_admin_password"); ok {
+		input.OntapConfiguration.FsxAdminPassword = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
@@ -361,6 +371,10 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 			input.OntapConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		}
 
+		if d.HasChange("fsx_admin_password") {
+			input.OntapConfiguration.FsxAdminPassword = aws.String(d.Get("fsx_admin_password").(string))
+		}
+
 		if d.HasChange("storage_capacity") {
 			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		}
@@ -412,6 +426,7 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
 	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
+	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
 
 	if filesystem.KmsKeyId != nil {
 		d.Set("kms_key_id", filesystem.KmsKeyId)
