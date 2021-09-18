@@ -303,7 +303,7 @@ func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
 }
 
 func TestAccAWSFsxOntapFileSystem_storageCapacity(t *testing.T) {
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -336,7 +336,8 @@ func TestAccAWSFsxOntapFileSystem_storageCapacity(t *testing.T) {
 			{
 				Config: testAccAwsFsxOntapFileSystemConfigStorageCapacity(7200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem3),
+					testAccCheckFsxOntapFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "7200"),
 				),
 			},
