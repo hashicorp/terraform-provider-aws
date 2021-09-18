@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -852,7 +851,6 @@ func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T)
 
 func TestAccAWSMskCluster_Tags(t *testing.T) {
 	var cluster kafka.ClusterInfo
-	var td kafka.ListTagsForResourceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
@@ -863,20 +861,11 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfigTags1(rName),
+				Config: testAccMskClusterConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "bar"),
-				),
-			},
-			{
-				Config: testAccMskClusterConfigTags2(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "baz"),
-					testAccCheckMskClusterTags(&td, "new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -886,6 +875,23 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"current_version",
 				},
+			},
+			{
+				Config: testAccMskClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccMskClusterConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -956,43 +962,6 @@ func testAccCheckMskClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 			return fmt.Errorf("MSK Cluster (%s) was not recreated", aws.StringValue(i.ClusterArn))
 		}
 
-		return nil
-	}
-}
-
-func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
-
-		tagOut, err := conn.ListTagsForResource(&kafka.ListTagsForResourceInput{
-			ResourceArn: cluster.ClusterArn,
-		})
-		if err != nil {
-			return err
-		}
-		if tagOut != nil {
-			*td = *tagOut
-			log.Printf("[DEBUG] loaded acceptance test tags: %v (from %v)", td, tagOut)
-		}
-		return nil
-	}
-}
-
-func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := keyvaluetags.KafkaKeyValueTags(td.Tags).IgnoreAws().Map()
-		v, ok := m[key]
-		if value != "" && !ok {
-			return fmt.Errorf("Missing tag: %s - (found tags %v)", key, m)
-		} else if value == "" && ok {
-			return fmt.Errorf("Extra tag: %s", key)
-		}
-		if value == "" {
-			return nil
-		}
-		if v != value {
-			return fmt.Errorf("%s: bad value: %s", key, v)
-		}
 		return nil
 	}
 }
@@ -1166,7 +1135,7 @@ resource "aws_msk_cluster" "test" {
 
   client_authentication {
     sasl {
-      scram = %t
+      scram = %[2]t
     }
   }
 }
@@ -1189,7 +1158,7 @@ resource "aws_msk_cluster" "test" {
 
   client_authentication {
     sasl {
-      iam = %t
+      iam = %[2]t
     }
   }
 }
@@ -1578,7 +1547,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, kafkaVersion, configResourceName))
 }
 
-func testAccMskClusterConfigTags1(rName string) string {
+func testAccMskClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1593,13 +1562,13 @@ resource "aws_msk_cluster" "test" {
   }
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccMskClusterConfigTags2(rName string) string {
+func testAccMskClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1614,16 +1583,9 @@ resource "aws_msk_cluster" "test" {
   }
 
   tags = {
-    foo = "baz"
-    new = "type"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName))
-}
-
-func TestSortMskClusterEndpoints(t *testing.T) {
-	testString := "this:123,is:147,just.a.test:443"
-	if "is:147,just.a.test:443,this:123" != sortMskClusterEndpoints(testString) {
-		t.Fail()
-	}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

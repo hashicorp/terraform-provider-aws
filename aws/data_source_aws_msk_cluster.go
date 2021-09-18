@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfkafka "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka"
 )
 
 func dataSourceAwsMskCluster() *schema.Resource {
@@ -61,40 +62,35 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).kafkaconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	listClustersInput := &kafka.ListClustersInput{
-		ClusterNameFilter: aws.String(d.Get("cluster_name").(string)),
+	clusterName := d.Get("cluster_name").(string)
+	input := &kafka.ListClustersInput{
+		ClusterNameFilter: aws.String(clusterName),
 	}
+	var cluster *kafka.ClusterInfo
 
-	var clusters []*kafka.ClusterInfo
-	for {
-		listClustersOutput, err := conn.ListClusters(listClustersInput)
-
-		if err != nil {
-			return fmt.Errorf("error listing MSK Clusters: %w", err)
+	err := conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if listClustersOutput == nil {
-			break
+		for _, clusterInfo := range page.ClusterInfoList {
+			if aws.StringValue(cluster.ClusterName) == clusterName {
+				cluster = clusterInfo
+
+				return false
+			}
 		}
 
-		clusters = append(clusters, listClustersOutput.ClusterInfoList...)
+		return !lastPage
+	})
 
-		if aws.StringValue(listClustersOutput.NextToken) == "" {
-			break
-		}
-
-		listClustersInput.NextToken = listClustersOutput.NextToken
+	if err != nil {
+		return fmt.Errorf("error listing MSK Clusters: %w", err)
 	}
 
-	if len(clusters) == 0 {
-		return fmt.Errorf("error reading MSK Cluster: no results found")
+	if cluster == nil {
+		return fmt.Errorf("error reading MSK Cluster (%s): no results found", clusterName)
 	}
-
-	if len(clusters) > 1 {
-		return fmt.Errorf("error reading MSK Cluster: multiple results found, try adjusting search criteria")
-	}
-
-	cluster := clusters[0]
 
 	bootstrapBrokersInput := &kafka.GetBootstrapBrokersInput{
 		ClusterArn: cluster.ClusterArn,
@@ -107,10 +103,10 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
 	d.Set("cluster_name", cluster.ClusterName)
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
@@ -119,7 +115,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("zookeeper_connect_string", sortMskClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 

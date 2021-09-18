@@ -4,21 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfkafka "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/waiter"
-	mskwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -440,10 +437,10 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %s", err)
@@ -488,7 +485,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting logging_info: %s", err)
 	}
 
-	d.Set("zookeeper_connect_string", sortMskClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	return nil
 }
@@ -536,14 +533,12 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error updating MSK Cluster (%s) broker type: %s", d.Id(), err)
 		}
 
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker type: empty response", d.Id())
-		}
-
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -560,14 +555,12 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %s", d.Id(), err)
 		}
 
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker count: empty response", d.Id())
-		}
-
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -586,14 +579,12 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
 		}
 
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: empty response", d.Id())
-		}
-
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -610,14 +601,12 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error updating MSK Cluster (%s) configuration: %s", d.Id(), err)
 		}
 
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) configuration: empty response", d.Id())
-		}
-
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -638,13 +627,11 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: %w", d.Id(), err)
 		}
 
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: empty response", d.Id())
-		}
-
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
@@ -1177,52 +1164,4 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{m}
-}
-
-func mskClusterOperationRefreshFunc(conn *kafka.Kafka, clusterOperationARN string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &kafka.DescribeClusterOperationInput{
-			ClusterOperationArn: aws.String(clusterOperationARN),
-		}
-
-		output, err := conn.DescribeClusterOperation(input)
-
-		if err != nil {
-			return nil, "UPDATE_FAILED", fmt.Errorf("error describing MSK Cluster Operation (%s): %s", clusterOperationARN, err)
-		}
-
-		if output == nil || output.ClusterOperationInfo == nil {
-			return nil, "UPDATE_FAILED", fmt.Errorf("error describing MSK Cluster Operation (%s): empty response", clusterOperationARN)
-		}
-
-		state := aws.StringValue(output.ClusterOperationInfo.OperationState)
-
-		if state == "UPDATE_FAILED" && output.ClusterOperationInfo.ErrorInfo != nil {
-			errorInfo := output.ClusterOperationInfo.ErrorInfo
-			err := fmt.Errorf("error code: %s, error string: %s", aws.StringValue(errorInfo.ErrorCode), aws.StringValue(errorInfo.ErrorString))
-			return output.ClusterOperationInfo, state, err
-		}
-
-		return output.ClusterOperationInfo, state, nil
-	}
-}
-
-func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
-		Target:  []string{"UPDATE_COMPLETE"},
-		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: mskwaiter.ClusterUpdateTimeout,
-	}
-
-	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func sortMskClusterEndpoints(s string) string {
-	splitBootstrapBrokers := strings.Split(s, ",")
-	sort.Strings(splitBootstrapBrokers)
-	return strings.Join(splitBootstrapBrokers, ",")
 }
