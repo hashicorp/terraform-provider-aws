@@ -499,6 +499,41 @@ func TestAccAWSFsxOntapFileSystem_KmsKeyId(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigDailyAutomaticBackupStartTime("01:01"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigDailyAutomaticBackupStartTime("02:02"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -613,11 +648,11 @@ resource "aws_fsx_ontap_file_system" "test" {
 func testAccAwsFsxOntapFileSystemConfigDiskIopsConfiguration() string {
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_fsx_ontap_file_system" "test" {
-  storage_capacity          = 1024
-  subnet_ids                = [aws_subnet.test1.id, aws_subnet.test2.id]
-  deployment_type           = "MULTI_AZ_1"
-  throughput_capacity       = 512
-  preferred_subnet_id       = aws_subnet.test1.id
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test1.id
 
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
