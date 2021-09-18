@@ -27,7 +27,7 @@ data "aws_lambda_layer_version" "existing" {
 The following arguments are supported:
 
 * `layer_name` - (Required) Name of the lambda layer.
-* `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime`. If omitted, the latest available layer version will be used.
+* `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime` and `compatible_architecture`. If omitted, the latest available layer version will be used.
 * `compatible_runtime` (Optional) Specific runtime the layer version must support. Conflicts with `version`. If specified, the latest available layer version supporting the provided runtime will be used.
 * `compatible_architecture` (Optional) Specific architecture the layer version could support. Conflicts with `version`. If specified, the latest available layer version supporting the provided architecture will be used.
 
