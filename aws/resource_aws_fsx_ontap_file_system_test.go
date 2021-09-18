@@ -668,7 +668,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
-	iops = 3072
+    iops = 3072
   }
 }
 `)
