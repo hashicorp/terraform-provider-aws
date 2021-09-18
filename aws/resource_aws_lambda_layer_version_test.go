@@ -208,6 +208,7 @@ func TestAccAWSLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compatible_architectures.*", lambda.ArchitectureX8664),
 				),
 			},
 			{
