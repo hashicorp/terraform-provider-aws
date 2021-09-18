@@ -100,7 +100,7 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.testt", "default_route_table_id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "512"),
 					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test1", "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
@@ -110,6 +110,9 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.ip_addresses"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
 				),
 			},
 			{
@@ -137,6 +140,34 @@ func TestAccAWSFsxOntapFileSystem_endpointIpAddressRange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_ip_address_range", "198.19.255.0/24"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigDiskIopsConfiguration(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 				),
 			},
 			{
@@ -575,6 +606,22 @@ resource "aws_fsx_ontap_file_system" "test" {
   throughput_capacity       = 512
   preferred_subnet_id       = aws_subnet.test1.id
   endpoint_ip_address_range = "198.19.255.0/24"
+}
+`)
+}
+
+func testAccAwsFsxOntapFileSystemConfigDiskIopsConfiguration() string {
+	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity          = 1024
+  subnet_ids                = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type           = "MULTI_AZ_1"
+  throughput_capacity       = 512
+  preferred_subnet_id       = aws_subnet.test1.id
+
+  disk_iops_configuration {
+    mode = "USER_PROVISIONED"
+  }
 }
 `)
 }

@@ -66,6 +66,28 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(fsx.OntapDeploymentType_Values(), false),
 			},
+			"disk_iops_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iops": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(0, 80000),
+						},
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      fsx.DiskIopsConfigurationModeAutomatic,
+							ValidateFunc: validation.StringInSlice(fsx.DiskIopsConfigurationMode_Values(), false),
+						},
+					},
+				},
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -258,6 +280,10 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		input.OntapConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("disk_iops_configuration"); ok {
+		input.OntapConfiguration.DiskIopsConfiguration = expandFsxOntapFileDiskIopsConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
@@ -407,6 +433,10 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting endpoints: %w", err)
 	}
 
+	if err := d.Set("disk_iops_configuration", flattenFsxOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
+		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
+	}
+
 	tags := keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -444,6 +474,41 @@ func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
+}
+
+func expandFsxOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	conf := cfg[0].(map[string]interface{})
+
+	out := fsx.DiskIopsConfiguration{}
+
+	if v, ok := conf["mode"].(string); ok && len(v) > 0 {
+		out.Mode = aws.String(v)
+	}
+	if v, ok := conf["iops"].(int); ok {
+		out.Iops = aws.Int64(int64(v))
+	}
+
+	return &out
+}
+
+func flattenFsxOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.Mode != nil {
+		m["mode"] = aws.StringValue(rs.Mode)
+	}
+	if rs.Iops != nil {
+		m["iops"] = aws.Int64Value(rs.Iops)
+	}
+
+	return []interface{}{m}
 }
 
 func flattenFsxOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
