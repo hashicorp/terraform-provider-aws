@@ -46,11 +46,6 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 90),
 			},
-			"backup_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"daily_automatic_backup_start_time": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -267,15 +262,8 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		},
 	}
 
-	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
-		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
-	}
-
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
-		backupInput.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("endpoint_ip_address_range"); ok {
@@ -296,7 +284,6 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
-		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok {
@@ -305,34 +292,20 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().FsxTags()
-		backupInput.Tags = tags.IgnoreAws().FsxTags()
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("backup_id"); ok {
-		backupInput.BackupId = aws.String(v.(string))
+	log.Printf("[DEBUG] Creating FSx Ontap File System: %s", input)
+	result, err := conn.CreateFileSystem(input)
 
-		log.Printf("[DEBUG] Creating FSx Ontap File System: %s", backupInput)
-		result, err := conn.CreateFileSystemFromBackup(backupInput)
-
-		if err != nil {
-			return fmt.Errorf("error creating FSx Ontap File System from backup: %w", err)
-		}
-
-		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
-	} else {
-		log.Printf("[DEBUG] Creating FSx Ontap File System: %s", input)
-		result, err := conn.CreateFileSystem(input)
-
-		if err != nil {
-			return fmt.Errorf("error creating FSx Ontap File System: %w", err)
-		}
-
-		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
+	if err != nil {
+		return fmt.Errorf("error creating FSx Ontap File System: %w", err)
 	}
+
+	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
 	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for FSx Ontap File System (%s) to be available: %w", d.Id(), err)

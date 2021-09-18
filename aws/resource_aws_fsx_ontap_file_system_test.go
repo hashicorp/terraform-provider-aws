@@ -460,35 +460,6 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
-// func TestAccAWSFsxOntapFileSystem_fromBackup(t *testing.T) {
-// 	var filesystem fsx.FileSystem
-// 	resourceName := "aws_fsx_ontap_file_system.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-// 		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAwsFsxOntapFileSystemFromBackup(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
-// 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
-// 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
-// 					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:            resourceName,
-// 				ImportState:             true,
-// 				ImportStateVerify:       true,
-// 				ImportStateVerifyIgnore: []string{"security_group_ids", "backup_id"},
-// 			},
-// 		},
-// 	})
-// }
-
 func TestAccAWSFsxOntapFileSystem_KmsKeyId(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -886,29 +857,6 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 `, retention))
 }
-
-// func testAccAwsFsxOntapFileSystemFromBackup() string {
-// 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
-// resource "aws_fsx_ontap_file_system" "base" {
-//   storage_capacity            = 1024
-//   subnet_ids                  = [aws_subnet.test1.id]
-//   deployment_type             = "PERSISTENT_1"
-//   per_unit_storage_throughput = 50
-// }
-
-// resource "aws_fsx_backup" "test" {
-//   file_system_id = aws_fsx_ontap_file_system.base.id
-// }
-
-// resource "aws_fsx_ontap_file_system" "test" {
-//   storage_capacity            = 1024
-//   subnet_ids                  = [aws_subnet.test1.id]
-//   deployment_type             = "PERSISTENT_1"
-//   per_unit_storage_throughput = 50
-//   backup_id                   = aws_fsx_backup.test.id
-// }
-// `)
-// }
 
 func testAccAwsFsxOntapFileSystemConfigKmsKeyId1() string {
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
