@@ -175,6 +175,7 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 			"route_table_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
