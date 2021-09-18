@@ -190,12 +190,13 @@ func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) []interface{} {
 
 func ExpandDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
 	dcb := &cloudfront.DefaultCacheBehavior{
-		CachePolicyId:          aws.String(m["cache_policy_id"].(string)),
-		Compress:               aws.Bool(m["compress"].(bool)),
-		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
-		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
-		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+		CachePolicyId:           aws.String(m["cache_policy_id"].(string)),
+		Compress:                aws.Bool(m["compress"].(bool)),
+		FieldLevelEncryptionId:  aws.String(m["field_level_encryption_id"].(string)),
+		OriginRequestPolicyId:   aws.String(m["origin_request_policy_id"].(string)),
+		ResponseHeadersPolicyId: aws.String(m["response_headers_policy_id"].(string)),
+		TargetOriginId:          aws.String(m["target_origin_id"].(string)),
+		ViewerProtocolPolicy:    aws.String(m["viewer_protocol_policy"].(string)),
 	}
 
 	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
@@ -251,13 +252,14 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	}
 
 	cb := &cloudfront.CacheBehavior{
-		CachePolicyId:          aws.String(m["cache_policy_id"].(string)),
-		Compress:               aws.Bool(m["compress"].(bool)),
-		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        forwardedValues,
-		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
-		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
-		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+		CachePolicyId:           aws.String(m["cache_policy_id"].(string)),
+		Compress:                aws.Bool(m["compress"].(bool)),
+		FieldLevelEncryptionId:  aws.String(m["field_level_encryption_id"].(string)),
+		ForwardedValues:         forwardedValues,
+		OriginRequestPolicyId:   aws.String(m["origin_request_policy_id"].(string)),
+		ResponseHeadersPolicyId: aws.String(m["response_headers_policy_id"].(string)),
+		TargetOriginId:          aws.String(m["target_origin_id"].(string)),
+		ViewerProtocolPolicy:    aws.String(m["viewer_protocol_policy"].(string)),
 	}
 
 	if m["cache_policy_id"].(string) == "" {
@@ -307,14 +309,15 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 
 func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
 	m := map[string]interface{}{
-		"cache_policy_id":           aws.StringValue(dcb.CachePolicyId),
-		"compress":                  aws.BoolValue(dcb.Compress),
-		"field_level_encryption_id": aws.StringValue(dcb.FieldLevelEncryptionId),
-		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
-		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
-		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
-		"origin_request_policy_id":  aws.StringValue(dcb.OriginRequestPolicyId),
-		"realtime_log_config_arn":   aws.StringValue(dcb.RealtimeLogConfigArn),
+		"cache_policy_id":            aws.StringValue(dcb.CachePolicyId),
+		"compress":                   aws.BoolValue(dcb.Compress),
+		"field_level_encryption_id":  aws.StringValue(dcb.FieldLevelEncryptionId),
+		"viewer_protocol_policy":     aws.StringValue(dcb.ViewerProtocolPolicy),
+		"target_origin_id":           aws.StringValue(dcb.TargetOriginId),
+		"min_ttl":                    aws.Int64Value(dcb.MinTTL),
+		"origin_request_policy_id":   aws.StringValue(dcb.OriginRequestPolicyId),
+		"realtime_log_config_arn":    aws.StringValue(dcb.RealtimeLogConfigArn),
+		"response_headers_policy_id": aws.StringValue(dcb.ResponseHeadersPolicyId),
 	}
 
 	if dcb.ForwardedValues != nil {
@@ -362,6 +365,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
 	m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
 	m["realtime_log_config_arn"] = aws.StringValue(cb.RealtimeLogConfigArn)
+	m["response_headers_policy_id"] = aws.StringValue(cb.ResponseHeadersPolicyId)
 
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{FlattenForwardedValues(cb.ForwardedValues)}
