@@ -1025,8 +1025,16 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
 				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
 			{
@@ -1037,6 +1045,40 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_ArchitecturesUpdate(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			// Ensure function with arm64 architecture can be created
+			{
+				Config: testAccAWSLambdaArchitecturesARM64(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
 				),
 			},
@@ -1056,18 +1098,7 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
-					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
-				),
-			},
-			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
-			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
 				),
 			},
@@ -2868,14 +2899,14 @@ func testAccAWSLambdaArchitecturesARM64WithLayer(funcName, layerName, policyName
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%s"
+  layer_name               = "%[1]s"
   compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = "%[2]s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2889,14 +2920,14 @@ func testAccAWSLambdaArchitecturesUpdateWithLayer(funcName, layerName, policyNam
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%s"
+  layer_name               = "%[1]s"
   compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = "%[2]s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
