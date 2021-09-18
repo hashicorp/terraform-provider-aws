@@ -146,7 +146,7 @@ func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{"security_group_ids", "fsx_admin_password"},
 			},
 		},
 	})
