@@ -470,7 +470,7 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 }
 
 func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -482,7 +482,7 @@ func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 			{
 				Config: testAccAwsFsxOntapFileSystemConfigKmsKeyId(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
