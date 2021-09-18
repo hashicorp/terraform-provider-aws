@@ -778,7 +778,7 @@ func testAccAwsFsxOntapFileSystemConfigStorageCapacity(storageCapacity int) stri
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = %[1]d
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
   preferred_subnet_id = aws_subnet.test1.id
