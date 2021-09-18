@@ -195,7 +195,7 @@ func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iop	s", "3072"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
 				),
 			},
 			{
@@ -678,6 +678,10 @@ func testAccAwsFsxOntapFileSystemConfigRouteTable() string {
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
+
+  lifecycle {
+    ignore_changes = [tags, tags_all]
+  }
 }
 
 resource "aws_fsx_ontap_file_system" "test" {
