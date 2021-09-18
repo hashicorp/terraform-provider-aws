@@ -125,9 +125,10 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 }
 
 func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
-	var filesystem fsx.FileSystem
+	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	pass := acctest.RandomWithPrefix("tf-acc-test")
+	pass2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
@@ -138,7 +139,7 @@ func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 			{
 				Config: testAccAwsFsxOntapFileSystemConfigFsxAdminPassword(pass),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "fsx_admin_password", pass),
 				),
 			},
@@ -147,6 +148,14 @@ func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids", "fsx_admin_password"},
+			},
+			{
+				Config: testAccAwsFsxOntapFileSystemConfigFsxAdminPassword(pass2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "fsx_admin_password", pass2),
+				),
 			},
 		},
 	})
