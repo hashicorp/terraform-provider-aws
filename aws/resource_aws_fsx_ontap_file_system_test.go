@@ -472,8 +472,6 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
-	kmsKeyResourceName1 := "aws_kms_key.test1"
-	kmsKeyResourceName2 := "aws_kms_key.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
@@ -482,11 +480,10 @@ func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxOntapFileSystemConfigKmsKeyId1(),
+				Config: testAccAwsFsxOntapFileSystemConfigKmsKeyId(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -494,15 +491,6 @@ func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
-			},
-			{
-				Config: testAccAwsFsxOntapFileSystemConfigKmsKeyId2(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
-					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
-				),
 			},
 		},
 	})
@@ -873,9 +861,9 @@ resource "aws_fsx_ontap_file_system" "test" {
 `, retention))
 }
 
-func testAccAwsFsxOntapFileSystemConfigKmsKeyId1() string {
+func testAccAwsFsxOntapFileSystemConfigKmsKeyId() string {
 	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
-resource "aws_kms_key" "test1" {
+resource "aws_kms_key" "test" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
 }
@@ -886,25 +874,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
   preferred_subnet_id = aws_subnet.test1.id
-  kms_key_id          = aws_kms_key.test1.arn
-}
-`)
-}
-
-func testAccAwsFsxOntapFileSystemConfigKmsKeyId2() string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), `
-resource "aws_kms_key" "test2" {
-  description             = "FSx KMS Testing key"
-  deletion_window_in_days = 7
-}
-
-resource "aws_fsx_ontap_file_system" "test" {
-  storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
-  deployment_type     = "MULTI_AZ_1"
-  throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
-  kms_key_id          = aws_kms_key.test2.arn
+  kms_key_id          = aws_kms_key.test.arn
 }
 `)
 }
