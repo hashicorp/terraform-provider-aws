@@ -567,8 +567,16 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
-	d.Set("availability_zone_relocation", getAvailabilityZoneRelocationValue(rsc, d))
 	d.Set("availability_zone_relocation_status", rsc.AvailabilityZoneRelocationStatus)
+	// AvailabilityZoneRelocation is not returned by the API, and AvailabilityZoneRelocationStatus is not implemented as Const at this time.
+	switch availabilityZoneRelocationStatus := *rsc.AvailabilityZoneRelocationStatus; availabilityZoneRelocationStatus {
+	case "enabled", "pending_enabling":
+		d.Set("availability_zone_relocation", true)
+	case "disabled", "pending_disabling":
+		d.Set("availability_zone_relocation", false)
+	default:
+		return fmt.Errorf("error reading cluster %s, unexpected AvailabilityZoneRelocationStatus attribute: %s", d.Id(), availabilityZoneRelocationStatus)
+	}
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenRedshiftClusterNodes(rsc.ClusterNodes)); err != nil {
 		return fmt.Errorf("error setting cluster_nodes: %w", err)
@@ -997,28 +1005,4 @@ func flattenRedshiftClusterNodes(apiObjects []*redshift.ClusterNode) []interface
 	}
 
 	return tfList
-}
-
-func getAvailabilityZoneRelocationValue(rsc *redshift.Cluster, d *schema.ResourceData) bool {
-	// AvailabilityZoneRelocationStatus is an official API, but not documented.
-	// based on interactions with the API, these are the possible values that can be returned
-	// we infer the AvailabilityZoneRelocation from here
-	azr := *rsc.AvailabilityZoneRelocationStatus
-	statuses := map[string]bool{
-		"enabled":          true,
-		"pending_enabling": true,
-		"disabled":         false,
-		"pending_disabled": false,
-	}
-	if v, ok := statuses[azr]; ok {
-		return v
-	}
-	// if the API returns an unknown value, we try to use the state if available to avoid a possible dud plan
-	// otherwise, we default to false
-	if v, ok := d.GetOkExists("availability_zone_relocation"); ok {
-		log.Printf("[WARN] Redshift Cluster (%s) Unexpected AvailabilityZoneRelocationStatus from API: %s, returning value from state: %t.", d.Id(), azr, v)
-		return v.(bool)
-	}
-	log.Printf("[WARN] Redshift Cluster (%s) Unexpected AvailabilityZoneRelocationStatus from API: %s, returning default value: false.", d.Id(), azr)
-	return false
 }
