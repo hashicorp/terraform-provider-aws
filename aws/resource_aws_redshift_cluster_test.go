@@ -1469,7 +1469,7 @@ resource "aws_redshift_cluster" "default" {
   publicly_accessible                 = false
   automated_snapshot_retention_period = 1
   allow_version_upgrade               = false
-  skip_final_snapshot = true
+  skip_final_snapshot                 = true
 }
 `, rInt))
 }
@@ -1489,7 +1489,7 @@ resource "aws_redshift_cluster" "default" {
   publicly_accessible                 = false
   automated_snapshot_retention_period = 1
   allow_version_upgrade               = false
-  skip_final_snapshot = true
+  skip_final_snapshot                 = true
 }
 `, rInt))
 }
