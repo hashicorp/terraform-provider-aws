@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchMetricStream() *schema.Resource {
@@ -119,8 +120,8 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 }
 
 func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -153,9 +154,9 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := waiter.MetricStreamReady(ctx, conn, d.Id())
 
@@ -217,7 +218,7 @@ func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.Resour
 
 func resourceAwsCloudWatchMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting CloudWatch MetricStream %s", d.Id())
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
 	}

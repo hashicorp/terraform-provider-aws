@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
@@ -92,7 +93,7 @@ func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
 }
 
 func resourceAwsCloudWatchCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Get("alarm_name").(string)
 
 	input := expandAwsCloudWatchPutCompositeAlarmInput(d, meta)
@@ -108,9 +109,9 @@ func resourceAwsCloudWatchCompositeAlarmCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsCloudWatchCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Id()
 
 	alarm, err := finder.CompositeAlarmByName(ctx, conn, name)
@@ -173,7 +174,7 @@ func resourceAwsCloudWatchCompositeAlarmRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsCloudWatchCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Id()
 
 	input := expandAwsCloudWatchPutCompositeAlarmInput(d, meta)
@@ -196,7 +197,7 @@ func resourceAwsCloudWatchCompositeAlarmUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsCloudWatchCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*conns.AWSClient).CloudWatchConn
 	name := d.Id()
 
 	input := cloudwatch.DeleteAlarmsInput{
@@ -215,7 +216,7 @@ func resourceAwsCloudWatchCompositeAlarmDelete(ctx context.Context, d *schema.Re
 }
 
 func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutCompositeAlarmInput {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	out := cloudwatch.PutCompositeAlarmInput{

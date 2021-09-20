@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
@@ -416,7 +417,7 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -431,7 +432,7 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 }
 
 func testAccCheckAWSCloudWatchMetricAlarmDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_metric_alarm" {
