@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
 func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccount(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +80,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
-		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -101,7 +102,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) er
 			continue
 		}
 
-		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {

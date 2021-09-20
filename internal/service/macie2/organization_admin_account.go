@@ -75,7 +75,7 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 
 	var err error
 
-	res, err := getMacie2OrganizationAdminAccount(conn, d.Id())
+	res, err := GetOrganizationAdminAccount(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
@@ -116,7 +116,7 @@ func resourceMacie2OrganizationAdminAccountDelete(ctx context.Context, d *schema
 	return nil
 }
 
-func getMacie2OrganizationAdminAccount(conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
+func GetOrganizationAdminAccount(conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
 	var res *macie2.AdminAccount
 
 	err := conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
