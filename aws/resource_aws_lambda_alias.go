@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLambdaAlias() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsLambdaAlias() *schema.Resource {
 // resourceAwsLambdaAliasCreate maps to:
 // CreateAlias in the API / SDK
 func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 	aliasName := d.Get("name").(string)
@@ -104,7 +105,7 @@ func resourceAwsLambdaAliasCreate(d *schema.ResourceData, meta interface{}) erro
 // resourceAwsLambdaAliasRead maps to:
 // GetAlias in the API / SDK
 func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Fetching Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 
@@ -143,7 +144,7 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 // resourceAwsLambdaAliasDelete maps to:
 // DeleteAlias in the API / SDK
 func resourceAwsLambdaAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 
@@ -163,7 +164,7 @@ func resourceAwsLambdaAliasDelete(d *schema.ResourceData, meta interface{}) erro
 // resourceAwsLambdaAliasUpdate maps to:
 // UpdateAlias in the API / SDK
 func resourceAwsLambdaAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Updating Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
@@ -118,7 +119,7 @@ func resourceAwsLambdaLayerVersion() *schema.Resource {
 }
 
 func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
@@ -176,7 +177,7 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	layerName, version, err := resourceAwsLambdaLayerVersionParseId(d.Id())
 	if err != nil {
@@ -239,7 +240,7 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsLambdaLayerVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
 	if err != nil {

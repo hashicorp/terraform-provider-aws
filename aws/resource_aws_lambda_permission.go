@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
@@ -89,7 +90,7 @@ func resourceAwsLambdaPermission() *schema.Resource {
 }
 
 func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 
@@ -189,7 +190,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	input := lambda.GetPolicyInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
@@ -273,7 +274,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
-	if strings.HasPrefix(d.Get("function_name").(string), "arn:"+meta.(*AWSClient).partition+":lambda:") {
+	if strings.HasPrefix(d.Get("function_name").(string), "arn:"+meta.(*conns.AWSClient).Partition+":lambda:") {
 		// Strip qualifier off
 		trimmedArn := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmedArn)
@@ -308,7 +309,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 
@@ -445,7 +446,7 @@ func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{})
 	statementId := idParts[1]
 	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 	getFunctionOutput, err := conn.GetFunction(input)
 	if err != nil {
 		return nil, err

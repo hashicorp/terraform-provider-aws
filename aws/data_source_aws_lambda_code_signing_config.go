@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
@@ -63,7 +64,7 @@ func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 }
 
 func dataSourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	arn := d.Get("arn").(string)
 

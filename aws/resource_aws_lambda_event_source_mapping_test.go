@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lambda/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
@@ -877,7 +878,7 @@ func TestAccAWSLambdaEventSourceMapping_RabbitMQ(t *testing.T) {
 
 func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 		// Disable enabled state
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -928,7 +929,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 }
 
 func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_event_source_mapping" {
@@ -963,7 +964,7 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
@@ -1786,7 +1787,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccPreCheckAWSMq(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
 	input := &mq.ListBrokersInput{}
 
@@ -1802,7 +1803,7 @@ func testAccPreCheckAWSMq(t *testing.T) {
 }
 
 func testAccPreCheckAWSMsk(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	input := &kafka.ListClustersInput{}
 
@@ -1818,7 +1819,7 @@ func testAccPreCheckAWSMsk(t *testing.T) {
 }
 
 func testAccPreCheckAWSSecretsManager(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.ListSecretsInput{}
 
