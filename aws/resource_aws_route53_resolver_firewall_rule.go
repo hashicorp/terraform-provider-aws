@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfroute53resolver "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 )
 
 func resourceAwsRoute53ResolverFirewallRule() *schema.Resource {
