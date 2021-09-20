@@ -3,7 +3,6 @@ package rds
 import (
 	"fmt"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAwsDBProxyEndpointParseID(id string) (string, string, error) {
