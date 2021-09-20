@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDynamoDbTableItem() *schema.Resource {
+func ResourceTableItem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDynamoDbTableItemCreate,
-		Read:   resourceAwsDynamoDbTableItemRead,
-		Update: resourceAwsDynamoDbTableItemUpdate,
-		Delete: resourceAwsDynamoDbTableItemDelete,
+		Create: resourceTableItemCreate,
+		Read:   resourceTableItemRead,
+		Update: resourceTableItemUpdate,
+		Delete: resourceTableItemDelete,
 
 		Schema: map[string]*schema.Schema{
 			"table_name": {
@@ -52,7 +52,7 @@ func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	tableName := d.Get("table_name").(string)
@@ -84,10 +84,10 @@ func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(id)
 
-	return resourceAwsDynamoDbTableItemRead(d, meta)
+	return resourceTableItemRead(d, meta)
 }
 
-func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
@@ -150,10 +150,10 @@ func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}
 		d.SetId(id)
 	}
 
-	return resourceAwsDynamoDbTableItemRead(d, meta)
+	return resourceTableItemRead(d, meta)
 }
 
-func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
@@ -203,7 +203,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsDynamoDbTableItemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	attributes, err := expandTableItemAttributes(d.Get("item").(string))

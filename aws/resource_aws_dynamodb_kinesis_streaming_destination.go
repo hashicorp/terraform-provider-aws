@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDynamoDbKinesisStreamingDestination() *schema.Resource {
+func ResourceKinesisStreamingDestination() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsDynamoDbKinesisStreamingDestinationCreate,
-		ReadWithoutTimeout:   resourceAwsDynamoDbKinesisStreamingDestinationRead,
-		DeleteWithoutTimeout: resourceAwsDynamoDbKinesisStreamingDestinationDelete,
+		CreateWithoutTimeout: resourceKinesisStreamingDestinationCreate,
+		ReadWithoutTimeout:   resourceKinesisStreamingDestinationRead,
+		DeleteWithoutTimeout: resourceKinesisStreamingDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -42,7 +42,7 @@ func resourceAwsDynamoDbKinesisStreamingDestination() *schema.Resource {
 	}
 }
 
-func resourceAwsDynamoDbKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	streamArn := d.Get("stream_arn").(string)
@@ -69,10 +69,10 @@ func resourceAwsDynamoDbKinesisStreamingDestinationCreate(ctx context.Context, d
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.TableName), aws.StringValue(output.StreamArn)))
 
-	return resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx, d, meta)
+	return resourceKinesisStreamingDestinationRead(ctx, d, meta)
 }
 
-func resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
@@ -108,7 +108,7 @@ func resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx context.Context, d *
 	return nil
 }
 
-func resourceAwsDynamoDbKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())

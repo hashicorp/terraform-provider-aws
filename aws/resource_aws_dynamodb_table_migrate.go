@@ -30,7 +30,7 @@ func migrateDynamoDBStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 	log.Printf("[DEBUG] DynamoDB Table Attributes before Migration: %#v", is.Attributes)
 
 	prefix := "global_secondary_index"
-	entity := resourceAwsDynamoDbTable()
+	entity := ResourceTable()
 
 	// Read old keys
 	reader := &schema.MapFieldReader{

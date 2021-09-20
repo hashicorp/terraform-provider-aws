@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDynamoDbTable() *schema.Resource {
+func DataSourceTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDynamoDbTableRead,
+		Read: dataSourceTableRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -218,7 +218,7 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -22,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDynamoDbTable() *schema.Resource {
+func ResourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsDynamoDbTableCreate,
-		Read:   resourceAwsDynamoDbTableRead,
-		Update: resourceAwsDynamoDbTableUpdate,
-		Delete: resourceAwsDynamoDbTableDelete,
+		Create: resourceTableCreate,
+		Read:   resourceTableRead,
+		Update: resourceTableUpdate,
+		Delete: resourceTableDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -320,7 +320,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 	}
 }
 
-func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -467,10 +467,10 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsDynamoDbTableRead(d, meta)
+	return resourceTableRead(d, meta)
 }
 
-func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -599,7 +599,7 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	billingMode := d.Get("billing_mode").(string)
 
@@ -781,10 +781,10 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsDynamoDbTableRead(d, meta)
+	return resourceTableRead(d, meta)
 }
 
-func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	log.Printf("[DEBUG] DynamoDB delete table: %s", d.Id())
