@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigConfigurationRecorderStatus() *schema.Resource {
+func ResourceConfigurationRecorderStatus() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigConfigurationRecorderStatusPut,
-		Read:   resourceAwsConfigConfigurationRecorderStatusRead,
+		Read:   resourceConfigurationRecorderStatusRead,
 		Update: resourceAwsConfigConfigurationRecorderStatusPut,
-		Delete: resourceAwsConfigConfigurationRecorderStatusDelete,
+		Delete: resourceConfigurationRecorderStatusDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -66,10 +66,10 @@ func resourceAwsConfigConfigurationRecorderStatusPut(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAwsConfigConfigurationRecorderStatusRead(d, meta)
+	return resourceConfigurationRecorderStatusRead(d, meta)
 }
 
-func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRecorderStatusRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Id()
@@ -104,7 +104,7 @@ func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsConfigConfigurationRecorderStatusDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRecorderStatusDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Get("name").(string)),

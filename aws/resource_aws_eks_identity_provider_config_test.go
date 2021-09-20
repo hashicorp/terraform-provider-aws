@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 				}
 
 				for _, identityProviderConfig := range page.IdentityProviderConfigs {
-					r := resourceAwsEksIdentityProviderConfig()
+					r := ResourceIdentityProviderConfig()
 					d := r.Data(nil)
 					d.SetId(tfeks.IdentityProviderConfigCreateResourceID(aws.StringValue(cluster), aws.StringValue(identityProviderConfig.Name)))
 
@@ -154,7 +155,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 				Config: testAccAWSEksIdentityProviderConfigConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksIdentityProviderConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

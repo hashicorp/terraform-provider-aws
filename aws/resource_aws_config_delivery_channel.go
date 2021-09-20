@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigDeliveryChannel() *schema.Resource {
+func ResourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigDeliveryChannelPut,
-		Read:   resourceAwsConfigDeliveryChannelRead,
+		Read:   resourceDeliveryChannelRead,
 		Update: resourceAwsConfigDeliveryChannelPut,
-		Delete: resourceAwsConfigDeliveryChannelDelete,
+		Delete: resourceDeliveryChannelDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -123,10 +123,10 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 
 	d.SetId(name)
 
-	return resourceAwsConfigDeliveryChannelRead(d, meta)
+	return resourceDeliveryChannelRead(d, meta)
 }
 
-func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := configservice.DescribeDeliveryChannelsInput{
@@ -170,7 +170,7 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	input := configservice.DeleteDeliveryChannelInput{
 		DeliveryChannelName: aws.String(d.Id()),

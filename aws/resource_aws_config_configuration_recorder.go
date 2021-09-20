@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigConfigurationRecorder() *schema.Resource {
+func ResourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigConfigurationRecorderPut,
-		Read:   resourceAwsConfigConfigurationRecorderRead,
+		Read:   resourceConfigurationRecorderRead,
 		Update: resourceAwsConfigConfigurationRecorderPut,
-		Delete: resourceAwsConfigConfigurationRecorderDelete,
+		Delete: resourceConfigurationRecorderDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -87,10 +87,10 @@ func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	return resourceAwsConfigConfigurationRecorderRead(d, meta)
+	return resourceConfigurationRecorderRead(d, meta)
 }
 
-func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := configservice.DescribeConfigurationRecordersInput{
@@ -134,7 +134,7 @@ func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsConfigConfigurationRecorderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRecorderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),

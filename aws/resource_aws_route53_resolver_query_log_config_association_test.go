@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepRoute53ResolverQueryLogConfigAssociations(region string) error {
 			id := aws.StringValue(queryLogConfigAssociation.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver Query Log Config Association: %s", id)
-			r := resourceAwsRoute53ResolverQueryLogConfigAssociation()
+			r := ResourceQueryLogConfigAssociation()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -110,7 +111,7 @@ func TestAccAWSRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T)
 				Config: testAccRoute53ResolverQueryLogConfigAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigAssociationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ResolverQueryLogConfigAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueryLogConfigAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

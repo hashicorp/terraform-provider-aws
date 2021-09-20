@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccConfigConformancePack_basic(t *testing.T) {
@@ -106,7 +107,7 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 				Config: testAccConfigConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConfigConformancePack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
