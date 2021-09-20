@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceQuotasService() *schema.Resource {
+func DataSourceService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceQuotasServiceRead,
+		Read: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
 			"service_code": {
@@ -26,7 +26,7 @@ func dataSourceAwsServiceQuotasService() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceQuotasServiceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	serviceName := d.Get("service_name").(string)
