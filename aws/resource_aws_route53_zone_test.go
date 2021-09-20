@@ -105,14 +105,14 @@ func hostedZonesToPreserve() []string {
 }
 
 func testSweepRoute53Zones(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).r53conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHostedZonesInput{}
@@ -143,7 +143,7 @@ func testSweepRoute53Zones(region string) error {
 			d.Set("force_destroy", true)
 			d.Set("name", detail.Name)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -153,11 +153,11 @@ func testSweepRoute53Zones(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+	if err = acctest.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Route53 Hosted Zones sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -174,7 +174,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -207,7 +207,7 @@ func TestAccAWSRoute53Zone_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +230,7 @@ func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -261,7 +261,7 @@ func TestAccAWSRoute53Zone_Comment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -298,7 +298,7 @@ func TestAccAWSRoute53Zone_DelegationSetID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -327,7 +327,7 @@ func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -352,7 +352,7 @@ func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -377,7 +377,7 @@ func TestAccAWSRoute53Zone_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -426,7 +426,7 @@ func TestAccAWSRoute53Zone_VPC_Single(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -459,7 +459,7 @@ func TestAccAWSRoute53Zone_VPC_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -493,7 +493,7 @@ func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -526,7 +526,7 @@ func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
 }
 
 func testAccCheckRoute53ZoneDestroy(s *terraform.State) error {
-	return testAccCheckRoute53ZoneDestroyWithProvider(s, testAccProvider)
+	return testAccCheckRoute53ZoneDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -545,7 +545,7 @@ func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *sc
 }
 
 func testAccCreateRandomRoute53RecordsInZoneId(zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
-	return testAccCreateRandomRoute53RecordsInZoneIdWithProvider(func() *schema.Provider { return testAccProvider }, zone, recordsCount)
+	return testAccCreateRandomRoute53RecordsInZoneIdWithProvider(func() *schema.Provider { return acctest.Provider }, zone, recordsCount)
 }
 
 func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *schema.Provider, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
@@ -590,7 +590,7 @@ func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *sch
 }
 
 func testAccCheckRoute53ZoneExists(n string, zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
-	return testAccCheckRoute53ZoneExistsWithProvider(n, zone, func() *schema.Provider { return testAccProvider })
+	return testAccCheckRoute53ZoneExistsWithProvider(n, zone, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHostedZoneOutput, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -639,7 +639,7 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 
 func testAccCheckRoute53ZoneDisappears(zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 		input := &route53.DeleteHostedZoneInput{
 			Id: zone.HostedZone.Id,

@@ -118,7 +118,7 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSRoute53Record_underscored(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAWSRoute53Record_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +194,7 @@ func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -221,7 +221,7 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +288,7 @@ func TestAccAWSRoute53Record_txtSupport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -314,7 +314,7 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -341,7 +341,7 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -368,7 +368,7 @@ func TestAccAWSRoute53Record_dsSupport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -393,7 +393,7 @@ func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -419,7 +419,7 @@ func TestAccAWSRoute53Record_wildcard(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -453,7 +453,7 @@ func TestAccAWSRoute53Record_failover(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -480,7 +480,7 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -508,7 +508,7 @@ func TestAccAWSRoute53Record_weighted_to_simple_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -542,7 +542,7 @@ func TestAccAWSRoute53Record_Alias_Elb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -569,7 +569,7 @@ func TestAccAWSRoute53Record_Alias_S3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -596,7 +596,7 @@ func TestAccAWSRoute53Record_Alias_VpcEndpoint(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -628,7 +628,7 @@ func TestAccAWSRoute53Record_Alias_Uppercase(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -654,7 +654,7 @@ func TestAccAWSRoute53Record_weighted_alias(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -691,7 +691,7 @@ func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -720,7 +720,7 @@ func TestAccAWSRoute53Record_HealthCheckId_SetIdentifierChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -752,7 +752,7 @@ func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -784,7 +784,7 @@ func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -812,7 +812,7 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -846,7 +846,7 @@ func TestAccAWSRoute53Record_NameChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -881,7 +881,7 @@ func TestAccAWSRoute53Record_SetIdentifierChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -915,7 +915,7 @@ func TestAccAWSRoute53Record_AliasChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -949,7 +949,7 @@ func TestAccAWSRoute53Record_empty(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -970,7 +970,7 @@ func TestAccAWSRoute53Record_longTXTrecord(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -996,7 +996,7 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1020,7 +1020,7 @@ func TestAccAWSRoute53Record_doNotAllowOverwrite(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccAWSRoute53RecordOverwriteExpectErrorCheck(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1037,7 +1037,7 @@ func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1082,7 +1082,7 @@ func testAccAWSRoute53RecordOverwriteExpectErrorCheck(t *testing.T) resource.Err
 }
 
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*AWSClient).r53conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_record" {
 			continue
@@ -1124,7 +1124,7 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 
 func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 		input := &route53.ChangeResourceRecordSetsInput{
 			HostedZoneId: zone.HostedZone.Id,
@@ -1159,7 +1159,7 @@ func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, reso
 
 func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -1205,7 +1205,7 @@ func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.Resour
 
 func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)

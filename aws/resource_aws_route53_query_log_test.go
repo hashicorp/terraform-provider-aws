@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepRoute53QueryLogs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -55,7 +55,7 @@ func testSweepRoute53QueryLogs(region string) error {
 	})
 	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
 	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
-	if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+	if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
 		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -78,7 +78,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,14 +109,14 @@ func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53QueryLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53QueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,14 +135,14 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53Zone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

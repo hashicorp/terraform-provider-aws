@@ -19,7 +19,7 @@ func TestAccAWSRoute53ZoneDataSource_id(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSRoute53ZoneDataSource_name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccAWSRoute53ZoneDataSource_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +95,7 @@ func TestAccAWSRoute53ZoneDataSource_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func TestAccAWSRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("servicediscovery", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{

@@ -30,14 +30,14 @@ func init() {
 }
 
 func testSweepRoute53Healthchecks(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).r53conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHealthChecksInput{}
@@ -58,7 +58,7 @@ func testSweepRoute53Healthchecks(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -68,11 +68,11 @@ func testSweepRoute53Healthchecks(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Health Checks for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+	if err = acctest.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Health Checks for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Route53 Health Checks sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -86,7 +86,7 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +124,7 @@ func TestAccAWSRoute53HealthCheck_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +167,7 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -201,7 +201,7 @@ func TestAccAWSRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func TestAccAWSRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition("aws", t) }, // GovCloud has 2 regions, test requires 3
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,7 +250,7 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -311,7 +311,7 @@ func TestAccAWSRoute53HealthCheck_CloudWatchAlarmCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,7 +336,7 @@ func TestAccAWSRoute53HealthCheck_withSNI(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -376,7 +376,7 @@ func TestAccAWSRoute53HealthCheck_Disabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -416,7 +416,7 @@ func TestAccAWSRoute53HealthCheck_withRoutingControlArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -441,14 +441,14 @@ func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthCheckConfigBasic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53HealthCheck(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53HealthCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -457,7 +457,7 @@ func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53HealthCheckDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_health_check" {
@@ -491,7 +491,7 @@ func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) reso
 			return fmt.Errorf("No Route53 Health Check ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 		output, err := finder.HealthCheckByID(conn, rs.Primary.ID)
 

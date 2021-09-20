@@ -25,7 +25,7 @@ func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,14 +54,14 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53HostedZoneDnssec(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53HostedZoneDnssec(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,7 +78,7 @@ func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
 		Steps: []resource.TestStep{
 			{
