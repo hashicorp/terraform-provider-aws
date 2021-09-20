@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSLakeFormationResourceDataSource_basic(t *testing.T) {
+func TestAccLakeFormationResourceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lakeformation_resource.test"
 	resourceName := "aws_lakeformation_resource.test"

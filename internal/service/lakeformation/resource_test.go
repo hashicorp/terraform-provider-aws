@@ -15,7 +15,7 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
-func TestAccAWSLakeFormationResource_basic(t *testing.T) {
+func TestAccLakeFormationResource_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceAddr := "aws_lakeformation_resource.test"
@@ -40,7 +40,7 @@ func TestAccAWSLakeFormationResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
+func TestAccLakeFormationResource_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_resource.test"
 
@@ -62,7 +62,7 @@ func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
+func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceAddr := "aws_lakeformation_resource.test"
 	bucketAddr := "aws_s3_bucket.test"
@@ -89,7 +89,7 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_updateRoleToRole(t *testing.T) {
+func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	roleName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	roleName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -123,7 +123,7 @@ func TestAccAWSLakeFormationResource_updateRoleToRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
+func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceAddr := "aws_lakeformation_resource.test"
@@ -163,7 +163,7 @@ func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
 // AWS does not support changing from an IAM role to an SLR. No error is thrown
 // but the registration is not changed (the IAM role continues in the registration).
 //
-// func TestAccAWSLakeFormationResource_updateRoleToSLR(t *testing.T) {
+// func TestAccLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckAWSLakeFormationResourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
