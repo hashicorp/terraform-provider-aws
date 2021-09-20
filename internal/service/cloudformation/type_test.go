@@ -230,7 +230,7 @@ func testAccAwsCloudformationTypeZipGenerator(t *testing.T, typeName string) str
 	tempDir := t.TempDir()
 	_, currentFilePath, _, _ := runtime.Caller(0)
 
-	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "testdata", "service", "cloudformation", "examplecompany-exampleservice-exampleresource")
+	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "testdata", "examplecompany-exampleservice-exampleresource")
 	targetDirectoryPath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource")
 	targetZipFilePath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource.zip")
 
