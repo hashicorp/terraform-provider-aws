@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDevicefarmProject() *schema.Resource {
@@ -44,8 +45,8 @@ func resourceAwsDevicefarmProject() *schema.Resource {
 }
 
 func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -77,9 +78,9 @@ func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &devicefarm.GetProjectInput{
 		Arn: aws.String(d.Id()),
@@ -123,7 +124,7 @@ func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDevicefarmProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateProjectInput{
@@ -157,7 +158,7 @@ func resourceAwsDevicefarmProjectUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDevicefarmProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
 	input := &devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
