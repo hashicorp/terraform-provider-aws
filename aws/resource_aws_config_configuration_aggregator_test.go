@@ -60,7 +60,7 @@ func testSweepConfigConfigurationAggregators(region string) error {
 
 func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	//Name is upper case on purpose to test https://github.com/terraform-providers/terraform-provider-aws/issues/8432
+	//Name is upper case on purpose to test https://github.com/hashicorp/terraform-provider-aws/issues/8432
 	rName := acctest.RandomWithPrefix("Tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
