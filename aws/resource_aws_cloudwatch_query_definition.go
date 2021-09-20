@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceQueryDefinition() *schema.Resource {
@@ -49,7 +50,7 @@ func ResourceQueryDefinition() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateLogGroupName,
+					ValidateFunc: validLogGroupName,
 				},
 			},
 		},
@@ -145,7 +146,7 @@ func resourceAwsCloudWatchQueryDefinitionImport(ctx context.Context, d *schema.R
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
 	}
 
-	matcher := regexp.MustCompile("^query-definition:(" + uuidRegexPattern + ")$")
+	matcher := regexp.MustCompile("^query-definition:(" + verify.UUIDRegexPattern + ")$")
 	matches := matcher.FindStringSubmatch(arn.Resource)
 	if len(matches) != 2 {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())

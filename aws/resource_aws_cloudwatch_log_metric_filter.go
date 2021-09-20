@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMetricFilter() *schema.Resource {
@@ -31,7 +32,7 @@ func ResourceMetricFilter() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLogMetricFilterName,
+				ValidateFunc: validLogMetricFilterName,
 			},
 
 			"pattern": {
@@ -51,7 +52,7 @@ func ResourceMetricFilter() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLogGroupName,
+				ValidateFunc: validLogGroupName,
 			},
 
 			"metric_transformation": {
@@ -63,12 +64,12 @@ func ResourceMetricFilter() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateLogMetricFilterTransformationName,
+							ValidateFunc: validLogMetricFilterTransformationName,
 						},
 						"namespace": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateLogMetricFilterTransformationName,
+							ValidateFunc: validLogMetricFilterTransformationName,
 						},
 						"value": {
 							Type:         schema.TypeString,
@@ -78,7 +79,7 @@ func ResourceMetricFilter() *schema.Resource {
 						"default_value": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateTypeStringNullableFloat,
+							ValidateFunc: verify.ValidTypeStringNullableFloat,
 						},
 						"dimensions": {
 							Type:     schema.TypeMap,
@@ -275,7 +276,7 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	}
 
 	if dims := transform.Dimensions; len(dims) > 0 {
-		m["dimensions"] = pointersMapToStringList(dims)
+		m["dimensions"] = verify.PointersMapToStringList(dims)
 	} else {
 		m["dimensions"] = nil
 	}
