@@ -9,20 +9,20 @@ import (
 )
 
 const (
-	DocumentStatusUnknown = "Unknown"
+	documentStatusUnknown = "Unknown"
 )
 
-// DocumentStatus fetches the Document and its Status
-func DocumentStatus(conn *ssm.SSM, name string) resource.StateRefreshFunc {
+// statusDocument fetches the Document and its Status
+func statusDocument(conn *ssm.SSM, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DocumentByName(conn, name)
+		output, err := finder.FindDocumentByName(conn, name)
 
 		if err != nil {
 			return nil, ssm.DocumentStatusFailed, err
 		}
 
 		if output == nil {
-			return output, DocumentStatusUnknown, nil
+			return output, documentStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

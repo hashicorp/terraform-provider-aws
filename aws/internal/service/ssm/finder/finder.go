@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// DocumentByName returns the Document corresponding to the specified name.
-func DocumentByName(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
+// FindDocumentByName returns the Document corresponding to the specified name.
+func FindDocumentByName(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
 	input := &ssm.DescribeDocumentInput{
 		Name: aws.String(name),
 	}
@@ -32,8 +32,8 @@ func DocumentByName(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error
 	return output.Document, nil
 }
 
-// PatchGroup returns matching SSM Patch Group by Patch Group and BaselineId.
-func PatchGroup(conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGroupPatchBaselineMapping, error) {
+// FindPatchGroup returns matching SSM Patch Group by Patch Group and BaselineId.
+func FindPatchGroup(conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGroupPatchBaselineMapping, error) {
 	input := &ssm.DescribePatchGroupsInput{}
 	var result *ssm.PatchGroupPatchBaselineMapping
 

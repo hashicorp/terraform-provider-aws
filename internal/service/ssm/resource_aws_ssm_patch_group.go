@@ -74,7 +74,7 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
 	}
 
-	group, err := finder.PatchGroup(conn, patchGroup, baselineId)
+	group, err := finder.FindPatchGroup(conn, patchGroup, baselineId)
 
 	if err != nil {
 		return fmt.Errorf("error reading SSM Patch Group (%s): %w", d.Id(), err)

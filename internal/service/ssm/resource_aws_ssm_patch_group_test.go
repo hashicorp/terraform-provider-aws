@@ -95,7 +95,7 @@ func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		group, err := finder.PatchGroup(conn, patchGroup, baselineId)
+		group, err := finder.FindPatchGroup(conn, patchGroup, baselineId)
 
 		if err != nil {
 			return fmt.Errorf("error describing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
@@ -127,7 +127,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
-		group, err := finder.PatchGroup(conn, patchGroup, baselineId)
+		group, err := finder.FindPatchGroup(conn, patchGroup, baselineId)
 
 		if err != nil {
 			return fmt.Errorf("error reading SSM Patch Group (%s): %w", rs.Primary.ID, err)

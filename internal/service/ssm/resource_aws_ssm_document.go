@@ -243,7 +243,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
 	}
 
-	_, err = waiter.DocumentActive(conn, d.Id())
+	_, err = waiter.waitDocumentActive(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for SSM Document (%s) to be Active: %w", d.Id(), err)
 	}
@@ -414,7 +414,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		_, err := waiter.DocumentActive(conn, d.Id())
+		_, err := waiter.waitDocumentActive(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error waiting for SSM Document (%s) to be Active: %w", d.Id(), err)
 		}
@@ -441,7 +441,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	_, err = waiter.DocumentDeleted(conn, d.Id())
+	_, err = waiter.waitDocumentDeleted(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
 			return nil
