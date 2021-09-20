@@ -19,7 +19,7 @@ func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 }
 
 func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+	conn := acctest.Provider.Meta().(*AWSClient).mediapackageconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_package_channel" {
@@ -153,7 +153,7 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+		conn := acctest.Provider.Meta().(*AWSClient).mediapackageconn
 
 		input := &mediapackage.DescribeChannelInput{
 			Id: aws.String(rs.Primary.ID),
@@ -166,7 +166,7 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSMediaPackage(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+	conn := acctest.Provider.Meta().(*AWSClient).mediapackageconn
 
 	input := &mediapackage.ListChannelsInput{}
 
