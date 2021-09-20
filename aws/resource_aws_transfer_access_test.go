@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSTransferAccess_s3_basic(t *testing.T) {
@@ -126,7 +127,7 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 				Config: testAccAWSTransferAccessS3BasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferAccessExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTransferAccess(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

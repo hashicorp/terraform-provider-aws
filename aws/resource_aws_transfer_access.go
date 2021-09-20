@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsTransferAccess() *schema.Resource {
+func ResourceAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTransferAccessCreate,
-		Read:   resourceAwsTransferAccessRead,
-		Update: resourceAwsTransferAccessUpdate,
-		Delete: resourceAwsTransferAccessDelete,
+		Create: resourceAccessCreate,
+		Read:   resourceAccessRead,
+		Update: resourceAccessUpdate,
+		Delete: resourceAccessDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -114,7 +114,7 @@ func resourceAwsTransferAccess() *schema.Resource {
 	}
 }
 
-func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	externalID := d.Get("external_id").(string)
@@ -158,10 +158,10 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(id)
 
-	return resourceAwsTransferAccessRead(d, meta)
+	return resourceAccessRead(d, meta)
 }
 
-func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
@@ -199,7 +199,7 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
@@ -244,10 +244,10 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error updating Transfer Access (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsTransferAccessRead(d, meta)
+	return resourceAccessRead(d, meta)
 }
 
-func resourceAwsTransferAccessDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())

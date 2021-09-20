@@ -26,12 +26,12 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func resourceAwsTransferServer() *schema.Resource {
+func ResourceServer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTransferServerCreate,
-		Read:   resourceAwsTransferServerRead,
-		Update: resourceAwsTransferServerUpdate,
-		Delete: resourceAwsTransferServerDelete,
+		Create: resourceServerCreate,
+		Read:   resourceServerRead,
+		Update: resourceServerUpdate,
+		Delete: resourceServerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -194,7 +194,7 @@ func resourceAwsTransferServer() *schema.Resource {
 	}
 }
 
-func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -309,10 +309,10 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsTransferServerRead(d, meta)
+	return resourceServerRead(d, meta)
 }
 
-func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -392,7 +392,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -594,10 +594,10 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsTransferServerRead(d, meta)
+	return resourceServerRead(d, meta)
 }
 
-func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
