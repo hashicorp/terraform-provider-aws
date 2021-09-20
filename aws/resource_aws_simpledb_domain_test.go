@@ -18,7 +18,7 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, simpledb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSimpleDBDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 }
 
 func testAccCheckAWSSimpleDBDomainDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).simpledbconn
+	conn := acctest.Provider.Meta().(*AWSClient).simpledbconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_simpledb_domain" {
@@ -73,7 +73,7 @@ func testAccCheckAWSSimpleDBDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SimpleDB domain with that name exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).simpledbconn
+		conn := acctest.Provider.Meta().(*AWSClient).simpledbconn
 		input := &simpledb.DomainMetadataInput{
 			DomainName: aws.String(rs.Primary.ID),
 		}
