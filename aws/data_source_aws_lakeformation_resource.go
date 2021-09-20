@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLakeFormationResource() *schema.Resource {
@@ -34,7 +35,7 @@ func dataSourceAwsLakeFormationResource() *schema.Resource {
 }
 
 func dataSourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.DescribeResourceInput{}
 

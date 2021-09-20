@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLakeFormationResource() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 }
 
 func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.RegisterResourceInput{
@@ -66,7 +67,7 @@ func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DescribeResourceInput{
@@ -99,7 +100,7 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLakeFormationResourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DeregisterResourceInput{
