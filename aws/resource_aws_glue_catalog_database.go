@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueCatalogDatabase() *schema.Resource {
+func ResourceCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueCatalogDatabaseCreate,
-		Read:   resourceAwsGlueCatalogDatabaseRead,
-		Update: resourceAwsGlueCatalogDatabaseUpdate,
-		Delete: resourceAwsGlueCatalogDatabaseDelete,
+		Create: resourceCatalogDatabaseCreate,
+		Read:   resourceCatalogDatabaseRead,
+		Update: resourceCatalogDatabaseUpdate,
+		Delete: resourceCatalogDatabaseDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
@@ -118,10 +118,10 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
 
-	return resourceAwsGlueCatalogDatabaseRead(d, meta)
+	return resourceCatalogDatabaseRead(d, meta)
 }
 
-func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, name, err := readAwsGlueCatalogID(d.Id())
@@ -158,10 +158,10 @@ func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsGlueCatalogDatabaseRead(d, meta)
+	return resourceCatalogDatabaseRead(d, meta)
 }
 
-func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, name, err := readAwsGlueCatalogID(d.Id())
@@ -212,7 +212,7 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsGlueCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())

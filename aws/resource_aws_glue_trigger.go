@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueTrigger() *schema.Resource {
+func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueTriggerCreate,
-		Read:   resourceAwsGlueTriggerRead,
-		Update: resourceAwsGlueTriggerUpdate,
-		Delete: resourceAwsGlueTriggerDelete,
+		Create: resourceTriggerCreate,
+		Read:   resourceTriggerRead,
+		Update: resourceTriggerUpdate,
+		Delete: resourceTriggerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -174,7 +174,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -253,10 +253,10 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsGlueTriggerRead(d, meta)
+	return resourceTriggerRead(d, meta)
 }
 
-func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -334,7 +334,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("actions", "description", "predicate", "schedule") {
@@ -406,7 +406,7 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsGlueTriggerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Trigger: %s", d.Id())

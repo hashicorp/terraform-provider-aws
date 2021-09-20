@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepGlueRegistry(region string) error {
 	}
 	for _, registry := range listOutput.Registries {
 		arn := aws.StringValue(registry.RegistryArn)
-		r := resourceAwsGlueRegistry()
+		r := ResourceRegistry()
 		d := r.Data(nil)
 		d.SetId(arn)
 
@@ -179,7 +180,7 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 				Config: testAccAWSGlueRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueRegistry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueJob() *schema.Resource {
+func ResourceJob() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueJobCreate,
-		Read:   resourceAwsGlueJobRead,
-		Update: resourceAwsGlueJobUpdate,
-		Delete: resourceAwsGlueJobDelete,
+		Create: resourceJobCreate,
+		Read:   resourceJobRead,
+		Update: resourceJobUpdate,
+		Delete: resourceJobDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -158,7 +158,7 @@ func resourceAwsGlueJob() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -230,10 +230,10 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	return resourceAwsGlueJobRead(d, meta)
+	return resourceJobRead(d, meta)
 }
 
-func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
+func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -322,7 +322,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("command", "connections", "default_arguments", "description",
@@ -403,10 +403,10 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsGlueJobRead(d, meta)
+	return resourceJobRead(d, meta)
 }
 
-func resourceAwsGlueJobDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())

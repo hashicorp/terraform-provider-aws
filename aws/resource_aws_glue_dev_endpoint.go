@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueDevEndpoint() *schema.Resource {
+func ResourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueDevEndpointCreate,
-		Read:   resourceAwsGlueDevEndpointRead,
+		Create: resourceDevEndpointCreate,
+		Read:   resourceDevEndpointRead,
 		Update: resourceAwsDevEndpointUpdate,
 		Delete: resourceAwsDevEndpointDelete,
 
@@ -164,7 +164,7 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -261,10 +261,10 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsGlueDevEndpointRead(d, meta)
+	return resourceDevEndpointRead(d, meta)
 }
 
-func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -503,7 +503,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsGlueDevEndpointRead(d, meta)
+	return resourceDevEndpointRead(d, meta)
 }
 
 func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {

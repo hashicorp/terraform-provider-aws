@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsGlueScript() *schema.Resource {
+func DataSourceScript() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsGlueScriptRead,
+		Read: dataSourceScriptRead,
 		Schema: map[string]*schema.Schema{
 			"dag_edge": {
 				Type:     schema.TypeList,
@@ -98,7 +98,7 @@ func dataSourceAwsGlueScript() *schema.Resource {
 	}
 }
 
-func dataSourceAwsGlueScriptRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceScriptRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	dagEdge := d.Get("dag_edge").([]interface{})

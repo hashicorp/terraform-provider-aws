@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -675,7 +676,7 @@ func TestAccAWSGlueJob_disappears(t *testing.T) {
 				Config: testAccAWSGlueJobConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueJob(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceJob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

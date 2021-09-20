@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueMLTransform() *schema.Resource {
+func ResourceMLTransform() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueMLTransformCreate,
-		Read:   resourceAwsGlueMLTransformRead,
-		Update: resourceAwsGlueMLTransformUpdate,
-		Delete: resourceAwsGlueMLTransformDelete,
+		Create: resourceMLTransformCreate,
+		Read:   resourceMLTransformRead,
+		Update: resourceMLTransformUpdate,
+		Delete: resourceMLTransformDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -174,7 +174,7 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -220,10 +220,10 @@ func resourceAwsGlueMLTransformCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.TransformId))
 
-	return resourceAwsGlueMLTransformRead(d, meta)
+	return resourceMLTransformRead(d, meta)
 }
 
-func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -303,7 +303,7 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
@@ -357,10 +357,10 @@ func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsGlueMLTransformRead(d, meta)
+	return resourceMLTransformRead(d, meta)
 }
 
-func resourceAwsGlueMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())

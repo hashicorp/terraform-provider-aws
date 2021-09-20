@@ -10,6 +10,7 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func CreateTablePolicy(action string) string {
@@ -65,7 +66,7 @@ func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 				Config: testAccAWSGlueResourcePolicy_Required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSGlueResourcePolicy(resourceName, "glue:CreateTable"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

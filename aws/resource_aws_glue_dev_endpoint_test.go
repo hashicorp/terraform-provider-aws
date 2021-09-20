@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const (
@@ -608,7 +609,7 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueDevEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDevEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

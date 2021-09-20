@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -436,7 +437,7 @@ func TestAccAWSGlueClassifier_disappears(t *testing.T) {
 				Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueClassifier(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

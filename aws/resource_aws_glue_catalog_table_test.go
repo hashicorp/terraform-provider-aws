@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -598,7 +599,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -651,7 +652,7 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

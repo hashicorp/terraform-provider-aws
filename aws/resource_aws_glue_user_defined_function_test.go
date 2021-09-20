@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
@@ -108,7 +109,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueUserDefinedFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

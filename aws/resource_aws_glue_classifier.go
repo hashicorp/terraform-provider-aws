@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueClassifier() *schema.Resource {
+func ResourceClassifier() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueClassifierCreate,
-		Read:   resourceAwsGlueClassifierRead,
-		Update: resourceAwsGlueClassifierUpdate,
-		Delete: resourceAwsGlueClassifierDelete,
+		Create: resourceClassifierCreate,
+		Read:   resourceClassifierRead,
+		Update: resourceClassifierUpdate,
+		Delete: resourceClassifierDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -158,7 +158,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueClassifierCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
@@ -192,10 +192,10 @@ func resourceAwsGlueClassifierCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(name)
 
-	return resourceAwsGlueClassifierRead(d, meta)
+	return resourceClassifierRead(d, meta)
 }
 
-func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetClassifierInput{
@@ -241,7 +241,7 @@ func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsGlueClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateClassifierInput{}
@@ -275,7 +275,7 @@ func resourceAwsGlueClassifierUpdate(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsGlueClassifierDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClassifierDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())

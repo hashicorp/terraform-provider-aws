@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueUserDefinedFunction() *schema.Resource {
+func ResourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueUserDefinedFunctionCreate,
-		Read:   resourceAwsGlueUserDefinedFunctionRead,
-		Update: resourceAwsGlueUserDefinedFunctionUpdate,
-		Delete: resourceAwsGlueUserDefinedFunctionDelete,
+		Create: resourceUserDefinedFunctionCreate,
+		Read:   resourceUserDefinedFunctionRead,
+		Update: resourceUserDefinedFunctionUpdate,
+		Delete: resourceUserDefinedFunctionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -87,7 +87,7 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
@@ -106,10 +106,10 @@ func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, funcName))
 
-	return resourceAwsGlueUserDefinedFunctionRead(d, meta)
+	return resourceUserDefinedFunctionRead(d, meta)
 }
 
-func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
@@ -128,10 +128,10 @@ func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error updating Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsGlueUserDefinedFunctionRead(d, meta)
+	return resourceUserDefinedFunctionRead(d, meta)
 }
 
-func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
@@ -184,7 +184,7 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsGlueUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {

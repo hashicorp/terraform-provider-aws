@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepGlueCatalogDatabases(region string) error {
 
 			log.Printf("[INFO] Deleting Glue Catalog Database: %s", name)
 
-			r := resourceAwsGlueCatalogDatabase()
+			r := ResourceCatalogDatabase()
 			d := r.Data(nil)
 			d.SetId("???")
 			d.Set("name", name)
@@ -171,7 +172,7 @@ func TestAccAWSGlueCatalogDatabase_disappears(t *testing.T) {
 				Config: testAccGlueCatalogDatabase_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogDatabase(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

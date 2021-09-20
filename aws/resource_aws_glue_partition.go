@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGluePartition() *schema.Resource {
+func ResourcePartition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGluePartitionCreate,
-		Read:   resourceAwsGluePartitionRead,
-		Update: resourceAwsGluePartitionUpdate,
-		Delete: resourceAwsGluePartitionDelete,
+		Create: resourcePartitionCreate,
+		Read:   resourcePartitionRead,
+		Update: resourcePartitionUpdate,
+		Delete: resourcePartitionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -198,7 +198,7 @@ func resourceAwsGluePartition() *schema.Resource {
 	}
 }
 
-func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
@@ -220,10 +220,10 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(tfglue.CreateAwsGluePartitionID(catalogID, dbName, tableName, values))
 
-	return resourceAwsGluePartitionRead(d, meta)
+	return resourcePartitionRead(d, meta)
 }
 
-func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
@@ -265,7 +265,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(d.Id())
@@ -286,10 +286,10 @@ func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error updating Glue Partition: %w", err)
 	}
 
-	return resourceAwsGluePartitionRead(d, meta)
+	return resourcePartitionRead(d, meta)
 }
 
-func resourceAwsGluePartitionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, values, tableErr := tfglue.ReadAwsGluePartitionID(d.Id())

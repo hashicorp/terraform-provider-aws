@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueRegistry() *schema.Resource {
+func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueRegistryCreate,
-		Read:   resourceAwsGlueRegistryRead,
-		Update: resourceAwsGlueRegistryUpdate,
-		Delete: resourceAwsGlueRegistryDelete,
+		Create: resourceRegistryCreate,
+		Read:   resourceRegistryRead,
+		Update: resourceRegistryUpdate,
+		Delete: resourceRegistryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,7 +53,7 @@ func resourceAwsGlueRegistry() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueRegistryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -74,10 +74,10 @@ func resourceAwsGlueRegistryCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(aws.StringValue(output.RegistryArn))
 
-	return resourceAwsGlueRegistryRead(d, meta)
+	return resourceRegistryRead(d, meta)
 }
 
-func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -123,7 +123,7 @@ func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsGlueRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("description") {
@@ -149,10 +149,10 @@ func resourceAwsGlueRegistryUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsGlueRegistryRead(d, meta)
+	return resourceRegistryRead(d, meta)
 }
 
-func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())

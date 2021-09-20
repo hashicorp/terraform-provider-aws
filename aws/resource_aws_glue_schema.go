@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueSchema() *schema.Resource {
+func ResourceSchema() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueSchemaCreate,
-		Read:   resourceAwsGlueSchemaRead,
-		Update: resourceAwsGlueSchemaUpdate,
-		Delete: resourceAwsGlueSchemaDelete,
+		Create: resourceSchemaCreate,
+		Read:   resourceSchemaRead,
+		Update: resourceSchemaUpdate,
+		Delete: resourceSchemaDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -93,7 +93,7 @@ func resourceAwsGlueSchema() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -129,10 +129,10 @@ func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for Glue Schema (%s) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsGlueSchemaRead(d, meta)
+	return resourceSchemaRead(d, meta)
 }
 
-func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -192,7 +192,7 @@ func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateSchemaInput{
@@ -250,10 +250,10 @@ func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsGlueSchemaRead(d, meta)
+	return resourceSchemaRead(d, meta)
 }
 
-func resourceAwsGlueSchemaDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
