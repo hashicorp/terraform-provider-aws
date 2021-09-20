@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -262,7 +263,7 @@ func updateComputedAttributesOnIntentCreateVersion(_ context.Context, d *schema.
 	return nil
 }
 
-func hasIntentConfigChanges(d resourceDiffer) bool {
+func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"description",
 		"conclusion_statement",
@@ -546,7 +547,7 @@ var lexCodeHookResource = &schema.Resource{
 		"uri": {
 			Type:         schema.TypeString,
 			Required:     true,
-			ValidateFunc: validateArn,
+			ValidateFunc: verify.ValidARN,
 		},
 	},
 }

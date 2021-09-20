@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -121,7 +122,7 @@ func updateComputedAttributesOnSlotTypeCreateVersion(_ context.Context, d *schem
 	return nil
 }
 
-func hasSlotTypeConfigChanges(d resourceDiffer) bool {
+func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"description",
 		"enumeration_value",
