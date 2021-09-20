@@ -68,7 +68,7 @@ func testSweepLightsailStaticIps(region string) error {
 	return nil
 }
 
-func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
+func TestAccLightsailStaticIP_basic(t *testing.T) {
 	var staticIp lightsail.StaticIp
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
@@ -88,7 +88,7 @@ func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
+func TestAccLightsailStaticIP_disappears(t *testing.T) {
 	var staticIp lightsail.StaticIp
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 

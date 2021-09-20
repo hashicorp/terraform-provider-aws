@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
+func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
@@ -44,7 +44,7 @@ func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
+func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
@@ -79,7 +79,7 @@ func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
+func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_instance_public_ports.test"
 

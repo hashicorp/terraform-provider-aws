@@ -16,7 +16,7 @@ import (
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
-func TestAccAWSLightsailDomain_basic(t *testing.T) {
+func TestAccLightsailDomain_basic(t *testing.T) {
 	var domain lightsail.Domain
 	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
 	resourceName := "aws_lightsail_domain.test"
@@ -37,7 +37,7 @@ func TestAccAWSLightsailDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailDomain_disappears(t *testing.T) {
+func TestAccLightsailDomain_disappears(t *testing.T) {
 	var domain lightsail.Domain
 	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
 	resourceName := "aws_lightsail_domain.test"

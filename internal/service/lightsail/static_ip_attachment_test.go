@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
+func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 	var staticIp lightsail.StaticIp
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 	instanceName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
@@ -38,7 +38,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
+func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 	var staticIp lightsail.StaticIp
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 	instanceName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
