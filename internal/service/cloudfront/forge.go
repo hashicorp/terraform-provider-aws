@@ -2,6 +2,7 @@ package cloudfront
 
 import (
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // There are several parts of the AWS API that will sort lists of strings,
