@@ -1,4 +1,4 @@
-package finder
+package sts
 
 import (
 	"github.com/aws/aws-sdk-go/service/sts"
