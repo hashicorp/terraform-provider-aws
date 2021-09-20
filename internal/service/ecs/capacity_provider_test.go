@@ -51,7 +51,7 @@ func testSweepEcsCapacityProviders(region string) error {
 				continue
 			}
 
-			r := ResourceCapacityProvider()
+			r := tfecs.ResourceCapacityProvider()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -130,7 +130,7 @@ func TestAccAWSEcsCapacityProvider_disappears(t *testing.T) {
 				Config: testAccAWSEcsCapacityProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCapacityProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCapacityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

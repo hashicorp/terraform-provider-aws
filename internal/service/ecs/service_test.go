@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func init() {
@@ -194,7 +195,7 @@ func TestAccAWSEcsService_disappears(t *testing.T) {
 				Config: testAccAWSEcsService(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

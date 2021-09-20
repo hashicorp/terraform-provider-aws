@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"testing"
 )
 
@@ -78,7 +79,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_basic(t *testing.T) {
     }
 ]`
 
-	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +126,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
     }
 ]`
 
-	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +168,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *t
 		err   error
 	)
 
-	equal, err = EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +176,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *t
 		t.Fatal("Expected definitions to differ.")
 	}
 
-	equal, err = EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
+	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -428,7 +429,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 ]
 `
 
-	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -466,7 +467,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_negative(t *testing.T) {
     }
 ]`
 
-	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -553,7 +554,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testi
     }
 ]`
 
-	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
