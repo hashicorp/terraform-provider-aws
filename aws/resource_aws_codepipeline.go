@@ -26,12 +26,12 @@ const (
 	CodePipelineGitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
-func resourceAwsCodePipeline() *schema.Resource {
+func Resource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodePipelineCreate,
-		Read:   resourceAwsCodePipelineRead,
-		Update: resourceAwsCodePipelineUpdate,
-		Delete: resourceAwsCodePipelineDelete,
+		Create: resourceCreate,
+		Read:   resourceRead,
+		Update: resourceUpdate,
+		Delete: resourceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -178,7 +178,7 @@ func resourceAwsCodePipeline() *schema.Resource {
 	}
 }
 
-func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -220,7 +220,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(resp.Pipeline.Name))
 
-	return resourceAwsCodePipelineRead(d, meta)
+	return resourceRead(d, meta)
 }
 
 func expandAwsCodePipeline(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
@@ -497,7 +497,7 @@ func flattenAwsCodePipelineActionsInputArtifacts(artifacts []*codepipeline.Input
 	return values
 }
 
-func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -558,7 +558,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	pipeline, err := expandAwsCodePipeline(d)
@@ -583,10 +583,10 @@ func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsCodePipelineRead(d, meta)
+	return resourceRead(d, meta)
 }
 
-func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	_, err := conn.DeletePipeline(&codepipeline.DeletePipelineInput{

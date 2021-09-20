@@ -32,13 +32,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsInstance() *schema.Resource {
+func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsInstanceCreate,
-		Read:   resourceAwsInstanceRead,
-		Update: resourceAwsInstanceUpdate,
-		Delete: resourceAwsInstanceDelete,
+		Create: resourceInstanceCreate,
+		Read:   resourceInstanceRead,
+		Update: resourceInstanceUpdate,
+		Delete: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -712,7 +712,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
 }
 
-func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -880,10 +880,10 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Update if we need to
-	return resourceAwsInstanceUpdate(d, meta)
+	return resourceInstanceUpdate(d, meta)
 }
 
-func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1189,7 +1189,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") && !d.IsNewResource() {
@@ -1713,10 +1713,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
-	return resourceAwsInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
-func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))

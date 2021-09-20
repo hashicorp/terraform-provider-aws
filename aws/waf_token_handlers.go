@@ -17,8 +17,8 @@ type WafRetryer struct {
 type withTokenFunc func(token *string) (interface{}, error)
 
 func (t *WafRetryer) RetryWithToken(f withTokenFunc) (interface{}, error) {
-	awsMutexKV.Lock("WafRetryer")
-	defer awsMutexKV.Unlock("WafRetryer")
+	conns.GlobalMutexKV.Lock("WafRetryer")
+	defer conns.GlobalMutexKV.Unlock("WafRetryer")
 
 	var out interface{}
 	var tokenOut *waf.GetChangeTokenOutput

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRegions() *schema.Resource {
+func DataSourceRegions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRegionsRead,
+		Read: dataSourceRegionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -30,7 +30,7 @@ func dataSourceAwsRegions() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	connection := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Reading regions.")

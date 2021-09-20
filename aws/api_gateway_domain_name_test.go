@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // API Gateway Edge-Optimized Domain Name can only be created with ACM Certificates in specific regions.
@@ -48,7 +49,7 @@ func testAccPreCheckApigatewayEdgeDomainName(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderApigatewayEdgeDomainNameConfigure.Do(func() {
-		testAccProviderApigatewayEdgeDomainName = Provider()
+		testAccProviderApigatewayEdgeDomainName = provider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,

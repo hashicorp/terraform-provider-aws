@@ -24,11 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func resourceAwsLaunchConfiguration() *schema.Resource {
+func ResourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLaunchConfigurationCreate,
-		Read:   resourceAwsLaunchConfigurationRead,
-		Delete: resourceAwsLaunchConfigurationDelete,
+		Create: resourceLaunchConfigurationCreate,
+		Read:   resourceLaunchConfigurationRead,
+		Delete: resourceLaunchConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -356,7 +356,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -562,10 +562,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(lcName)
 
-	return resourceAwsLaunchConfigurationRead(d, meta)
+	return resourceLaunchConfigurationRead(d, meta)
 }
 
-func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -634,7 +634,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	input := &autoscaling.DeleteLaunchConfigurationInput{
 		LaunchConfigurationName: aws.String(d.Id()),

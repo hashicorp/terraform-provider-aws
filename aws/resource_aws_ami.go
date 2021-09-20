@@ -26,15 +26,15 @@ const (
 	AWSAMIRetryMinTimeout    = 3 * time.Second
 )
 
-func resourceAwsAmi() *schema.Resource {
+func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmiCreate,
+		Create: resourceAMICreate,
 		// The Read, Update and Delete operations are shared with aws_ami_copy
 		// and aws_ami_from_instance, since they differ only in how the image
 		// is created.
-		Read:   resourceAwsAmiRead,
-		Update: resourceAwsAmiUpdate,
-		Delete: resourceAwsAmiDelete,
+		Read:   resourceAMIRead,
+		Update: resourceAMIUpdate,
+		Delete: resourceAMIDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -250,7 +250,7 @@ func resourceAwsAmi() *schema.Resource {
 	}
 }
 
-func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -324,10 +324,10 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceAwsAmiRead(d, meta)
+	return resourceAMIRead(d, meta)
 }
 
-func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -454,7 +454,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -477,10 +477,10 @@ func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsAmiRead(d, meta)
+	return resourceAMIRead(d, meta)
 }
 
-func resourceAwsAmiDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DeregisterImageInput{

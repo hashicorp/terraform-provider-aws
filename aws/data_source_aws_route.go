@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRoute() *schema.Resource {
+func DataSourceRoute() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRouteRead,
+		Read: dataSourceRouteRead,
 
 		Schema: map[string]*schema.Schema{
 			"route_table_id": {
@@ -94,7 +94,7 @@ func dataSourceAwsRoute() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID := d.Get("route_table_id").(string)

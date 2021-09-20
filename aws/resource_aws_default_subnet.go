@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDefaultSubnet() *schema.Resource {
+func ResourceDefaultSubnet() *schema.Resource {
 	// reuse aws_subnet schema, and methods for READ, UPDATE
-	dsubnet := resourceAwsSubnet()
-	dsubnet.Create = resourceAwsDefaultSubnetCreate
-	dsubnet.Delete = resourceAwsDefaultSubnetDelete
+	dsubnet := ResourceSubnet()
+	dsubnet.Create = resourceDefaultSubnetCreate
+	dsubnet.Delete = resourceDefaultSubnetDelete
 
 	// availability_zone is a required value for Default Subnets
 	dsubnet.Schema["availability_zone"] = &schema.Schema{
@@ -57,7 +57,7 @@ func resourceAwsDefaultSubnet() *schema.Resource {
 	return dsubnet
 }
 
-func resourceAwsDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeSubnetsInput{}
@@ -78,10 +78,10 @@ func resourceAwsDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(resp.Subnets[0].SubnetId))
-	return resourceAwsSubnetUpdate(d, meta)
+	return resourceSubnetUpdate(d, meta)
 }
 
-func resourceAwsDefaultSubnetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default Subnet. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

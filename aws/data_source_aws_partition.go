@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsPartition() *schema.Resource {
+func DataSourcePartition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsPartitionRead,
+		Read: dataSourcePartitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"partition": {
@@ -30,7 +30,7 @@ func dataSourceAwsPartition() *schema.Resource {
 	}
 }
 
-func dataSourceAwsPartitionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient)
 
 	log.Printf("[DEBUG] Reading Partition.")

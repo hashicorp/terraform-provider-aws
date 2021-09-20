@@ -603,7 +603,7 @@ func (c *Config) Client() (interface{}, error) {
 		Region:                           c.Region,
 		ResourceGroupsConn:               resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
 		ResourceGroupsTaggingConn:        resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroupstaggingapi"])})),
-		ReverseDNSPrefix:                 ReverseDns(DNSSuffix),
+		ReverseDNSPrefix:                 ReverseDNS(DNSSuffix),
 		Route53DomainsConn:               route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
 		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
 		Route53RecoveryReadinessConn:     route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"])})),
@@ -972,3 +972,17 @@ func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
 
 	return platforms, nil
 }
+
+// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
+func ReverseDNS(hostname string) string {
+	parts := strings.Split(hostname, ".")
+
+	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
+		parts[i], parts[j] = parts[j], parts[i]
+	}
+
+	return strings.Join(parts, ".")
+}
+
+// This is a global MutexKV for use within this plugin.
+var GlobalMutexKV = NewMutexKV()

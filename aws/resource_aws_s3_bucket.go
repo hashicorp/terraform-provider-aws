@@ -32,12 +32,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3Bucket() *schema.Resource {
+func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketCreate,
-		Read:   resourceAwsS3BucketRead,
-		Update: resourceAwsS3BucketUpdate,
-		Delete: resourceAwsS3BucketDelete,
+		Create: resourceBucketCreate,
+		Read:   resourceBucketRead,
+		Update: resourceBucketUpdate,
+		Delete: resourceBucketDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -627,7 +627,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	// Get the bucket and acl
@@ -697,10 +697,10 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Assign the bucket name as the resource ID
 	d.SetId(bucket)
-	return resourceAwsS3BucketUpdate(d, meta)
+	return resourceBucketUpdate(d, meta)
 }
 
-func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	if d.HasChange("tags_all") {
@@ -717,7 +717,7 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("policy") {
-		if err := resourceAwsS3BucketPolicyUpdate(conn, d); err != nil {
+		if err := resourceBucketPolicyUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -793,10 +793,10 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsS3BucketRead(d, meta)
+	return resourceBucketRead(d, meta)
 }
 
-func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1353,7 +1353,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	log.Printf("[DEBUG] S3 Delete Bucket: %s", d.Id())
@@ -1389,7 +1389,7 @@ func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// this line recurses until all objects are deleted or an error is returned
-			return resourceAwsS3BucketDelete(d, meta)
+			return resourceBucketDelete(d, meta)
 		}
 	}
 
@@ -1400,7 +1400,7 @@ func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsS3BucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	policy := d.Get("policy").(string)
 

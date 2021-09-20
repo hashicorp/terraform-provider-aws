@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRegion() *schema.Resource {
+func DataSourceRegion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRegionRead,
+		Read: dataSourceRegionRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -34,7 +34,7 @@ func dataSourceAwsRegion() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRegionRead(d *schema.ResourceData, meta interface{}) error {
 	providerRegion := meta.(*conns.AWSClient).Region
 
 	var region *endpoints.Region

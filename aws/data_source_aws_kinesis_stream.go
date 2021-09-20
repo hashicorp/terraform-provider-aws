@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKinesisStream() *schema.Resource {
+func DataSourceStream() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKinesisStreamRead,
+		Read: dataSourceStreamRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -64,7 +64,7 @@ func dataSourceAwsKinesisStream() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

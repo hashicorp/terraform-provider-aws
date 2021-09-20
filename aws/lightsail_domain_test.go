@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // Lightsail Domains can only be created in specific regions.
@@ -34,7 +35,7 @@ var testAccProviderLightsailDomainConfigure sync.Once
 
 // Prevent panic with acctest.CheckResourceDisappears
 func init() {
-	testAccProviderLightsailDomain = Provider()
+	testAccProviderLightsailDomain = provider.Provider()
 }
 
 // testAccPreCheckLightsailDomain verifies AWS credentials and that Lightsail Domains is supported

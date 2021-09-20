@@ -38,12 +38,12 @@ var routeValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
-func resourceAwsRoute() *schema.Resource {
+func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRouteCreate,
-		Read:   resourceAwsRouteRead,
-		Update: resourceAwsRouteUpdate,
-		Delete: resourceAwsRouteDelete,
+		Create: resourceRouteCreate,
+		Read:   resourceRouteRead,
+		Update: resourceRouteUpdate,
+		Delete: resourceRouteDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRouteImport,
 		},
@@ -170,7 +170,7 @@ func resourceAwsRoute() *schema.Resource {
 	}
 }
 
-func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
@@ -253,10 +253,10 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 
-	return resourceAwsRouteRead(d, meta)
+	return resourceRouteRead(d, meta)
 }
 
-func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
@@ -318,7 +318,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
@@ -392,10 +392,10 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
 
-	return resourceAwsRouteRead(d, meta)
+	return resourceRouteRead(d, meta)
 }
 
-func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)

@@ -22,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpc() *schema.Resource {
+func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsVpcCreate,
-		Read:   resourceAwsVpcRead,
-		Update: resourceAwsVpcUpdate,
-		Delete: resourceAwsVpcDelete,
+		Create: resourceVPCCreate,
+		Read:   resourceVPCRead,
+		Update: resourceVPCUpdate,
+		Delete: resourceVPCDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcInstanceImport,
 		},
@@ -138,7 +138,7 @@ func resourceAwsVpc() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -245,10 +245,10 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsVpcRead(d, meta)
+	return resourceVPCRead(d, meta)
 }
 
-func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -429,7 +429,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcid := d.Id()
@@ -579,10 +579,10 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsVpcRead(d, meta)
+	return resourceVPCRead(d, meta)
 }
 
-func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	vpcID := d.Id()
 	deleteVpcOpts := &ec2.DeleteVpcInput{

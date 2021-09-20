@@ -97,7 +97,7 @@ var Provider *schema.Provider
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = Provider()
+	Provider = provider.Provider()
 
 	Providers = map[string]*schema.Provider{
 		ProviderName: Provider,
@@ -106,7 +106,7 @@ func init() {
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		ProviderName: func() (*schema.Provider, error) { return Provider(), nil }, //nolint:unparam
+		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
 	}
 }
 
@@ -115,7 +115,7 @@ func FactoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p := Provider()
+		p := provider.Provider()
 
 		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 			return p, nil
@@ -646,7 +646,7 @@ func PartitionDNSSuffix() string {
 
 func PartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return ReverseDns(partition.DNSSuffix())
+		return conns.ReverseDNS(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -1263,7 +1263,7 @@ func CheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
 
 			providerClient := provo.Meta().(*conns.AWSClient)
 
-			for _, endpointServiceName := range endpointServiceNames {
+			for _, endpointServiceName := range provider.EndpointServiceNames {
 				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(endpointServiceName))
 
 				if !providerClientField.IsValid() {

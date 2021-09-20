@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLaunchTemplate() *schema.Resource {
+func ResourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLaunchTemplateCreate,
-		Read:   resourceAwsLaunchTemplateRead,
-		Update: resourceAwsLaunchTemplateUpdate,
-		Delete: resourceAwsLaunchTemplateDelete,
+		Create: resourceLaunchTemplateCreate,
+		Read:   resourceLaunchTemplateRead,
+		Update: resourceLaunchTemplateUpdate,
+		Delete: resourceLaunchTemplateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -657,7 +657,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 	}
 }
 
-func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -691,10 +691,10 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Launch Template created: %q (version %d)",
 		*launchTemplate.LaunchTemplateId, *launchTemplate.LatestVersionNumber)
 
-	return resourceAwsLaunchTemplateRead(d, meta)
+	return resourceLaunchTemplateRead(d, meta)
 }
 
-func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -859,7 +859,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	latestVersion := int64(d.Get("latest_version").(int))
@@ -918,10 +918,10 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsLaunchTemplateRead(d, meta)
+	return resourceLaunchTemplateRead(d, meta)
 }
 
-func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Launch Template destroy: %v", d.Id())

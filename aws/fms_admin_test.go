@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // Firewall Management Service admin APIs are only enabled in specific regions, otherwise:
@@ -40,7 +41,7 @@ func testAccPreCheckFmsAdmin(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderFmsAdminConfigure.Do(func() {
-		testAccProviderFmsAdmin = Provider()
+		testAccProviderFmsAdmin = provider.Provider()
 
 		config := map[string]interface{}{
 			"region": testAccGetFmsAdminRegion(),

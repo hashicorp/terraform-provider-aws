@@ -20,12 +20,12 @@ const (
 	kinesisStreamStatusDeleted = "DESTROYED"
 )
 
-func resourceAwsKinesisStream() *schema.Resource {
+func ResourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisStreamCreate,
-		Read:   resourceAwsKinesisStreamRead,
-		Update: resourceAwsKinesisStreamUpdate,
-		Delete: resourceAwsKinesisStreamDelete,
+		Create: resourceStreamCreate,
+		Read:   resourceStreamRead,
+		Update: resourceStreamUpdate,
+		Delete: resourceStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsKinesisStreamImport,
 		},
@@ -114,7 +114,7 @@ func resourceAwsKinesisStreamImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
 	createOpts := &kinesis.CreateStreamInput{
@@ -149,10 +149,10 @@ func resourceAwsKinesisStreamCreate(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", s.arn)
 	d.Set("shard_count", len(s.openShards))
 
-	return resourceAwsKinesisStreamUpdate(d, meta)
+	return resourceStreamUpdate(d, meta)
 }
 
-func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
 	sn := d.Get("name").(string)
@@ -178,10 +178,10 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceAwsKinesisStreamRead(d, meta)
+	return resourceStreamRead(d, meta)
 }
 
-func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -232,7 +232,7 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
 

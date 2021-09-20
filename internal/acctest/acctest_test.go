@@ -11,13 +11,13 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	if err := Provider().InternalValidate(); err != nil {
+	if err := provider.Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ *schema.Provider = Provider()
+	var _ *schema.Provider = provider.Provider()
 }
 
 func TestReverseDns(t *testing.T) {
@@ -56,7 +56,7 @@ func TestReverseDns(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
-			if got, want := ReverseDns(testCase.input), testCase.expected; got != want {
+			if got, want := conns.ReverseDNS(testCase.input), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}
 		})
@@ -168,7 +168,7 @@ func TestAccAWSProvider_Endpoints(t *testing.T) {
 	var endpoints strings.Builder
 
 	// Initialize each endpoint configuration with matching name and value
-	for _, endpointServiceName := range endpointServiceNames {
+	for _, endpointServiceName := range provider.EndpointServiceNames {
 		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", endpointServiceName, endpointServiceName))
 	}
 

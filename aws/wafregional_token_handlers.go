@@ -19,8 +19,8 @@ type WafRegionalRetryer struct {
 type withRegionalTokenFunc func(token *string) (interface{}, error)
 
 func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{}, error) {
-	awsMutexKV.Lock(t.Region)
-	defer awsMutexKV.Unlock(t.Region)
+	conns.GlobalMutexKV.Lock(t.Region)
+	defer conns.GlobalMutexKV.Unlock(t.Region)
 
 	var out interface{}
 	var tokenOut *waf.GetChangeTokenOutput

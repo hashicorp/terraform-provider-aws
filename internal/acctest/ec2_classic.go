@@ -35,7 +35,7 @@ func PreCheckEC2Classic(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEc2ClassicConfigure.Do(func() {
-		ProviderEC2Classic = Provider()
+		ProviderEC2Classic = provider.Provider()
 
 		config := map[string]interface{}{
 			"region": EC2ClassicRegion(),
