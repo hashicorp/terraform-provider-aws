@@ -632,7 +632,7 @@ func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
-		listener, err := finder.ListenerByARN(conn, rs.Primary.ID)
+		listener, err := finder.FindListenerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
@@ -655,7 +655,7 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		listener, err := finder.ListenerByARN(conn, rs.Primary.ID)
+		listener, err := finder.FindListenerByARN(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			continue

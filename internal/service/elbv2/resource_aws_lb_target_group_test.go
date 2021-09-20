@@ -1429,7 +1429,7 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
-		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
+		targetGroup, err := finder.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
@@ -1472,7 +1472,7 @@ func testAccCheckAWSLBTargetGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
+		targetGroup, err := finder.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 			continue

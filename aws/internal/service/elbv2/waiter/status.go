@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func LoadBalancerState(conn *elbv2.ELBV2, arn string) resource.StateRefreshFunc {
+func statusLoadBalancerState(conn *elbv2.ELBV2, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &elbv2.DescribeLoadBalancersInput{
 			LoadBalancerArns: []*string{aws.String(arn)},

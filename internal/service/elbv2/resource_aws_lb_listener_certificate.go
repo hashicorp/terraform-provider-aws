@@ -81,7 +81,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error adding LB Listener Certificate: %w", err)
 	}
 
-	d.SetId(tfelbv2.ListenerCertificateCreateID(listenerArn, certificateArn))
+	d.SetId(tfelbv2.listenerCertificateCreateID(listenerArn, certificateArn))
 
 	return resourceListenerCertificateRead(d, meta)
 }
@@ -89,7 +89,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
-	listenerArn, certificateArn, err := tfelbv2.ListenerCertificateParseID(d.Id())
+	listenerArn, certificateArn, err := tfelbv2.listenerCertificateParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
 	}

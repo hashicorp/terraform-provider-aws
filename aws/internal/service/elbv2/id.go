@@ -8,7 +8,7 @@ import (
 
 const listenerCertificateIDSeparator = "_"
 
-func ListenerCertificateParseID(id string) (string, string, error) {
+func listenerCertificateParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, listenerCertificateIDSeparator, 2)
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
@@ -19,6 +19,6 @@ func ListenerCertificateParseID(id string) (string, string, error) {
 			"certificate-arn", id)
 }
 
-func ListenerCertificateCreateID(listenerArn, certificateArn string) string {
+func listenerCertificateCreateID(listenerArn, certificateArn string) string {
 	return strings.Join([]string{listenerArn, listenerCertificateIDSeparator, certificateArn}, "")
 }

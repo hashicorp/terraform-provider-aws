@@ -847,7 +847,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(waiter.loadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
