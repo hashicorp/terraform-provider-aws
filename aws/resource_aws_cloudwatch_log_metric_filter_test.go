@@ -20,7 +20,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,14 +113,14 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogMetricFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,14 +136,14 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -234,7 +234,7 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 		metricFilter, err := lookupCloudWatchLogMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
 		if err != nil {
 			return err
@@ -247,7 +247,7 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 }
 
 func testAccCheckAWSCloudWatchLogMetricFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_metric_filter" {
