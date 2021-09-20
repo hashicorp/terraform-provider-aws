@@ -1,4 +1,4 @@
-package aws
+package globalaccelerator_test
 
 import (
 	"fmt"

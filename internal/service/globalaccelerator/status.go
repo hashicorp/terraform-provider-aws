@@ -4,15 +4,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // statusAccelerator fetches the Accelerator and its Status
 func statusAccelerator(conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		accelerator, err := finder.FindAcceleratorByARN(conn, arn)
+		accelerator, err := FindAcceleratorByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -1,4 +1,4 @@
-package aws
+package globalaccelerator_test
 
 import (
 	"fmt"
@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	ec2finder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
@@ -434,7 +434,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupExists(name string, v *globalacce
 			return fmt.Errorf("No Global Accelerator endpoint group ID is set")
 		}
 
-		endpointGroup, err := finder.FindEndpointGroupByARN(conn, rs.Primary.ID)
+		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -454,7 +454,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error
 			continue
 		}
 
-		_, err := finder.FindEndpointGroupByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -475,7 +475,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGr
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := ec2finder.FindSecurityGroupByNameAndVPCID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		sg, err := tfec2.FindSecurityGroupByNameAndVPCID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
 		if tfresource.NotFound(err) {
 			// Already gone.
 			return nil

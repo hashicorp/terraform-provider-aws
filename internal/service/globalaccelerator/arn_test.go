@@ -1,11 +1,11 @@
-package globalaccelerator
+package globalaccelerator_test
 
 import (
 	"regexp"
 	"testing"
 
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func TestEndpointGroupARNToListenerARN(t *testing.T) {
