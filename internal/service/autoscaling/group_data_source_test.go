@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsAutoScalingGroupDataSource_basic(t *testing.T) {
+func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_autoscaling_group.test"
 	resourceName := "aws_autoscaling_group.match"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -44,7 +44,7 @@ func TestAccAwsAutoScalingGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
+func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 	datasourceName := "data.aws_autoscaling_group.test"
 	resourceName := "aws_autoscaling_group.test"
 

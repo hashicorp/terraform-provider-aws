@@ -70,7 +70,7 @@ func testSweepLaunchConfigurations(region string) error {
 	return nil
 }
 
-func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -97,7 +97,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -125,7 +125,7 @@ func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -153,7 +153,7 @@ func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -184,7 +184,7 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_configuration.test"
@@ -211,7 +211,7 @@ func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *testing.T) {
 	var ami ec2.Image
 	var conf autoscaling.LaunchConfiguration
 	amiCopyResourceName := "aws_ami_copy.test"
@@ -243,7 +243,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -278,7 +278,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_launch_configuration.test"
@@ -306,7 +306,7 @@ func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withSpotPrice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -333,7 +333,7 @@ func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withVPCClassicLink(t *testing.T) {
 	var vpc ec2.Vpc
 	var group ec2.SecurityGroup
 	var conf autoscaling.LaunchConfiguration
@@ -363,7 +363,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_launch_configuration.test"
@@ -390,7 +390,7 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withEncryption(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -417,7 +417,7 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_withGP3(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -449,7 +449,7 @@ func TestAccAWSLaunchConfiguration_withGP3(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_updateEBSBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -487,7 +487,7 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_metadataOptions(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_configuration.test"
@@ -517,7 +517,7 @@ func TestAccAWSLaunchConfiguration_metadataOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_launch_configuration.test"
@@ -549,7 +549,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
+func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 

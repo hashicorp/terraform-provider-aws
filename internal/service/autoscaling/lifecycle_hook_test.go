@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
+func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 	resourceName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingLifecycleHook_omitDefaultResult(t *testing.T) {
+func TestAccAutoScalingLifecycleHook_omitDefaultResult(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{

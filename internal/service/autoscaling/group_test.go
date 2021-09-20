@@ -92,7 +92,7 @@ func testSweepAutoscalingGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
+func TestAccAutoScalingGroup_basic(t *testing.T) {
 	var group autoscaling.Group
 	var lc autoscaling.LaunchConfiguration
 
@@ -184,7 +184,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_Name_Generated(t *testing.T) {
+func TestAccAutoScalingGroup_Name_generated(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 
@@ -219,7 +219,7 @@ func TestAccAWSAutoScalingGroup_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_NamePrefix(t *testing.T) {
+func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 
@@ -254,7 +254,7 @@ func TestAccAWSAutoScalingGroup_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_terminationPolicies(t *testing.T) {
+func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -323,7 +323,7 @@ func TestAccAWSAutoScalingGroup_terminationPolicies(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_tags(t *testing.T) {
+func TestAccAutoScalingGroup_tags(t *testing.T) {
 	var group autoscaling.Group
 
 	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
@@ -388,7 +388,7 @@ func TestAccAWSAutoScalingGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
+func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -437,7 +437,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
+func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -470,7 +470,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
+func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.bar"
 
@@ -547,7 +547,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
+func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
 
 	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
@@ -581,7 +581,7 @@ func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_enablingMetrics(t *testing.T) {
+func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 	var group autoscaling.Group
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
@@ -624,7 +624,7 @@ func TestAccAWSAutoScalingGroup_enablingMetrics(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_suspendingProcesses(t *testing.T) {
+func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 	var group autoscaling.Group
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
 
@@ -675,7 +675,7 @@ func TestAccAWSAutoScalingGroup_suspendingProcesses(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
+func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -717,7 +717,7 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
+func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -751,7 +751,7 @@ func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MaxInstanceLifetime(t *testing.T) {
+func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -793,7 +793,7 @@ func TestAccAWSAutoScalingGroup_MaxInstanceLifetime(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
+func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
 	var tg2 elbv2.TargetGroup
@@ -875,7 +875,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
-func TestAccAWSAutoScalingGroup_TargetGroupArns(t *testing.T) {
+func TestAccAutoScalingGroup_targetGroupARNs(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -924,7 +924,7 @@ func TestAccAWSAutoScalingGroup_TargetGroupArns(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
+func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	var group autoscaling.Group
 
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
@@ -965,7 +965,7 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_ALB_TargetGroups_ELBCapacity(t *testing.T) {
+func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
 
@@ -1002,7 +1002,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups_ELBCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_InstanceRefresh_Basic(t *testing.T) {
+func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1053,7 +1053,7 @@ func TestAccAWSAutoScalingGroup_InstanceRefresh_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_InstanceRefresh_Start(t *testing.T) {
+func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	launchConfigurationName := "aws_launch_configuration.test"
@@ -1095,7 +1095,7 @@ func TestAccAWSAutoScalingGroup_InstanceRefresh_Start(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_InstanceRefresh_Triggers(t *testing.T) {
+func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1128,7 +1128,7 @@ func TestAccAWSAutoScalingGroup_InstanceRefresh_Triggers(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_WarmPool(t *testing.T) {
+func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1439,7 +1439,7 @@ func testAccCheckAWSALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestC
 	}
 }
 
-func TestAccAWSAutoScalingGroup_classicVpcZoneIdentifier(t *testing.T) {
+func TestAccAutoScalingGroup_classicVPCZoneIdentifier(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1472,7 +1472,7 @@ func TestAccAWSAutoScalingGroup_classicVpcZoneIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_launchTemplate(t *testing.T) {
+func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1506,7 +1506,7 @@ func TestAccAWSAutoScalingGroup_launchTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_launchTemplate_update(t *testing.T) {
+func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1583,7 +1583,7 @@ func TestAccAWSAutoScalingGroup_launchTemplate_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_LaunchTemplate_IAMInstanceProfile(t *testing.T) {
+func TestAccAutoScalingGroup_LaunchTemplate_iamInstanceProfile(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1618,7 +1618,7 @@ func TestAccAWSAutoScalingGroup_LaunchTemplate_IAMInstanceProfile(t *testing.T) 
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
-func TestAccAWSAutoScalingGroup_LoadBalancers(t *testing.T) {
+func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1667,7 +1667,7 @@ func TestAccAWSAutoScalingGroup_LoadBalancers(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy(t *testing.T) {
+func TestAccAutoScalingGroup_mixedInstancesPolicy(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1710,7 +1710,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_CapacityRebalance(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicy_capacityRebalance(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1754,7 +1754,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_CapacityRebalance(t *testin
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDemandAllocationStrategy(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandAllocationStrategy(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1791,7 +1791,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDem
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDemandBaseCapacity(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandBaseCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1847,7 +1847,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDem
 }
 
 // Test to verify fix for behavior in GH-ISSUE 7368
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_UpdateToZeroOnDemandBaseCapacity(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_updateToZeroOnDemandBaseCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1906,7 +1906,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_Updat
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDemandPercentageAboveBaseCapacity(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandPercentageAboveBaseCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1952,7 +1952,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDem
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_SpotAllocationStrategy(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotAllocationStrategy(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1989,7 +1989,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_SpotA
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_SpotInstancePools(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotInstancePools(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2035,7 +2035,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_SpotI
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_SpotMaxPrice(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPrice(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2090,7 +2090,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_SpotM
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_LaunchTemplateName(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpecification_launchTemplateName(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2128,7 +2128,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_LaunchTempla
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpecification_version(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2176,7 +2176,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_LaunchTempla
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceType(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2226,7 +2226,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Ins
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceTypeWithLaunchTemplateSpecification(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2269,7 +2269,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Ins
 	})
 }
 
-func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(t *testing.T) {
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weightedCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2310,7 +2310,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Wei
 	})
 }
 
-func TestAccAWSAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
+func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	var group autoscaling.Group
 
 	randName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))

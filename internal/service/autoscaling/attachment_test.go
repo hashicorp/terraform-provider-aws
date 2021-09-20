@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
+func TestAccAutoScalingAttachment_elb(t *testing.T) {
 
 	rInt := sdkacctest.RandInt()
 
@@ -57,7 +57,7 @@ func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
+func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
 
 	rInt := sdkacctest.RandInt()
 

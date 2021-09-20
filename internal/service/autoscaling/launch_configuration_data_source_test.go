@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
+func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 	datasourceName := "data.aws_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -40,7 +40,7 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
+func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	rName := "data.aws_launch_configuration.foo"
 
@@ -59,7 +59,7 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
+func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 	datasourceName := "data.aws_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -82,7 +82,7 @@ func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
+func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_launch_configuration.test"
 	resourceName := "aws_launch_configuration.test"

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSASGNotification_basic(t *testing.T) {
+func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
 	rName := sdkacctest.RandString(5)
@@ -36,7 +36,7 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSASGNotification_update(t *testing.T) {
+func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
 	rName := sdkacctest.RandString(5)
@@ -66,7 +66,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSASGNotification_Pagination(t *testing.T) {
+func TestAccAutoScalingNotification_ASG_pagination(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
 	resourceName := "aws_autoscaling_notification.example"
