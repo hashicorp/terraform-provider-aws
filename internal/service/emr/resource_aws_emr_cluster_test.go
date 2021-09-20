@@ -1,4 +1,4 @@
-package aws
+package emr_test
 
 import (
 	"fmt"
@@ -13,12 +13,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func init() {
@@ -1643,7 +1643,7 @@ func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 	}
 
 	for groupName := range managedSecurityGroups {
-		securityGroup, err := finder.FindSecurityGroupByNameAndVPCID(conn, groupName, aws.StringValue(vpc.VpcId))
+		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCID(conn, groupName, aws.StringValue(vpc.VpcId))
 
 		if err != nil {
 			return fmt.Errorf("error describing EMR Managed Security Group (%s): %w", groupName, err)
