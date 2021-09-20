@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -79,14 +80,14 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 
 func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 	var v neptune.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)
 
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 				Config: testAccAWSNeptuneEventSubscriptionConfig(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneEventSubscriptionExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -123,14 +124,14 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 
 func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 	var v neptune.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-neptune-event-subs-")
 
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -153,13 +154,13 @@ func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 
 func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 	var v neptune.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -190,14 +191,14 @@ func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 
 func TestAccAWSNeptuneEventSubscription_withCategories(t *testing.T) {
 	var v neptune.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)
 
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{

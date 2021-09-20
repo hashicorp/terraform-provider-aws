@@ -9,20 +9,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 	var dbCluster neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -59,12 +60,12 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	var dbCluster neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -110,8 +111,8 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -139,12 +140,12 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	var v neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterSnapshot(rName),
 		Steps: []resource.TestStep{
@@ -171,12 +172,12 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_tags(t *testing.T) {
 	var v neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -222,12 +223,12 @@ func TestAccAWSNeptuneCluster_tags(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 	var v neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -270,11 +271,11 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -303,11 +304,11 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -336,11 +337,11 @@ func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -380,11 +381,11 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 	var v neptune.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -412,12 +413,12 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 	var dbCluster neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -460,12 +461,12 @@ func TestAccAWSNeptuneCluster_updateCloudwatchLogsExports(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 	var dbCluster neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -507,12 +508,12 @@ func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 
 func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
 	var dbCluster neptune.DBCluster
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
@@ -520,7 +521,7 @@ func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
 				Config: testAccAWSNeptuneClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -651,7 +652,7 @@ func testAccCheckAWSNeptuneClusterSnapshot(rName string) resource.TestCheckFunc 
 }
 
 func testAccAWSNeptuneClusterConfigBase() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 locals {
   availability_zone_names = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
 }
@@ -659,7 +660,7 @@ locals {
 }
 
 func testAccAWSNeptuneClusterConfig(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
   availability_zones                   = local.availability_zone_names
@@ -671,7 +672,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterCopyTagsConfig(rName string, copy bool) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
@@ -684,7 +685,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigDeleteProtection(rName string, isProtected bool) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
   availability_zones                   = local.availability_zone_names
@@ -708,7 +709,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigWithFinalSnapshot(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
@@ -719,7 +720,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
@@ -735,7 +736,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
@@ -752,7 +753,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigIncludingIamRoles(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = "/"
@@ -839,7 +840,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigAddIamRoles(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = "/"
@@ -926,7 +927,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigRemoveIamRoles(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = "/"
@@ -976,7 +977,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfig_kmsKey(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
@@ -1013,7 +1014,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfig_encrypted(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier  = %q
   availability_zones  = local.availability_zone_names
@@ -1024,7 +1025,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfig_backups(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier           = %q
   availability_zones           = local.availability_zone_names
@@ -1037,7 +1038,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfig_backupsUpdate(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier           = %q
   availability_zones           = local.availability_zone_names
@@ -1051,7 +1052,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfig_iamAuth(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                  = %q
   availability_zones                  = local.availability_zone_names
@@ -1062,7 +1063,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier             = %q
   availability_zones             = local.availability_zone_names
