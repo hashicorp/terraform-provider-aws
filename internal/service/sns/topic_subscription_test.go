@@ -60,7 +60,7 @@ func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		actual := suppressEquivalentSnsTopicSubscriptionDeliveryPolicy("", tc.old, tc.new, nil)
+		actual := tfsns.SuppressEquivalentTopicSubscriptionDeliveryPolicy("", tc.old, tc.new, nil)
 		if actual != tc.equivalent {
 			t.Fatalf("Test Case %d: Got: %t Expected: %t", i, actual, tc.equivalent)
 		}
@@ -170,8 +170,8 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &snsTopicSubscriptionDeliveryPolicy{
-						HealthyRetryPolicy: &snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
+					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
+						HealthyRetryPolicy: &tfsns.TopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 20,
 							MinDelayTarget: 5,
 							NumRetries:     5,
@@ -193,8 +193,8 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":3,"maxDelayTarget":78,"numRetries": 11}}`)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &snsTopicSubscriptionDeliveryPolicy{
-						HealthyRetryPolicy: &snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
+					testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
+						HealthyRetryPolicy: &tfsns.TopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 78,
 							MinDelayTarget: 3,
 							NumRetries:     11,
@@ -453,7 +453,7 @@ func TestAccAWSSNSTopicSubscription_disappears(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopicSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -476,7 +476,7 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopic(), "aws_sns_topic.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -529,7 +529,7 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]s
 	}
 }
 
-func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[string]string, expectedDeliveryPolicy *snsTopicSubscriptionDeliveryPolicy) resource.TestCheckFunc {
+func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[string]string, expectedDeliveryPolicy *tfsns.TopicSubscriptionDeliveryPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		apiDeliveryPolicyJSONString, ok := attributes["DeliveryPolicy"]
 
@@ -537,7 +537,7 @@ func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[s
 			return fmt.Errorf("DeliveryPolicy attribute not found in attributes: %s", attributes)
 		}
 
-		var apiDeliveryPolicy snsTopicSubscriptionDeliveryPolicy
+		var apiDeliveryPolicy tfsns.TopicSubscriptionDeliveryPolicy
 		if err := json.Unmarshal([]byte(apiDeliveryPolicyJSONString), &apiDeliveryPolicy); err != nil {
 			return fmt.Errorf("unable to unmarshal SNS Topic Subscription delivery policy JSON (%s): %s", apiDeliveryPolicyJSONString, err)
 		}
@@ -558,12 +558,12 @@ func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[st
 			return fmt.Errorf("RedrivePolicy attribute not found in attributes: %s", attributes)
 		}
 
-		var apiRedrivePolicy snsTopicSubscriptionRedrivePolicy
+		var apiRedrivePolicy tfsns.TopicSubscriptionRedrivePolicy
 		if err := json.Unmarshal([]byte(apiRedrivePolicyJSONString), &apiRedrivePolicy); err != nil {
 			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %s", apiRedrivePolicyJSONString, err)
 		}
 
-		expectedRedrivePolicy := snsTopicSubscriptionRedrivePolicy{
+		expectedRedrivePolicy := tfsns.TopicSubscriptionRedrivePolicy{
 			DeadLetterTargetArn: arn.ARN{
 				AccountID: acctest.AccountID(),
 				Partition: acctest.Partition(),

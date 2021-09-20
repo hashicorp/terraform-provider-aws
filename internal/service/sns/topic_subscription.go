@@ -49,7 +49,7 @@ func ResourceTopicSubscription() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentSnsTopicSubscriptionDeliveryPolicy,
+				DiffSuppressFunc: SuppressEquivalentTopicSubscriptionDeliveryPolicy,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -370,22 +370,22 @@ func snsSubscriptionAttributeUpdate(conn *sns.SNS, subscriptionArn, attributeNam
 	return nil
 }
 
-type snsTopicSubscriptionDeliveryPolicy struct {
-	Guaranteed         bool                                                  `json:"guaranteed,omitempty"`
-	HealthyRetryPolicy *snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy `json:"healthyRetryPolicy,omitempty"`
-	SicklyRetryPolicy  *snsTopicSubscriptionDeliveryPolicySicklyRetryPolicy  `json:"sicklyRetryPolicy,omitempty"`
-	ThrottlePolicy     *snsTopicSubscriptionDeliveryPolicyThrottlePolicy     `json:"throttlePolicy,omitempty"`
+type TopicSubscriptionDeliveryPolicy struct {
+	Guaranteed         bool                                                 `json:"guaranteed,omitempty"`
+	HealthyRetryPolicy *TopicSubscriptionDeliveryPolicyHealthyRetryPolicy   `json:"healthyRetryPolicy,omitempty"`
+	SicklyRetryPolicy  *snsTopicSubscriptionDeliveryPolicySicklyRetryPolicy `json:"sicklyRetryPolicy,omitempty"`
+	ThrottlePolicy     *snsTopicSubscriptionDeliveryPolicyThrottlePolicy    `json:"throttlePolicy,omitempty"`
 }
 
-func (s snsTopicSubscriptionDeliveryPolicy) String() string {
+func (s TopicSubscriptionDeliveryPolicy) String() string {
 	return awsutil.Prettify(s)
 }
 
-func (s snsTopicSubscriptionDeliveryPolicy) GoString() string {
+func (s TopicSubscriptionDeliveryPolicy) GoString() string {
 	return s.String()
 }
 
-type snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy struct {
+type TopicSubscriptionDeliveryPolicyHealthyRetryPolicy struct {
 	BackoffFunction    string `json:"backoffFunction,omitempty"`
 	MaxDelayTarget     int    `json:"maxDelayTarget,omitempty"`
 	MinDelayTarget     int    `json:"minDelayTarget,omitempty"`
@@ -395,11 +395,11 @@ type snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy struct {
 	NumRetries         int    `json:"numRetries,omitempty"`
 }
 
-func (s snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy) String() string {
+func (s TopicSubscriptionDeliveryPolicyHealthyRetryPolicy) String() string {
 	return awsutil.Prettify(s)
 }
 
-func (s snsTopicSubscriptionDeliveryPolicyHealthyRetryPolicy) GoString() string {
+func (s TopicSubscriptionDeliveryPolicyHealthyRetryPolicy) GoString() string {
 	return s.String()
 }
 
@@ -433,11 +433,11 @@ func (s snsTopicSubscriptionDeliveryPolicyThrottlePolicy) GoString() string {
 	return s.String()
 }
 
-type snsTopicSubscriptionRedrivePolicy struct {
+type TopicSubscriptionRedrivePolicy struct {
 	DeadLetterTargetArn string `json:"deadLetterTargetArn,omitempty"`
 }
 
-func suppressEquivalentSnsTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
+func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
 	ob, err := normalizeSnsTopicSubscriptionDeliveryPolicy(old)
 	if err != nil {
 		log.Print(err)
@@ -454,7 +454,7 @@ func suppressEquivalentSnsTopicSubscriptionDeliveryPolicy(k, old, new string, d 
 }
 
 func normalizeSnsTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
-	var deliveryPolicy snsTopicSubscriptionDeliveryPolicy
+	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {
 		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)

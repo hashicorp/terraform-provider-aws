@@ -74,7 +74,7 @@ func ResourceSMSPreferences() *schema.Resource {
 
 const resourceId = "aws_sns_sms_id"
 
-var smsAttributeMap = map[string]string{
+var SMSAttributeMap = map[string]string{
 	"monthly_spend_limit":                   "MonthlySpendLimit",
 	"delivery_status_iam_role_arn":          "DeliveryStatusIAMRole",
 	"delivery_status_success_sampling_rate": "DeliveryStatusSuccessSamplingRate",
@@ -141,7 +141,7 @@ func resourceAwsSnsSmsPreferencesGet(d *schema.ResourceData, meta interface{}) e
 	// Apply existing settings
 	if attrs.Attributes != nil && len(attrs.Attributes) > 0 {
 		attrmap := attrs.Attributes
-		for tfAttrName, snsAttrName := range smsAttributeMap {
+		for tfAttrName, snsAttrName := range SMSAttributeMap {
 			d.Set(tfAttrName, attrmap[snsAttrName])
 		}
 	}
@@ -155,7 +155,7 @@ func resourceSMSPreferencesDelete(d *schema.ResourceData, meta interface{}) erro
 	// Reset the attributes to their default value
 	attrs := map[string]*string{}
 	for tfAttrName, defValue := range smsAttributeDefaultValues {
-		attrs[smsAttributeMap[tfAttrName]] = aws.String(defValue)
+		attrs[SMSAttributeMap[tfAttrName]] = aws.String(defValue)
 	}
 
 	params := &sns.SetSMSAttributesInput{
