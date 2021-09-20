@@ -172,7 +172,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		req.CreateApplicationRequest.Tags = tags.IgnoreAws().PinpointTags()
+		req.CreateApplicationRequest.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateApp(req)
@@ -222,7 +222,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("tags_all") {
 			o, n := d.GetChange("tags_all")
 
-			if err := tftags.PinpointUpdateTags(conn, arn, o, n); err != nil {
+			if err := UpdateTags(conn, arn, o, n); err != nil {
 				return fmt.Errorf("error updating PinPoint Application (%s) tags: %s", arn, err)
 			}
 		}
@@ -279,7 +279,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting quiet_time: %s", err)
 	}
 
-	tags, err := tftags.PinpointListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for PinPoint Application (%s): %s", arn, err)
