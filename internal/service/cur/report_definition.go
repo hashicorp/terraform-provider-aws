@@ -114,7 +114,7 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 		additionalArtifactsList = append(additionalArtifactsList, *additionalArtifacts[i])
 	}
 
-	err := checkAwsCurReportDefinitionPropertyCombination(
+	err := CheckReportDefinitionPropertyCombination(
 		additionalArtifactsList,
 		compression,
 		format,
@@ -217,7 +217,7 @@ func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) er
 		additionalArtifactsList = append(additionalArtifactsList, *additionalArtifacts[i])
 	}
 
-	err := checkAwsCurReportDefinitionPropertyCombination(
+	err := CheckReportDefinitionPropertyCombination(
 		additionalArtifactsList,
 		compression,
 		format,
@@ -278,7 +278,7 @@ func resourceReportDefinitionDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func checkAwsCurReportDefinitionPropertyCombination(additionalArtifacts []string, compression string, format string, prefix string, reportVersioning string) error {
+func CheckReportDefinitionPropertyCombination(additionalArtifacts []string, compression string, format string, prefix string, reportVersioning string) error {
 	// perform various combination checks, AWS API unhelpfully just returns an empty ValidationException
 	// these combinations have been determined from the Create Report AWS Console Web Form
 

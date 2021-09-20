@@ -45,7 +45,7 @@ func testSweepCurReportDefinitions(region string) error {
 		}
 
 		for _, reportDefinition := range page.ReportDefinitions {
-			r := ResourceReportDefinition()
+			r := tfcur.ResourceReportDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(reportDefinition.ReportName))
 			err = r.Delete(d, client)
@@ -359,7 +359,7 @@ func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceReportDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcur.ResourceReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -743,7 +743,7 @@ func TestCheckAwsCurReportDefinitionPropertyCombination(t *testing.T) {
 
 	for name, tCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := checkAwsCurReportDefinitionPropertyCombination(
+			err := tfcur.CheckReportDefinitionPropertyCombination(
 				tCase.additionalArtifacts,
 				tCase.compression,
 				tCase.format,
