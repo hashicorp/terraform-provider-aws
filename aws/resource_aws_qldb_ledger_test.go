@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepQLDBLedgers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -34,7 +34,7 @@ func testSweepQLDBLedgers(region string) error {
 	page, err := conn.ListLedgers(input)
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
 			return nil
 		}
@@ -71,7 +71,7 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 }
 
 func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
-	return testAccCheckAWSLedgerDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSLedgerDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -181,7 +181,7 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).qldbconn
+		conn := acctest.Provider.Meta().(*AWSClient).qldbconn
 		resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -227,7 +227,7 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
