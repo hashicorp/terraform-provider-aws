@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -34,7 +35,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"database_name": {
 				Type:     schema.TypeString,
@@ -80,7 +81,7 @@ func ResourceEndpoint() *schema.Resource {
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 							// API returns this error with ModifyEndpoint:
 							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
 							ForceNew: true,
@@ -96,7 +97,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDmsEndpointId,
+				ValidateFunc: validEndpointID,
 			},
 			"endpoint_type": {
 				Type:     schema.TypeString,
@@ -185,12 +186,12 @@ func ResourceEndpoint() *schema.Resource {
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"stream_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -200,7 +201,7 @@ func ResourceEndpoint() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"mongodb_settings": {
 				Type:     schema.TypeList,

@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReplicationSubnetGroup() *schema.Resource {
@@ -37,7 +38,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDmsReplicationSubnetGroupId,
+				ValidateFunc: validReplicationSubnetGroupID,
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,

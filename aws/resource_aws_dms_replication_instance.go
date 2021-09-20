@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReplicationInstance() *schema.Resource {
@@ -68,7 +69,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -79,7 +80,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
@@ -101,7 +102,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDmsReplicationInstanceId,
+				ValidateFunc: validReplicationInstanceID,
 			},
 			"replication_instance_private_ips": {
 				Type:     schema.TypeList,
