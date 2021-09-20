@@ -75,7 +75,7 @@ func resourceRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	if len(tags) > 0 {
 		arn := aws.StringValue(resp.RecoveryGroupArn)
-		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error adding Route53 Recovery Readiness RecoveryGroup (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -107,7 +107,7 @@ func resourceRecoveryGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("recovery_group_name", resp.RecoveryGroupName)
 	d.Set("cells", resp.Cells)
 
-	tags, err := tftags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Recovery Readiness RecoveryGroup (%s): %w", d.Id(), err)
@@ -144,7 +144,7 @@ func resourceRecoveryGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
-		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Recovery Readiness RecoveryGroup (%s) tags: %w", d.Id(), err)
 		}
 	}

@@ -82,7 +82,7 @@ func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		arn := aws.StringValue(resp.CellArn)
-		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error adding Route53 Recovery Readiness Cell (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -116,7 +116,7 @@ func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cells", resp.Cells)
 	d.Set("parent_readiness_scopes", resp.ParentReadinessScopes)
 
-	tags, err := tftags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Recovery Readiness Cell (%s): %w", d.Id(), err)
@@ -152,7 +152,7 @@ func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
-		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Recovery Readiness Cell (%s) tags: %w", d.Id(), err)
 		}
 	}

@@ -71,7 +71,7 @@ func resourceReadinessCheckCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if len(tags) > 0 {
 		arn := aws.StringValue(resp.ReadinessCheckArn)
-		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error adding Route53 Recovery Readiness ReadinessCheck (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -104,7 +104,7 @@ func resourceReadinessCheckRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("readiness_check_name", resp.ReadinessCheckName)
 	d.Set("resource_set_name", resp.ResourceSet)
 
-	tags, err := tftags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Recovery Readiness ReadinessCheck (%s): %w", d.Id(), err)
@@ -140,7 +140,7 @@ func resourceReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
-		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Recovery Readiness ReadinessCheck (%s) tags: %w", d.Id(), err)
 		}
 	}
