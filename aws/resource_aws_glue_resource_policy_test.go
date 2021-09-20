@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func CreateTablePolicy(action string) string {
@@ -25,14 +26,14 @@ func CreateTablePolicy(action string) string {
       "Resource" : "arn:%s:glue:%s:%s:*"
     }
   ]
-}`, action, testAccGetPartition(), testAccGetRegion(), testAccGetAccountID())
+}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID())
 }
 
 func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -54,8 +55,8 @@ func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -63,7 +64,7 @@ func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 				Config: testAccAWSGlueResourcePolicy_Required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSGlueResourcePolicy(resourceName, "glue:CreateTable"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,8 +100,8 @@ resource "aws_glue_resource_policy" "test" {
 func testAccAWSGlueResourcePolicy_update(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{

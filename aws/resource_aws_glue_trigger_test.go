@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -61,12 +62,12 @@ func testSweepGlueTriggers(region string) error {
 func TestAccAWSGlueTrigger_basic(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func TestAccAWSGlueTrigger_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "0"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("trigger/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("trigger/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -101,12 +102,12 @@ func TestAccAWSGlueTrigger_basic(t *testing.T) {
 func TestAccAWSGlueTrigger_Crawler(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test_trigger"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -149,12 +150,12 @@ func TestAccAWSGlueTrigger_Crawler(t *testing.T) {
 func TestAccAWSGlueTrigger_Description(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -185,12 +186,12 @@ func TestAccAWSGlueTrigger_Description(t *testing.T) {
 func TestAccAWSGlueTrigger_Enabled(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -228,12 +229,12 @@ func TestAccAWSGlueTrigger_Enabled(t *testing.T) {
 func TestAccAWSGlueTrigger_Predicate(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -272,12 +273,12 @@ func TestAccAWSGlueTrigger_Predicate(t *testing.T) {
 func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -308,12 +309,12 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 func TestAccAWSGlueTrigger_Tags(t *testing.T) {
 	var trigger1, trigger2, trigger3 glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -355,12 +356,12 @@ func TestAccAWSGlueTrigger_Tags(t *testing.T) {
 func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -384,12 +385,12 @@ func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 func TestAccAWSGlueTrigger_actions_notify(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -436,12 +437,12 @@ func TestAccAWSGlueTrigger_actions_notify(t *testing.T) {
 func TestAccAWSGlueTrigger_actions_securityConfig(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -467,12 +468,12 @@ func TestAccAWSGlueTrigger_actions_securityConfig(t *testing.T) {
 func TestAccAWSGlueTrigger_onDemandDisable(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -513,12 +514,12 @@ func TestAccAWSGlueTrigger_onDemandDisable(t *testing.T) {
 func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -526,7 +527,7 @@ func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 				Config: testAccAWSGlueTriggerConfig_OnDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueTrigger(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -594,7 +595,7 @@ func testAccCheckAWSGlueTriggerDestroy(s *terraform.State) error {
 }
 
 func testAccAWSGlueTriggerConfig_Description(rName, description string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   description = %[1]q
   name        = %[2]q
@@ -608,7 +609,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfig_Enabled(rName string, enabled bool) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   enabled  = %[1]t
   name     = %[2]q
@@ -623,7 +624,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfig_OnDemand(rName string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -636,7 +637,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfig_OnDemandEnabled(rName string, enabled bool) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name    = %[1]q
   type    = "ON_DEMAND"
@@ -650,7 +651,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfig_Predicate(rName, state string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test2" {
   name     = "%[1]s2"
   role_arn = aws_iam_role.test.arn
@@ -681,7 +682,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfig_Crawler(rName, state string) string {
-	return composeConfig(testAccGlueCrawlerConfig_S3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGlueCrawlerConfig_S3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
 resource "aws_glue_crawler" "test2" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
@@ -713,7 +714,7 @@ resource "aws_glue_trigger" "test_trigger" {
 }
 
 func testAccAWSGlueTriggerConfig_Schedule(rName, schedule string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name     = %[1]q
   schedule = %[2]q
@@ -727,7 +728,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -744,7 +745,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -762,7 +763,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfig_WorkflowName(rName string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_workflow" test {
   name = %[1]q
 }
@@ -780,7 +781,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfigActionsNotification(rName string, delay int) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -797,7 +798,7 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccAWSGlueTriggerConfigActionsSecurityConfiguration(rName string) string {
-	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_security_configuration" "test" {
   name = %[1]q
 
