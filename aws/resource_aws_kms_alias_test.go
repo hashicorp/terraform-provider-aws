@@ -25,7 +25,7 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,14 +55,14 @@ func TestAccAWSKmsAlias_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists(resourceName, &alias),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKmsAlias(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,7 +78,7 @@ func TestAccAWSKmsAlias_Name_Generated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +136,7 @@ func TestAccAWSKmsAlias_UpdateKeyID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,7 +174,7 @@ func TestAccAWSKmsAlias_MultipleAliasesForSameKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +205,7 @@ func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +230,7 @@ func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
 }
 
 func testAccCheckAWSKmsAliasDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_alias" {
@@ -264,7 +264,7 @@ func testAccCheckAWSKmsAliasExists(name string, v *kms.AliasListEntry) resource.
 			return fmt.Errorf("No KMS Alias ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		output, err := finder.AliasByName(conn, rs.Primary.ID)
 
