@@ -14,7 +14,7 @@ import (
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
-func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
+func TestAccCloudWatchLogsStream_basic(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	resourceName := "aws_cloudwatch_log_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -41,7 +41,7 @@ func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
+func TestAccCloudWatchLogsStream_disappears(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	resourceName := "aws_cloudwatch_log_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -64,7 +64,7 @@ func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
+func TestAccCloudWatchLogsStream_Disappears_logGroup(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_stream.test"

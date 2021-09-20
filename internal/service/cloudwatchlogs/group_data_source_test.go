@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudwatchLogGroupDataSource_basic(t *testing.T) {
+func TestAccCloudWatchLogsGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
@@ -32,7 +32,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogGroupDataSource_tags(t *testing.T) {
+func TestAccCloudWatchLogsGroupDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
@@ -57,7 +57,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogGroupDataSource_kms(t *testing.T) {
+func TestAccCloudWatchLogsGroupDataSource_kms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
@@ -80,7 +80,7 @@ func TestAccAWSCloudwatchLogGroupDataSource_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogGroupDataSource_retention(t *testing.T) {
+func TestAccCloudWatchLogsGroupDataSource_retention(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "data.aws_cloudwatch_log_group.test"
 

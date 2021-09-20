@@ -14,7 +14,7 @@ import (
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
-func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
+func TestAccCloudWatchLogsDestination_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test"
@@ -45,7 +45,7 @@ func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
+func TestAccCloudWatchLogsDestination_disappears(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 

@@ -79,7 +79,7 @@ func testSweepCloudwatchlogQueryDefinitions(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
+func TestAccCloudWatchLogsQueryDefinition_basic(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -129,7 +129,7 @@ func testAccAWSCloudWatchQueryDefinitionImportStateId(v *cloudwatchlogs.QueryDef
 	}
 }
 
-func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
+func TestAccCloudWatchLogsQueryDefinition_disappears(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -152,7 +152,7 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchQueryDefinition_Rename(t *testing.T) {
+func TestAccCloudWatchLogsQueryDefinition_rename(t *testing.T) {
 	var v1, v2 cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -188,7 +188,7 @@ func TestAccAWSCloudWatchQueryDefinition_Rename(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchQueryDefinition_LogGroups(t *testing.T) {
+func TestAccCloudWatchLogsQueryDefinition_logGroups(t *testing.T) {
 	var v1, v2 cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
 	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_basic(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	lambdaFunctionResourceName := "aws_lambda_function.test"
@@ -48,7 +48,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_disappears(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_disappears(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -72,7 +72,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 	var logGroup cloudwatchlogs.LogGroup
 
@@ -99,7 +99,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T)
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisDataFirehose(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -129,7 +129,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisDataFirehos
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisStream(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	kinesisStream := "aws_kinesis_stream.test"
@@ -159,7 +159,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisStream(t *t
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_Distribution(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_distribution(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -195,7 +195,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_Distribution(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_RoleArn(t *testing.T) {
+func TestAccCloudWatchLogsSubscriptionFilter_roleARN(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	iamRoleResourceName1 := "aws_iam_role.test"

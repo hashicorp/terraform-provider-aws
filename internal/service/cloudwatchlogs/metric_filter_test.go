@@ -14,7 +14,7 @@ import (
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
-func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
+func TestAccCloudWatchLogsMetricFilter_basic(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
@@ -107,7 +107,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
+func TestAccCloudWatchLogsMetricFilter_disappears(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
@@ -130,7 +130,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
+func TestAccCloudWatchLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
