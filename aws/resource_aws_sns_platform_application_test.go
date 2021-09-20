@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepSnsPlatformApplications(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -59,7 +59,7 @@ func testSweepSnsPlatformApplications(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -213,7 +213,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { acctest.PreCheck(t) },
 				ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-				Providers:    testAccProviders,
+				Providers:    acctest.Providers,
 				CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
 					{
@@ -264,7 +264,7 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { acctest.PreCheck(t) },
 						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-						Providers:    testAccProviders,
+						Providers:    acctest.Providers,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
@@ -315,7 +315,7 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { acctest.PreCheck(t) },
 						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-						Providers:    testAccProviders,
+						Providers:    acctest.Providers,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
@@ -368,7 +368,7 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { acctest.PreCheck(t) },
 						ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-						Providers:    testAccProviders,
+						Providers:    acctest.Providers,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
@@ -410,7 +410,7 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 			return fmt.Errorf("missing ID: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*AWSClient).snsconn
 
 		input := &sns.GetPlatformApplicationAttributesInput{
 			PlatformApplicationArn: aws.String(rs.Primary.ID),
@@ -424,7 +424,7 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 }
 
 func testAccCheckAWSSNSPlatformApplicationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).snsconn
+	conn := acctest.Provider.Meta().(*AWSClient).snsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_platform_application" {

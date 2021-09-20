@@ -21,7 +21,7 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,14 +89,14 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(topicResourceName, attributes),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSnsTopic(), topicResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,14 +112,14 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSnsTopicPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,7 +128,7 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).snsconn
+	conn := acctest.Provider.Meta().(*AWSClient).snsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic_policy" {

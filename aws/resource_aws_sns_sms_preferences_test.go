@@ -35,7 +35,7 @@ func testAccAWSSNSSMSPreferences_empty(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +105,7 @@ func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -125,7 +125,7 @@ func testAccCheckAWSSNSSMSPrefsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*AWSClient).snsconn
 		attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
 		if err != nil {
 			return fmt.Errorf("error getting SMS attributes: %s", err)
