@@ -250,7 +250,7 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AmplifyTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Amplify Branch: %s", input)
@@ -310,7 +310,7 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	tags := tftags.AmplifyKeyValueTags(branch.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(branch.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -407,7 +407,7 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AmplifyUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
