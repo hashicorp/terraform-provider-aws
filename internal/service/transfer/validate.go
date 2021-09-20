@@ -3,7 +3,6 @@ package transfer
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validServerID(v interface{}, k string) (ws []string, errors []error) {
