@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
@@ -334,7 +335,7 @@ func testAccCheckAWSCognitoIdentityPoolExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito Identity Pool ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 		_, err := conn.DescribeIdentityPool(&cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
@@ -345,7 +346,7 @@ func testAccCheckAWSCognitoIdentityPoolExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSCognitoIdentityPoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool" {
@@ -368,7 +369,7 @@ func testAccCheckAWSCognitoIdentityPoolDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSCognitoIdentity(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 	input := &cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int64(int64(1)),

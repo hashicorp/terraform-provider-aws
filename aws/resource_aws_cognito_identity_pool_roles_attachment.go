@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
@@ -104,7 +105,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -139,7 +140,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
 	ip, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
@@ -168,7 +169,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -211,7 +212,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
 	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
