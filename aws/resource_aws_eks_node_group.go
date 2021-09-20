@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
@@ -291,7 +291,7 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
-	nodeGroupName := naming.Generate(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
+	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	id := tfeks.NodeGroupCreateResourceID(clusterName, nodeGroupName)
 
 	input := &eks.CreateNodegroupInput{
@@ -413,7 +413,7 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("node_group_name", nodeGroup.NodegroupName)
-	d.Set("node_group_name_prefix", naming.NamePrefixFromName(aws.StringValue(nodeGroup.NodegroupName)))
+	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.StringValue(nodeGroup.NodegroupName)))
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
