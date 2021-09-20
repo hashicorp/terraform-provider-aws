@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFirewallRuleGroupAssociation() *schema.Resource {
@@ -35,7 +36,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateRoute53ResolverName,
+				ValidateFunc: validResolverName,
 			},
 
 			"firewall_rule_group_id": {
