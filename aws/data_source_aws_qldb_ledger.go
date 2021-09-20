@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsQLDBLedger() *schema.Resource {
@@ -43,7 +44,7 @@ func dataSourceAwsQLDBLedger() *schema.Resource {
 }
 
 func dataSourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
+	conn := meta.(*conns.AWSClient).QLDBConn
 
 	target := d.Get("name")
 

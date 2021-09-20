@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepQLDBLedgers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).qldbconn
+	conn := client.(*conns.AWSClient).QLDBConn
 	input := &qldb.ListLedgersInput{}
 	page, err := conn.ListLedgers(input)
 
@@ -137,7 +138,7 @@ func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).qldbconn
+	conn := provider.Meta().(*conns.AWSClient).QLDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_qldb_ledger" {
@@ -181,7 +182,7 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).qldbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
 		resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
