@@ -21,7 +21,7 @@ func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +136,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -185,7 +185,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 }
 
 func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codedeployconn
+	conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_deployment_config" {
@@ -261,7 +261,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigExists(name string, config *codede
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codedeployconn
+		conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
 
 		resp, err := conn.GetDeploymentConfig(&codedeploy.GetDeploymentConfigInput{
 			DeploymentConfigName: aws.String(rs.Primary.ID),
