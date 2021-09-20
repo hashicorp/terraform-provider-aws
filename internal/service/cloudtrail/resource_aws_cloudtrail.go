@@ -61,7 +61,7 @@ func Resource() *schema.Resource {
 									"field": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice(tfcloudtrail.Field_Values(), false),
+										ValidateFunc: validation.StringInSlice(tfcloudtrail.field_Values(), false),
 									},
 									"not_ends_with": {
 										Type:     schema.TypeList,
@@ -147,7 +147,7 @@ func Resource() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice(tfcloudtrail.ResourceType_Values(), false),
+										ValidateFunc: validation.StringInSlice(tfcloudtrail.resourceType_Values(), false),
 									},
 									"values": {
 										Type:     schema.TypeList,
