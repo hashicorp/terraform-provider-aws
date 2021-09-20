@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func Application(conn *serverlessrepository.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepository.GetApplicationOutput, error) {
+func findApplication(conn *serverlessrepository.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepository.GetApplicationOutput, error) {
 	input := &serverlessrepository.GetApplicationInput{
 		ApplicationId: aws.String(applicationID),
 	}
@@ -18,7 +18,7 @@ func Application(conn *serverlessrepository.ServerlessApplicationRepository, app
 		input.SemanticVersion = aws.String(version)
 	}
 
-	log.Printf("[DEBUG] Getting Serverless Application Repository Application: %s", input)
+	log.Printf("[DEBUG] Getting Serverless findApplication Repository Application: %s", input)
 	resp, err := conn.GetApplication(input)
 	if tfawserr.ErrCodeEquals(err, serverlessrepository.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

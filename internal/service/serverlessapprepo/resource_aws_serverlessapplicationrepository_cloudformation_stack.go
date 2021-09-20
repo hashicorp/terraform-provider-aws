@@ -43,9 +43,9 @@ func ResourceCloudFormationStack() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.CloudFormationStackCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(waiter.CloudFormationStackUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(waiter.CloudFormationStackDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(waiter.cloudFormationStackCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(waiter.cloudFormationStackUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(waiter.cloudFormationStackDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -116,7 +116,7 @@ func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("executing Serverless Application Repository CloudFormation Stack (%s) change set failed: %w", d.Id(), err)
 	}
 
-	_, err = cfwaiter.StackCreated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
+	_, err = cfwaiter.WaitStackCreated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) creation: %w", d.Id(), err)
 	}
@@ -132,7 +132,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	stack, err := cffinder.Stack(cfConn, d.Id())
+	stack, err := cffinder.FindStack(cfConn, d.Id())
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -176,7 +176,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("failed to set outputs: %w", err)
 	}
 
-	getApplicationOutput, err := finder.Application(serverlessConn, applicationID, semanticVersion)
+	getApplicationOutput, err := finder.findApplication(serverlessConn, applicationID, semanticVersion)
 	if err != nil {
 		return fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): %w", applicationID, semanticVersion, err)
 	}
@@ -240,7 +240,7 @@ func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("executing Serverless Application Repository CloudFormation change set failed: %w", err)
 	}
 
-	_, err = cfwaiter.StackUpdated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = cfwaiter.WaitStackUpdated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) update: %w", d.Id(), err)
 	}
@@ -267,7 +267,7 @@ func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	_, err = cfwaiter.StackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
+	_, err = cfwaiter.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack deletion: %w", err)
 	}
@@ -288,7 +288,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 	}
 
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
-	stack, err := cffinder.Stack(cfConn, stackID)
+	stack, err := cffinder.FindStack(cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}
@@ -324,7 +324,7 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 		return nil, err
 	}
 
-	return cfwaiter.ChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
+	return cfwaiter.WaitChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
 }
 
 func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {

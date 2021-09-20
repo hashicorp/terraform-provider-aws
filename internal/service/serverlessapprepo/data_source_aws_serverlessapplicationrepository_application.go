@@ -53,7 +53,7 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 	applicationID := d.Get("application_id").(string)
 	semanticVersion := d.Get("semantic_version").(string)
 
-	output, err := finder.Application(conn, applicationID, semanticVersion)
+	output, err := finder.findApplication(conn, applicationID, semanticVersion)
 	if err != nil {
 		descriptor := applicationID
 		if semanticVersion != "" {
