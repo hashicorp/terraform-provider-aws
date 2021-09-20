@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ScheduledAction(conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceId string) (*applicationautoscaling.ScheduledAction, error) {
+func FindScheduledAction(conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceId string) (*applicationautoscaling.ScheduledAction, error) {
 	var result *applicationautoscaling.ScheduledAction
 
 	input := &applicationautoscaling.DescribeScheduledActionsInput{

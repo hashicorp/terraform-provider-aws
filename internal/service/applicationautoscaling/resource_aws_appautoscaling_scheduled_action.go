@@ -203,7 +203,7 @@ func appautoscalingScheduledActionPopulateInputForUpdate(input *applicationautos
 func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
-	scheduledAction, err := finder.ScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
+	scheduledAction, err := finder.FindScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")

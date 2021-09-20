@@ -590,7 +590,7 @@ func testAccCheckAwsAppautoscalingScheduledActionExists(name string, obj *applic
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
-		sa, err := finder.ScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
+		sa, err := finder.FindScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
 		if err != nil {
 			return err
 		}
