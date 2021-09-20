@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPinpointADMChannel() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsPinpointADMChannel() *schema.Resource {
 }
 
 func resourceAwsPinpointADMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -71,7 +72,7 @@ func resourceAwsPinpointADMChannelUpsert(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsPinpointADMChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint ADM Channel for application %s", d.Id())
 
@@ -96,7 +97,7 @@ func resourceAwsPinpointADMChannelRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsPinpointADMChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete ADM Channel: %s", d.Id())
 	_, err := conn.DeleteAdmChannel(&pinpoint.DeleteAdmChannelInput{

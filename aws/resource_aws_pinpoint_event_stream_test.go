@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSPinpointEventStream_basic(t *testing.T) {
@@ -85,7 +86,7 @@ func testAccCheckAWSPinpointEventStreamExists(n string, stream *pinpoint.EventSt
 			return fmt.Errorf("No Pinpoint event stream with that ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetEventStreamInput{
@@ -162,7 +163,7 @@ EOF
 }
 
 func testAccCheckAWSPinpointEventStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_event_stream" {

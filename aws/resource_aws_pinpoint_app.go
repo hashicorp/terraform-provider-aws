@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPinpointApp() *schema.Resource {
@@ -146,8 +147,8 @@ func resourceAwsPinpointApp() *schema.Resource {
 }
 
 func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) error {
-	pinpointconn := meta.(*AWSClient).pinpointconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).PinpointConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -172,7 +173,7 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 		req.CreateApplicationRequest.Tags = tags.IgnoreAws().PinpointTags()
 	}
 
-	output, err := pinpointconn.CreateApp(req)
+	output, err := conn.CreateApp(req)
 	if err != nil {
 		return fmt.Errorf("error creating Pinpoint app: %s", err)
 	}
@@ -184,7 +185,7 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
@@ -229,9 +230,9 @@ func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).PinpointConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
 
@@ -297,7 +298,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsPinpointAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
 	_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{

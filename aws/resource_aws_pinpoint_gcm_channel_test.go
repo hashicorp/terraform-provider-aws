@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 /**
@@ -69,7 +70,7 @@ func testAccCheckAWSPinpointGCMChannelExists(n string, channel *pinpoint.GCMChan
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetGcmChannelInput{
@@ -100,7 +101,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 }
 
 func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_gcm_channel" {
