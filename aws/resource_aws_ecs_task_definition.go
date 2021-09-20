@@ -15,8 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTaskDefinition() *schema.Resource {
@@ -46,7 +47,7 @@ func ResourceTaskDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsEcsTaskDefinitionMigrateState,
@@ -378,8 +379,8 @@ func ResourceTaskDefinition() *schema.Resource {
 				},
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"inference_accelerator": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -415,7 +416,7 @@ func validateAwsEcsTaskDefinitionContainerDefinitions(v interface{}, k string) (
 func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandEcsContainerDefinitions(rawDefinitions)
@@ -560,7 +561,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
 
-	tags := keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.EcsKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -639,7 +640,7 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.EcsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.EcsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %s", d.Id(), err)
 		}
 	}

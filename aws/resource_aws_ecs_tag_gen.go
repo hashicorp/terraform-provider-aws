@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTag() *schema.Resource {
@@ -50,24 +51,24 @@ func resourceTagCreate(d *schema.ResourceData, meta interface{}) error {
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := keyvaluetags.EcsUpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
+	if err := tftags.EcsUpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
 		return fmt.Errorf("error creating %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
 	}
 
-	d.SetId(tagresource.SetResourceID(identifier, key))
+	d.SetId(tftags.SetResourceID(identifier, key))
 
 	return resourceTagRead(d, meta)
 }
 
 func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
-	identifier, key, err := tagresource.GetResourceID(d.Id())
+	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	value, err := keyvaluetags.EcsGetTag(conn, identifier, key)
+	value, err := tftags.EcsGetTag(conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", ecs.ServiceID, identifier, key)
@@ -88,13 +89,13 @@ func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
-	identifier, key, err := tagresource.GetResourceID(d.Id())
+	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if err := keyvaluetags.EcsUpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := tftags.EcsUpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
 	}
 
@@ -103,13 +104,13 @@ func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
-	identifier, key, err := tagresource.GetResourceID(d.Id())
+	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if err := keyvaluetags.EcsUpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := tftags.EcsUpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return fmt.Errorf("error deleting %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
 	}
 
