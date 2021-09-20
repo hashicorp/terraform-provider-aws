@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -916,8 +916,8 @@ func optionSettingValueHash(v interface{}) int {
 	value, _ := rd["value"].(string)
 	value, _ = structure.NormalizeJsonString(value)
 	hk := fmt.Sprintf("%s:%s%s=%s", namespace, optionName, resourceName, sortValues(value))
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, hashcode.String(hk))
-	return hashcode.String(hk)
+	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
+	return create.StringHashcode(hk)
 }
 
 func optionSettingKeyHash(v interface{}) int {
@@ -929,8 +929,8 @@ func optionSettingKeyHash(v interface{}) int {
 		resourceName = v
 	}
 	hk := fmt.Sprintf("%s:%s%s", namespace, optionName, resourceName)
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingKeyHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, hashcode.String(hk))
-	return hashcode.String(hk)
+	log.Printf("[DEBUG] Elastic Beanstalk optionSettingKeyHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
+	return create.StringHashcode(hk)
 }
 
 func sortValues(v string) string {
