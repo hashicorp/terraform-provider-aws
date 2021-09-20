@@ -1875,12 +1875,12 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 }
 
 func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
-	create := make([]interface{}, 0)
+	add := make([]interface{}, 0)
 	disable := make([]interface{}, 0)
 
 	for _, n := range new {
 		if _, contains := sliceContainsString(old, n.(string)); !contains {
-			create = append(create, n)
+			add = append(add, n)
 		}
 	}
 
@@ -1890,7 +1890,7 @@ func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 		}
 	}
 
-	return create, disable
+	return add, disable
 }
 
 // Database instance status: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html
