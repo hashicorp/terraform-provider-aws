@@ -4,7 +4,6 @@ import (
 	"regexp"
 
 	"github.com/beevik/etree"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // cannonicalXML reads XML in a string and re-writes it canonically, used for
