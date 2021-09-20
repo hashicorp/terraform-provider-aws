@@ -194,13 +194,13 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 	}
 
 	if pcx.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", flattenVpcPeeringConnectionOptions(pcx.AccepterVpcInfo.PeeringOptions)[0]); err != nil {
+		if err := d.Set("accepter", flattenVPCPeeringConnectionOptions(pcx.AccepterVpcInfo.PeeringOptions)[0]); err != nil {
 			return err
 		}
 	}
 
 	if pcx.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", flattenVpcPeeringConnectionOptions(pcx.RequesterVpcInfo.PeeringOptions)[0]); err != nil {
+		if err := d.Set("requester", flattenVPCPeeringConnectionOptions(pcx.RequesterVpcInfo.PeeringOptions)[0]); err != nil {
 			return err
 		}
 	}

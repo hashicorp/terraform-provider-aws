@@ -153,8 +153,6 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.Set("subnet_ids", subnets)
 
-	conn := meta.(*conns.AWSClient).RDSConn
-
 	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
 	d.Set("arn", arn)
 

@@ -165,10 +165,10 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("peer_region", pc.AccepterVpcInfo.Region)
 	d.Set("accept_status", pc.Status.Code)
 
-	if err := d.Set("accepter", flattenVpcPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions)); err != nil {
+	if err := d.Set("accepter", flattenVPCPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions)); err != nil {
 		return fmt.Errorf("Error setting VPC Peering Connection accepter information: %s", err)
 	}
-	if err := d.Set("requester", flattenVpcPeeringConnectionOptions(pc.RequesterVpcInfo.PeeringOptions)); err != nil {
+	if err := d.Set("requester", flattenVPCPeeringConnectionOptions(pc.RequesterVpcInfo.PeeringOptions)); err != nil {
 		return fmt.Errorf("Error setting VPC Peering Connection requester information: %s", err)
 	}
 
@@ -248,10 +248,10 @@ func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error
 				VpcPeeringConnectionId: aws.String(d.Id()),
 			}
 			if d.HasChange("accepter") {
-				req.AccepterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("accepter").([]interface{}), crossRegionPeering)
+				req.AccepterPeeringConnectionOptions = expandVPCPeeringConnectionOptions(d.Get("accepter").([]interface{}), crossRegionPeering)
 			}
 			if d.HasChange("requester") {
-				req.RequesterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("requester").([]interface{}), crossRegionPeering)
+				req.RequesterPeeringConnectionOptions = expandVPCPeeringConnectionOptions(d.Get("requester").([]interface{}), crossRegionPeering)
 			}
 
 			log.Printf("[DEBUG] Modifying VPC Peering Connection options: %s", req)

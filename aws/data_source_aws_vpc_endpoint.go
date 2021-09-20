@@ -191,7 +191,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 		pl := respPl.PrefixLists[0]
 
 		d.Set("prefix_list_id", pl.PrefixListId)
-		err = d.Set("cidr_blocks", flattenStringList(pl.Cidrs))
+		err = d.Set("cidr_blocks", flex.FlattenStringList(pl.Cidrs))
 		if err != nil {
 			return fmt.Errorf("error setting cidr_blocks: %w", err)
 		}
@@ -201,7 +201,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error setting dns_entry: %w", err)
 	}
-	err = d.Set("network_interface_ids", flattenStringSet(vpce.NetworkInterfaceIds))
+	err = d.Set("network_interface_ids", flex.FlattenStringSet(vpce.NetworkInterfaceIds))
 	if err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %w", err)
 	}
@@ -212,7 +212,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.Set("policy", policy)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
-	err = d.Set("route_table_ids", flattenStringSet(vpce.RouteTableIds))
+	err = d.Set("route_table_ids", flex.FlattenStringSet(vpce.RouteTableIds))
 	if err != nil {
 		return fmt.Errorf("error setting route_table_ids: %w", err)
 	}
@@ -221,7 +221,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error setting security_group_ids: %w", err)
 	}
-	err = d.Set("subnet_ids", flattenStringSet(vpce.SubnetIds))
+	err = d.Set("subnet_ids", flex.FlattenStringSet(vpce.SubnetIds))
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
