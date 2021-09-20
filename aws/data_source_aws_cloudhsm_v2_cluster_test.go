@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
@@ -14,8 +15,8 @@ func testAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudhsm_v2_cluster.default"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudhsmv2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -33,7 +34,7 @@ func testAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
 	})
 }
 
-var testAccCheckCloudHsmV2ClusterDataSourceConfig = composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+var testAccCheckCloudHsmV2ClusterDataSourceConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = list(string)
@@ -71,4 +72,4 @@ resource "aws_cloudhsm_v2_cluster" "cluster" {
 data "aws_cloudhsm_v2_cluster" "default" {
   cluster_id = aws_cloudhsm_v2_cluster.cluster.cluster_id
 }
-`, acctest.RandInt()))
+`, sdkacctest.RandInt()))
