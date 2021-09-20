@@ -1,4 +1,4 @@
-package aws
+package xray
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/xray/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -60,7 +59,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if _, err := waiter.waitEncryptionConfigAvailable(conn); err != nil {
+	if _, err := waitEncryptionConfigAvailable(conn); err != nil {
 		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
 	}
 
