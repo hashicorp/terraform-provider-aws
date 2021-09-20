@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsS3BucketPublicAccessBlock() *schema.Resource {
