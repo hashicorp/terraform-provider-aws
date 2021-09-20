@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceSigningProfile() *schema.Resource {
@@ -74,8 +75,8 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,14 +119,14 @@ func ResourceSigningProfile() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	log.Printf("[DEBUG] Creating Signer signing profile")
 
@@ -215,7 +216,7 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting signer signing profile status: %s", err)
 	}
 
-	tags := keyvaluetags.SignerKeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.SignerKeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -240,7 +241,7 @@ func resourceSigningProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SignerUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.SignerUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Signer signing profile (%s) tags: %s", arn, err)
 		}
 	}
