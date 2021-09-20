@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
@@ -128,8 +129,8 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 }
 
 func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
 	out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{

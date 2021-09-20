@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).dsconn
+	conn := client.(*conns.AWSClient).DirectoryServiceConn
 
 	var sweeperErrs *multierror.Error
 
@@ -313,7 +314,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 }
 
 func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_directory" {
@@ -378,7 +379,7 @@ func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.Direct
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -413,7 +414,7 @@ func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -442,7 +443,7 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})

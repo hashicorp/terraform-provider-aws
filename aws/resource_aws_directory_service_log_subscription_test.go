@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
@@ -42,14 +43,14 @@ func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDirectoryServiceLogSubscriptionDestroy(s *terraform.State) error {
-	dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_log_subscription" {
 			continue
 		}
 
-		res, err := dsconn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
+		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 
@@ -80,9 +81,9 @@ func testAccCheckAwsDirectoryServiceLogSubscriptionExists(name string, logGroupN
 			return fmt.Errorf("No ID is set")
 		}
 
-		dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
-		res, err := dsconn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
+		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	dnsIps := expandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -73,7 +74,7 @@ func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceDat
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
 	if err != nil {
@@ -110,7 +111,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
 	if err != nil {
@@ -133,7 +134,7 @@ func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceDat
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
 	if err != nil {
