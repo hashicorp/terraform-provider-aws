@@ -70,7 +70,7 @@ func testSweepEcrPublicRepositories(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
+func TestAccECRPublicRepository_basic(t *testing.T) {
 	var v ecrpublic.Repository
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecrpublic_repository.test"
@@ -338,7 +338,7 @@ func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
+func TestAccECRPublicRepository_disappears(t *testing.T) {
 	var v ecrpublic.Repository
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecrpublic_repository.test"
