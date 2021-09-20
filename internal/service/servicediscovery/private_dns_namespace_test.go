@@ -96,7 +96,7 @@ func testSweepServiceDiscoveryPrivateDnsNamespaces(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
+func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -130,7 +130,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
+func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -156,7 +156,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Description(t *testing.T) {
+func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -184,7 +184,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Description(t *testing.T) {
 // This acceptance test ensures we properly send back error messaging. References:
 //  * https://github.com/hashicorp/terraform-provider-aws/issues/2830
 //  * https://github.com/hashicorp/terraform-provider-aws/issues/5532
-func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
+func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -205,7 +205,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Tags(t *testing.T) {
+func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

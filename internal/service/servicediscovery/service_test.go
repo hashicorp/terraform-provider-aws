@@ -68,7 +68,7 @@ func testSweepServiceDiscoveryServices(region string) error {
 	return nil
 }
 
-func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
+func TestAccServiceDiscoveryService_private(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -122,7 +122,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
+func TestAccServiceDiscoveryService_public(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_service_discovery_service.test"
 
@@ -181,7 +181,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
+func TestAccServiceDiscoveryService_http(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_service_discovery_service.test"
 
@@ -210,7 +210,7 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
+func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_service_discovery_service.test"
 
@@ -232,7 +232,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
+func TestAccServiceDiscoveryService_tags(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_service_discovery_service.test"
 

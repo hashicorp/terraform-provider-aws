@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
+func TestAccServiceDiscoveryDNSNamespaceDataSource_private(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
@@ -37,7 +37,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
+func TestAccServiceDiscoveryDNSNamespaceDataSource_public(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_public_dns_namespace.test"

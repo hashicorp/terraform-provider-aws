@@ -96,7 +96,7 @@ func testSweepServiceDiscoveryHttpNamespaces(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
+func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
@@ -130,7 +130,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
+func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
@@ -156,7 +156,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
+func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
@@ -186,7 +186,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryHttpNamespace_Tags(t *testing.T) {
+func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 

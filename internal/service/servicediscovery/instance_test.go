@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
+func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 	resourceName := "aws_service_discovery_instance.instance"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	domainName := acctest.RandomDomainName()
@@ -67,7 +67,7 @@ func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryInstance_public(t *testing.T) {
+func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 	resourceName := "aws_service_discovery_instance.instance"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	domainName := acctest.RandomDomainName()
@@ -120,7 +120,7 @@ func TestAccAWSServiceDiscoveryInstance_public(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryInstance_http(t *testing.T) {
+func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 	resourceName := "aws_service_discovery_instance.instance"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	domainName := acctest.RandomDomainName()
