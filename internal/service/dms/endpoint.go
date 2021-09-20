@@ -380,7 +380,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               tags.IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 	}
 
 	switch d.Get("engine_name").(string) {
@@ -527,7 +527,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := tftags.DatabasemigrationserviceListTags(conn, d.Get("endpoint_arn").(string))
+	tags, err := ListTags(conn, d.Get("endpoint_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
@@ -596,7 +596,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		arn := d.Get("endpoint_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Endpoint (%s) tags: %s", arn, err)
 		}
 	}

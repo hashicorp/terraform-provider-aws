@@ -103,7 +103,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 		ReplicationTaskIdentifier: aws.String(d.Get("replication_task_id").(string)),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
-		Tags:                      tags.IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:                      Tags(tags.IgnoreAws()),
 		TargetEndpointArn:         aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
@@ -174,7 +174,7 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	tags, err := tftags.DatabasemigrationserviceListTags(conn, d.Get("replication_task_arn").(string))
+	tags, err := ListTags(conn, d.Get("replication_task_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Replication Task (%s): %s", d.Get("replication_task_arn").(string), err)
@@ -230,7 +230,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		arn := d.Get("replication_task_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Replication Task (%s) tags: %s", arn, err)
 		}
 	}

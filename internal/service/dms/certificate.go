@@ -71,7 +71,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
-		Tags:                  tags.IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:                  Tags(tags.IgnoreAws()),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")
@@ -142,7 +142,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := tftags.DatabasemigrationserviceListTags(conn, d.Get("certificate_arn").(string))
+	tags, err := ListTags(conn, d.Get("certificate_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Certificate (%s): %w", d.Get("certificate_arn").(string), err)
@@ -169,7 +169,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 		arn := d.Get("certificate_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Certificate (%s) tags: %w", arn, err)
 		}
 	}
