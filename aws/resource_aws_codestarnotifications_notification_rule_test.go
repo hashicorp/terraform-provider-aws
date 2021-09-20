@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeStarNotificationsNotificationRule_basic(t *testing.T) {
@@ -199,7 +200,7 @@ func TestAccAWSCodeStarNotificationsNotificationRule_EventTypeIds(t *testing.T) 
 }
 
 func testAccCheckAWSCodeStarNotificationsNotificationRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codestarnotificationsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		switch rs.Type {
