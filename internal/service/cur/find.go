@@ -1,4 +1,4 @@
-package finder
+package cur
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
