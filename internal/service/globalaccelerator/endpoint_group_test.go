@@ -71,7 +71,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEndpointGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
