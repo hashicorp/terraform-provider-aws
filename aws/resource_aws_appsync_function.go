@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppsyncFunction() *schema.Resource {
+func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncFunctionCreate,
-		Read:   resourceAwsAppsyncFunctionRead,
-		Update: resourceAwsAppsyncFunctionUpdate,
-		Delete: resourceAwsAppsyncFunctionDelete,
+		Create: resourceFunctionCreate,
+		Read:   resourceFunctionRead,
+		Update: resourceFunctionUpdate,
+		Delete: resourceFunctionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -77,7 +77,7 @@ func resourceAwsAppsyncFunction() *schema.Resource {
 	}
 }
 
-func resourceAwsAppsyncFunctionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID := d.Get("api_id").(string)
@@ -105,10 +105,10 @@ func resourceAwsAppsyncFunctionCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fmt.Sprintf("%s-%s", apiID, aws.StringValue(resp.FunctionConfiguration.FunctionId)))
 
-	return resourceAwsAppsyncFunctionRead(d, meta)
+	return resourceFunctionRead(d, meta)
 }
 
-func resourceAwsAppsyncFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
@@ -144,7 +144,7 @@ func resourceAwsAppsyncFunctionRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsAppsyncFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
@@ -179,10 +179,10 @@ func resourceAwsAppsyncFunctionUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error updating AppSync Function %s: %s", d.Id(), err)
 	}
 
-	return resourceAwsAppsyncFunctionRead(d, meta)
+	return resourceFunctionRead(d, meta)
 }
 
-func resourceAwsAppsyncFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())

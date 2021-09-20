@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsAppsyncResolver_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(appsyncGraphqlApiResourceName, &api1),
 					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppsyncResolver(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

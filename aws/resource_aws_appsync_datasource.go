@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppsyncDatasource() *schema.Resource {
+func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncDatasourceCreate,
-		Read:   resourceAwsAppsyncDatasourceRead,
-		Update: resourceAwsAppsyncDatasourceUpdate,
-		Delete: resourceAwsAppsyncDatasourceDelete,
+		Create: resourceDataSourceCreate,
+		Read:   resourceDataSourceRead,
+		Update: resourceDataSourceUpdate,
+		Delete: resourceDataSourceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -139,7 +139,7 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 	}
 }
 
-func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -180,10 +180,10 @@ func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("name").(string))
 
-	return resourceAwsAppsyncDatasourceRead(d, meta)
+	return resourceDataSourceRead(d, meta)
 }
 
-func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
@@ -234,7 +234,7 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -278,10 +278,10 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	return resourceAwsAppsyncDatasourceRead(d, meta)
+	return resourceDataSourceRead(d, meta)
 }
 
-func resourceAwsAppsyncDatasourceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())

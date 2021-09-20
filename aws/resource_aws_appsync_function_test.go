@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsAppsyncFunction_basic(t *testing.T) {
@@ -132,7 +133,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppsyncFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
