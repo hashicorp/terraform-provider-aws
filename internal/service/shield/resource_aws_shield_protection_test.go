@@ -1,4 +1,4 @@
-package aws
+package shield_test
 
 import (
 	"fmt"
