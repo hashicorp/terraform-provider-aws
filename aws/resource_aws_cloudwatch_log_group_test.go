@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -96,12 +97,12 @@ func testSweepCloudwatchLogGroups(region string) error {
 
 func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:foo-bar-%d", rInt)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:foo-bar-%d", rInt)),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("foo-bar-%d", rInt)),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -130,8 +131,8 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -154,12 +155,12 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 
 func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -194,8 +195,8 @@ func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -217,12 +218,12 @@ func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 
 func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -252,12 +253,12 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 
 func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.alpha"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -284,12 +285,12 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 
 func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -307,12 +308,12 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 
 func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -370,12 +371,12 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 
 func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{

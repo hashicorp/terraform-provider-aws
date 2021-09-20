@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -63,13 +64,13 @@ func testSweepCloudWatchLogResourcePolicies(region string) error {
 }
 
 func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
-	name := acctest.RandString(5)
+	name := sdkacctest.RandString(5)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudWatchLogResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +79,7 @@ func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}]}", testAccGetPartitionDNSSuffix(), testAccGetPartition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}]}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
 			},
 			{
@@ -91,7 +92,7 @@ func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}]}", testAccGetPartitionDNSSuffix(), testAccGetPartition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}]}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
 			},
 		},

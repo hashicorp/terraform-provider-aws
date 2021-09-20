@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -79,7 +80,7 @@ func testSweepCloudwatchlogQueryDefinitions(region string) error {
 func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
-	queryName := acctest.RandomWithPrefix("tf-acc-test")
+	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	expectedQueryString := `fields @timestamp, @message
 | sort @timestamp desc
@@ -87,8 +88,8 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -115,9 +116,9 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 func testAccAWSCloudWatchQueryDefinitionImportStateId(v *cloudwatchlogs.QueryDefinition) resource.ImportStateIdFunc {
 	return func(*terraform.State) (string, error) {
 		id := arn.ARN{
-			AccountID: testAccGetAccountID(),
-			Partition: testAccGetPartition(),
-			Region:    testAccGetRegion(),
+			AccountID: acctest.AccountID(),
+			Partition: acctest.Partition(),
+			Region:    acctest.Region(),
 			Service:   cloudwatchlogs.ServiceName,
 			Resource:  fmt.Sprintf("query-definition:%s", aws.StringValue(v.QueryDefinitionId)),
 		}
@@ -129,11 +130,11 @@ func testAccAWSCloudWatchQueryDefinitionImportStateId(v *cloudwatchlogs.QueryDef
 func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
-	queryName := acctest.RandomWithPrefix("tf-acc-test")
+	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchQueryDefinitionConfig_Basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchQueryDefinition(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchQueryDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,12 +153,12 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 func TestAccAWSCloudWatchQueryDefinition_Rename(t *testing.T) {
 	var v1, v2 cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
-	queryName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedQueryName := acctest.RandomWithPrefix("tf-acc-test")
+	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	updatedQueryName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -188,11 +189,11 @@ func TestAccAWSCloudWatchQueryDefinition_Rename(t *testing.T) {
 func TestAccAWSCloudWatchQueryDefinition_LogGroups(t *testing.T) {
 	var v1, v2 cloudwatchlogs.QueryDefinition
 	resourceName := "aws_cloudwatch_query_definition.test"
-	queryName := acctest.RandomWithPrefix("tf-acc-test")
+	queryName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
