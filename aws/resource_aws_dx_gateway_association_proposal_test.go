@@ -9,13 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -84,16 +85,16 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +103,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
-					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 				),
@@ -120,16 +121,16 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +141,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
-					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 				),
@@ -158,21 +159,21 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -183,14 +184,14 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -198,7 +199,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -220,14 +221,14 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +236,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -257,14 +258,14 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -375,7 +376,7 @@ func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) re
 }
 
 func testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName string, rBgpAsn int) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   provider = "awsalternate"
 
@@ -402,7 +403,7 @@ resource "aws_vpn_gateway" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName string, rBgpAsn int) string {
-	return composeConfig(testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = aws_dx_gateway.test.id
   dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
@@ -412,7 +413,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_endOfLifeVpn(rName string, rBgpAsn int) string {
-	return composeConfig(testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
@@ -426,7 +427,7 @@ resource "aws_dx_gateway_association" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_endOfLifeTgw(rName string, rBgpAsn int) string {
-	return composeConfig(testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
@@ -440,7 +441,7 @@ resource "aws_dx_gateway_association" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   provider = "awsalternate"
 
@@ -468,7 +469,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfigAllowedPrefixes1(rName string, rBgpAsn int) string {
-	return composeConfig(testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/16"]
   dx_gateway_id               = aws_dx_gateway.test.id
@@ -479,7 +480,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfigAllowedPrefixes2(rName string, rBgpAsn int) string {
-	return composeConfig(testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/24", "10.0.1.0/24"]
   dx_gateway_id               = aws_dx_gateway.test.id

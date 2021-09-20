@@ -9,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsDxHostedPublicVirtualInterface_basic(t *testing.T) {
@@ -26,19 +27,19 @@ func TestAccAwsDxHostedPublicVirtualInterface_basic(t *testing.T) {
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
 	amazonAddress := "175.45.176.5/28"
 	customerAddress := "175.45.176.6/28"
-	bgpAsn := acctest.RandIntRange(64512, 65534)
-	vlan := acctest.RandIntRange(2049, 4094)
+	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxHostedPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +49,7 @@ func TestAccAwsDxHostedPublicVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -87,19 +88,19 @@ func TestAccAwsDxHostedPublicVirtualInterface_AccepterTags(t *testing.T) {
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
 	amazonAddress := "175.45.176.7/28"
 	customerAddress := "175.45.176.8/28"
-	bgpAsn := acctest.RandIntRange(64512, 65534)
-	vlan := acctest.RandIntRange(2049, 4094)
+	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxHostedPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +110,7 @@ func TestAccAwsDxHostedPublicVirtualInterface_AccepterTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -136,7 +137,7 @@ func TestAccAwsDxHostedPublicVirtualInterface_AccepterTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
@@ -169,7 +170,7 @@ func testAccCheckAwsDxHostedPublicVirtualInterfaceExists(name string, vif *direc
 }
 
 func testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
 resource "aws_dx_hosted_public_virtual_interface" "test" {
   address_family   = "ipv4"
