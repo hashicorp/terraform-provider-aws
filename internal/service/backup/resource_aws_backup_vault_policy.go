@@ -1,4 +1,4 @@
-package aws
+package backup
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfbackup "github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,7 +68,7 @@ func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) e
 func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	output, err := finder.FindBackupVaultAccessPolicyByName(conn, d.Id())
+	output, err := FindBackupVaultAccessPolicyByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Policy (%s) not found, removing from state", d.Id())
@@ -97,7 +95,7 @@ func resourceVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		BackupVaultName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, tfbackup.errCodeAccessDeniedException) {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return nil
 	}
 

@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfbackup "github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -16,7 +15,7 @@ func FindBackupVaultAccessPolicyByName(conn *backup.Backup, name string) (*backu
 
 	output, err := conn.GetBackupVaultAccessPolicy(input)
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, tfbackup.errCodeAccessDeniedException) {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
