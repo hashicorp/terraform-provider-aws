@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePipeline() *schema.Resource {
@@ -36,18 +37,18 @@ func ResourcePipeline() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	uniqueID := resource.UniqueId()
 
@@ -89,7 +90,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
-	tags := keyvaluetags.DatapipelineKeyValueTags(v.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.DatapipelineKeyValueTags(v.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -109,7 +110,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DatapipelineUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.DatapipelineUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Datapipeline Pipeline (%s) tags: %s", d.Id(), err)
 		}
 	}
