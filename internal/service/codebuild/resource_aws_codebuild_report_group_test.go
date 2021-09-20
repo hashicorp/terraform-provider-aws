@@ -276,7 +276,7 @@ func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
+		resp, err := finder.FindReportGroupByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -298,7 +298,7 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
+		resp, err := finder.FindReportGroupByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

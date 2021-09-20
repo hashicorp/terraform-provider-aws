@@ -134,7 +134,7 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	reportGroup, err := finder.ReportGroupByArn(conn, d.Id())
+	reportGroup, err := finder.FindReportGroupByARN(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error Listing CodeBuild Report Groups: %w", err)
 	}
@@ -208,7 +208,7 @@ func resourceReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting CodeBuild Report Group (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ReportGroupDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitReportGroupDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become deleted: %w", d.Id(), err)
 	}
 
