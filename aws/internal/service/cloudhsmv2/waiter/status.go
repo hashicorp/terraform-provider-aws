@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
