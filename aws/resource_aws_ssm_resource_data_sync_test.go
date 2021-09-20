@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -71,13 +72,13 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 	resourceName := "aws_ssm_resource_data_sync.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
+				Config: testAccSsmResourceDataSyncConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
 				),
@@ -92,17 +93,17 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 }
 
 func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_ssm_resource_data_sync.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), rName),
+				Config: testAccSsmResourceDataSyncConfig(sdkacctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
 				),
@@ -113,7 +114,7 @@ func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSsmResourceDataSyncConfigUpdate(acctest.RandInt(), rName),
+				Config: testAccSsmResourceDataSyncConfigUpdate(sdkacctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
 				),

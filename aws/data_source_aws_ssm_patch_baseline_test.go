@@ -5,16 +5,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSsmPatchBaselineDataSource_existingBaseline(t *testing.T) {
 	resourceName := "data.aws_ssm_patch_baseline.test_existing"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -30,11 +31,11 @@ func TestAccAWSSsmPatchBaselineDataSource_existingBaseline(t *testing.T) {
 
 func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 	resourceName := "data.aws_ssm_patch_baseline.test_new"
-	rName := acctest.RandomWithPrefix("tf-bl-test")
+	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{

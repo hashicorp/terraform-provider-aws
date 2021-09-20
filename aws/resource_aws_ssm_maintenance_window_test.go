@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -78,12 +79,12 @@ func testSweepSsmMaintenanceWindows(region string) error {
 
 func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -114,12 +115,12 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -150,12 +151,12 @@ func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -195,12 +196,12 @@ func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -218,13 +219,13 @@ func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -256,12 +257,12 @@ func TestAccAWSSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_Cutoff(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -290,12 +291,12 @@ func TestAccAWSSSMMaintenanceWindow_Cutoff(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_Duration(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -324,12 +325,12 @@ func TestAccAWSSSMMaintenanceWindow_Duration(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_Enabled(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -360,12 +361,12 @@ func TestAccAWSSSMMaintenanceWindow_EndDate(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
 	endDate1 := time.Now().UTC().Add(365 * 24 * time.Hour).Format(time.RFC3339)
 	endDate2 := time.Now().UTC().Add(730 * 24 * time.Hour).Format(time.RFC3339)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -401,12 +402,12 @@ func TestAccAWSSSMMaintenanceWindow_EndDate(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_Schedule(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -435,12 +436,12 @@ func TestAccAWSSSMMaintenanceWindow_Schedule(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_ScheduleTimezone(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -476,12 +477,12 @@ func TestAccAWSSSMMaintenanceWindow_ScheduleTimezone(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindow_ScheduleOffset(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2 ssm.MaintenanceWindowIdentity
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
@@ -512,12 +513,12 @@ func TestAccAWSSSMMaintenanceWindow_StartDate(t *testing.T) {
 	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
 	startDate1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	startDate2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{

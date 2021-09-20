@@ -7,18 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("patch-baseline-%s", name)),
@@ -45,7 +46,7 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),
@@ -67,11 +68,11 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 	var patch ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -111,12 +112,12 @@ func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 	var identity ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -124,7 +125,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &identity),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmPatchBaseline(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSsmPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,11 +135,11 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -177,12 +178,12 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -226,12 +227,12 @@ func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -278,12 +279,12 @@ func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_ApprovedPatchesNonSec(t *testing.T) {
 	var ssmPatch ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
@@ -305,12 +306,12 @@ func TestAccAWSSSMPatchBaseline_ApprovedPatchesNonSec(t *testing.T) {
 
 func TestAccAWSSSMPatchBaseline_RejectPatchesAction(t *testing.T) {
 	var ssmPatch ssm.PatchBaselineIdentity
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{

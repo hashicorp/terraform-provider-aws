@@ -5,17 +5,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -45,11 +46,11 @@ func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 
 func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
-	name := acctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
