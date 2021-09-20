@@ -42,7 +42,7 @@ func testSweepCloudhsmv2Clusters(region string) error {
 				continue
 			}
 
-			r := ResourceCluster()
+			r := tfcloudhsmv2.ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster.ClusterId))
 			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
@@ -117,9 +117,9 @@ func testAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
