@@ -681,9 +681,9 @@ func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroup
 
 	bngi := &kafka.BrokerNodeGroupInfo{
 		BrokerAZDistribution: aws.String(m["az_distribution"].(string)),
-		ClientSubnets:        expandStringList(m["client_subnets"].([]interface{})),
+		ClientSubnets:        expandStringSet(m["client_subnets"].(*schema.Set)),
 		InstanceType:         aws.String(m["instance_type"].(string)),
-		SecurityGroups:       expandStringList(m["security_groups"].([]interface{})),
+		SecurityGroups:       expandStringSet(m["security_groups"].(*schema.Set)),
 		StorageInfo: &kafka.StorageInfo{
 			EbsStorageInfo: &kafka.EBSStorageInfo{
 				VolumeSize: aws.Int64(int64(m["ebs_volume_size"].(int))),
@@ -946,9 +946,9 @@ func flattenMskBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]in
 
 	m := map[string]interface{}{
 		"az_distribution": aws.StringValue(b.BrokerAZDistribution),
-		"client_subnets":  flattenStringList(b.ClientSubnets),
+		"client_subnets":  aws.StringValueSlice(b.ClientSubnets),
 		"instance_type":   aws.StringValue(b.InstanceType),
-		"security_groups": flattenStringList(b.SecurityGroups),
+		"security_groups": aws.StringValueSlice(b.SecurityGroups),
 	}
 	if b.StorageInfo != nil {
 		if b.StorageInfo.EbsStorageInfo != nil {
