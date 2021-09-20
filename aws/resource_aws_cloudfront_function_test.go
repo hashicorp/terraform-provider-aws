@@ -8,16 +8,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(cloudfront.EndpointsID, testAccErrorCheckSkipFunction)
+	acctest.RegisterServiceErrorCheckFunc(cloudfront.EndpointsID, testAccErrorCheckSkipFunction)
 
 	resource.AddTestSweepers("aws_cloudfront_function", &resource.Sweeper{
 		Name: "aws_cloudfront_function",
@@ -26,7 +27,7 @@ func init() {
 }
 
 func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterValueException: Unsupported source arn",
 	)
 }
@@ -93,11 +94,11 @@ func testSweepCloudfrontFunctions(region string) error {
 func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
@@ -128,12 +129,12 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontFunction(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,11 +153,11 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -191,11 +192,11 @@ func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -234,11 +235,11 @@ func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
 func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -269,11 +270,11 @@ func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{

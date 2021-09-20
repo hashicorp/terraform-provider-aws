@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -70,12 +71,12 @@ func testSweepCloudFrontKeyGroup(region string) error {
 }
 
 func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
@@ -100,12 +101,12 @@ func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontKeyGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,15 +123,15 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	firstComment := "first comment"
 	secondComment := "second comment"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
@@ -158,12 +159,12 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{

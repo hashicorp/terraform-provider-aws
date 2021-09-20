@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -73,10 +74,10 @@ func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
@@ -102,16 +103,16 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontMonitoringSubscription(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontMonitoringSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,10 +125,10 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
@@ -253,7 +254,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 func testAccAWSCloudFrontMonitoringSubscriptionConfig(status string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCloudFrontMonitoringSubscriptionConfigBase(),
 		fmt.Sprintf(`
 resource "aws_cloudfront_monitoring_subscription" "test" {

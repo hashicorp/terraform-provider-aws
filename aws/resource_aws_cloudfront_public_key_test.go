@@ -7,18 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -41,12 +42,12 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontPublicKey(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontPublicKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,8 +68,8 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -92,12 +93,12 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
