@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
@@ -133,7 +134,7 @@ func testAccCheckAWSAPIGatewayResourceExists(n string, res *apigateway.Resource)
 			return fmt.Errorf("No API Gateway Resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetResourceInput{
 			ResourceId: aws.String(rs.Primary.ID),
@@ -155,7 +156,7 @@ func testAccCheckAWSAPIGatewayResourceExists(n string, res *apigateway.Resource)
 }
 
 func testAccCheckAWSAPIGatewayResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_resource" {

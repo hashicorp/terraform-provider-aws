@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
@@ -125,7 +126,7 @@ func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.
 			return fmt.Errorf("No API Gateway Client Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetClientCertificateInput{
 			ClientCertificateId: aws.String(rs.Primary.ID),
@@ -142,7 +143,7 @@ func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.
 }
 
 func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_client_certificate" {

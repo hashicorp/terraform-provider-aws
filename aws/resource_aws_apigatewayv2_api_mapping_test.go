@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // These tests need to be serialized, else resources get orphaned after "TooManyRequests" errors.
@@ -157,7 +158,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 		privateKey := acctest.TLSRSAPrivateKeyPEM(2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey, fmt.Sprintf("%s.example.com", rName))
 
-		conn := acctest.Provider.Meta().(*AWSClient).acmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 
 		output, err := conn.ImportCertificate(&acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
@@ -177,7 +178,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 }
 
 func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_api_mapping" {
@@ -203,7 +204,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2ApiMappingDisappears(domainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{
 			ApiMappingId: v.ApiMappingId,
@@ -225,7 +226,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingExists(n string, vDomainName *string, 
 			return fmt.Errorf("No API Gateway v2 API mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		domainName := aws.String(rs.Primary.Attributes["domain_name"])
 		resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{

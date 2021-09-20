@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepAppsyncGraphqlApis(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).appsyncconn
+	conn := client.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.ListGraphqlApisInput{}
 
@@ -969,7 +970,7 @@ func TestAccAWSAppsyncGraphqlApi_XrayEnabled(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_graphql_api" {
 			continue
@@ -997,7 +998,7 @@ func testAccCheckAwsAppsyncGraphqlApiExists(name string, api *appsync.GraphqlApi
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
 		input := &appsync.GetGraphqlApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -1022,7 +1023,7 @@ func testAccCheckAwsAppsyncTypeExists(name, typeName string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
 		input := &appsync.GetTypeInput{
 			ApiId:    aws.String(rs.Primary.ID),

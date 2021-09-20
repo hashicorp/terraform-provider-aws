@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
@@ -91,7 +92,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetGatewayResponseInput{
 			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
@@ -109,7 +110,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 }
 
 func testAccCheckAWSAPIGatewayGatewayResponseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_gateway_response" {

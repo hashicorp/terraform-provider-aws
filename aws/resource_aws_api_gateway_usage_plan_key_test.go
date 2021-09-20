@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
@@ -111,7 +112,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.Usage
 			return fmt.Errorf("No API Gateway Usage Plan Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetUsagePlanKeyInput{
 			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
@@ -135,7 +136,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.Usage
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_usage_plan_key" {

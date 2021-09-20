@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayMethodSettings() *schema.Resource {
@@ -134,7 +135,7 @@ func flattenAwsApiGatewayMethodSettings(settings *apigateway.MethodSetting) []in
 }
 
 func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := &apigateway.GetStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
@@ -170,7 +171,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	methodPath := d.Get("method_path").(string)
 	prefix := fmt.Sprintf("/%s/", methodPath)
@@ -271,7 +272,7 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := &apigateway.UpdateStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayDeployment() *schema.Resource {
@@ -75,7 +76,7 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 }
 
 func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
@@ -103,7 +104,7 @@ func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Deployment %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -124,13 +125,13 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 
 	stageName := d.Get("stage_name").(string)
 
-	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*AWSClient), restApiId, stageName))
+	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*conns.AWSClient), restApiId, stageName))
 
 	executionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "execute-api",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("%s/%s", restApiId, stageName),
 	}.String()
 	d.Set("execution_arn", executionArn)
@@ -157,7 +158,7 @@ func resourceAwsApiGatewayDeploymentUpdateOperations(d *schema.ResourceData) []*
 }
 
 func resourceAwsApiGatewayDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
@@ -174,7 +175,7 @@ func resourceAwsApiGatewayDeploymentUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 
 	// If the stage has been updated to point at a different deployment, then
