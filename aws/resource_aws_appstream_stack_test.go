@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsAppStreamStack_basic(t *testing.T) {
@@ -57,7 +58,7 @@ func TestAccAwsAppStreamStack_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppStreamStack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

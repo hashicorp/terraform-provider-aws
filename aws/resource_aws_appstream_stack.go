@@ -24,12 +24,12 @@ var (
 	flagDiffUserSettings = false
 )
 
-func resourceAwsAppStreamStack() *schema.Resource {
+func ResourceStack() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppStreamStackCreate,
-		ReadWithoutTimeout:   resourceAwsAppStreamStackRead,
-		UpdateWithoutTimeout: resourceAwsAppStreamStackUpdate,
-		DeleteWithoutTimeout: resourceAwsAppStreamStackDelete,
+		CreateWithoutTimeout: resourceStackCreate,
+		ReadWithoutTimeout:   resourceStackRead,
+		UpdateWithoutTimeout: resourceStackUpdate,
+		DeleteWithoutTimeout: resourceStackDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -184,7 +184,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 	}
 }
 
-func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.CreateStackInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -258,10 +258,10 @@ func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.Stack.Name))
 
-	return resourceAwsAppStreamStackRead(ctx, d, meta)
+	return resourceStackRead(ctx, d, meta)
 }
 
-func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -322,7 +322,7 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsAppStreamStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	input := &appstream.UpdateStackInput{
@@ -372,10 +372,10 @@ func resourceAwsAppStreamStackUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceAwsAppStreamStackRead(ctx, d, meta)
+	return resourceStackRead(ctx, d, meta)
 }
 
-func resourceAwsAppStreamStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	_, err := conn.DeleteStackWithContext(ctx, &appstream.DeleteStackInput{
