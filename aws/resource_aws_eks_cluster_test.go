@@ -31,13 +31,13 @@ func init() {
 }
 
 func testSweepEksClusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).eksconn
 	input := &eks.ListClustersInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -49,13 +49,13 @@ func testSweepEksClusters(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
 		return nil
 	}
@@ -64,7 +64,7 @@ func testSweepEksClusters(region string) error {
 		return fmt.Errorf("error listing EKS Clusters (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = acctest.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EKS Clusters (%s): %w", region, err)
@@ -81,7 +81,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,14 +128,14 @@ func TestAccAWSEksCluster_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEksClusterConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEksCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,7 +152,7 @@ func TestAccAWSEksCluster_EncryptionConfig_Create(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,7 +183,7 @@ func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,7 +223,7 @@ func TestAccAWSEksCluster_EncryptionConfig_VersionUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -301,7 +301,7 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -348,7 +348,7 @@ func TestAccAWSEksCluster_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -393,7 +393,7 @@ func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -421,7 +421,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -467,7 +467,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -513,7 +513,7 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -549,7 +549,7 @@ func TestAccAWSEksCluster_NetworkConfig_ServiceIpv4Cidr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -614,7 +614,7 @@ func testAccCheckAWSEksClusterExists(resourceName string, cluster *eks.Cluster) 
 			return fmt.Errorf("No EKS Cluster ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*AWSClient).eksconn
 
 		output, err := finder.ClusterByName(conn, rs.Primary.ID)
 
@@ -634,7 +634,7 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*AWSClient).eksconn
 
 		_, err := finder.ClusterByName(conn, rs.Primary.ID)
 
@@ -673,7 +673,7 @@ func testAccCheckAWSEksClusterNotRecreated(i, j *eks.Cluster) resource.TestCheck
 }
 
 func testAccPreCheckAWSEks(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*AWSClient).eksconn
 
 	input := &eks.ListClustersInput{}
 
