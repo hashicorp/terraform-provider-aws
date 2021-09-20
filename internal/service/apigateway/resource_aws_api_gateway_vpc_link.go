@@ -1,4 +1,4 @@
-package aws
+package apigateway
 
 import (
 	"fmt"
@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigateway/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -75,7 +74,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.Id))
 
-	if err := waiter.waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {
+	if err := waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after creation: %w", d.Id(), err)
 	}
 
@@ -169,7 +168,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := waiter.waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {
+	if err := waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after update: %w", d.Id(), err)
 	}
 
@@ -193,7 +192,7 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.waitAPIGatewayVPCLinkDeleted(conn, d.Id()); err != nil {
+	if err := waitAPIGatewayVPCLinkDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %w", d.Id(), err)
 	}
 

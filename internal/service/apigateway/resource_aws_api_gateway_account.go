@@ -1,4 +1,4 @@
-package aws
+package apigateway
 
 import (
 	"fmt"
@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceAccount() *schema.Resource {
@@ -99,7 +99,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.UpdateAccount(&input)
 
 		if err != nil {
