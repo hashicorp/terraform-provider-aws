@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validRolePolicyName(v interface{}, k string) (ws []string, errors []error) {

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RetrieveGPGKey returns the PGP key specified as the pgpKey parameter, or queries

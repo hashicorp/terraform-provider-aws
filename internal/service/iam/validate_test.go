@@ -2,7 +2,6 @@ package iam
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidRoleProfileName(t *testing.T) {
