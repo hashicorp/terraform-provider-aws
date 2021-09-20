@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const awsAutoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -45,13 +46,13 @@ func ResourceSchedule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateASGScheduleTimestamp,
+				ValidateFunc: validScheduleTimestamp,
 			},
 			"end_time": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateASGScheduleTimestamp,
+				ValidateFunc: validScheduleTimestamp,
 			},
 			"time_zone": {
 				Type:     schema.TypeString,
