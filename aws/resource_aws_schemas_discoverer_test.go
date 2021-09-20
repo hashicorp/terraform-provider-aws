@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepSchemasDiscoverers(region string) error {
 		}
 
 		for _, discoverer := range page.Discoverers {
-			r := resourceAwsSchemasDiscoverer()
+			r := ResourceDiscoverer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(discoverer.DiscovererId))
 			err = r.Delete(d, client)
@@ -110,7 +111,7 @@ func TestAccAWSSchemasDiscoverer_disappears(t *testing.T) {
 				Config: testAccAWSSchemasDiscovererConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasDiscovererExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSchemasDiscoverer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDiscoverer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

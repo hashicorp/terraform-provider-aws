@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSchemasRegistry() *schema.Resource {
+func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSchemasRegistryCreate,
-		Read:   resourceAwsSchemasRegistryRead,
-		Update: resourceAwsSchemasRegistryUpdate,
-		Delete: resourceAwsSchemasRegistryDelete,
+		Create: resourceRegistryCreate,
+		Read:   resourceRegistryRead,
+		Update: resourceRegistryUpdate,
+		Delete: resourceRegistryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsSchemasRegistry() *schema.Resource {
 	}
 }
 
-func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -83,10 +83,10 @@ func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(input.RegistryName))
 
-	return resourceAwsSchemasRegistryRead(d, meta)
+	return resourceRegistryRead(d, meta)
 }
 
-func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -126,7 +126,7 @@ func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChanges("description") {
@@ -150,10 +150,10 @@ func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsSchemasRegistryRead(d, meta)
+	return resourceRegistryRead(d, meta)
 }
 
-func resourceAwsSchemasRegistryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry (%s)", d.Id())
