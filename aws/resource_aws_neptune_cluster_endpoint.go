@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNeptuneClusterEndpoint() *schema.Resource {
+func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterEndpointCreate,
-		Read:   resourceAwsNeptuneClusterEndpointRead,
-		Update: resourceAwsNeptuneClusterEndpointUpdate,
-		Delete: resourceAwsNeptuneClusterEndpointDelete,
+		Create: resourceClusterEndpointCreate,
+		Read:   resourceClusterEndpointRead,
+		Update: resourceClusterEndpointUpdate,
+		Delete: resourceClusterEndpointDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -72,7 +72,7 @@ func resourceAwsNeptuneClusterEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -110,11 +110,11 @@ func resourceAwsNeptuneClusterEndpointCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsNeptuneClusterEndpointRead(d, meta)
+	return resourceClusterEndpointRead(d, meta)
 
 }
 
-func resourceAwsNeptuneClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -166,7 +166,7 @@ func resourceAwsNeptuneClusterEndpointRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsNeptuneClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -206,10 +206,10 @@ func resourceAwsNeptuneClusterEndpointUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsNeptuneClusterEndpointRead(d, meta)
+	return resourceClusterEndpointRead(d, meta)
 }
 
-func resourceAwsNeptuneClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	endpointId := d.Get("cluster_endpoint_identifier").(string)

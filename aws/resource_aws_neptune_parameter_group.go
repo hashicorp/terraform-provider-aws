@@ -19,12 +19,12 @@ import (
 // we've got them all.
 const maxParams = 20
 
-func resourceAwsNeptuneParameterGroup() *schema.Resource {
+func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneParameterGroupCreate,
-		Read:   resourceAwsNeptuneParameterGroupRead,
-		Update: resourceAwsNeptuneParameterGroupUpdate,
-		Delete: resourceAwsNeptuneParameterGroupDelete,
+		Create: resourceParameterGroupCreate,
+		Read:   resourceParameterGroupRead,
+		Update: resourceParameterGroupUpdate,
+		Delete: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -85,7 +85,7 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -107,10 +107,10 @@ func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interfa
 	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
 	log.Printf("[INFO] Neptune Parameter Group ID: %s", d.Id())
 
-	return resourceAwsNeptuneParameterGroupUpdate(d, meta)
+	return resourceParameterGroupUpdate(d, meta)
 }
 
-func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -184,7 +184,7 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	if d.HasChange("parameter") {
@@ -266,10 +266,10 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsNeptuneParameterGroupRead(d, meta)
+	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	deleteOpts := neptune.DeleteDBParameterGroupInput{

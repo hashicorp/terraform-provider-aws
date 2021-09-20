@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNeptuneClusterInstance() *schema.Resource {
+func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterInstanceCreate,
-		Read:   resourceAwsNeptuneClusterInstanceRead,
-		Update: resourceAwsNeptuneClusterInstanceUpdate,
-		Delete: resourceAwsNeptuneClusterInstanceDelete,
+		Create: resourceClusterInstanceCreate,
+		Read:   resourceClusterInstanceRead,
+		Update: resourceClusterInstanceUpdate,
+		Delete: resourceClusterInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -191,7 +191,7 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -278,10 +278,10 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	return resourceAwsNeptuneClusterInstanceRead(d, meta)
+	return resourceClusterInstanceRead(d, meta)
 }
 
-func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn)
 	if err != nil {
 		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
@@ -377,7 +377,7 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	requestUpdate := false
 
@@ -461,10 +461,10 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsNeptuneClusterInstanceRead(d, meta)
+	return resourceClusterInstanceRead(d, meta)
 }
 
-func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy: %v", d.Id())

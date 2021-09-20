@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsNeptuneEngineVersion() *schema.Resource {
+func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNeptuneEngineVersionRead,
+		Read: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
 			"engine": {
 				Type:     schema.TypeString,
@@ -83,7 +83,7 @@ func dataSourceAwsNeptuneEngineVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAwsNeptuneEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeDBEngineVersionsInput{}

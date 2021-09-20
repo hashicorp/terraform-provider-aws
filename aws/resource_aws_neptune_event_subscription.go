@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNeptuneEventSubscription() *schema.Resource {
+func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneEventSubscriptionCreate,
-		Read:   resourceAwsNeptuneEventSubscriptionRead,
-		Update: resourceAwsNeptuneEventSubscriptionUpdate,
-		Delete: resourceAwsNeptuneEventSubscriptionDelete,
+		Create: resourceEventSubscriptionCreate,
+		Read:   resourceEventSubscriptionRead,
+		Update: resourceEventSubscriptionUpdate,
+		Delete: resourceEventSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -87,7 +87,7 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -155,10 +155,10 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error waiting for Neptune Event Subscription state to be \"active\": %s", err)
 	}
 
-	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
+	return resourceEventSubscriptionRead(d, meta)
 }
 
-func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -216,7 +216,7 @@ func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	requestUpdate := false
@@ -325,10 +325,10 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
+	return resourceEventSubscriptionRead(d, meta)
 }
 
-func resourceAwsNeptuneEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	deleteOpts := neptune.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
