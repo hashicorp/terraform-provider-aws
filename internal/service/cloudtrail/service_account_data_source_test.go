@@ -8,7 +8,7 @@ import (
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 )
 
-func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
+func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
@@ -29,7 +29,7 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
+func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
 	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
