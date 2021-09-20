@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudFrontCachePolicy_basic(t *testing.T) {
+func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_cache_policy.example"
 
@@ -45,7 +45,7 @@ func TestAccAWSCloudFrontCachePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontCachePolicy_update(t *testing.T) {
+func TestAccCloudFrontCachePolicy_update(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_cache_policy.example"
 
@@ -95,7 +95,7 @@ func TestAccAWSCloudFrontCachePolicy_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontCachePolicy_noneBehavior(t *testing.T) {
+func TestAccCloudFrontCachePolicy_noneBehavior(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_cache_policy.example"
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
+func TestAccCloudFrontFunctionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_cloudfront_function.test"
 	resourceName := "aws_cloudfront_function.test"

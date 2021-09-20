@@ -14,7 +14,7 @@ import (
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
-func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
+func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	var origin cloudfront.GetCloudFrontOriginAccessIdentityOutput
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
@@ -45,7 +45,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
+func TestAccCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	var origin cloudfront.GetCloudFrontOriginAccessIdentityOutput
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
@@ -75,7 +75,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
+func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 	var origin cloudfront.GetCloudFrontOriginAccessIdentityOutput
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 

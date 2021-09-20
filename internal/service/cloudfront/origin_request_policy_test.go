@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudFrontOriginRequestPolicy_basic(t *testing.T) {
+func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_origin_request_policy.example"
 
@@ -42,7 +42,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
+func TestAccCloudFrontOriginRequestPolicy_update(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_origin_request_policy.example"
 
@@ -84,7 +84,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontOriginRequestPolicy_noneBehavior(t *testing.T) {
+func TestAccCloudFrontOriginRequestPolicy_noneBehavior(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_origin_request_policy.example"
 
