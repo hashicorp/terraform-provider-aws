@@ -1,6 +1,9 @@
 package autoscaling_test
 
-import "testing"
+import (
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
+	"testing"
+)
 
 func TestCapacitySatisfiedCreate(t *testing.T) {
 	cases := map[string]struct {
@@ -119,7 +122,7 @@ func TestCapacitySatisfiedCreate(t *testing.T) {
 		},
 	}
 
-	r := ResourceGroup()
+	r := tfautoscaling.ResourceGroup()
 	for tn, tc := range cases {
 		d := r.TestResourceData()
 		for k, v := range tc.Data {
@@ -127,7 +130,7 @@ func TestCapacitySatisfiedCreate(t *testing.T) {
 				t.Fatalf("err: %s", err)
 			}
 		}
-		gotSatisfied, gotReason := capacitySatisfiedCreate(d, tc.HaveASG, tc.HaveELB)
+		gotSatisfied, gotReason := tfautoscaling.CapacitySatisfiedCreate(d, tc.HaveASG, tc.HaveELB)
 
 		if gotSatisfied != tc.ExpectSatisfied {
 			t.Fatalf("%s: expected satisfied: %t, got: %t (reason: %s)",
@@ -201,7 +204,7 @@ func TestCapacitySatisfiedUpdate(t *testing.T) {
 		},
 	}
 
-	r := ResourceGroup()
+	r := tfautoscaling.ResourceGroup()
 	for tn, tc := range cases {
 		d := r.TestResourceData()
 		for k, v := range tc.Data {
@@ -209,7 +212,7 @@ func TestCapacitySatisfiedUpdate(t *testing.T) {
 				t.Fatalf("err: %s", err)
 			}
 		}
-		gotSatisfied, gotReason := capacitySatisfiedUpdate(d, tc.HaveASG, tc.HaveELB)
+		gotSatisfied, gotReason := tfautoscaling.CapacitySatisfiedUpdate(d, tc.HaveASG, tc.HaveELB)
 
 		if gotSatisfied != tc.ExpectSatisfied {
 			t.Fatalf("%s: expected satisfied: %t, got: %t (reason: %s)",

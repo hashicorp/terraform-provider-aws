@@ -53,7 +53,7 @@ func TestAccAWSAutoscalingGroupTag_disappears(t *testing.T) {
 				Config: testAccAutoscalingGroupTagConfig("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoscalingGroupTagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroupTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-const awsAutoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
+const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
 func ResourceSchedule() *schema.Resource {
 	return &schema.Resource{
@@ -110,7 +110,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if attr, ok := d.GetOk("start_time"); ok {
-		t, err := time.Parse(awsAutoscalingScheduleTimeLayout, attr.(string))
+		t, err := time.Parse(ScheduleTimeLayout, attr.(string))
 		if err != nil {
 			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule Start Time: %s", err.Error())
 		}
@@ -118,7 +118,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if attr, ok := d.GetOk("end_time"); ok {
-		t, err := time.Parse(awsAutoscalingScheduleTimeLayout, attr.(string))
+		t, err := time.Parse(ScheduleTimeLayout, attr.(string))
 		if err != nil {
 			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule End Time: %s", err.Error())
 		}
@@ -197,11 +197,11 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("recurrence", sa.Recurrence)
 
 	if sa.StartTime != nil {
-		d.Set("start_time", sa.StartTime.Format(awsAutoscalingScheduleTimeLayout))
+		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
 	}
 
 	if sa.EndTime != nil {
-		d.Set("end_time", sa.EndTime.Format(awsAutoscalingScheduleTimeLayout))
+		d.Set("end_time", sa.EndTime.Format(ScheduleTimeLayout))
 	}
 
 	if sa.TimeZone != nil {

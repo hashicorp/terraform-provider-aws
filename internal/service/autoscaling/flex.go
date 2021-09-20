@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
-func flattenEnabledMetrics(list []*autoscaling.EnabledMetric) []string {
+func FlattenEnabledMetrics(list []*autoscaling.EnabledMetric) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Metric != nil {
@@ -30,7 +30,7 @@ func flattenSuspendedProcesses(list []*autoscaling.SuspendedProcess) []string {
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
 // returns a []*autoscaling.StepAdjustment.
-func expandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustment, error) {
+func ExpandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustment, error) {
 	var adjustments []*autoscaling.StepAdjustment
 
 	// Loop over our configured step adjustments and create an array
@@ -81,7 +81,7 @@ func expandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustm
 }
 
 // Flattens step adjustments into a list of map[string]interface.
-func flattenStepAdjustments(adjustments []*autoscaling.StepAdjustment) []map[string]interface{} {
+func FlattenStepAdjustments(adjustments []*autoscaling.StepAdjustment) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(adjustments))
 	for _, raw := range adjustments {
 		a := map[string]interface{}{

@@ -14,7 +14,7 @@ func TestFlattenEnabledMetrics(t *testing.T) {
 		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
 	}
 
-	result := flattenEnabledMetrics(expanded)
+	result := FlattenEnabledMetrics(expanded)
 
 	if len(result) != 2 {
 		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
@@ -37,7 +37,7 @@ func TestExpandStepAdjustments(t *testing.T) {
 			"scaling_adjustment":          1,
 		},
 	}
-	parameters, err := expandStepAdjustments(expanded)
+	parameters, err := ExpandStepAdjustments(expanded)
 	if err != nil {
 		t.Fatalf("bad: %#v", err)
 	}
@@ -65,7 +65,7 @@ func TestFlattenStepAdjustments(t *testing.T) {
 		},
 	}
 
-	result := flattenStepAdjustments(expanded)[0]
+	result := FlattenStepAdjustments(expanded)[0]
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")
 	}

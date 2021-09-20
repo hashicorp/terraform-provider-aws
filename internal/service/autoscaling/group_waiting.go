@@ -162,8 +162,8 @@ func isELBCapacitySatisfied(d *schema.ResourceData, meta interface{}, g *autosca
 
 type capacitySatisfiedFunc func(*schema.ResourceData, int, int) (bool, string)
 
-// capacitySatisfiedCreate treats all targets as minimums
-func capacitySatisfiedCreate(d *schema.ResourceData, haveASG, haveELB int) (bool, string) {
+// CapacitySatisfiedCreate treats all targets as minimums
+func CapacitySatisfiedCreate(d *schema.ResourceData, haveASG, haveELB int) (bool, string) {
 	minASG := d.Get("min_size").(int)
 	if wantASG := d.Get("desired_capacity").(int); wantASG > 0 {
 		minASG = wantASG
@@ -183,8 +183,8 @@ func capacitySatisfiedCreate(d *schema.ResourceData, haveASG, haveELB int) (bool
 	return true, ""
 }
 
-// capacitySatisfiedUpdate only cares about specific targets
-func capacitySatisfiedUpdate(d *schema.ResourceData, haveASG, haveELB int) (bool, string) {
+// CapacitySatisfiedUpdate only cares about specific targets
+func CapacitySatisfiedUpdate(d *schema.ResourceData, haveASG, haveELB int) (bool, string) {
 	if wantASG := d.Get("desired_capacity").(int); wantASG > 0 {
 		if haveASG != wantASG {
 			return false, fmt.Sprintf(
