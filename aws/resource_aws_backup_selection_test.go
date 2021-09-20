@@ -6,19 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsBackupSelection_basic(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -41,11 +42,11 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 func TestAccAwsBackupSelection_disappears(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -53,7 +54,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 				Config: testAccBackupSelectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupSelection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupSelection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,11 +66,11 @@ func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	backupPlanResourceName := "aws_backup_plan.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -77,8 +78,8 @@ func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 				Config: testAccBackupSelectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupSelection(), resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupPlan(), backupPlanResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupSelection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupPlan(), backupPlanResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,11 +90,11 @@ func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 func TestAccAwsBackupSelection_withTags(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -117,11 +118,11 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -145,11 +146,11 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 	var selection1, selection2 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -279,7 +280,7 @@ resource "aws_backup_plan" "test" {
 }
 
 func testAccBackupSelectionConfigBasic(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
@@ -302,7 +303,7 @@ resource "aws_backup_selection" "test" {
 }
 
 func testAccBackupSelectionConfigWithTags(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
@@ -331,7 +332,7 @@ resource "aws_backup_selection" "test" {
 }
 
 func testAccBackupSelectionConfigWithResources(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -372,7 +373,7 @@ resource "aws_backup_selection" "test" {
 }
 
 func testAccBackupSelectionConfigUpdateTag(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {

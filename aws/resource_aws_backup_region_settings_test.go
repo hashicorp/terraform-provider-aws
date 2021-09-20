@@ -5,23 +5,24 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 	var settings backup.DescribeRegionSettingsOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_backup_region_settings.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheckAWSBackup(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

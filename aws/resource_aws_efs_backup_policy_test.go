@@ -6,21 +6,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -45,11 +46,11 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	fsResourceName := "aws_efs_file_system.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +58,7 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 				Config: testAccAWSEFSBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEFSBackupPolicyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), fsResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,11 +69,11 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 func TestAccAWSEFSBackupPolicy_update(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
 		Steps: []resource.TestStep{

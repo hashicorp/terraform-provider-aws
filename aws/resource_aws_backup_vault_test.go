@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -116,11 +117,11 @@ func testSweepBackupVaults(region string) error {
 func TestAccAwsBackupVault_basic(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -142,11 +143,11 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -169,11 +170,11 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 func TestAccAwsBackupVault_withTags(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -218,11 +219,11 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 func TestAccAwsBackupVault_disappears(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -230,7 +231,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists(resourceName, &vault),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -290,7 +291,7 @@ func testAccPreCheckAWSBackup(t *testing.T) {
 
 	_, err := conn.ListBackupVaults(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

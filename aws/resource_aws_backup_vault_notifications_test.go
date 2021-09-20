@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -72,11 +73,11 @@ func testSweepBackupVaultNotifications(region string) error {
 func TestAccAwsBackupVaultNotification_basic(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultNotificationDestroy,
 		Steps: []resource.TestStep{
@@ -99,11 +100,11 @@ func TestAccAwsBackupVaultNotification_basic(t *testing.T) {
 func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultNotificationDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 				Config: testAccBackupVaultNotificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultNotificationExists(resourceName, &vault),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVaultNotifications(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupVaultNotifications(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
