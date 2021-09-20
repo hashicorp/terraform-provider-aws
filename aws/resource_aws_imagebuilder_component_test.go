@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepImageBuilderComponents(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).imagebuilderconn
+	conn := client.(*conns.AWSClient).ImageBuilderConn
 
 	var sweeperErrs *multierror.Error
 
@@ -366,7 +367,7 @@ func TestAccAwsImageBuilderComponent_Uri(t *testing.T) {
 }
 
 func testAccCheckAwsImageBuilderComponentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_component" {
@@ -402,7 +403,7 @@ func testAccCheckAwsImageBuilderComponentExists(resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 		input := &imagebuilder.GetComponentInput{
 			ComponentBuildVersionArn: aws.String(rs.Primary.ID),

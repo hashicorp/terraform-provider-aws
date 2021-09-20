@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepImageBuilderImageRecipes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).imagebuilderconn
+	conn := client.(*conns.AWSClient).ImageBuilderConn
 
 	var sweeperErrs *multierror.Error
 
@@ -579,7 +580,7 @@ func TestAccAwsImageBuilderImageRecipe_WorkingDirectory(t *testing.T) {
 }
 
 func testAccCheckAwsImageBuilderImageRecipeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_image_recipe" {
@@ -615,7 +616,7 @@ func testAccCheckAwsImageBuilderImageRecipeExists(resourceName string) resource.
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 		input := &imagebuilder.GetImageRecipeInput{
 			ImageRecipeArn: aws.String(rs.Primary.ID),

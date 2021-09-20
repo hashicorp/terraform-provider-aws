@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsImageBuilderImageRecipe() *schema.Resource {
@@ -186,8 +187,8 @@ func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 }
 
 func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImageRecipeInput{
@@ -241,9 +242,9 @@ func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
@@ -293,7 +294,7 @@ func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsImageBuilderImageRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -307,7 +308,7 @@ func resourceAwsImageBuilderImageRecipeUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsImageBuilderImageRecipeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),

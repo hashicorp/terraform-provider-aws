@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
@@ -124,8 +125,8 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 }
 
 func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateInfrastructureConfigurationInput{
@@ -212,9 +213,9 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 }
 
 func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),
@@ -271,7 +272,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 }
 
 func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChanges(
 		"description",
@@ -361,7 +362,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 }
 
 func resourceAwsImageBuilderInfrastructureConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),

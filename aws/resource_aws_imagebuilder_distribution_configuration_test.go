@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepImageBuilderDistributionConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).imagebuilderconn
+	conn := client.(*conns.AWSClient).ImageBuilderConn
 
 	var sweeperErrs *multierror.Error
 
@@ -538,7 +539,7 @@ func TestAccAwsImageBuilderDistributionConfiguration_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsImageBuilderDistributionConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_distribution_configuration" {
@@ -574,7 +575,7 @@ func testAccCheckAwsImageBuilderDistributionConfigurationExists(resourceName str
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 		input := &imagebuilder.GetDistributionConfigurationInput{
 			DistributionConfigurationArn: aws.String(rs.Primary.ID),

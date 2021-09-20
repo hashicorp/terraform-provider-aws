@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
@@ -105,7 +106,7 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 }
 
 func dataSourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.GetImagePipelineInput{}
 
@@ -153,7 +154,7 @@ func dataSourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta int
 	}
 
 	d.Set("status", imagePipeline.Status)
-	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return nil
 }
