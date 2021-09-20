@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -69,12 +70,12 @@ func testSweepEcrRepositories(region string) error {
 
 func TestAccAWSEcrRepository_basic(t *testing.T) {
 	var v ecr.Repository
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func TestAccAWSEcrRepository_basic(t *testing.T) {
 				Config: testAccAWSEcrRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckAWSEcrRepositoryRegistryID(resourceName),
 					testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, rName),
@@ -102,12 +103,12 @@ func TestAccAWSEcrRepository_basic(t *testing.T) {
 
 func TestAccAWSEcrRepository_tags(t *testing.T) {
 	var v1, v2 ecr.Repository
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -135,12 +136,12 @@ func TestAccAWSEcrRepository_tags(t *testing.T) {
 
 func TestAccAWSEcrRepository_immutability(t *testing.T) {
 	var v ecr.Repository
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -163,12 +164,12 @@ func TestAccAWSEcrRepository_immutability(t *testing.T) {
 
 func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
 	var v1, v2 ecr.Repository
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -213,13 +214,13 @@ func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
 
 func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 	var v1, v2 ecr.Repository
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 	kmsKeyDataSourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -230,7 +231,7 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
-					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexp.MustCompile(fmt.Sprintf("key/%s$", uuidRegexPattern))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexp.MustCompile(fmt.Sprintf("key/%s$", uuidRegexPattern))),
 				),
 			},
 			{
@@ -259,12 +260,12 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 
 func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
 	var v1, v2 ecr.Repository
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -362,14 +363,14 @@ func testAccCheckAWSEcrRepositoryExists(name string, res *ecr.Repository) resour
 
 func testAccCheckAWSEcrRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := testAccGetAccountID()
+		attributeValue := acctest.AccountID()
 		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
 	}
 }
 
 func testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, repositoryName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", testAccGetAccountID(), testAccGetRegion(), repositoryName)
+		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", acctest.AccountID(), acctest.Region(), repositoryName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_url", attributeValue)(s)
 	}
 }

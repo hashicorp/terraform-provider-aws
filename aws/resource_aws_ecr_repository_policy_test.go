@@ -7,18 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +29,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 			{
@@ -43,7 +44,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("ecr:DescribeImages")),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 		},
@@ -51,12 +52,12 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -78,12 +79,12 @@ func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 }
 
 func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRepositoryPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcrRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,12 +101,12 @@ func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
 }
 
 func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
 				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRepository(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcrRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
