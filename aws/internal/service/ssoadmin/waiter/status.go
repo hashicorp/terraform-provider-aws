@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	AccountAssignmentStatusUnknown          = "Unknown"
-	AccountAssignmentStatusNotFound         = "NotFound"
-	PermissionSetProvisioningStatusUnknown  = "Unknown"
-	PermissionSetProvisioningStatusNotFound = "NotFound"
+	accountAssignmentStatusUnknown          = "Unknown"
+	accountAssignmentStatusNotFound         = "NotFound"
+	permissionSetProvisioningStatusUnknown  = "Unknown"
+	permissionSetProvisioningStatusNotFound = "NotFound"
 )
 
-func AccountAssignmentCreationStatus(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusAccountAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
 			AccountAssignmentCreationRequestId: aws.String(requestID),
@@ -24,18 +24,18 @@ func AccountAssignmentCreationStatus(conn *ssoadmin.SSOAdmin, instanceArn, reque
 		resp, err := conn.DescribeAccountAssignmentCreationStatus(input)
 
 		if err != nil {
-			return nil, AccountAssignmentStatusUnknown, err
+			return nil, accountAssignmentStatusUnknown, err
 		}
 
 		if resp == nil || resp.AccountAssignmentCreationStatus == nil {
-			return nil, AccountAssignmentStatusNotFound, nil
+			return nil, accountAssignmentStatusNotFound, nil
 		}
 
 		return resp.AccountAssignmentCreationStatus, aws.StringValue(resp.AccountAssignmentCreationStatus.Status), nil
 	}
 }
 
-func AccountAssignmentDeletionStatus(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusAccountAssignmentDeletion(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
 			AccountAssignmentDeletionRequestId: aws.String(requestID),
@@ -45,18 +45,18 @@ func AccountAssignmentDeletionStatus(conn *ssoadmin.SSOAdmin, instanceArn, reque
 		resp, err := conn.DescribeAccountAssignmentDeletionStatus(input)
 
 		if err != nil {
-			return nil, AccountAssignmentStatusUnknown, err
+			return nil, accountAssignmentStatusUnknown, err
 		}
 
 		if resp == nil || resp.AccountAssignmentDeletionStatus == nil {
-			return nil, AccountAssignmentStatusNotFound, nil
+			return nil, accountAssignmentStatusNotFound, nil
 		}
 
 		return resp.AccountAssignmentDeletionStatus, aws.StringValue(resp.AccountAssignmentDeletionStatus.Status), nil
 	}
 }
 
-func PermissionSetProvisioningStatus(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusPermissionSetProvisioning(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
 			InstanceArn:                     aws.String(instanceArn),
@@ -66,11 +66,11 @@ func PermissionSetProvisioningStatus(conn *ssoadmin.SSOAdmin, instanceArn, reque
 		resp, err := conn.DescribePermissionSetProvisioningStatus(input)
 
 		if err != nil {
-			return nil, PermissionSetProvisioningStatusUnknown, err
+			return nil, permissionSetProvisioningStatusUnknown, err
 		}
 
 		if resp == nil || resp.PermissionSetProvisioningStatus == nil {
-			return nil, PermissionSetProvisioningStatusNotFound, nil
+			return nil, permissionSetProvisioningStatusNotFound, nil
 		}
 
 		return resp.PermissionSetProvisioningStatus, aws.StringValue(resp.PermissionSetProvisioningStatus.Status), nil

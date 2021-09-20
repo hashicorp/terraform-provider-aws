@@ -89,7 +89,7 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 
 	// We need to check if the assignment exists before creating it
 	// since the AWS SSO API doesn't prevent us from creating duplicates
-	accountAssignment, err := finder.AccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := finder.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 	if err != nil {
 		return fmt.Errorf("error listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %w", targetID, permissionSetArn, err)
 	}
@@ -119,7 +119,7 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 
 	status := output.AccountAssignmentCreationStatus
 
-	_, err = waiter.AccountAssignmentCreated(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, err = waiter.waitAccountAssignmentCreated(conn, instanceArn, aws.StringValue(status.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Account Assignment for %s (%s) to be created: %w", principalType, principalID, err)
 	}
@@ -144,7 +144,7 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 	permissionSetArn := idParts[4]
 	instanceArn := idParts[5]
 
-	accountAssignment, err := finder.AccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := finder.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
@@ -214,7 +214,7 @@ func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) e
 
 	status := output.AccountAssignmentDeletionStatus
 
-	_, err = waiter.AccountAssignmentDeleted(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, err = waiter.waitAccountAssignmentDeleted(conn, instanceArn, aws.StringValue(status.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Account Assignment for Principal (%s) to be deleted: %w", principalID, err)
 	}

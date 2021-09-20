@@ -183,7 +183,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy(s *terraform.State) e
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		policy, err := finder.ManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+		policy, err := finder.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 			continue
@@ -223,7 +223,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
-		policy, err := finder.ManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+		policy, err := finder.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 		if err != nil {
 			return err

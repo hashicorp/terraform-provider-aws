@@ -284,7 +284,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 	}
 
 	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := resource.Retry(waiter.AWSSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.awsSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.ProvisionPermissionSet(input)
 
@@ -313,7 +313,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 		return fmt.Errorf("error provisioning SSO Permission Set (%s): empty output", arn)
 	}
 
-	_, err = waiter.PermissionSetProvisioned(conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
+	_, err = waiter.waitPermissionSetProvisioned(conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Permission Set (%s) to provision: %w", arn, err)
 	}

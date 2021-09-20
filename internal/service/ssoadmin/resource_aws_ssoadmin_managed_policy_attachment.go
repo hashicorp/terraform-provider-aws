@@ -90,7 +90,7 @@ func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
 	}
 
-	policy, err := finder.ManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+	policy, err := finder.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", managedPolicyArn, permissionSetArn)

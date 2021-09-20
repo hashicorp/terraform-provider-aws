@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// AccountAssignment returns the account assigned to a permission set within a specified SSO instance.
+// FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
 // Returns an error if no account assignment is found.
-func AccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
+func FindAccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
 	input := &ssoadmin.ListAccountAssignmentsInput{
 		AccountId:        aws.String(accountId),
 		InstanceArn:      aws.String(instanceArn),
@@ -41,9 +41,9 @@ func AccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, acco
 	return accountAssignment, err
 }
 
-// ManagedPolicy returns the managed policy attached to a permission set within a specified SSO instance.
+// FindManagedPolicy returns the managed policy attached to a permission set within a specified SSO instance.
 // Returns an error if no managed policy is found.
-func ManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetArn, instanceArn string) (*ssoadmin.AttachedManagedPolicy, error) {
+func FindManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetArn, instanceArn string) (*ssoadmin.AttachedManagedPolicy, error) {
 	input := &ssoadmin.ListManagedPoliciesInPermissionSetInput{
 		PermissionSetArn: aws.String(permissionSetArn),
 		InstanceArn:      aws.String(instanceArn),

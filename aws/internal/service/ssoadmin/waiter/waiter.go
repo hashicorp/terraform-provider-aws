@@ -9,22 +9,22 @@ import (
 )
 
 const (
-	AWSSSOAdminAccountAssignmentCreateTimeout      = 5 * time.Minute
-	AWSSSOAdminAccountAssignmentDeleteTimeout      = 5 * time.Minute
-	AWSSSOAdminAccountAssignmentDelay              = 5 * time.Second
-	AWSSSOAdminAccountAssignmentMinTimeout         = 3 * time.Second
-	AWSSSOAdminPermissionSetProvisioningRetryDelay = 5 * time.Second
-	AWSSSOAdminPermissionSetProvisionTimeout       = 10 * time.Minute
+	awsSSOAdminAccountAssignmentCreateTimeout      = 5 * time.Minute
+	awsSSOAdminAccountAssignmentDeleteTimeout      = 5 * time.Minute
+	awsSSOAdminAccountAssignmentDelay              = 5 * time.Second
+	awsSSOAdminAccountAssignmentMinTimeout         = 3 * time.Second
+	awsSSOAdminPermissionSetProvisioningRetryDelay = 5 * time.Second
+	awsSSOAdminPermissionSetProvisionTimeout       = 10 * time.Minute
 )
 
-func AccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
-		Refresh:    AccountAssignmentCreationStatus(conn, instanceArn, requestID),
-		Timeout:    AWSSSOAdminAccountAssignmentCreateTimeout,
-		Delay:      AWSSSOAdminAccountAssignmentDelay,
-		MinTimeout: AWSSSOAdminAccountAssignmentMinTimeout,
+		Refresh:    statusAccountAssignmentCreation(conn, instanceArn, requestID),
+		Timeout:    awsSSOAdminAccountAssignmentCreateTimeout,
+		Delay:      awsSSOAdminAccountAssignmentDelay,
+		MinTimeout: awsSSOAdminAccountAssignmentMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -35,14 +35,14 @@ func AccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID st
 	return nil, err
 }
 
-func AccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
-		Refresh:    AccountAssignmentDeletionStatus(conn, instanceArn, requestID),
-		Timeout:    AWSSSOAdminAccountAssignmentDeleteTimeout,
-		Delay:      AWSSSOAdminAccountAssignmentDelay,
-		MinTimeout: AWSSSOAdminAccountAssignmentMinTimeout,
+		Refresh:    statusAccountAssignmentDeletion(conn, instanceArn, requestID),
+		Timeout:    awsSSOAdminAccountAssignmentDeleteTimeout,
+		Delay:      awsSSOAdminAccountAssignmentDelay,
+		MinTimeout: awsSSOAdminAccountAssignmentMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -53,13 +53,13 @@ func AccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestID st
 	return nil, err
 }
 
-func PermissionSetProvisioned(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
+func waitPermissionSetProvisioned(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
 	stateConf := resource.StateChangeConf{
-		Delay:   AWSSSOAdminPermissionSetProvisioningRetryDelay,
+		Delay:   awsSSOAdminPermissionSetProvisioningRetryDelay,
 		Pending: []string{ssoadmin.StatusValuesInProgress},
 		Target:  []string{ssoadmin.StatusValuesSucceeded},
-		Refresh: PermissionSetProvisioningStatus(conn, instanceArn, requestID),
-		Timeout: AWSSSOAdminPermissionSetProvisionTimeout,
+		Refresh: statusPermissionSetProvisioning(conn, instanceArn, requestID),
+		Timeout: awsSSOAdminPermissionSetProvisionTimeout,
 	}
 	outputRaw, err := stateConf.WaitForState()
 	if v, ok := outputRaw.(*ssoadmin.PermissionSetProvisioningStatus); ok {
