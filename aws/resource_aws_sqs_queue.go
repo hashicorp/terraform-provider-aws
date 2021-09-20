@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/attrmap"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
-	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/attrmap"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 var (

@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
-	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
