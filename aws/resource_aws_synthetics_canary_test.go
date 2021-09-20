@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -37,7 +38,7 @@ func testSweepSyntheticsCanaries(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).syntheticsconn
+	conn := client.(*conns.AWSClient).SyntheticsConn
 	input := &synthetics.DescribeCanariesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -524,7 +525,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).syntheticsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_synthetics_canary" {
@@ -558,7 +559,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).syntheticsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
 
 		output, err := finder.CanaryByName(conn, rs.Primary.ID)
 
@@ -583,7 +584,7 @@ func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.T
 			return fmt.Errorf("synthetics Canary name not set")
 		}
 
-		lambdaConn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		lambdaConn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		layerArn := rs.Primary.Attributes["source_location_arn"]
 		layerArnObj, err := arn.Parse(layerArn)

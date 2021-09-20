@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -223,8 +224,8 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 }
 
 func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SyntheticsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -312,9 +313,9 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SyntheticsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	canary, err := finder.CanaryByName(conn, d.Id())
 
@@ -329,10 +330,10 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	canaryArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   synthetics.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("canary:%s", aws.StringValue(canary.Name)),
 	}.String()
 	d.Set("arn", canaryArn)
@@ -378,7 +379,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
+	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
@@ -484,7 +485,7 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
+	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
 		if err := syntheticsStopCanary(d.Id(), conn); err != nil {
