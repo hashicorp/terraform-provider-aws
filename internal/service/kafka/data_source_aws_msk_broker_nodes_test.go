@@ -1,4 +1,4 @@
-package aws
+package kafka_test
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package aws
+package kafka
 
 import (
 	"fmt"

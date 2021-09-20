@@ -1,4 +1,4 @@
-package aws
+package kafka
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +71,7 @@ func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface
 func resourceScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
-	secretArnList, err := finder.FindScramSecrets(conn, d.Id())
+	secretArnList, err := FindScramSecrets(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Scram secret(s) for MSK cluster (%s) not found, removing from state", d.Id())
@@ -129,7 +128,7 @@ func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface
 func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
-	secretArnList, err := finder.FindScramSecrets(conn, d.Id())
+	secretArnList, err := FindScramSecrets(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {

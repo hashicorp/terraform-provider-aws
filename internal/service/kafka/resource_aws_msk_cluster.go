@@ -1,4 +1,4 @@
-package aws
+package kafka
 
 import (
 	"context"
@@ -13,8 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,9 +30,9 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.clusterCreateTimeout),
-			Update: schema.DefaultTimeout(waiter.clusterUpdateTimeout),
-			Delete: schema.DefaultTimeout(waiter.clusterDeleteTimeout),
+			Create: schema.DefaultTimeout(clusterCreateTimeout),
+			Update: schema.DefaultTimeout(clusterUpdateTimeout),
+			Delete: schema.DefaultTimeout(clusterDeleteTimeout),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -418,7 +417,7 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(waiter.clusterCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(clusterCreateTimeout, func() *resource.RetryError {
 		out, err := conn.DescribeCluster(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1219,7 +1218,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(waiter.clusterDeleteTimeout, func() *resource.RetryError {
+	err := resource.Retry(clusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DescribeCluster(input)
 
 		if err != nil {
@@ -1276,7 +1275,7 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
 		Target:  []string{"UPDATE_COMPLETE"},
 		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: waiter.clusterUpdateTimeout,
+		Timeout: clusterUpdateTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)
