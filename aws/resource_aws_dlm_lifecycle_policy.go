@@ -182,7 +182,7 @@ func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 		PolicyId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, dlm.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, dlm.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] DLM Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
