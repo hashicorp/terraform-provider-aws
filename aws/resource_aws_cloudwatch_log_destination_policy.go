@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchLogDestinationPolicy() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsCloudWatchLogDestinationPolicy() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogDestinationPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	destination_name := d.Get("destination_name").(string)
 	access_policy := d.Get("access_policy").(string)
@@ -60,7 +61,7 @@ func resourceAwsCloudWatchLogDestinationPolicyPut(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCloudWatchLogDestinationPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	destination_name := d.Get("destination_name").(string)
 	destination, exists, err := lookupCloudWatchLogDestination(conn, destination_name, nil)
 	if err != nil {

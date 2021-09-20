@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudwatchLogDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination" {
@@ -96,7 +97,7 @@ func testAccCheckAWSCloudwatchLogDestinationExists(n string, d *cloudwatchlogs.D
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 		destination, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err

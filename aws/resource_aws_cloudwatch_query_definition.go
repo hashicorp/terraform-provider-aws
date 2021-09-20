@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchQueryDefinition() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsCloudWatchQueryDefinition() *schema.Resource {
 }
 
 func resourceAwsCloudWatchQueryDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := getAwsCloudWatchQueryDefinitionInput(d)
 	r, err := conn.PutQueryDefinitionWithContext(ctx, input)
@@ -84,7 +85,7 @@ func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlog
 }
 
 func resourceAwsCloudWatchQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	result, err := finder.QueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
 
@@ -109,7 +110,7 @@ func resourceAwsCloudWatchQueryDefinitionRead(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsCloudWatchQueryDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	_, err := conn.PutQueryDefinitionWithContext(ctx, getAwsCloudWatchQueryDefinitionInput(d))
 	if err != nil {
@@ -120,7 +121,7 @@ func resourceAwsCloudWatchQueryDefinitionUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceAwsCloudWatchQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	input := &cloudwatchlogs.DeleteQueryDefinitionInput{
 		QueryDefinitionId: aws.String(d.Id()),
