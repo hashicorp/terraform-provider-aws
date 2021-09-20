@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAcmCertificate() *schema.Resource {
+func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAcmCertificateRead,
+		Read: dataSourceCertificateRead,
 		Schema: map[string]*schema.Schema{
 			"domain": {
 				Type:     schema.TypeString,
@@ -63,7 +63,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
