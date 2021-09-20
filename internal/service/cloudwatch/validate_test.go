@@ -3,7 +3,6 @@ package cloudwatch
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidDashboardName(t *testing.T) {

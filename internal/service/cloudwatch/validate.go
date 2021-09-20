@@ -3,7 +3,6 @@ package cloudwatch
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validDashboardName(v interface{}, k string) (ws []string, errors []error) {
