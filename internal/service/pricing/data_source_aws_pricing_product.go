@@ -1,4 +1,4 @@
-package aws
+package pricing
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package aws
+package pricing_test
 
 import (
 	"context"
