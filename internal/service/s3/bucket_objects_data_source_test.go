@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -37,7 +37,7 @@ func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_basicViaAccessPoint(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,7 +63,7 @@ func TestAccDataSourceAWSS3BucketObjects_basicViaAccessPoint(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,7 +94,7 @@ func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,7 +124,7 @@ func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -150,7 +150,7 @@ func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -176,7 +176,7 @@ func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObjects_fetchOwner(t *testing.T) {
+func TestAccS3BucketObjectsDataSource_fetchOwner(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{

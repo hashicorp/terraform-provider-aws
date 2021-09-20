@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSS3ObjectCopy_basic(t *testing.T) {
+func TestAccS3ObjectCopy_basic(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_object_copy.test"
@@ -41,7 +41,7 @@ func TestAccAWSS3ObjectCopy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Bucket(t *testing.T) {
+func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_object_copy.test"
 
@@ -62,7 +62,7 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Bucket(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Object(t *testing.T) {
+func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_object_copy.test"
 

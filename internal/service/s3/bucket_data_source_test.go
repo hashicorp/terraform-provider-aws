@@ -11,7 +11,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestAccDataSourceS3Bucket_basic(t *testing.T) {
+func TestAccS3BucketDataSource_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
 	hostedZoneID, _ := tfs3.HostedZoneIDForRegion(region)
@@ -37,7 +37,7 @@ func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceS3Bucket_website(t *testing.T) {
+func TestAccS3BucketDataSource_website(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
 

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSS3BucketNotification_LambdaFunction(t *testing.T) {
+func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -59,7 +59,7 @@ func TestAccAWSS3BucketNotification_LambdaFunction(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketNotification_LambdaFunction_LambdaFunctionArn_Alias(t *testing.T) {
+func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_notification.test"
 
@@ -90,7 +90,7 @@ func TestAccAWSS3BucketNotification_LambdaFunction_LambdaFunctionArn_Alias(t *te
 	})
 }
 
-func TestAccAWSS3BucketNotification_Queue(t *testing.T) {
+func TestAccS3BucketNotification_queue(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -132,7 +132,7 @@ func TestAccAWSS3BucketNotification_Queue(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketNotification_Topic(t *testing.T) {
+func TestAccS3BucketNotification_topic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -163,7 +163,7 @@ func TestAccAWSS3BucketNotification_Topic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketNotification_Topic_Multiple(t *testing.T) {
+func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -219,7 +219,7 @@ func TestAccAWSS3BucketNotification_Topic_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketNotification_update(t *testing.T) {
+func TestAccS3BucketNotification_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{

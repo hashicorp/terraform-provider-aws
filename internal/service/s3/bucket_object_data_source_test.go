@@ -17,7 +17,7 @@ import (
 
 const rfc1123RegexPattern = `^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
 
-func TestAccDataSourceAWSS3BucketObject_basic(t *testing.T) {
+func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	var rObj s3.GetObjectOutput
@@ -51,7 +51,7 @@ func TestAccDataSourceAWSS3BucketObject_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_basicViaAccessPoint(t *testing.T) {
+func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	var dsObj, rObj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -78,7 +78,7 @@ func TestAccDataSourceAWSS3BucketObject_basicViaAccessPoint(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
+func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	var rObj s3.GetObjectOutput
@@ -112,7 +112,7 @@ func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_kmsEncrypted(t *testing.T) {
+func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	var rObj s3.GetObjectOutput
@@ -148,7 +148,7 @@ func TestAccDataSourceAWSS3BucketObject_kmsEncrypted(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_bucketKeyEnabled(t *testing.T) {
+func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	var rObj s3.GetObjectOutput
@@ -185,7 +185,7 @@ func TestAccDataSourceAWSS3BucketObject_bucketKeyEnabled(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_allParams(t *testing.T) {
+func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	var rObj s3.GetObjectOutput
@@ -236,7 +236,7 @@ func TestAccDataSourceAWSS3BucketObject_allParams(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOff(t *testing.T) {
+func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	var rObj s3.GetObjectOutput
@@ -270,7 +270,7 @@ func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOff(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOn(t *testing.T) {
+func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
@@ -305,7 +305,7 @@ func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOn(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_LeadingSlash(t *testing.T) {
+func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 	var rObj s3.GetObjectOutput
 	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
@@ -358,7 +358,7 @@ func TestAccDataSourceAWSS3BucketObject_LeadingSlash(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
+func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 	var rObj1, rObj2 s3.GetObjectOutput
 	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
@@ -408,7 +408,7 @@ func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSS3BucketObject_SingleSlashAsKey(t *testing.T) {
+func TestAccS3BucketObjectDataSource_singleSlashAsKey(t *testing.T) {
 	var dsObj s3.GetObjectOutput
 	dataSourceName := "data.aws_s3_bucket_object.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

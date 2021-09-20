@@ -18,7 +18,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestAccAWSS3BucketInventory_basic(t *testing.T) {
+func TestAccS3BucketInventory_basic(t *testing.T) {
 	var conf s3.InventoryConfiguration
 	rString := sdkacctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
@@ -64,7 +64,7 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
+func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	var conf s3.InventoryConfiguration
 	rString := sdkacctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
@@ -94,7 +94,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
+func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	var conf s3.InventoryConfiguration
 	rString := sdkacctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"

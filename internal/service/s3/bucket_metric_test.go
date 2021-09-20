@@ -265,7 +265,7 @@ func TestResourceAwsS3BucketMetricParseID(t *testing.T) {
 	}
 }
 
-func TestAccAWSS3BucketMetric_basic(t *testing.T) {
+func TestAccS3BucketMetric_basic(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
@@ -299,7 +299,7 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11813
 // Disallow Empty filter block
-func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
+func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
@@ -324,7 +324,7 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketMetric_WithFilterPrefix(t *testing.T) {
+func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
@@ -367,7 +367,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketMetric_WithFilterPrefixAndMultipleTags(t *testing.T) {
+func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
@@ -418,7 +418,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndMultipleTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketMetric_WithFilterPrefixAndSingleTag(t *testing.T) {
+func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
@@ -465,7 +465,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndSingleTag(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketMetric_WithFilterMultipleTags(t *testing.T) {
+func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
@@ -514,7 +514,7 @@ func TestAccAWSS3BucketMetric_WithFilterMultipleTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
+func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"

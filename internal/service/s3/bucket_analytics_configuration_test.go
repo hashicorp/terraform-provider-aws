@@ -18,7 +18,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -48,7 +48,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -75,7 +75,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	originalACName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	originalBucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -130,7 +130,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,7 +147,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -189,7 +189,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -233,7 +233,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -281,7 +281,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -331,7 +331,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -367,7 +367,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -384,7 +384,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Default(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_default(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
@@ -418,7 +418,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Default(t
 	})
 }
 
-func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *testing.T) {
+func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 

@@ -14,7 +14,7 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
-func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
+func TestAccS3BucketPolicy_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	partition := acctest.Partition()
 
@@ -58,7 +58,7 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
+func TestAccS3BucketPolicy_policyUpdate(t *testing.T) {
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	partition := acctest.Partition()
 
@@ -174,7 +174,7 @@ resource "aws_s3_bucket" "bucket" {
   bucket = "%s"
 
   tags = {
-    TestName = "TestAccAWSS3BucketPolicy_basic"
+    TestName = "TestAccS3BucketPolicy_basic"
   }
 }
 
@@ -211,7 +211,7 @@ resource "aws_s3_bucket" "bucket" {
   bucket = "%s"
 
   tags = {
-    TestName = "TestAccAWSS3BucketPolicy_basic"
+    TestName = "TestAccS3BucketPolicy_basic"
   }
 }
 

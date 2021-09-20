@@ -16,7 +16,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_basic(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
@@ -48,7 +48,7 @@ func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
@@ -71,7 +71,7 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
@@ -95,7 +95,7 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_blockPublicACLs(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
@@ -136,7 +136,7 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_blockPublicPolicy(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
@@ -177,7 +177,7 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_ignorePublicACLs(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
@@ -218,7 +218,7 @@ func TestAccAWSS3BucketPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
