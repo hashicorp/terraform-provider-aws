@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsRamResourceShare_basic(t *testing.T) {
@@ -159,7 +160,7 @@ func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 
 func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -195,7 +196,7 @@ func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *r
 }
 
 func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share" {
