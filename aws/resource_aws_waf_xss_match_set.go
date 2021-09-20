@@ -116,7 +116,7 @@ func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("name", resp.XssMatchSet.Name)
-	if err := d.Set("xss_match_tuples", flattenWafXssMatchTuples(resp.XssMatchSet.XssMatchTuples)); err != nil {
+	if err := d.Set("xss_match_tuples", flattenXSSMatchTuples(resp.XssMatchSet.XssMatchTuples)); err != nil {
 		return fmt.Errorf("error setting xss_match_tuples: %w", err)
 	}
 
@@ -193,7 +193,7 @@ func updateXssMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 	return nil
 }
 
-func flattenWafXssMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
+func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
