@@ -35,7 +35,7 @@ func roleUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, ne
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagRoleInput{
 			RoleName: aws.String(identifier),
-			Tags:     updatedTags.IgnoreAws().IamTags(),
+			Tags:     Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagRole(input)
@@ -70,7 +70,7 @@ func userUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, ne
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagUserInput{
 			UserName: aws.String(identifier),
-			Tags:     updatedTags.IgnoreAws().IamTags(),
+			Tags:     Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagUser(input)
@@ -105,7 +105,7 @@ func instanceProfileUpdateTags(conn *iam.IAM, identifier string, oldTagsMap inte
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			Tags:                updatedTags.IgnoreAws().IamTags(),
+			Tags:                Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagInstanceProfile(input)
@@ -140,7 +140,7 @@ func openIDConnectProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMa
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			Tags:                     updatedTags.IgnoreAws().IamTags(),
+			Tags:                     Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagOpenIDConnectProvider(input)
@@ -175,7 +175,7 @@ func policyUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			Tags:      updatedTags.IgnoreAws().IamTags(),
+			Tags:      Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagPolicy(input)
@@ -210,7 +210,7 @@ func samlProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interfa
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			Tags:            updatedTags.IgnoreAws().IamTags(),
+			Tags:            Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagSAMLProvider(input)
@@ -245,7 +245,7 @@ func serverCertificateUpdateTags(conn *iam.IAM, identifier string, oldTagsMap in
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			Tags:                  updatedTags.IgnoreAws().IamTags(),
+			Tags:                  Tags(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.TagServerCertificate(input)

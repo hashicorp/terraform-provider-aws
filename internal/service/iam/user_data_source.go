@@ -65,7 +65,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("user_id", user.UserId)
-	if err := d.Set("tags", tftags.IamKeyValueTags(user.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(user.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

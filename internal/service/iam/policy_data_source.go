@@ -109,7 +109,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	if err := d.Set("tags", tftags.IamKeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

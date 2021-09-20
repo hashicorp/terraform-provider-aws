@@ -86,7 +86,7 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.Role.RoleId)
-	d.Set("tags", tftags.IamKeyValueTags(output.Role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(output.Role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
 	if err != nil {
