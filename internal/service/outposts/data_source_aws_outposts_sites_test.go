@@ -1,4 +1,4 @@
-package aws
+package outposts_test
 
 import (
 	"fmt"
