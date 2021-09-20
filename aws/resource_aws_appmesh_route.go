@@ -710,7 +710,7 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
-		Spec:              expandAppmeshRouteSpec(d.Get("spec").([]interface{})),
+		Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
 		Tags:              tags.IgnoreAws().AppmeshTags(),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -797,7 +797,7 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("created_date", resp.Route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.Route.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppmeshRouteSpec(resp.Route.Spec))
+	err = d.Set("spec", flattenAppMeshRouteSpec(resp.Route.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -831,7 +831,7 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
 			RouteName:         aws.String(d.Get("name").(string)),
 			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
-			Spec:              expandAppmeshRouteSpec(v.([]interface{})),
+			Spec:              expandRouteSpec(v.([]interface{})),
 		}
 		if v, ok := d.GetOk("mesh_owner"); ok {
 			req.MeshOwner = aws.String(v.(string))
