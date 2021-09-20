@@ -63,7 +63,7 @@ func testSweepServiceCatalogTagOptionResourceAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceTagOptionResourceAssociation()
+					r := tfservicecatalog.ResourceTagOptionResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(resource.Id))
 
@@ -134,7 +134,7 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.
 				Config: testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTagOptionResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceTagOptionResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

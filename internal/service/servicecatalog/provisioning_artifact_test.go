@@ -67,7 +67,7 @@ func testSweepServiceCatalogProvisioningArtifacts(region string) error {
 				}
 
 				for _, pad := range output.ProvisioningArtifactDetails {
-					r := ResourceProvisioningArtifact()
+					r := tfservicecatalog.ResourceProvisioningArtifact()
 					d := r.Data(nil)
 
 					d.SetId(aws.StringValue(pad.Id))
@@ -165,7 +165,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProvisioningArtifact(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProvisioningArtifact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

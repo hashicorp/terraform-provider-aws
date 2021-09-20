@@ -63,7 +63,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceBudgetResourceAssociation()
+					r := tfservicecatalog.ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(port.Id)))
 
@@ -107,7 +107,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceBudgetResourceAssociation()
+					r := tfservicecatalog.ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(pvd.ProductViewSummary.ProductId)))
 
@@ -178,7 +178,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 				Config: testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBudgetResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -54,7 +54,7 @@ func testSweepServiceCatalogProducts(region string) error {
 
 			id := aws.StringValue(pvd.ProductViewSummary.ProductId)
 
-			r := ResourceProduct()
+			r := tfservicecatalog.ResourceProduct()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -148,7 +148,7 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogProductConfig_basic(rName, rName, rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProduct(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

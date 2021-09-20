@@ -51,7 +51,7 @@ func testSweepServiceCatalogServiceActions(region string) error {
 
 			id := aws.StringValue(sas.Id)
 
-			r := ResourceServiceAction()
+			r := tfservicecatalog.ResourceServiceAction()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -124,7 +124,7 @@ func TestAccAWSServiceCatalogServiceAction_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogServiceActionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceServiceAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceServiceAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

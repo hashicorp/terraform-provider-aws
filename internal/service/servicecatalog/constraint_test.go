@@ -65,7 +65,7 @@ func testSweepServiceCatalogConstraints(region string) error {
 						continue
 					}
 
-					r := ResourceConstraint()
+					r := tfservicecatalog.ResourceConstraint()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(detail.ConstraintId))
 
@@ -142,7 +142,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConstraint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
