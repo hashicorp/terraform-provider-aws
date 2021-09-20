@@ -59,7 +59,7 @@ func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &glue.CreateRegistryInput{
 		RegistryName: aws.String(d.Get("registry_name").(string)),
-		Tags:         tags.IgnoreAws().GlueTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -102,7 +102,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("registry_name", output.RegistryName)
 
-	tags, err := tftags.GlueListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Registry (%s): %w", arn, err)
@@ -143,7 +143,7 @@ func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

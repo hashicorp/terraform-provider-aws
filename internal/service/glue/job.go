@@ -171,7 +171,7 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
-		Tags:    tags.IgnoreAws().GlueTags(),
+		Tags:    Tags(tags.IgnoreAws()),
 		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
@@ -297,7 +297,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", job.Name)
 	d.Set("role_arn", job.Role)
 
-	tags, err := tftags.GlueListTags(conn, jobARN)
+	tags, err := ListTags(conn, jobARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Job (%s): %s", jobARN, err)
@@ -401,7 +401,7 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

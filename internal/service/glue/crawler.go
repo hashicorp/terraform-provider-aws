@@ -326,7 +326,7 @@ func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsC
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         tags.IgnoreAws().GlueTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 		Targets:      expandGlueCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {
@@ -641,7 +641,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.GlueUpdateTags(glueConn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(glueConn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -727,7 +727,7 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags, err := tftags.GlueListTags(glueConn, crawlerARN)
+	tags, err := ListTags(glueConn, crawlerARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Crawler (%s): %w", crawlerARN, err)
