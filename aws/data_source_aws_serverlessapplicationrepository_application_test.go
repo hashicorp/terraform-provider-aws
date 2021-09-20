@@ -18,7 +18,7 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig(appARN),
@@ -51,7 +51,7 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned(appARN, version1),
