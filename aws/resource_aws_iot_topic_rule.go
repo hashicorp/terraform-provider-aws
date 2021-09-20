@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTopicRule() *schema.Resource {
@@ -44,7 +45,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"state_reason": {
 							Type:     schema.TypeString,
@@ -53,7 +54,7 @@ func ResourceTopicRule() *schema.Resource {
 						"state_value": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateIoTTopicRuleCloudWatchAlarmStateValue,
+							ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
 						},
 					},
 				},
@@ -74,7 +75,7 @@ func ResourceTopicRule() *schema.Resource {
 						"metric_timestamp": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateUTCTimestamp,
+							ValidateFunc: verify.ValidUTCTimestamp,
 						},
 						"metric_unit": {
 							Type:     schema.TypeString,
@@ -87,7 +88,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -141,7 +142,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"table_name": {
 							Type:     schema.TypeString,
@@ -171,7 +172,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -184,7 +185,7 @@ func ResourceTopicRule() *schema.Resource {
 						"endpoint": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateIoTTopicRuleElasticSearchEndpoint,
+							ValidateFunc: validTopicRuleElasticSearchEndpoint,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -197,7 +198,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -222,12 +223,12 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"separator": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateIoTTopicRuleFirehoseSeparator,
+							ValidateFunc: validTopicRuleFirehoseSeparator,
 						},
 					},
 				},
@@ -244,7 +245,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -265,7 +266,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -282,7 +283,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"stream_name": {
 							Type:     schema.TypeString,
@@ -299,7 +300,7 @@ func ResourceTopicRule() *schema.Resource {
 						"function_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -308,7 +309,7 @@ func ResourceTopicRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateIoTTopicRuleName,
+				ValidateFunc: validTopicRuleName,
 			},
 			"republish": {
 				Type:     schema.TypeSet,
@@ -324,7 +325,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"topic": {
 							Type:     schema.TypeString,
@@ -349,7 +350,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -370,7 +371,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -388,12 +389,12 @@ func ResourceTopicRule() *schema.Resource {
 						"target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -418,7 +419,7 @@ func ResourceTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"use_base64": {
 							Type:     schema.TypeBool,
@@ -448,7 +449,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"state_reason": {
 										Type:     schema.TypeString,
@@ -457,7 +458,7 @@ func ResourceTopicRule() *schema.Resource {
 									"state_value": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateIoTTopicRuleCloudWatchAlarmStateValue,
+										ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
 									},
 								},
 							},
@@ -496,7 +497,7 @@ func ResourceTopicRule() *schema.Resource {
 									"metric_timestamp": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateUTCTimestamp,
+										ValidateFunc: verify.ValidUTCTimestamp,
 									},
 									"metric_unit": {
 										Type:     schema.TypeString,
@@ -509,7 +510,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -577,7 +578,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"table_name": {
 										Type:     schema.TypeString,
@@ -625,7 +626,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -656,7 +657,7 @@ func ResourceTopicRule() *schema.Resource {
 									"endpoint": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateIoTTopicRuleElasticSearchEndpoint,
+										ValidateFunc: validTopicRuleElasticSearchEndpoint,
 									},
 									"id": {
 										Type:     schema.TypeString,
@@ -669,7 +670,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"type": {
 										Type:     schema.TypeString,
@@ -708,12 +709,12 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"separator": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateIoTTopicRuleFirehoseSeparator,
+										ValidateFunc: validTopicRuleFirehoseSeparator,
 									},
 								},
 							},
@@ -748,7 +749,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -787,7 +788,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -822,7 +823,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"stream_name": {
 										Type:     schema.TypeString,
@@ -857,7 +858,7 @@ func ResourceTopicRule() *schema.Resource {
 									"function_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -894,7 +895,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"topic": {
 										Type:     schema.TypeString,
@@ -937,7 +938,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -976,7 +977,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -1012,12 +1013,12 @@ func ResourceTopicRule() *schema.Resource {
 									"target_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -1052,7 +1053,7 @@ func ResourceTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"use_base64": {
 										Type:     schema.TypeBool,
