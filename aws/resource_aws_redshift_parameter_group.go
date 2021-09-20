@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftParameterGroup() *schema.Resource {
+func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftParameterGroupCreate,
-		Read:   resourceAwsRedshiftParameterGroupRead,
-		Update: resourceAwsRedshiftParameterGroupUpdate,
-		Delete: resourceAwsRedshiftParameterGroupDelete,
+		Create: resourceParameterGroupCreate,
+		Read:   resourceParameterGroupRead,
+		Update: resourceParameterGroupUpdate,
+		Delete: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -86,7 +86,7 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -119,10 +119,10 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsRedshiftParameterGroupRead(d, meta)
+	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -180,7 +180,7 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("parameter") {
@@ -220,10 +220,10 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsRedshiftParameterGroupRead(d, meta)
+	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceAwsRedshiftParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	_, err := conn.DeleteClusterParameterGroup(&redshift.DeleteClusterParameterGroupInput{
