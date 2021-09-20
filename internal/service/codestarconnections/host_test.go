@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 )
 
 func TestAccAWSCodeStarConnectionsHost_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func TestAccAWSCodeStarConnectionsHost_disappears(t *testing.T) {
 				Config: testAccAWSCodeStarConnectionsHostConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsHostExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHost(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
