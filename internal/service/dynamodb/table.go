@@ -340,7 +340,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		TableName:   aws.String(d.Get("name").(string)),
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
-		Tags:        tags.IgnoreAws().DynamodbTags(),
+		Tags:        Tags(tags.IgnoreAws()),
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -446,7 +446,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requiresTagging {
-		if err := tftags.DynamodbUpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
 			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -581,7 +581,7 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
-	tags, err := tftags.DynamodbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
@@ -766,7 +766,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}

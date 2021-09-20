@@ -20,12 +20,12 @@ func TestAccAWSDynamodbTag_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDynamodbTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -47,12 +47,12 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDynamodbTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,12 +74,12 @@ func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDynamodbTagDestroy,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDynamodbTagConfigResourceArnTableReplica(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 				),
 			},
 			{
@@ -100,12 +100,12 @@ func TestAccAWSDynamodbTag_Value(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDynamodbTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -118,7 +118,7 @@ func TestAccAWSDynamodbTag_Value(t *testing.T) {
 			{
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
