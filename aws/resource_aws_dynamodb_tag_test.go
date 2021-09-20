@@ -59,7 +59,7 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13725
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13725
 func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
