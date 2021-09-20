@@ -116,7 +116,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().CloudwatcheventsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating CloudWatch Events Rule: %s", input)
@@ -195,7 +195,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("is_enabled", enabled)
 
-	tags, err := tftags.CloudwatcheventsListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Events Rule (%s): %w", arn, err)
@@ -257,7 +257,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %w", arn, err)
 		}
 	}
