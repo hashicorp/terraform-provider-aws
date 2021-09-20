@@ -156,7 +156,7 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting workspace properties: %w", err)
 	}
 
-	tags, err := tftags.WorkspacesListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %w", err)
 	}

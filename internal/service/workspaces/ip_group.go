@@ -71,7 +71,7 @@ func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		GroupName: aws.String(d.Get("name").(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
 		UserRules: expandIpGroupRules(rules),
-		Tags:      tags.IgnoreAws().WorkspacesTags(),
+		Tags:      Tags(tags.IgnoreAws()),
 	})
 	if err != nil {
 		return err
@@ -114,7 +114,7 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", ipGroup.GroupDesc)
 	d.Set("rules", flattenIpGroupRules(ipGroup.UserRules))
 
-	tags, err := tftags.WorkspacesListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for WorkSpaces IP Group (%s): %w", d.Id(), err)
 	}
@@ -151,7 +151,7 @@ func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

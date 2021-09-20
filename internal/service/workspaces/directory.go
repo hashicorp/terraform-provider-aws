@@ -214,7 +214,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
-		Tags:              tags.IgnoreAws().WorkspacesTags(),
+		Tags:              Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
@@ -343,7 +343,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
 	}
 
-	tags, err := tftags.WorkspacesListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %w", err)
 	}
@@ -437,7 +437,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
