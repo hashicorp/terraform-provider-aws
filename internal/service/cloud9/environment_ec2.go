@@ -84,7 +84,7 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(d.Get("name").(string)),
 		ClientRequestToken: aws.String(resource.UniqueId()),
-		Tags:               tags.IgnoreAws().Cloud9Tags(),
+		Tags:               Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
@@ -188,7 +188,7 @@ func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error 
 	d.Set("owner_arn", env.OwnerArn)
 	d.Set("type", env.Type)
 
-	tags, err := tftags.Cloud9ListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Cloud9 EC2 Environment (%s): %s", arn, err)
@@ -232,7 +232,7 @@ func resourceEnvironmentEC2Update(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := tftags.Cloud9UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Cloud9 EC2 Environment (%s) tags: %s", arn, err)
 		}
 	}
