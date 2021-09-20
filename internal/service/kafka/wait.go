@@ -1,4 +1,4 @@
-package waiter
+package kafka
 
 import (
 	"time"
