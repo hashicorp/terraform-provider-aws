@@ -1,4 +1,4 @@
-package waiter
+package batch
 
 import (
 	"time"

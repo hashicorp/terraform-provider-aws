@@ -1,4 +1,4 @@
-package equivalency
+package batch
 
 import (
 	"testing"
