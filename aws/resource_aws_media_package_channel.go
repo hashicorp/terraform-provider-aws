@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMediaPackageChannel() *schema.Resource {
+func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaPackageChannelCreate,
-		Read:   resourceAwsMediaPackageChannelRead,
-		Update: resourceAwsMediaPackageChannelUpdate,
-		Delete: resourceAwsMediaPackageChannelDelete,
+		Create: resourceChannelCreate,
+		Read:   resourceChannelRead,
+		Update: resourceChannelUpdate,
+		Delete: resourceChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaPackageConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -97,10 +97,10 @@ func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(resp.Id))
 
-	return resourceAwsMediaPackageChannelRead(d, meta)
+	return resourceChannelRead(d, meta)
 }
 
-func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaPackageConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -134,7 +134,7 @@ func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceChannelUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaPackageConn
 
 	input := &mediapackage.UpdateChannelInput{
@@ -156,10 +156,10 @@ func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsMediaPackageChannelRead(d, meta)
+	return resourceChannelRead(d, meta)
 }
 
-func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaPackageConn
 
 	input := &mediapackage.DeleteChannelInput{
