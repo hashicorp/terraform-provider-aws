@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEcrImage() *schema.Resource {
+func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcrImageRead,
+		Read: dataSourceImageRead,
 		Schema: map[string]*schema.Schema{
 			"registry_id": {
 				Type:         schema.TypeString,
@@ -51,7 +51,7 @@ func dataSourceAwsEcrImage() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEcrImageRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	params := &ecr.DescribeImagesInput{

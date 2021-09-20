@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
+func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcrAuthorizationTokenRead,
+		Read: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
 			"registry_id": {
@@ -48,7 +48,7 @@ func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEcrAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 	params := &ecr.GetAuthorizationTokenInput{}
 	if v, ok := d.GetOk("registry_id"); ok {

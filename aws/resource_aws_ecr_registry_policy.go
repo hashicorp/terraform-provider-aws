@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcrRegistryPolicy() *schema.Resource {
+func ResourceRegistryPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEcrRegistryPolicyPut,
-		Read:   resourceAwsEcrRegistryPolicyRead,
+		Read:   resourceRegistryPolicyRead,
 		Update: resourceAwsEcrRegistryPolicyPut,
-		Delete: resourceAwsEcrRegistryPolicyDelete,
+		Delete: resourceRegistryPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,10 +53,10 @@ func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(regID)
 
-	return resourceAwsEcrRegistryPolicyRead(d, meta)
+	return resourceRegistryPolicyRead(d, meta)
 }
 
-func resourceAwsEcrRegistryPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	log.Printf("[DEBUG] Reading registry policy %s", d.Id())
@@ -76,7 +76,7 @@ func resourceAwsEcrRegistryPolicyRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsEcrRegistryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.DeleteRegistryPolicy(&ecr.DeleteRegistryPolicyInput{})

@@ -258,9 +258,9 @@ var sageMakerPrebuiltECRImageIDByRegion_TensorFlowServing = map[string]string{
 	endpoints.UsWest2RegionID:      "520713654638",
 }
 
-func dataSourceAwsSageMakerPrebuiltECRImage() *schema.Resource {
+func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSageMakerPrebuiltECRImageRead,
+		Read: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
 				Type:     schema.TypeString,
@@ -328,7 +328,7 @@ func dataSourceAwsSageMakerPrebuiltECRImage() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSageMakerPrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)

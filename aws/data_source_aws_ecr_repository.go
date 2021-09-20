@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEcrRepository() *schema.Resource {
+func DataSourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcrRepositoryRead,
+		Read: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -70,7 +70,7 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

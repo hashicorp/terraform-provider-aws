@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcrReplicationConfiguration() *schema.Resource {
+func ResourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEcrReplicationConfigurationPut,
-		Read:   resourceAwsEcrReplicationConfigurationRead,
+		Read:   resourceReplicationConfigurationRead,
 		Update: resourceAwsEcrReplicationConfigurationPut,
-		Delete: resourceAwsEcrReplicationConfigurationDelete,
+		Delete: resourceReplicationConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,10 +78,10 @@ func resourceAwsEcrReplicationConfigurationPut(d *schema.ResourceData, meta inte
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAwsEcrReplicationConfigurationRead(d, meta)
+	return resourceReplicationConfigurationRead(d, meta)
 }
 
-func resourceAwsEcrReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	log.Printf("[DEBUG] Reading ECR Replication Configuration %s", d.Id())
@@ -99,7 +99,7 @@ func resourceAwsEcrReplicationConfigurationRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsEcrReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := ecr.PutReplicationConfigurationInput{
