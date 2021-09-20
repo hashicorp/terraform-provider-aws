@@ -74,7 +74,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err = conn.PutDestination(params)
 
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -82,7 +82,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutDestination(params)
 	}
 	if err != nil {

@@ -81,12 +81,12 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		ls, exists, err = lookupCloudWatchLogStream(conn, d.Id(), group, nil)
 	}
 
 	if err != nil {
-		if !isAWSErr(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 
