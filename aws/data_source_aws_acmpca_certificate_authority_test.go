@@ -19,7 +19,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,

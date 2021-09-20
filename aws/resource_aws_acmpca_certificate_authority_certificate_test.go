@@ -21,7 +21,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName str
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+		conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
 
 		output, err := finder.CertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
 		if err != nil {

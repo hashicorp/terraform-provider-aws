@@ -24,7 +24,7 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +67,7 @@ func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,17 +104,17 @@ func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(domain, tlsPemEscapeNewlines(csr)),
+				Config: testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(domain, acctest.TLSPEMEscapeNewlines(csr)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -146,18 +146,18 @@ func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
 	domain := acctest.RandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_Validity_EndDate(domain, tlsPemEscapeNewlines(csr), later),
+				Config: testAccAwsAcmpcaCertificateConfig_Validity_EndDate(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -189,18 +189,18 @@ func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
 	domain := acctest.RandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Unix()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_Validity_Absolute(domain, tlsPemEscapeNewlines(csr), later),
+				Config: testAccAwsAcmpcaCertificateConfig_Validity_Absolute(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -229,7 +229,7 @@ func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
 }
 
 func testAccCheckAwsAcmpcaCertificateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+	conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate" {
@@ -268,7 +268,7 @@ func testAccCheckAwsAcmpcaCertificateExists(resourceName string) resource.TestCh
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+		conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
 		input := &acmpca.GetCertificateInput{
 			CertificateArn:          aws.String(rs.Primary.ID),
 			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
