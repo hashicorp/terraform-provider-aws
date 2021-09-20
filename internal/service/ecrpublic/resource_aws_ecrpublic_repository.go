@@ -1,4 +1,4 @@
-package aws
+package ecrpublic
 
 import (
 	"encoding/base64"

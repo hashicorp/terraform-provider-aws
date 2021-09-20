@@ -1,4 +1,4 @@
-package aws
+package ecrpublic_test
 
 import (
 	"fmt"
