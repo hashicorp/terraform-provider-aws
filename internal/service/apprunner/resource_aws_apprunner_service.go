@@ -411,7 +411,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
-	if err := waiter.ServiceCreated(ctx, conn, d.Id()); err != nil {
+	if err := waiter.WaitServiceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) creation: %w", d.Id(), err))
 	}
 
@@ -532,7 +532,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s): %w", d.Id(), err))
 		}
 
-		if err := waiter.ServiceUpdated(ctx, conn, d.Id()); err != nil {
+		if err := waiter.WaitServiceUpdated(ctx, conn, d.Id()); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) to update: %w", d.Id(), err))
 		}
 	}
@@ -565,7 +565,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error deleting App Runner Service (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.ServiceDeleted(ctx, conn, d.Id()); err != nil {
+	if err := waiter.WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

@@ -109,7 +109,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.CustomDomain.DomainName), aws.StringValue(output.ServiceArn)))
 	d.Set("dns_target", output.DNSTarget)
 
-	if err := waiter.CustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
+	if err := waiter.WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner Custom Domain Association (%s) creation: %w", d.Id(), err))
 	}
 
@@ -125,7 +125,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	customDomain, err := finder.CustomDomain(ctx, conn, domainName, serviceArn)
+	customDomain, err := finder.FindCustomDomain(ctx, conn, domainName, serviceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
@@ -178,7 +178,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error disassociating App Runner Custom Domain (%s) for Service (%s): %w", domainName, serviceArn, err))
 	}
 
-	if err := waiter.CustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
+	if err := waiter.WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

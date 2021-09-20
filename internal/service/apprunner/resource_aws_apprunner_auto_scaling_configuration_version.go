@@ -119,7 +119,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationCreate(ctx context.Context, d *
 
 	d.SetId(aws.StringValue(output.AutoScalingConfiguration.AutoScalingConfigurationArn))
 
-	if err := waiter.AutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
+	if err := waiter.WaitAutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for AutoScaling Configuration Version (%s) creation: %w", d.Id(), err))
 	}
 
@@ -223,7 +223,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationDelete(ctx context.Context, d *
 		return diag.FromErr(fmt.Errorf("error deleting App Runner AutoScaling Configuration Version (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.AutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
+	if err := waiter.WaitAutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

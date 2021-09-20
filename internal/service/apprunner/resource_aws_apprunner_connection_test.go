@@ -197,7 +197,7 @@ func testAccCheckAwsAppRunnerConnectionDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
+		connection, err := finder.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			continue
@@ -228,7 +228,7 @@ func testAccCheckAwsAppRunnerConnectionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
+		connection, err := finder.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

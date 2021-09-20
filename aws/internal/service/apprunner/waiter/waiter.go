@@ -23,11 +23,11 @@ const (
 	ServiceUpdateTimeout = 20 * time.Minute
 )
 
-func AutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{AutoScalingConfigurationStatusActive},
-		Refresh: AutoScalingConfigurationStatus(ctx, conn, arn),
+		Refresh: StatusAutoScalingConfiguration(ctx, conn, arn),
 		Timeout: AutoScalingConfigurationCreateTimeout,
 	}
 
@@ -36,11 +36,11 @@ func AutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunn
 	return err
 }
 
-func AutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{AutoScalingConfigurationStatusActive},
 		Target:  []string{AutoScalingConfigurationStatusInactive},
-		Refresh: AutoScalingConfigurationStatus(ctx, conn, arn),
+		Refresh: StatusAutoScalingConfiguration(ctx, conn, arn),
 		Timeout: AutoScalingConfigurationDeleteTimeout,
 	}
 
@@ -49,11 +49,11 @@ func AutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.AppRu
 	return err
 }
 
-func ConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name string) error {
+func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apprunner.ConnectionStatusPendingHandshake, apprunner.ConnectionStatusAvailable, apprunner.ConnectionStatusDeleted},
 		Target:  []string{},
-		Refresh: ConnectionStatus(ctx, conn, name),
+		Refresh: StatusConnection(ctx, conn, name),
 		Timeout: ConnectionDeleteTimeout,
 	}
 
@@ -62,11 +62,11 @@ func ConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name stri
 	return err
 }
 
-func CustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
+func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusCreating},
-		Target:  []string{CustomDomainAssociationStatusPendingCertificateDnsValidation},
-		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
+		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation},
+		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationCreateTimeout,
 	}
 
@@ -75,11 +75,11 @@ func CustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunn
 	return err
 }
 
-func CustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
+func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusActive, CustomDomainAssociationStatusDeleting},
 		Target:  []string{},
-		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
+		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationDeleteTimeout,
 	}
 
@@ -88,11 +88,11 @@ func CustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunn
 	return err
 }
 
-func ServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+func WaitServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apprunner.ServiceStatusOperationInProgress},
 		Target:  []string{apprunner.ServiceStatusRunning},
-		Refresh: ServiceStatus(ctx, conn, serviceArn),
+		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceCreateTimeout,
 	}
 
@@ -101,11 +101,11 @@ func ServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceArn s
 	return err
 }
 
-func ServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+func WaitServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apprunner.ServiceStatusOperationInProgress},
 		Target:  []string{apprunner.ServiceStatusRunning},
-		Refresh: ServiceStatus(ctx, conn, serviceArn),
+		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceUpdateTimeout,
 	}
 
@@ -114,11 +114,11 @@ func ServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceArn s
 	return err
 }
 
-func ServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{apprunner.ServiceStatusRunning, apprunner.ServiceStatusOperationInProgress},
 		Target:  []string{apprunner.ServiceStatusDeleted},
-		Refresh: ServiceStatus(ctx, conn, serviceArn),
+		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceDeleteTimeout,
 	}
 

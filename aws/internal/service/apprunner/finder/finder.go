@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner, name string) (*apprunner.ConnectionSummary, error) {
+func FindConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner, name string) (*apprunner.ConnectionSummary, error) {
 	input := &apprunner.ListConnectionsInput{
 		ConnectionName: aws.String(name),
 	}
@@ -45,7 +45,7 @@ func ConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner, nam
 	return cs, nil
 }
 
-func CustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) (*apprunner.CustomDomain, error) {
+func FindCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) (*apprunner.CustomDomain, error) {
 	input := &apprunner.DescribeCustomDomainsInput{
 		ServiceArn: aws.String(serviceArn),
 	}
