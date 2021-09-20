@@ -45,7 +45,7 @@ func resourceAwsDynamoDbTableItem() *schema.Resource {
 }
 
 func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []error) {
-	_, err := expandDynamoDbTableItemAttributes(v.(string))
+	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
 	}
@@ -58,7 +58,7 @@ func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
 	item := d.Get("item").(string)
-	attributes, err := expandDynamoDbTableItemAttributes(item)
+	attributes, err := expandTableItemAttributes(item)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}
 
 		oldItem, newItem := d.GetChange("item")
 
-		attributes, err := expandDynamoDbTableItemAttributes(newItem.(string))
+		attributes, err := expandTableItemAttributes(newItem.(string))
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		oItem := oldItem.(string)
-		oldAttributes, err := expandDynamoDbTableItemAttributes(oItem)
+		oldAttributes, err := expandTableItemAttributes(oItem)
 		if err != nil {
 			return err
 		}
@@ -161,7 +161,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	attributes, err := expandDynamoDbTableItemAttributes(d.Get("item").(string))
+	attributes, err := expandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 
 	// The record exists, now test if it differs from what is desired
 	if !reflect.DeepEqual(result.Item, attributes) {
-		itemAttrs, err := flattenDynamoDbTableItemAttributes(result.Item)
+		itemAttrs, err := flattenDynamoDBTableItemAttributes(result.Item)
 		if err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsDynamoDbTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	attributes, err := expandDynamoDbTableItemAttributes(d.Get("item").(string))
+	attributes, err := expandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
 		return err
 	}
