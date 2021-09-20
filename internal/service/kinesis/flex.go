@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 )
 
-func flattenShardLevelMetrics(list []*kinesis.EnhancedMetrics) []string {
+func FlattenShardLevelMetrics(list []*kinesis.EnhancedMetrics) []string {
 	if len(list) == 0 {
 		return []string{}
 	}
