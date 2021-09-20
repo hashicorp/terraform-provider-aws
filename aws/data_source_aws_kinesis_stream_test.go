@@ -19,7 +19,7 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	config := fmt.Sprintf(testAccCheckAwsKinesisStreamDataSourceConfig, sn)
 
 	updateShardCount := func() {
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
 		_, err := conn.UpdateShardCount(&kinesis.UpdateShardCountInput{
 			ScalingType:      aws.String(kinesis.ScalingTypeUniformScaling),
 			StreamName:       aws.String(sn),
@@ -36,7 +36,7 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
