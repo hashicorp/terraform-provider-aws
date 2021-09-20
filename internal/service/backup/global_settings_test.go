@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
+func TestAccBackupGlobalSettings_basic(t *testing.T) {
 	var settings backup.DescribeGlobalSettingsOutput
 
 	resourceName := "aws_backup_global_settings.test"

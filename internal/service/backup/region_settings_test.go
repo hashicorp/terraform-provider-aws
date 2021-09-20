@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
+func TestAccBackupRegionSettings_basic(t *testing.T) {
 	var settings backup.DescribeRegionSettingsOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

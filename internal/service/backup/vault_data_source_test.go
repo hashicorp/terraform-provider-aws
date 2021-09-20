@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSBackupVaultDataSource_basic(t *testing.T) {
+func TestAccBackupVaultDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_backup_vault.test"
 	resourceName := "aws_backup_vault.test"
 	rInt := sdkacctest.RandInt()

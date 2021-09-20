@@ -14,7 +14,7 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
-func TestAccAwsBackupSelection_basic(t *testing.T) {
+func TestAccBackupSelection_basic(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -41,7 +41,7 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupSelection_disappears(t *testing.T) {
+func TestAccBackupSelection_disappears(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -64,7 +64,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
+func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	backupPlanResourceName := "aws_backup_plan.test"
@@ -89,7 +89,7 @@ func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupSelection_withTags(t *testing.T) {
+func TestAccBackupSelection_withTags(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -117,7 +117,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupSelection_withResources(t *testing.T) {
+func TestAccBackupSelection_withResources(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -145,7 +145,7 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupSelection_updateTag(t *testing.T) {
+func TestAccBackupSelection_updateTag(t *testing.T) {
 	var selection1, selection2 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

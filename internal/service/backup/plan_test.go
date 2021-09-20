@@ -16,7 +16,7 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
-func TestAccAwsBackupPlan_basic(t *testing.T) {
+func TestAccBackupPlan_basic(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
@@ -53,7 +53,7 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_withTags(t *testing.T) {
+func TestAccBackupPlan_withTags(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
@@ -106,7 +106,7 @@ func TestAccAwsBackupPlan_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_withRules(t *testing.T) {
+func TestAccBackupPlan_withRules(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
@@ -192,7 +192,7 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
+func TestAccBackupPlan_withLifecycle(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
@@ -264,7 +264,7 @@ func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_withRecoveryPointTags(t *testing.T) {
+func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
@@ -337,7 +337,7 @@ func TestAccAwsBackupPlan_withRecoveryPointTags(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_Rule_CopyAction_SameRegion(t *testing.T) {
+func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -400,7 +400,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_SameRegion(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_Rule_CopyAction_NoLifecycle(t *testing.T) {
+func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -461,7 +461,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_NoLifecycle(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_Rule_CopyAction_Multiple(t *testing.T) {
+func TestAccBackupPlan_RuleCopyAction_multiple(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -496,7 +496,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_Rule_CopyAction_CrossRegion(t *testing.T) {
+func TestAccBackupPlan_RuleCopyAction_crossRegion(t *testing.T) {
 	var providers []*schema.Provider
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
@@ -537,7 +537,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_CrossRegion(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_AdvancedBackupSetting(t *testing.T) {
+func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -583,7 +583,7 @@ func TestAccAwsBackupPlan_AdvancedBackupSetting(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_EnableContinuousBackup(t *testing.T) {
+func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
@@ -622,7 +622,7 @@ func TestAccAwsBackupPlan_EnableContinuousBackup(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupPlan_disappears(t *testing.T) {
+func TestAccBackupPlan_disappears(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))

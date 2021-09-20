@@ -116,7 +116,7 @@ func testSweepBackupVaults(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsBackupVault_basic(t *testing.T) {
+func TestAccBackupVault_basic(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := sdkacctest.RandInt()
@@ -142,7 +142,7 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
+func TestAccBackupVault_withKMSKey(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := sdkacctest.RandInt()
@@ -169,7 +169,7 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupVault_withTags(t *testing.T) {
+func TestAccBackupVault_withTags(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := sdkacctest.RandInt()
@@ -218,7 +218,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupVault_disappears(t *testing.T) {
+func TestAccBackupVault_disappears(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := sdkacctest.RandInt()
