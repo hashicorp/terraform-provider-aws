@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIntegration() *schema.Resource {
@@ -48,7 +49,7 @@ func ResourceIntegration() *schema.Resource {
 			"credentials_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -57,7 +58,7 @@ func ResourceIntegration() *schema.Resource {
 			"integration_method": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateHTTPMethod(),
+				ValidateFunc: validHTTPMethod(),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Default HTTP method for Lambda integration is POST.
 					if v := d.Get("integration_type").(string); (v == apigatewayv2.IntegrationTypeAws || v == apigatewayv2.IntegrationTypeAwsProxy) && old == "POST" && new == "" {
@@ -262,11 +263,11 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
-	err = d.Set("request_parameters", pointersMapToStringList(resp.RequestParameters))
+	err = d.Set("request_parameters", verify.PointersMapToStringList(resp.RequestParameters))
 	if err != nil {
 		return fmt.Errorf("error setting request_parameters: %s", err)
 	}
-	err = d.Set("request_templates", pointersMapToStringList(resp.RequestTemplates))
+	err = d.Set("request_templates", verify.PointersMapToStringList(resp.RequestTemplates))
 	if err != nil {
 		return fmt.Errorf("error setting request_templates: %s", err)
 	}
@@ -325,7 +326,7 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {

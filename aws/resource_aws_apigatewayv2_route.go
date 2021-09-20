@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRoute() *schema.Resource {
@@ -169,7 +170,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	d.Set("operation_name", resp.OperationName)
-	if err := d.Set("request_models", pointersMapToStringList(resp.RequestModels)); err != nil {
+	if err := d.Set("request_models", verify.PointersMapToStringList(resp.RequestModels)); err != nil {
 		return fmt.Errorf("error setting request_models: %w", err)
 	}
 	if err := d.Set("request_parameter", flattenApiGatewayV2RouteRequestParameters(resp.RequestParameters)); err != nil {
