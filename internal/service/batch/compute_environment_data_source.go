@@ -94,7 +94,7 @@ func dataSourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("status_reason", computeEnvironment.StatusReason)
 	d.Set("state", computeEnvironment.State)
 
-	if err := d.Set("tags", tftags.BatchKeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

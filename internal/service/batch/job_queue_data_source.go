@@ -110,7 +110,7 @@ func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting compute_environment_order: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.BatchKeyValueTags(jobQueue.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(jobQueue.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
