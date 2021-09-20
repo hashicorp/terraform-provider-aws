@@ -53,7 +53,7 @@ func resourceActivityCreate(d *schema.ResourceData, meta interface{}) error {
 
 	params := &sfn.CreateActivityInput{
 		Name: aws.String(d.Get("name").(string)),
-		Tags: tags.IgnoreAws().SfnTags(),
+		Tags: Tags(tags.IgnoreAws()),
 	}
 
 	activity, err := conn.CreateActivity(params)
@@ -71,7 +71,7 @@ func resourceActivityUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.SfnUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -103,7 +103,7 @@ func resourceActivityRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Error setting creation_date: %s", err)
 	}
 
-	tags, err := tftags.SfnListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SFN Activity (%s): %s", d.Id(), err)
