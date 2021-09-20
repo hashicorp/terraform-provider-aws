@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidPlacementConstraint(t *testing.T) {

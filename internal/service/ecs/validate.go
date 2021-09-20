@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Validates that ECS Placement Constraints are set correctly
