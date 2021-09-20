@@ -72,7 +72,7 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		var att *ses.IdentityVerificationAttributes
 		att, err = getAwsSesIdentityVerificationAttributes(conn, domainName)
 
