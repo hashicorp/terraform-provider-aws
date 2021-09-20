@@ -3,7 +3,6 @@ package sfn
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidStateMachineName(t *testing.T) {
