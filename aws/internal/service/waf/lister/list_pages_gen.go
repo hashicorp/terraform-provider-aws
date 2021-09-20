@@ -199,11 +199,11 @@ func ListSizeConstraintSetsPagesWithContext(ctx context.Context, conn *waf.WAF, 
 	return nil
 }
 
-func ListSqlInjectionMatchSetsPages(conn *waf.WAF, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool) error {
-	return ListSqlInjectionMatchSetsPagesWithContext(context.Background(), conn, input, fn)
+func ListSQLInjectionMatchSetsPages(conn *waf.WAF, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool) error {
+	return ListSQLInjectionMatchSetsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func ListSqlInjectionMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool) error {
+func ListSQLInjectionMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListSqlInjectionMatchSetsWithContext(ctx, input)
 		if err != nil {
@@ -241,11 +241,11 @@ func ListWebACLsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.
 	return nil
 }
 
-func ListXssMatchSetsPages(conn *waf.WAF, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool) error {
-	return ListXssMatchSetsPagesWithContext(context.Background(), conn, input, fn)
+func ListXSSMatchSetsPages(conn *waf.WAF, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool) error {
+	return ListXSSMatchSetsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func ListXssMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool) error {
+func ListXSSMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListXssMatchSetsWithContext(ctx, input)
 		if err != nil {

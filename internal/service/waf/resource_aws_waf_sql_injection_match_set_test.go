@@ -47,7 +47,7 @@ func testSweepWafSqlInjectionMatchSet(region string) error {
 
 	input := &waf.ListSqlInjectionMatchSetsInput{}
 
-	err = lister.ListSqlInjectionMatchSetsPages(conn, input, func(page *waf.ListSqlInjectionMatchSetsOutput, lastPage bool) bool {
+	err = lister.ListSQLInjectionMatchSetsPages(conn, input, func(page *waf.ListSqlInjectionMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -48,7 +48,7 @@ func testSweepWafXssMatchSet(region string) error {
 
 	input := &waf.ListXssMatchSetsInput{}
 
-	err = lister.ListXssMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
+	err = lister.ListXSSMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
