@@ -320,7 +320,7 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("sample_utterances"); ok {
-		input.SampleUtterances = expandStringSet(v.(*schema.Set))
+		input.SampleUtterances = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("slot"); ok {
@@ -471,7 +471,7 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("sample_utterances"); ok {
-		input.SampleUtterances = expandStringSet(v.(*schema.Set))
+		input.SampleUtterances = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("slot"); ok {
@@ -790,7 +790,7 @@ func flattenLexSlots(slots []*lexmodelbuildingservice.Slot) (flattenedSlots []ma
 		}
 
 		if slot.SampleUtterances != nil {
-			flattenedSlot["sample_utterances"] = flattenStringList(slot.SampleUtterances)
+			flattenedSlot["sample_utterances"] = flex.FlattenStringList(slot.SampleUtterances)
 		}
 
 		if slot.SlotTypeVersion != nil {
@@ -839,7 +839,7 @@ func expandLexSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 		}
 
 		if v, ok := value["sample_utterances"]; ok && len(v.([]interface{})) != 0 {
-			slot.SampleUtterances = expandStringList(v.([]interface{}))
+			slot.SampleUtterances = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := value["slot_type_version"]; ok && v != "" {

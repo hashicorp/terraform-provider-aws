@@ -319,7 +319,7 @@ func resourceAwsLexSlotTypeDelete(d *schema.ResourceData, meta interface{}) erro
 func flattenLexEnumerationValues(values []*lexmodelbuildingservice.EnumerationValue) (flattened []map[string]interface{}) {
 	for _, value := range values {
 		flattened = append(flattened, map[string]interface{}{
-			"synonyms": flattenStringList(value.Synonyms),
+			"synonyms": flex.FlattenStringList(value.Synonyms),
 			"value":    aws.StringValue(value.Value),
 		})
 	}
@@ -336,7 +336,7 @@ func expandLexEnumerationValues(rawValues []interface{}) []*lexmodelbuildingserv
 		}
 
 		enums = append(enums, &lexmodelbuildingservice.EnumerationValue{
-			Synonyms: expandStringSet(value["synonyms"].(*schema.Set)),
+			Synonyms: flex.ExpandStringSet(value["synonyms"].(*schema.Set)),
 			Value:    aws.String(value["value"].(string)),
 		})
 	}
