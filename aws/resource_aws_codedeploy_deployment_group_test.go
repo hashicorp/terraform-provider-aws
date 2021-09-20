@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
@@ -2275,7 +2276,7 @@ func testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(group *codedeploy.Dep
 }
 
 func testAccCheckAWSCodeDeployDeploymentGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_deployment_group" {
@@ -2310,7 +2311,7 @@ func testAccCheckAWSCodeDeployDeploymentGroupExists(name string, group *codedepl
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 		resp, err := conn.GetDeploymentGroup(&codedeploy.GetDeploymentGroupInput{
 			ApplicationName:     aws.String(rs.Primary.Attributes["app_name"]),
