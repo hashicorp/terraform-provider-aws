@@ -172,7 +172,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       tags.IgnoreAws().ConfigserviceTags(),
+		Tags:       Tags(tags.IgnoreAws()),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
@@ -204,7 +204,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 	if !d.IsNewResource() && d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Config Config Rule (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -257,7 +257,7 @@ func resourceConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("source", flattenRuleSource(rule.Source))
 
-	tags, err := tftags.ConfigserviceListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Config Config Rule (%s): %s", d.Get("arn").(string), err)

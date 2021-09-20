@@ -123,7 +123,7 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 
 	req := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        tags.IgnoreAws().ConfigserviceTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
@@ -146,7 +146,7 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 		o, n := d.GetChange("tags_all")
 
 		arn := aws.StringValue(configAgg.ConfigurationAggregatorArn)
-		if err := tftags.ConfigserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Config Configuration Aggregator (%s) tags: %w", arn, err)
 		}
 	}
@@ -192,7 +192,7 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
 	}
 
-	tags, err := tftags.ConfigserviceListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Config Configuration Aggregator (%s): %w", arn, err)
