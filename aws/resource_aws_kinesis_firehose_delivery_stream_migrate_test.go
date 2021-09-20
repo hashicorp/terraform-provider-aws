@@ -1,10 +1,11 @@
 package aws
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAWSKinesisFirehoseMigrateState(t *testing.T) {
@@ -92,6 +93,7 @@ func TestAWSKinesisFirehoseMigrateState_empty(t *testing.T) {
 		t.Fatalf("err: %#v", err)
 	}
 }
+
 func migrateAwsInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
@@ -132,4 +134,3 @@ func resourceAwsInstanceMigrateState(
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
-
