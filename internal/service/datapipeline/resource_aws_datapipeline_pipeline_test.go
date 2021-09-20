@@ -1,4 +1,4 @@
-package aws
+package datapipeline_test
 
 import (
 	"fmt"
