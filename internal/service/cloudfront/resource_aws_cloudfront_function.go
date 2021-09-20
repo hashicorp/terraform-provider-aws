@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"fmt"
@@ -9,8 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -124,7 +123,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		stage = cloudfront.FunctionStageLive
 	}
 
-	describeFunctionOutput, err := finder.FindFunctionByNameAndStage(conn, d.Id(), stage)
+	describeFunctionOutput, err := FindFunctionByNameAndStage(conn, d.Id(), stage)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Function (%s/%s) not found, removing from state", d.Id(), stage)

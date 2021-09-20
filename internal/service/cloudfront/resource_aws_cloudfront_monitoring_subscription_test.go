@@ -1,4 +1,4 @@
-package aws
+package cloudfront_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func init() {
@@ -171,7 +171,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionDestroy(s *terraform.State) err
 			continue
 		}
 
-		s, err := finder.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
+		s, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 			continue
@@ -200,7 +200,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionExists(n string, v *cloudfront.
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-		out, err := finder.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
+		out, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

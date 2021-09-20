@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -116,7 +115,7 @@ func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) e
 func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	logConfig, err := finder.FindRealtimeLogConfigByARN(conn, d.Id())
+	logConfig, err := FindRealtimeLogConfigByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())

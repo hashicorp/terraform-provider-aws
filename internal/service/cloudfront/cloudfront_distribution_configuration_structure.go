@@ -5,7 +5,7 @@
 // several sub-fields that require their own data type, and do not necessarily
 // 1-1 translate to resource configuration.
 
-package aws
+package cloudfront
 
 import (
 	"bytes"

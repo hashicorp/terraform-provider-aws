@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +73,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)
 
-	describeFunctionOutput, err := finder.FindFunctionByNameAndStage(conn, name, stage)
+	describeFunctionOutput, err := FindFunctionByNameAndStage(conn, name, stage)
 
 	if err != nil {
 		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", name, stage, err)

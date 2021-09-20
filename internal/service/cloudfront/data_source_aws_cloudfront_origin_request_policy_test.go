@@ -1,4 +1,4 @@
-package aws
+package cloudfront_test
 
 import (
 	"fmt"
