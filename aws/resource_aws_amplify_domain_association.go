@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAmplifyDomainAssociation() *schema.Resource {
+func ResourceDomainAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyDomainAssociationCreate,
-		Read:   resourceAwsAmplifyDomainAssociationRead,
-		Update: resourceAwsAmplifyDomainAssociationUpdate,
-		Delete: resourceAwsAmplifyDomainAssociationDelete,
+		Create: resourceDomainAssociationCreate,
+		Read:   resourceDomainAssociationRead,
+		Update: resourceDomainAssociationUpdate,
+		Delete: resourceDomainAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -86,7 +86,7 @@ func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsAmplifyDomainAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID := d.Get("app_id").(string)
@@ -118,10 +118,10 @@ func resourceAwsAmplifyDomainAssociationCreate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsAmplifyDomainAssociationRead(d, meta)
+	return resourceDomainAssociationRead(d, meta)
 }
 
-func resourceAwsAmplifyDomainAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
@@ -153,7 +153,7 @@ func resourceAwsAmplifyDomainAssociationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsAmplifyDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
@@ -183,10 +183,10 @@ func resourceAwsAmplifyDomainAssociationUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsAmplifyDomainAssociationRead(d, meta)
+	return resourceDomainAssociationRead(d, meta)
 }
 
-func resourceAwsAmplifyDomainAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())

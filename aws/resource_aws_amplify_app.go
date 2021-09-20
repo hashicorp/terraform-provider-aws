@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAmplifyApp() *schema.Resource {
+func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyAppCreate,
-		Read:   resourceAwsAmplifyAppRead,
-		Update: resourceAwsAmplifyAppUpdate,
-		Delete: resourceAwsAmplifyAppDelete,
+		Create: resourceAppCreate,
+		Read:   resourceAppRead,
+		Update: resourceAppUpdate,
+		Delete: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -316,7 +316,7 @@ func resourceAwsAmplifyApp() *schema.Resource {
 	}
 }
 
-func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -404,10 +404,10 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(output.App.AppId))
 
-	return resourceAwsAmplifyAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -470,7 +470,7 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -574,10 +574,10 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsAmplifyAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsAmplifyAppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	log.Printf("[DEBUG] Deleting Amplify App (%s)", d.Id())

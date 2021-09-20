@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAmplifyBranch() *schema.Resource {
+func ResourceBranch() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyBranchCreate,
-		Read:   resourceAwsAmplifyBranchRead,
-		Update: resourceAwsAmplifyBranchUpdate,
-		Delete: resourceAwsAmplifyBranchDelete,
+		Create: resourceBranchCreate,
+		Read:   resourceBranchRead,
+		Update: resourceBranchUpdate,
+		Delete: resourceBranchDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -182,7 +182,7 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 	}
 }
 
-func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -262,10 +262,10 @@ func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(id)
 
-	return resourceAwsAmplifyBranchRead(d, meta)
+	return resourceBranchRead(d, meta)
 }
 
-func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -323,7 +323,7 @@ func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -412,10 +412,10 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsAmplifyBranchRead(d, meta)
+	return resourceBranchRead(d, meta)
 }
 
-func resourceAwsAmplifyBranchDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBranchDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())

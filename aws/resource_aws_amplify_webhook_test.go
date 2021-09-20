@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSAmplifyWebhook_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func testAccAWSAmplifyWebhook_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyWebhookConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyWebhookExists(resourceName, &webhook),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmplifyWebhook(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

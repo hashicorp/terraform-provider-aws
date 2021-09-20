@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
@@ -79,7 +80,7 @@ func testAccAWSAmplifyDomainAssociation_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyDomainAssociationConfig(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmplifyDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
