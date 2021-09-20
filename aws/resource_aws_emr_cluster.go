@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1981,7 +1981,7 @@ func resourceAwsEMRClusterEBSConfigHash(v interface{}) int {
 	if v, ok := m["iops"]; ok && v.(int) != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func getEmrCoreInstanceGroupAutoscalingPolicy(conn *emr.EMR, clusterID string) (*emr.AutoScalingPolicyDescription, error) {
@@ -2284,5 +2284,5 @@ func resourceAwsEMRInstanceTypeConfigHash(v interface{}) int {
 	if v, ok := m["bid_price_as_percentage_of_on_demand_price"]; ok && v.(float64) != 0 {
 		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
