@@ -248,7 +248,7 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
-		input.AirflowConfigurationOptions = expandStringMap(v.(map[string]interface{}))
+		input.AirflowConfigurationOptions = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("airflow_version"); ok {
@@ -400,7 +400,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 				options = map[string]interface{}{}
 			}
 
-			input.AirflowConfigurationOptions = expandStringMap(options.(map[string]interface{}))
+			input.AirflowConfigurationOptions = flex.ExpandStringMap(options.(map[string]interface{}))
 		}
 
 		if d.HasChange("airflow_version") {
@@ -582,8 +582,8 @@ func expandMwaaEnvironmentNetworkConfigurationCreate(l []interface{}) *mwaa.Netw
 	m := l[0].(map[string]interface{})
 
 	return &mwaa.NetworkConfiguration{
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        expandStringSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
 	}
 }
 
@@ -591,7 +591,7 @@ func expandMwaaEnvironmentNetworkConfigurationUpdate(l []interface{}) *mwaa.Upda
 	m := l[0].(map[string]interface{})
 
 	return &mwaa.UpdateNetworkConfigurationInput{
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
 	}
 }
 
@@ -685,8 +685,8 @@ func flattenMwaaNetworkConfiguration(networkConfiguration *mwaa.NetworkConfigura
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flattenStringSet(networkConfiguration.SecurityGroupIds),
-		"subnet_ids":         flattenStringSet(networkConfiguration.SubnetIds),
+		"security_group_ids": flex.FlattenStringSet(networkConfiguration.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringSet(networkConfiguration.SubnetIds),
 	}
 
 	return []interface{}{m}
