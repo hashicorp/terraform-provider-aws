@@ -820,7 +820,7 @@ func ResourceDeliveryStream() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
+		MigrateState:  MigrateState,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
@@ -2814,7 +2814,7 @@ func resourceDeliveryStreamDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn); err != nil {
+	if err := WaitForDeliveryStreamDeletion(conn, sn); err != nil {
 		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", sn, err)
 	}
 
@@ -2868,7 +2868,7 @@ func waitForKinesisFirehoseDeliveryStreamCreation(conn *firehose.Firehose, deliv
 	return v.(*firehose.DeliveryStreamDescription), nil
 }
 
-func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
+func WaitForDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{firehose.DeliveryStreamStatusDeleting},
 		Target:     []string{firehoseDeliveryStreamStatusDeleted},

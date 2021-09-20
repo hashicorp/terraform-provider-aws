@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 )
 
 func TestAWSKinesisFirehoseMigrateState(t *testing.T) {
@@ -54,7 +56,7 @@ func TestAWSKinesisFirehoseMigrateState(t *testing.T) {
 			ID:         "i-abc123",
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsKinesisFirehoseMigrateState(
+		is, err := tffirehose.MigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
@@ -76,7 +78,7 @@ func TestAWSKinesisFirehoseMigrateState_empty(t *testing.T) {
 	var meta interface{}
 
 	// should handle nil
-	is, err := resourceAwsKinesisFirehoseMigrateState(0, is, meta)
+	is, err := tffirehose.MigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)
@@ -105,7 +107,7 @@ func migrateAwsInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 	// Delete old count
 	delete(is.Attributes, "block_device.#")
 
-	oldBds, err := readV0BlockDevices(is)
+	oldBds, err := tfec2.ReadV0BlockDevices(is)
 	if err != nil {
 		return is, err
 	}
@@ -118,7 +120,7 @@ func migrateAwsInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 		is.Attributes["root_block_device.#"] = "0"
 	}
 	for _, oldBd := range oldBds {
-		writeV1BlockDevice(is, oldBd)
+		tfec2.WriteV1BlockDevice(is, oldBd)
 	}
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil

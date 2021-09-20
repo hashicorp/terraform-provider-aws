@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 )
 
 func init() {
@@ -69,7 +70,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 				return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", name, err)
 			}
 
-			if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, name); err != nil {
+			if err := tffirehose.WaitForDeliveryStreamDeletion(conn, name); err != nil {
 				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", name, err)
 			}
 		}
@@ -153,7 +154,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeliveryStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tffirehose.ResourceDeliveryStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
