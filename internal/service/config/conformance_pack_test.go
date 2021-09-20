@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
 )
 
 func testAccConfigConformancePack_basic(t *testing.T) {
@@ -106,7 +107,7 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 				Config: testAccConfigConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConformancePack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -424,7 +425,7 @@ func testAccCheckConfigConformancePackDestroy(s *terraform.State) error {
 			continue
 		}
 
-		pack, err := configDescribeConformancePack(conn, rs.Primary.ID)
+		pack, err := tfconfig.DescribeConformancePack(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
 			continue
@@ -451,7 +452,7 @@ func testAccCheckConfigConformancePackExists(resourceName string, detail *config
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
-		pack, err := configDescribeConformancePack(conn, rs.Primary.ID)
+		pack, err := tfconfig.DescribeConformancePack(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error describing Config Conformance Pack (%s): %w", rs.Primary.ID, err)

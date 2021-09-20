@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
 )
 
 func testAccConfigOrganizationManagedRule_basic(t *testing.T) {
@@ -66,7 +67,7 @@ func testAccConfigOrganizationManagedRule_disappears(t *testing.T) {
 				Config: testAccConfigOrganizationManagedRuleConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationManagedRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceOrganizationManagedRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationManagedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -409,7 +410,7 @@ func testAccCheckConfigOrganizationManagedRuleExists(resourceName string, ocr *c
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
-		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
@@ -433,7 +434,7 @@ func testAccCheckConfigOrganizationManagedRuleDestroy(s *terraform.State) error 
 			continue
 		}
 
-		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 			continue

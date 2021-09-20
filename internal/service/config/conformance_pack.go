@@ -139,7 +139,7 @@ func resourceAwsConfigConformancePackPut(d *schema.ResourceData, meta interface{
 func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
-	pack, err := configDescribeConformancePack(conn, d.Id())
+	pack, err := DescribeConformancePack(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
 		log.Printf("[WARN] Config Conformance Pack (%s) not found, removing from state", d.Id())

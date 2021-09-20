@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
 )
 
 func testAccConfigOrganizationCustomRule_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func testAccConfigOrganizationCustomRule_disappears(t *testing.T) {
 				Config: testAccConfigOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationCustomRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceOrganizationCustomRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -447,7 +448,7 @@ func testAccCheckConfigOrganizationCustomRuleExists(resourceName string, ocr *co
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
-		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
@@ -471,7 +472,7 @@ func testAccCheckConfigOrganizationCustomRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 			continue

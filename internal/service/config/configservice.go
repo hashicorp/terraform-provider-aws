@@ -19,7 +19,7 @@ const (
 	ConfigConformancePackStatusUnknown  = "Unknown"
 )
 
-func configDescribeConformancePack(conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
+func DescribeConformancePack(conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
 	input := &configservice.DescribeConformancePacksInput{
 		ConformancePackNames: []*string{aws.String(name)},
 	}
@@ -79,7 +79,7 @@ func configDescribeConformancePackStatus(conn *configservice.ConfigService, name
 	return nil, nil
 }
 
-func configDescribeOrganizationConfigRule(conn *configservice.ConfigService, name string) (*configservice.OrganizationConfigRule, error) {
+func DescribeOrganizationConfigRule(conn *configservice.ConfigService, name string) (*configservice.OrganizationConfigRule, error) {
 	input := &configservice.DescribeOrganizationConfigRulesInput{
 		OrganizationConfigRuleNames: []*string{aws.String(name)},
 	}
@@ -135,7 +135,7 @@ func configDescribeOrganizationConfigRuleStatus(conn *configservice.ConfigServic
 	return nil, nil
 }
 
-func configDescribeOrganizationConformancePack(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePack, error) {
+func DescribeOrganizationConformancePack(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePack, error) {
 	input := &configservice.DescribeOrganizationConformancePacksInput{
 		OrganizationConformancePackNames: []*string{aws.String(name)},
 	}
