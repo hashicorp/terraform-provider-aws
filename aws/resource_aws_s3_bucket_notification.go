@@ -426,7 +426,7 @@ func flattenTopicConfigurations(configs []*s3.TopicConfiguration) []map[string]i
 		}
 
 		conf["id"] = *notification.Id
-		conf["events"] = flattenStringSet(notification.Events)
+		conf["events"] = flex.FlattenStringSet(notification.Events)
 		conf["topic_arn"] = *notification.TopicArn
 		topicNotifications = append(topicNotifications, conf)
 	}
@@ -445,7 +445,7 @@ func flattenQueueConfigurations(configs []*s3.QueueConfiguration) []map[string]i
 		}
 
 		conf["id"] = *notification.Id
-		conf["events"] = flattenStringSet(notification.Events)
+		conf["events"] = flex.FlattenStringSet(notification.Events)
 		conf["queue_arn"] = *notification.QueueArn
 		queueNotifications = append(queueNotifications, conf)
 	}
@@ -464,7 +464,7 @@ func flattenLambdaFunctionConfigurations(configs []*s3.LambdaFunctionConfigurati
 		}
 
 		conf["id"] = *notification.Id
-		conf["events"] = flattenStringSet(notification.Events)
+		conf["events"] = flex.FlattenStringSet(notification.Events)
 		conf["lambda_function_arn"] = *notification.LambdaFunctionArn
 		lambdaFunctionNotifications = append(lambdaFunctionNotifications, conf)
 	}

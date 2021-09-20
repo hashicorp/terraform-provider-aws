@@ -189,7 +189,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("optional_fields"); ok {
-		inventoryConfiguration.OptionalFields = expandStringSet(v.(*schema.Set))
+		inventoryConfiguration.OptionalFields = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -346,7 +346,7 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enabled", output.InventoryConfiguration.IsEnabled)
 	d.Set("included_object_versions", output.InventoryConfiguration.IncludedObjectVersions)
 
-	if err := d.Set("optional_fields", flattenStringList(output.InventoryConfiguration.OptionalFields)); err != nil {
+	if err := d.Set("optional_fields", flex.FlattenStringList(output.InventoryConfiguration.OptionalFields)); err != nil {
 		return fmt.Errorf("error setting optional_fields: %s", err)
 	}
 
