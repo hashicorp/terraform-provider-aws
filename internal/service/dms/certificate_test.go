@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
 func TestAccAWSDmsCertificate_basic(t *testing.T) {
@@ -54,7 +55,7 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 				Config: testAccAWSDmsCertificateConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSDmsCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCertificate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
