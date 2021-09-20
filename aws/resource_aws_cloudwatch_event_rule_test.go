@@ -10,17 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(events.EndpointsID, testAccErrorCheckSkipEvents)
+	acctest.RegisterServiceErrorCheckFunc(events.EndpointsID, testAccErrorCheckSkipEvents)
 
 	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_rule",
@@ -81,7 +82,7 @@ func testSweepCloudWatchEventRules(region string) error {
 }
 
 func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Operation is disabled in this region",
 		"not a supported service for a target",
 	)
@@ -89,13 +90,13 @@ func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
@@ -132,7 +133,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					testAccCheckCloudWatchEventRuleRecreated(&v1, &v2),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
@@ -146,7 +147,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRuleConfigDefaultEventBusName(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					testAccCheckCloudWatchEventRuleNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
@@ -158,15 +159,15 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test-rule")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test-rule")
-	busName := acctest.RandomWithPrefix("tf-acc-test-bus")
-	busName2 := acctest.RandomWithPrefix("tf-acc-test-bus")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
+	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
+	busName2 := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -176,7 +177,7 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
 				),
 			},
 			{
@@ -200,7 +201,7 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 					testAccCheckCloudWatchEventRuleRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName2),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
 				),
 			},
 		},
@@ -209,14 +210,14 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
 	var v events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_cloudwatch_event_rule.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -239,12 +240,12 @@ func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -275,12 +276,12 @@ func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -290,7 +291,7 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 				),
 			},
 			{
@@ -303,7 +304,7 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.lambda\"]}"),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.lambda\"]}"),
 				),
 			},
 		},
@@ -312,12 +313,12 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_ScheduleAndPattern(t *testing.T) {
 	var v events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -327,7 +328,7 @@ func TestAccAWSCloudWatchEventRule_ScheduleAndPattern(t *testing.T) {
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 				),
 			},
 			{
@@ -345,8 +346,8 @@ func TestAccAWSCloudWatchEventRule_NamePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -372,8 +373,8 @@ func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -396,12 +397,12 @@ func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -448,12 +449,12 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -498,12 +499,12 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 	}
 
 	var v events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test-rule")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -511,10 +512,10 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
@@ -533,13 +534,13 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 	var v events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test-rule")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	resourceName := "aws_cloudwatch_event_rule.test"
-	eventBusName := acctest.RandomWithPrefix("tf-acc-test")
+	eventBusName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
@@ -547,10 +548,10 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRuleEventBusArn(rName, eventBusName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", "arn"),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),

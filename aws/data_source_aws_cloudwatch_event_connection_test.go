@@ -3,23 +3,24 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDataSourceCloudwatch_Event_Connection_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudwatch_event_connection.test"
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	authorizationType := "API_KEY"
-	description := acctest.RandomWithPrefix("tf-acc-test")
-	key := acctest.RandomWithPrefix("tf-acc-test")
-	value := acctest.RandomWithPrefix("tf-acc-test")
+	description := sdkacctest.RandomWithPrefix("tf-acc-test")
+	key := sdkacctest.RandomWithPrefix("tf-acc-test")
+	value := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -42,7 +43,7 @@ func TestAccAWSDataSourceCloudwatch_Event_Connection_basic(t *testing.T) {
 }
 
 func testAccAWSCloudwatch_Event_ConnectionDataConfig(name, description, authorizationType, key, value string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCloudWatchEventConnectionConfig_apiKey(name, description, authorizationType, key, value),
 		`
 data "aws_cloudwatch_event_connection" "test" {

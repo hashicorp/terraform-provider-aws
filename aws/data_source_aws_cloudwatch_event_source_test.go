@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsCloudWatchEventSource_basic(t *testing.T) {
@@ -26,8 +27,8 @@ func TestAccDataSourceAwsCloudWatchEventSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, cloudwatchevents.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

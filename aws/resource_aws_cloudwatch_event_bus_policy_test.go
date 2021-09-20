@@ -8,18 +8,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
-	rstring := acctest.RandString(5)
+	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
@@ -48,11 +49,11 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 
 func TestAccAWSCloudwatchEventBusPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
-	rstring := acctest.RandString(5)
+	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func TestAccAWSCloudwatchEventBusPolicy_disappears(t *testing.T) {
 				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBusPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

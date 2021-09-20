@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testResourceAwsCloudWatchEventTargetStateDataV0() map[string]interface{} {
