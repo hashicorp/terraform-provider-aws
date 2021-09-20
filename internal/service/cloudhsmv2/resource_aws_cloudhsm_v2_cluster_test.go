@@ -1,4 +1,4 @@
-package aws
+package cloudhsmv2_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 )
 
 func init() {
@@ -243,7 +243,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudhsm_v2_cluster" {
 			continue
 		}
-		cluster, err := finder.FindCluster(conn, rs.Primary.ID)
+		cluster, err := tfcloudhsmv2.FindCluster(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -265,7 +265,7 @@ func testAccCheckAWSCloudHsmV2ClusterExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		_, err := finder.FindCluster(conn, it.Primary.ID)
+		_, err := tfcloudhsmv2.FindCluster(conn, it.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("CloudHSM cluster not found: %s", err)
