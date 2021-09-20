@@ -1,4 +1,4 @@
-package waiter
+package transfer
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
