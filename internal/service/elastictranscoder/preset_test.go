@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
+func TestAccElasticTranscoderPreset_basic(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -40,7 +40,7 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
+func TestAccElasticTranscoderPreset_disappears(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -64,7 +64,7 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14087
-func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
+func TestAccElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -91,7 +91,7 @@ func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
+func TestAccElasticTranscoderPreset_description(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -119,7 +119,7 @@ func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
 }
 
 // Tests all configuration blocks
-func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
+func TestAccElasticTranscoderPreset_full(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -169,7 +169,7 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/695
-func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
+func TestAccElasticTranscoderPreset_Video_frameRate(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
