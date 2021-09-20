@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func StateMachineByARN(conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineOutput, error) {
