@@ -1,4 +1,4 @@
-package waiter
+package apigatewayv2
 
 import (
 	"time"
