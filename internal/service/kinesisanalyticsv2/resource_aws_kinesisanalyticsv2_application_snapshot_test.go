@@ -1,4 +1,4 @@
-package aws
+package kinesisanalyticsv2_test
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 )
 
 func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
@@ -103,7 +103,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy(s *terraform.State
 			continue
 		}
 
-		_, err := finder.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+		_, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -131,7 +131,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
-		application, err := finder.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+		application, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 		if err != nil {
 			return err

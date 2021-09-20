@@ -6,9 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 const (
@@ -98,7 +98,7 @@ func waitApplicationUpdated(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name st
 func waitIAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = f()
