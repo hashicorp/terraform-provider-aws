@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUser() *schema.Resource {
@@ -71,8 +72,8 @@ func ResourceUser() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateIAMPolicyJson,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 
 			"posix_profile": {
@@ -101,14 +102,14 @@ func ResourceUser() *schema.Resource {
 			"role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"server_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateTransferServerID,
+				ValidateFunc: validServerID,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -118,7 +119,7 @@ func ResourceUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateTransferUserName,
+				ValidateFunc: validUserName,
 			},
 		},
 
