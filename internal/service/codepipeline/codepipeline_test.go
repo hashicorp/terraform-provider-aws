@@ -73,7 +73,7 @@ func testSweepCodepipelinePipelines(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSCodePipeline_basic(t *testing.T) {
+func TestAccCodePipeline_basic(t *testing.T) {
 	var p1, p2 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -179,7 +179,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_disappears(t *testing.T) {
+func TestAccCodePipeline_disappears(t *testing.T) {
 	var p codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -206,7 +206,7 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
+func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 	var p codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -248,7 +248,7 @@ func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
+func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 	var p codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -281,7 +281,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_tags(t *testing.T) {
+func TestAccCodePipeline_tags(t *testing.T) {
 	var p1, p2, p3 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -501,7 +501,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
+func TestAccCodePipeline_withNamespace(t *testing.T) {
 	var p1 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
