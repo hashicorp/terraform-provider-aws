@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceKey() *schema.Resource {
@@ -95,7 +96,7 @@ func ResourceKey() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
 
