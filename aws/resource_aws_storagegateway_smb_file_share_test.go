@@ -26,7 +26,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_GuestAccess(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSStorageGatewaySmbFileShare_accessBasedEnumeration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,7 +163,7 @@ func TestAccAWSStorageGatewaySmbFileShare_notificationPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,7 +204,7 @@ func TestAccAWSStorageGatewaySmbFileShare_DefaultStorageClass(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -238,7 +238,7 @@ func TestAccAWSStorageGatewaySmbFileShare_FileShareName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,7 +272,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -317,7 +317,7 @@ func TestAccAWSStorageGatewaySmbFileShare_GuessMIMETypeEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -369,7 +369,7 @@ func TestAccAWSStorageGatewaySmbFileShare_OpLocksEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -405,7 +405,7 @@ func TestAccAWSStorageGatewaySmbFileShare_InvalidUserList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -446,7 +446,7 @@ func TestAccAWSStorageGatewaySmbFileShare_KMSEncrypted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -479,7 +479,7 @@ func TestAccAWSStorageGatewaySmbFileShare_KMSKeyArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -522,7 +522,7 @@ func TestAccAWSStorageGatewaySmbFileShare_ObjectACL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -556,7 +556,7 @@ func TestAccAWSStorageGatewaySmbFileShare_ReadOnly(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -590,7 +590,7 @@ func TestAccAWSStorageGatewaySmbFileShare_RequesterPays(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -625,7 +625,7 @@ func TestAccAWSStorageGatewaySmbFileShare_ValidUserList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -667,7 +667,7 @@ func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -710,7 +710,7 @@ func TestAccAWSStorageGatewaySmbFileShare_audit(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -744,7 +744,7 @@ func TestAccAWSStorageGatewaySmbFileShare_cacheAttributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -788,7 +788,7 @@ func TestAccAWSStorageGatewaySmbFileShare_caseSensitivity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -829,14 +829,14 @@ func TestAccAWSStorageGatewaySmbFileShare_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewaySmbFileShareConfig_Authentication_GuestAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsStorageGatewaySmbFileShare(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewaySmbFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -853,7 +853,7 @@ func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -887,7 +887,7 @@ func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
 }
 
 func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_smb_file_share" {
@@ -918,7 +918,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 		output, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
 

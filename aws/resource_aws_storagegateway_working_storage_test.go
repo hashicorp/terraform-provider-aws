@@ -77,7 +77,7 @@ func TestAccAWSStorageGatewayWorkingStorage_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing working storages,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -106,7 +106,7 @@ func testAccCheckAWSStorageGatewayWorkingStorageExists(resourceName string) reso
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 		gatewayARN, diskID, err := decodeStorageGatewayWorkingStorageID(rs.Primary.ID)
 		if err != nil {

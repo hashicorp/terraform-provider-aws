@@ -21,7 +21,7 @@ func TestAccAWSStorageGatewayTapePool_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayTapePoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func TestAccAWSStorageGatewayTapePool_retention(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayTapePoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func TestAccAWSStorageGatewayTapePool_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayTapePoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,14 +128,14 @@ func TestAccAWSStorageGatewayTapePool_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayTapePoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayTapePoolBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayTapePoolExists(resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayTapePool(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayTapePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,7 +150,7 @@ func testAccCheckAWSStorageGatewayTapePoolExists(resourceName string, TapePool *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 		input := &storagegateway.ListTapePoolsInput{
 			PoolARNs: []*string{aws.String(rs.Primary.ID)},
@@ -173,7 +173,7 @@ func testAccCheckAWSStorageGatewayTapePoolExists(resourceName string, TapePool *
 }
 
 func testAccCheckAWSStorageGatewayTapePoolDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_tape_pool" {
