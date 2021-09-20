@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
@@ -47,11 +48,11 @@ func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
@@ -79,11 +80,11 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxyTarget(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDbProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

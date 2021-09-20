@@ -7,17 +7,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
-	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
+	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -102,13 +103,13 @@ func testAccCheckLBCookieStickinessPolicy(elbResource string, policyResource str
 }
 
 func TestAccAWSLBCookieStickinessPolicy_disappears(t *testing.T) {
-	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
+	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	elbResourceName := "aws_elb.lb"
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(elbResourceName, resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsLBCookieStickinessPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLBCookieStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,13 +126,13 @@ func TestAccAWSLBCookieStickinessPolicy_disappears(t *testing.T) {
 }
 
 func TestAccAWSLBCookieStickinessPolicy_disappears_ELB(t *testing.T) {
-	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
+	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	elbResourceName := "aws_elb.lb"
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +140,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears_ELB(t *testing.T) {
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(elbResourceName, resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsElb(), elbResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElb(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,7 +149,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears_ELB(t *testing.T) {
 }
 
 func testAccLBCookieStickinessPolicyConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -172,7 +173,7 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 
 // Sets the cookie_expiration_period to 0s.
 func testAccLBCookieStickinessPolicyConfigUpdate(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]

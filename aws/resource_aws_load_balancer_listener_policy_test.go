@@ -8,18 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
-	rChar := acctest.RandStringFromCharSet(6, acctest.CharSetAlpha)
+	rChar := sdkacctest.RandStringFromCharSet(6, sdkacctest.CharSetAlpha)
 	lbName := rChar
 	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loa
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -187,7 +188,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -227,7 +228,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]

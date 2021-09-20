@@ -8,13 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8)) // ELB name cannot be longer than 32 characters
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
@@ -22,8 +23,8 @@ func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +41,7 @@ func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
 
 func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8)) // ELB name cannot be longer than 32 characters
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
@@ -48,8 +49,8 @@ func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
