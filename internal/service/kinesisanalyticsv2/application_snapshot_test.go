@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
+func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"
@@ -45,7 +45,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
+func TestAccKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -68,7 +68,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *testing.T) {
+func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *testing.T) {
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"

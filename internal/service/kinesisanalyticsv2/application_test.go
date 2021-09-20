@@ -82,7 +82,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -229,7 +229,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basicFlinkApplication(t *testing.T)
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -270,7 +270,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -293,7 +293,7 @@ func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_Tags(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -341,7 +341,7 @@ func TestAccAWSKinesisAnalyticsV2Application_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_ApplicationCodeConfiguration_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_ApplicationCode_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -424,7 +424,7 @@ func TestAccAWSKinesisAnalyticsV2Application_ApplicationCodeConfiguration_Update
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Add(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_add(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -487,7 +487,7 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Add(t *tes
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Delete(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_delete(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -550,7 +550,7 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Delete(t *
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_CloudWatchLoggingOptions_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -615,7 +615,7 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Update(t *
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_EnvironmentProperties_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -811,7 +811,7 @@ func TestAccAWSKinesisAnalyticsV2Application_EnvironmentProperties_Update(t *tes
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -931,7 +931,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Updat
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_EnvironmentProperties_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
@@ -1084,7 +1084,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Envir
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_RestoreFromSnapshot(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -1355,7 +1355,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Resto
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_StartApplication_OnCreate(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCreate(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -1431,7 +1431,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Start
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_StartApplication_OnUpdate(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpdate(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -1603,7 +1603,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Start
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_UpdateRunning(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -1732,7 +1732,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Updat
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_ServiceExecutionRole_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_ServiceExecutionRole_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
@@ -1794,7 +1794,7 @@ func TestAccAWSKinesisAnalyticsV2Application_ServiceExecutionRole_Update(t *test
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_Add(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_add(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -1904,7 +1904,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_A
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationInput_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -2044,7 +2044,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_U
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputProcessingConfiguration_Add(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_add(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -2183,7 +2183,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputPr
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputProcessingConfiguration_Delete(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_delete(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -2322,7 +2322,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputPr
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputProcessingConfiguration_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -2464,7 +2464,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_InputPr
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Multiple_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationMultiple_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
@@ -2658,7 +2658,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Multipl
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Output_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationOutput_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -2808,7 +2808,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Output_
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_ReferenceDataSource_Add(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_add(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -2912,7 +2912,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Referen
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_ReferenceDataSource_Delete(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_delete(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3016,7 +3016,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Referen
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_ReferenceDataSource_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationReferenceDataSource_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3143,7 +3143,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Referen
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_StartApplication_OnCreate(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onCreate(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3223,7 +3223,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_StartAp
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_StartApplication_OnUpdate(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationStartApplication_onUpdate(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3417,7 +3417,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_StartAp
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_UpdateRunning(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplication_updateRunning(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
@@ -3612,7 +3612,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_UpdateR
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConfiguration_Add(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3736,7 +3736,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConf
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConfiguration_Delete(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
@@ -3860,7 +3860,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConf
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConfiguration_Update(t *testing.T) {
+func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
