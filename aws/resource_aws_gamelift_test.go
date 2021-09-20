@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 type testAccGameliftGame struct {
@@ -28,7 +29,7 @@ func testAccAWSGameliftSampleGame(region string) (*testAccGameliftGame, error) {
 	}
 	bucket := fmt.Sprintf("gamelift-sample-builds-prod-%s", region)
 	key := fmt.Sprintf("%s/server/sample_build_%s", version, version)
-	roleArn := fmt.Sprintf("arn:%s:iam::%s:role/sample-build-upload-role-%s", testAccGetPartition(), accId, region)
+	roleArn := fmt.Sprintf("arn:%s:iam::%s:role/sample-build-upload-role-%s", acctest.Partition(), accId, region)
 	launchPath := `C:\game\Bin64.Release.Dedicated\MultiplayerProjectLauncher_Server.exe`
 
 	gg := &testAccGameliftGame{
