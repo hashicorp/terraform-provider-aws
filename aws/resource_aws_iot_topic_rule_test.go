@@ -47,7 +47,7 @@ func testSweepIotTopicRules(region string) error {
 			_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
 				RuleName: aws.String(name),
 			})
-			if isAWSErr(err, iot.ErrCodeUnauthorizedException, "") {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeUnauthorizedException, "") {
 				continue
 			}
 			if err != nil {

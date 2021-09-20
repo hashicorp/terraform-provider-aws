@@ -67,7 +67,7 @@ func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		PolicyName: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] IoT Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,7 +123,7 @@ func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 				PolicyVersionId: ver.VersionId,
 			})
 
-			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 
@@ -138,7 +138,7 @@ func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		PolicyName: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

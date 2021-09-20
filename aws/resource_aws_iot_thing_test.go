@@ -204,7 +204,7 @@ func testAccCheckAWSIotThingDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeThing(params)
 		if err != nil {
-			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
