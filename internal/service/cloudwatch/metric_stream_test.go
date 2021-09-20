@@ -26,7 +26,7 @@ func testAccErrorCheckSkipCloudwatch(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
+func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -58,7 +58,7 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
+func TestAccCloudWatchMetricStream_noName(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,7 +82,7 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
+func TestAccCloudWatchMetricStream_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -108,7 +108,7 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
+func TestAccCloudWatchMetricStream_includeFilters(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -136,7 +136,7 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
+func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -164,7 +164,7 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
+func TestAccCloudWatchMetricStream_update(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -199,7 +199,7 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
+func TestAccCloudWatchMetricStream_updateName(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -229,7 +229,7 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
+func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

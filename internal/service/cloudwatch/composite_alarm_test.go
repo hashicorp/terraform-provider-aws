@@ -85,7 +85,7 @@ func testSweepCloudWatchCompositeAlarms(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_basic(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_basic(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -119,7 +119,7 @@ func TestAccAwsCloudWatchCompositeAlarm_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_disappears(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_disappears(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -141,7 +141,7 @@ func TestAccAwsCloudWatchCompositeAlarm_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -179,7 +179,7 @@ func TestAccAwsCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_alarmActions(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_alarmActions(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -229,7 +229,7 @@ func TestAccAwsCloudWatchCompositeAlarm_alarmActions(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_description(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_description(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -267,7 +267,7 @@ func TestAccAwsCloudWatchCompositeAlarm_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_insufficientDataActions(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_insufficientDataActions(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -317,7 +317,7 @@ func TestAccAwsCloudWatchCompositeAlarm_insufficientDataActions(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_okActions(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_okActions(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -367,7 +367,7 @@ func TestAccAwsCloudWatchCompositeAlarm_okActions(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_allActions(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_allActions(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
@@ -409,7 +409,7 @@ func TestAccAwsCloudWatchCompositeAlarm_allActions(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
