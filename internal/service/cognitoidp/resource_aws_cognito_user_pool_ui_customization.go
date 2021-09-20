@@ -119,7 +119,7 @@ func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", d.Id(), err)
 	}
 
-	uiCustomization, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
+	uiCustomization, err := finder.FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s) not found, removing from state", userPoolId, clientId)

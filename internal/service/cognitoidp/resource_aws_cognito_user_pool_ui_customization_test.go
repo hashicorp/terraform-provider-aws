@@ -510,7 +510,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) er
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		output, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
+		output, err := finder.FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
 
 		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			continue
@@ -553,7 +553,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
-		output, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
+		output, err := finder.FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
 
 		if err != nil {
 			return err

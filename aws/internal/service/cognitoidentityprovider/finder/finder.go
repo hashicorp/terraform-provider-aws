@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// CognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
+// FindCognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
 // Returns nil if no UI Customization is found.
-func CognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
+func FindCognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
 	input := &cognitoidentityprovider.GetUICustomizationInput{
 		ClientId:   aws.String(clientId),
 		UserPoolId: aws.String(userPoolId),

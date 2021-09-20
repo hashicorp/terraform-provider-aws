@@ -91,7 +91,7 @@ func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(domain)
 
-	if _, err := waiter.UserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
+	if _, err := waiter.waitUserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
 		return fmt.Errorf("error waiting for User Pool Domain (%s) creation: %w", d.Id(), err)
 	}
 
@@ -148,7 +148,7 @@ func resourceUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error deleting User Pool Domain: %w", err)
 	}
 
-	if _, err := waiter.UserPoolDomainDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitUserPoolDomainDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
