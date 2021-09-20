@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
@@ -15,8 +16,8 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
@@ -26,7 +27,7 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -43,8 +44,8 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
@@ -54,7 +55,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,7 +64,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 }
 
 func testAccErrorCheckSkipMacie2OrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"AccessDeniedException: The request failed because you must be a user of the management account for your AWS organization to perform this operation",
 	)
 }

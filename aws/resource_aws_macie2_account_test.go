@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsMacie2Account_basic(t *testing.T) {
@@ -15,10 +16,10 @@ func testAccAwsMacie2Account_basic(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieAccountConfigBasic(),
@@ -26,9 +27,9 @@ func testAccAwsMacie2Account_basic(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -45,10 +46,10 @@ func testAccAwsMacie2Account_FindingPublishingFrequency(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieAccountConfigWithFinding(macie2.FindingPublishingFrequencyFifteenMinutes),
@@ -56,9 +57,9 @@ func testAccAwsMacie2Account_FindingPublishingFrequency(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -67,9 +68,9 @@ func testAccAwsMacie2Account_FindingPublishingFrequency(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyOneHour),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -86,10 +87,10 @@ func testAccAwsMacie2Account_WithStatus(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieAccountConfigWithstatus(macie2.MacieStatusEnabled),
@@ -97,9 +98,9 @@ func testAccAwsMacie2Account_WithStatus(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -108,9 +109,9 @@ func testAccAwsMacie2Account_WithStatus(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -127,10 +128,10 @@ func testAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieAccountConfigWithfindingandstatus(macie2.FindingPublishingFrequencyFifteenMinutes, macie2.MacieStatusEnabled),
@@ -138,9 +139,9 @@ func testAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -149,9 +150,9 @@ func testAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyOneHour),
 					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
-					testAccCheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "service_role", "iam", "role/aws-service-role/macie.amazonaws.com/AWSServiceRoleForAmazonMacie"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -168,16 +169,16 @@ func testAccAwsMacie2Account_disappears(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

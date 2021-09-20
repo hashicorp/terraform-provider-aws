@@ -11,21 +11,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.member"
-	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2PrincipalEmail, EnvVarMacie2PrincipalEmailMessageError)
+	email := acctest.SkipIfEnvVarEmpty(t, EnvVarMacie2PrincipalEmail, EnvVarMacie2PrincipalEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieInvitationAccepterConfigBasic(email),
@@ -98,7 +99,7 @@ func testAccCheckAwsMacie2InvitationAccepterDestroy(s *terraform.State) error {
 }
 
 func testAccAwsMacieInvitationAccepterConfigBasic(email string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "admin" {
   provider = "awsalternate"
 }
