@@ -19,7 +19,7 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,7 +104,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +189,7 @@ func testAccAwsOrganizationsOrganization_FeatureSet(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -215,7 +215,7 @@ func testAccAwsOrganizationsOrganization_FeatureSetForcesNew(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -249,7 +249,7 @@ func testAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func testAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsOrganizationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organization" {
@@ -319,7 +319,7 @@ func testAccCheckAwsOrganizationsOrganizationExists(n string, org *organizations
 			return fmt.Errorf("Organization ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
 		params := &organizations.DescribeOrganizationInput{}
 
 		resp, err := conn.DescribeOrganization(params)

@@ -18,7 +18,7 @@ func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsOrganizationResourceOnlyConfig,
