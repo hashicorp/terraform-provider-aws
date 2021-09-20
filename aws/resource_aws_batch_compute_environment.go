@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceComputeEnvironment() *schema.Resource {
@@ -42,7 +43,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"compute_environment_name_prefix"},
-				ValidateFunc:  validateBatchName,
+				ValidateFunc:  validName,
 			},
 			"compute_environment_name_prefix": {
 				Type:          schema.TypeString,
@@ -50,7 +51,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"compute_environment_name"},
-				ValidateFunc:  validateBatchPrefix,
+				ValidateFunc:  validPrefix,
 			},
 			"compute_resources": {
 				Type:     schema.TypeList,
@@ -93,7 +94,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"instance_type": {
 							Type:     schema.TypeSet,
@@ -145,7 +146,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"subnets": {
 							Type:     schema.TypeSet,
@@ -169,7 +170,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"state": {
 				Type:     schema.TypeString,
