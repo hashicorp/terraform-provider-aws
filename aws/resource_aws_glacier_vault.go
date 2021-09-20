@@ -252,7 +252,7 @@ func resourceAwsGlacierVaultNotificationUpdate(conn *glacier.Glacier, d *schema.
 			VaultName: aws.String(d.Id()),
 			VaultNotificationConfig: &glacier.VaultNotificationConfig{
 				SNSTopic: aws.String(s["sns_topic"].(string)),
-				Events:   expandStringSet(s["events"].(*schema.Set)),
+				Events:   flex.ExpandStringSet(s["events"].(*schema.Set)),
 			},
 		})
 
