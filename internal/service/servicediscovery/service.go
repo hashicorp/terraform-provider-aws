@@ -170,7 +170,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Service Discovery Service: %s", input)
@@ -217,7 +217,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
 
-	tags, err := tftags.ServicediscoveryListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
@@ -271,7 +271,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Service Discovery Service (%s) tags: %s", d.Id(), err)
 		}
 	}
