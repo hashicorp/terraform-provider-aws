@@ -89,7 +89,7 @@ func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlog
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	result, err := finder.QueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
+	result, err := finder.FindQueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading CloudWatch query definition (%s): %w", d.Id(), err))

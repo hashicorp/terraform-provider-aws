@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DescribeQueryDefinitionsPages(conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
-	return DescribeQueryDefinitionsPagesWithContext(context.Background(), conn, input, fn)
+func describeQueryDefinitionsPages(conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
+	return describeQueryDefinitionsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func DescribeQueryDefinitionsPagesWithContext(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
+func describeQueryDefinitionsPagesWithContext(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeQueryDefinitionsWithContext(ctx, input)
 		if err != nil {
