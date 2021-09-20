@@ -55,14 +55,14 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {
-			if isAWSErr(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.AssociateWebACL(params)
 	}
 	if err != nil {
@@ -86,7 +86,7 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 
 	output, err := conn.GetWebACLForResource(input)
 
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
 		d.SetId("")
 		return nil

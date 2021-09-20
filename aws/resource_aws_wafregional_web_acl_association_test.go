@@ -124,7 +124,7 @@ func testAccCheckWafRegionalWebAclAssociationDestroy(s *terraform.State) error {
 
 		_, err := conn.GetWebACLForResource(input)
 
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			continue
 		}
 

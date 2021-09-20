@@ -116,7 +116,7 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetRule(params)
 	if err != nil {
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Rule (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil

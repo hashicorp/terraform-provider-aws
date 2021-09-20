@@ -59,7 +59,7 @@ func testSweepWafRegionalRules(region string) error {
 				return conn.DeleteRule(deleteInput)
 			})
 
-			if isAWSErr(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
 				getRuleInput := &waf.GetRuleInput{
 					RuleId: rule.RuleId,
 				}
@@ -419,7 +419,7 @@ func testAccCheckAWSWafRegionalRuleDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Rule is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 

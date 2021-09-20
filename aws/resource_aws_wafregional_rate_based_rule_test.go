@@ -58,7 +58,7 @@ func testSweepWafRegionalRateBasedRules(region string) error {
 				return conn.DeleteRateBasedRule(deleteInput)
 			})
 
-			if isAWSErr(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
 				getRateBasedRuleInput := &waf.GetRateBasedRuleInput{
 					RuleId: rule.RuleId,
 				}
@@ -395,7 +395,7 @@ func testAccCheckAWSWafRegionalRateBasedRuleDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Rule is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 

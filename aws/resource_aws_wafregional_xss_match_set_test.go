@@ -248,7 +248,7 @@ func testAccCheckAWSWafRegionalXssMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the regional WAF XSS Match Set is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 

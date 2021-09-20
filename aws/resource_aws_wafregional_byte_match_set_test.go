@@ -345,7 +345,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 			continue
 		}
 

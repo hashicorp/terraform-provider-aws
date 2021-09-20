@@ -56,7 +56,7 @@ func testSweepWafRegionalWebAcls(region string) error {
 				return conn.DeleteWebACL(deleteInput)
 			})
 
-			if isAWSErr(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
 				getWebACLInput := &waf.GetWebACLInput{
 					WebACLId: webACL.WebACLId,
 				}
@@ -572,7 +572,7 @@ func testAccCheckAWSWafRegionalWebAclDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the WebACL is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 

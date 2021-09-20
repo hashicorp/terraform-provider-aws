@@ -103,7 +103,7 @@ func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.GetXssMatchSet(params)
 	if err != nil {
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
