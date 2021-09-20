@@ -15,7 +15,6 @@ import (
 
 	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Canonicalize validates IAM resources are appropriate for the authenticator

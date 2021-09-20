@@ -11,7 +11,6 @@ package eks_test
 import (
 	"fmt"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var arnTests = []struct {

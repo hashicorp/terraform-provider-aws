@@ -3,7 +3,6 @@ package eks
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validClusterName(v interface{}, k string) (ws []string, errors []error) {
