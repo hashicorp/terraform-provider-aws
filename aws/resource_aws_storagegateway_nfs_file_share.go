@@ -209,7 +209,7 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 	}
 
 	input := &storagegateway.CreateNFSFileShareInput{
-		ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
+		ClientList:           flex.ExpandStringSet(d.Get("client_list").(*schema.Set)),
 		ClientToken:          aws.String(resource.UniqueId()),
 		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
@@ -287,7 +287,7 @@ func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta inte
 	arn := fileshare.FileShareARN
 	d.Set("arn", arn)
 
-	if err := d.Set("client_list", flattenStringSet(fileshare.ClientList)); err != nil {
+	if err := d.Set("client_list", flex.FlattenStringSet(fileshare.ClientList)); err != nil {
 		return fmt.Errorf("error setting client_list: %w", err)
 	}
 
@@ -350,7 +350,7 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 		}
 
 		input := &storagegateway.UpdateNFSFileShareInput{
-			ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
+			ClientList:           flex.ExpandStringSet(d.Get("client_list").(*schema.Set)),
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
 			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
