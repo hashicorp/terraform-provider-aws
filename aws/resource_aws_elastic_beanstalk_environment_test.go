@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,9 +32,9 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	beanstalkconn := client.(*AWSClient).elasticbeanstalkconn
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
 
-	resp, err := beanstalkconn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
+	resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
 		IncludeDeleted: aws.Bool(false),
 	})
 
@@ -56,7 +57,7 @@ func testSweepElasticBeanstalkEnvironments(region string) error {
 		environmentID := aws.StringValue(bse.EnvironmentId)
 		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
 
-		err := deleteElasticBeanstalkEnvironment(beanstalkconn, environmentID, 5*time.Minute, 10*time.Second)
+		err := deleteElasticBeanstalkEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second)
 		if err != nil {
 			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Environment %q: %w", environmentID, err))
 		}
@@ -488,7 +489,7 @@ func testAccVerifyBeanstalkConfig(env *elasticbeanstalk.EnvironmentDescription, 
 		if env == nil {
 			return fmt.Errorf("Nil environment in testAccVerifyBeanstalkConfig")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 		resp, err := conn.DescribeConfigurationSettings(&elasticbeanstalk.DescribeConfigurationSettingsInput{
 			ApplicationName: env.ApplicationName,
@@ -536,7 +537,7 @@ func testAccVerifyBeanstalkConfig(env *elasticbeanstalk.EnvironmentDescription, 
 }
 
 func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_environment" {
@@ -581,7 +582,7 @@ func testAccCheckBeanstalkEnvExists(n string, app *elasticbeanstalk.EnvironmentD
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeBeanstalkEnv(acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn, aws.String(rs.Primary.ID))
+		env, err := describeBeanstalkEnv(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
@@ -603,7 +604,7 @@ func testAccCheckBeanstalkEnvTier(n string, app *elasticbeanstalk.EnvironmentDes
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeBeanstalkEnv(acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn, aws.String(rs.Primary.ID))
+		env, err := describeBeanstalkEnv(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
@@ -619,7 +620,7 @@ func testAccCheckBeanstalkEnvTier(n string, app *elasticbeanstalk.EnvironmentDes
 
 func testAccCheckBeanstalkEnvConfigValue(n string, expectedValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -666,7 +667,7 @@ func testAccCheckBeanstalkEnvTagsMatch(env *elasticbeanstalk.EnvironmentDescript
 			return fmt.Errorf("Nil environment in testAccCheckBeanstalkEnvTagsMatch")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 		tags, err := conn.ListTagsForResource(&elasticbeanstalk.ListTagsForResourceInput{
 			ResourceArn: env.EnvironmentArn,
@@ -697,7 +698,7 @@ func testAccCheckBeanstalkApplicationVersionDeployed(n string, app *elasticbeans
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeBeanstalkEnv(acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn, aws.String(rs.Primary.ID))
+		env, err := describeBeanstalkEnv(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}

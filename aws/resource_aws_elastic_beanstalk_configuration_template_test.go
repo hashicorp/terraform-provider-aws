@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
@@ -76,7 +77,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
 }
 
 func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_configuration_template" {
@@ -119,7 +120,7 @@ func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error
 
 func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticbeanstalk.ConfigurationSettingsDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

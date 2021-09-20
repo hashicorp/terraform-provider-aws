@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsElasticBeanstalkSolutionStack() *schema.Resource {
@@ -37,7 +38,7 @@ func dataSourceAwsElasticBeanstalkSolutionStack() *schema.Resource {
 
 // dataSourceAwsElasticBeanstalkSolutionStackRead performs the API lookup.
 func dataSourceAwsElasticBeanstalkSolutionStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	nameRegex := d.Get("name_regex")
 

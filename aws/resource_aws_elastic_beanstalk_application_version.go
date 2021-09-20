@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
@@ -62,8 +63,8 @@ func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("application").(string)
@@ -98,9 +99,9 @@ func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData,
 }
 
 func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeApplicationVersions(&elasticbeanstalk.DescribeApplicationVersionsInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
@@ -146,7 +147,7 @@ func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, m
 }
 
 func resourceAwsElasticBeanstalkApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	if d.HasChange("description") {
 		if err := resourceAwsElasticBeanstalkApplicationVersionDescriptionUpdate(conn, d); err != nil {
@@ -168,7 +169,7 @@ func resourceAwsElasticBeanstalkApplicationVersionUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsElasticBeanstalkApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	application := d.Get("application").(string)
 	name := d.Id()

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDataSourceElasticBeanstalkHostedZone_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func testAccCheckAwsElasticBeanstalkHostedZone(resourceName string, region strin
 		expectedValue, ok := elasticBeanstalkHostedZoneIds[region]
 
 		if !ok {
-			return fmt.Errorf("Unsupported region: %s", region)
+			return fmt.Errorf("Unsupported Region: %s", region)
 		}
 
 		return resource.TestCheckResourceAttr(resourceName, "id", expectedValue)(s)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		_, err := finder.ClusterByName(conn, rs.Primary.ID)
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
@@ -214,8 +215,8 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get values from config
@@ -319,7 +320,7 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	envID := d.Id()
 
@@ -498,9 +499,9 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	envID := d.Id()
 
@@ -639,7 +640,7 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 }
 
 func fetchAwsElasticBeanstalkEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	app := d.Get("application").(string)
 	name := d.Get("name").(string)
@@ -735,7 +736,7 @@ func resourceAwsElasticBeanstalkEnvironmentSettingsRead(d *schema.ResourceData, 
 }
 
 func resourceAwsElasticBeanstalkEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 	if err != nil {
@@ -961,7 +962,7 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 }
 
 func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	groups := strings.Split(settingValue, ",")
 
