@@ -1,12 +1,11 @@
-package aws
+package codestarconnections
 
 import (
 	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codestarconnections/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -54,7 +53,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
 
 	log.Printf("[DEBUG] Getting CodeStar Connection")
-	connection, err := finder.findConnectionByARN(conn, arn)
+	connection, err := findConnectionByARN(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error getting CodeStar Connection (%s): %w", arn, err)
 	}

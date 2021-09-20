@@ -1,4 +1,4 @@
-package aws
+package codestarconnections_test
 
 import (
 	"fmt"
