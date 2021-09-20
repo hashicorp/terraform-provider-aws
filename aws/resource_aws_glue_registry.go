@@ -83,7 +83,7 @@ func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error
 
 	output, err := finder.RegistryByID(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -161,7 +161,7 @@ func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.DeleteRegistry(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue Registry (%s): %w", d.Id(), err)
@@ -169,7 +169,7 @@ func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err = waiter.RegistryDeleted(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Registry (%s) to be deleted: %w", d.Id(), err)

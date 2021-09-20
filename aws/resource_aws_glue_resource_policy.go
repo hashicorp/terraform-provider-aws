@@ -51,7 +51,7 @@ func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).glueconn
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
-	if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 		log.Printf("[WARN] Glue Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

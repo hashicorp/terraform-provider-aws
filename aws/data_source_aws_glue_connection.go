@@ -92,7 +92,7 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	}
 	output, err := conn.GetConnection(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return diag.Errorf("error Glue Connection (%s) not found", id)
 		}
 		return diag.Errorf("error reading Glue Connection (%s): %s", id, err)

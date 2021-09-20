@@ -30,7 +30,7 @@ func testSweepGlueRegistry(region string) error {
 	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InternalFailure", "") {
+		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
 			return nil
 		}
@@ -191,7 +191,7 @@ func testAccPreCheckAWSGlueRegistry(t *testing.T) {
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Registrys return InternalFailure
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InternalFailure", "") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -239,7 +239,7 @@ func testAccCheckAWSGlueRegistryDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).glueconn
 		output, err := finder.RegistryByID(conn, rs.Primary.ID)
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				return nil
 			}
 

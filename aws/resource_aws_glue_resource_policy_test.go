@@ -165,7 +165,7 @@ func testAccCheckAWSGlueResourcePolicyDestroy(s *terraform.State) error {
 	policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "Policy not found") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "Policy not found") {
 			return nil
 		}
 		return err

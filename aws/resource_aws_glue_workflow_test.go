@@ -29,7 +29,7 @@ func testSweepGlueWorkflow(region string) error {
 	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InternalFailure", "") {
+		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping Glue Workflow sweep for %s: %s", region, err)
 			return nil
 		}
@@ -256,7 +256,7 @@ func testAccPreCheckAWSGlueWorkflow(t *testing.T) {
 	_, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 
 	// Some endpoints that do not support Glue Workflows return InternalFailure
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InternalFailure", "") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -311,7 +311,7 @@ func testAccCheckAWSGlueWorkflowDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				return nil
 			}
 

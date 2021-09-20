@@ -30,7 +30,7 @@ func testSweepGlueSchema(region string) error {
 	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InternalFailure", "") {
+		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
 			return nil
 		}
@@ -298,7 +298,7 @@ func testAccPreCheckAWSGlueSchema(t *testing.T) {
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Schemas return InternalFailure
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InternalFailure", "") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -346,7 +346,7 @@ func testAccCheckAWSGlueSchemaDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).glueconn
 		output, err := finder.SchemaByID(conn, rs.Primary.ID)
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				return nil
 			}
 

@@ -305,7 +305,7 @@ func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = glueConn.CreateCrawler(crawlerInput)
 	}
 	if err != nil {
@@ -657,7 +657,7 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 
 	crawlerOutput, err := glueConn.GetCrawler(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -833,7 +833,7 @@ func resourceAwsGlueCrawlerDelete(d *schema.ResourceData, meta interface{}) erro
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue crawler: %w", err)

@@ -387,7 +387,7 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 	out, err := finder.TableByName(conn, catalogID, dbName, name)
 	if err != nil {
 
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

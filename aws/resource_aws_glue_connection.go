@@ -135,7 +135,7 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading Glue Connection: %s", input)
 	output, err := conn.GetConnection(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -232,7 +232,7 @@ func deleteGlueConnection(conn *glue.Glue, catalogID, connectionName string) err
 
 	_, err := conn.DeleteConnection(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return err

@@ -147,7 +147,7 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 	out, err := conn.GetUserDefinedFunction(input)
 	if err != nil {
 
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue User Defined Function (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

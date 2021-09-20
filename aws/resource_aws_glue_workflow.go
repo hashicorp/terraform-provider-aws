@@ -99,7 +99,7 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading Glue Workflow: %#v", input)
 	output, err := conn.GetWorkflow(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Workflow (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -206,7 +206,7 @@ func deleteWorkflow(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteWorkflow(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return err

@@ -228,7 +228,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	partition, err := finder.PartitionByValues(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
