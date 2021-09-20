@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSOpsworksPermission_basic(t *testing.T) {
@@ -138,7 +139,7 @@ func testAccCheckAWSOpsworksPermissionExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribePermissionsInput{
 			StackId:    aws.String(rs.Primary.Attributes["stack_id"]),
@@ -180,7 +181,7 @@ func testAccCheckAWSOpsworksCreatePermissionAttributes(
 }
 
 func testAccCheckAwsOpsworksPermissionDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_permission" {

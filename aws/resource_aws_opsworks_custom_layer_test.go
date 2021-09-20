@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
@@ -184,7 +185,7 @@ func testAccCheckAWSOpsworksLayerExists(n string, opslayer *opsworks.Layer) reso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeLayersInput{
 			LayerIds: []*string{aws.String(rs.Primary.ID)},
@@ -267,7 +268,7 @@ func testAccCheckAWSOpsworksCreateLayerAttributes(
 }
 
 func testAccCheckAwsOpsworksLayerDestroy(resourceType string, s *terraform.State) error {
-	opsworksconn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourceType {
 			continue
@@ -278,7 +279,7 @@ func testAccCheckAwsOpsworksLayerDestroy(resourceType string, s *terraform.State
 			},
 		}
 
-		_, err := opsworksconn.DescribeLayers(req)
+		_, err := conn.DescribeLayers(req)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 				return nil

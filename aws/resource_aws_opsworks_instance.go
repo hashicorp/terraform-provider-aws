@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOpsworksInstance() *schema.Resource {
@@ -462,7 +463,7 @@ func resourceAwsOpsworksInstanceValidate(d *schema.ResourceData) error {
 }
 
 func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeInstancesInput{
 		InstanceIds: []*string{
@@ -571,7 +572,7 @@ func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksInstanceValidate(d)
 	if err != nil {
@@ -734,7 +735,7 @@ func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksInstanceValidate(d)
 	if err != nil {
@@ -815,7 +816,7 @@ func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsOpsworksInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != "stopped" {
 		err := stopOpsworksInstance(d, meta, d.Timeout(schema.TimeoutDelete))
@@ -847,7 +848,7 @@ func resourceAwsOpsworksInstanceImport(
 }
 
 func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	instanceId := d.Id()
 
@@ -885,7 +886,7 @@ func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, 
 }
 
 func stopOpsworksInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	instanceId := d.Id()
 

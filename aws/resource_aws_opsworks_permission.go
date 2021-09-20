@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOpsworksPermission() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsOpsworksPermissionDelete(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -107,7 +108,7 @@ func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
