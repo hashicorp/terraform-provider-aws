@@ -7,22 +7,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigurationTemplateConfig(acctest.RandString(5)),
+				Config: testAccBeanstalkConfigurationTemplateConfig(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 				),
@@ -35,13 +36,13 @@ func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigurationTemplateConfig_VPC(acctest.RandString(5)),
+				Config: testAccBeanstalkConfigurationTemplateConfig_VPC(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 				),
@@ -54,13 +55,13 @@ func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigurationTemplateConfig_Setting(acctest.RandString(5)),
+				Config: testAccBeanstalkConfigurationTemplateConfig_Setting(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 					resource.TestCheckResourceAttr(

@@ -12,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -70,7 +71,7 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	beanstalkAsgNameRegexp := regexp.MustCompile("awseb.+?AutoScalingGroup[^,]+")
 	beanstalkElbNameRegexp := regexp.MustCompile("awseb.+?EBLoa[^,]+")
@@ -79,8 +80,8 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	beanstalkEndpointURL := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 				Config: testAccBeanstalkEnvConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
 					resource.TestMatchResourceAttr(resourceName, "autoscaling_groups.0", beanstalkAsgNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointURL),
 					resource.TestMatchResourceAttr(resourceName, "instances.0", beanstalkInstancesNameRegexp),
@@ -114,11 +115,11 @@ func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
 	beanstalkQueuesNameRegexp := regexp.MustCompile("https://sqs.+?awseb[^,]+")
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -146,13 +147,13 @@ func TestAccAWSBeanstalkEnv_cname_prefix(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	beanstalkCnameRegexp := regexp.MustCompile("^" + rName + ".+?elasticbeanstalk.com$")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -180,11 +181,11 @@ func TestAccAWSBeanstalkEnv_config(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -227,11 +228,11 @@ func TestAccAWSBeanstalkEnv_resource(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -258,11 +259,11 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -304,11 +305,11 @@ func TestAccAWSBeanstalkEnv_template_change(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -338,11 +339,11 @@ func TestAccAWSBeanstalkEnv_settings_update(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -382,11 +383,11 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -419,15 +420,15 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -454,11 +455,11 @@ func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
@@ -466,7 +467,7 @@ func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
 				Config: testAccBeanstalkEnvConfig_platform_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
-					testAccCheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
 				),
 			},
 			{
