@@ -1,4 +1,4 @@
-package aws
+package elb_test
 
 import (
 	"testing"
