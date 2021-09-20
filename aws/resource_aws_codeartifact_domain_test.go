@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepCodeArtifactDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).codeartifactconn
+	conn := client.(*conns.AWSClient).CodeArtifactConn
 	input := &codeartifact.ListDomainsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -209,7 +210,7 @@ func testAccCheckAWSCodeArtifactDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
 		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
 		if err != nil {
@@ -231,7 +232,7 @@ func testAccCheckAWSCodeArtifactDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
 		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
 		if err != nil {

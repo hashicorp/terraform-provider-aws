@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeArtifactRepository() *schema.Resource {
@@ -95,8 +96,8 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 }
 
 func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Repository")
 
@@ -145,7 +146,7 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Updating CodeArtifact Repository")
 
 	needsUpdate := false
@@ -218,9 +219,9 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeArtifact Repository: %s", d.Id())
 
@@ -283,7 +284,7 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeArtifactRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
 
 	owner, domain, repo, err := decodeCodeArtifactRepositoryID(d.Id())

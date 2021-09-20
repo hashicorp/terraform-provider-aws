@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicy() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicy() *schema.Resource {
 }
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Creating CodeArtifact Repository Permissions Policy")
 
 	params := &codeartifact.PutRepositoryPermissionsPolicyInput{
@@ -85,7 +86,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyPut(d *schema.ResourceDat
 }
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Reading CodeArtifact Repository Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(d.Id())
@@ -118,7 +119,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceDa
 }
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(d.Id())

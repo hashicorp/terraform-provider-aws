@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeArtifactDomain() *schema.Resource {
@@ -65,8 +66,8 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 }
 
 func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Domain")
 
@@ -90,9 +91,9 @@ func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeArtifact Domain: %s", d.Id())
 
@@ -144,7 +145,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -157,7 +158,7 @@ func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
 	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())

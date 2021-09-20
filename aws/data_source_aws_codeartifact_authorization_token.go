@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCodeArtifactAuthorizationToken() *schema.Resource {
@@ -47,9 +48,9 @@ func dataSourceAwsCodeArtifactAuthorizationToken() *schema.Resource {
 }
 
 func dataSourceAwsCodeArtifactAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	domain := d.Get("domain").(string)
-	domainOwner := meta.(*AWSClient).accountid
+	domainOwner := meta.(*conns.AWSClient).AccountID
 	params := &codeartifact.GetAuthorizationTokenInput{
 		Domain: aws.String(domain),
 	}
