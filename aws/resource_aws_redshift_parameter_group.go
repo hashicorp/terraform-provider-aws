@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -242,5 +242,5 @@ func resourceAwsRedshiftParameterHash(v interface{}) int {
 	// Store the value as a lower case string, to match how we store them in flattenParameters
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["value"].(string))))
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
