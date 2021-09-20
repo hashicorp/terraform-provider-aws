@@ -294,7 +294,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AcmpcaTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating ACM PCA Certificate Authority: %s", input)
@@ -426,7 +426,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := tftags.AcmpcaListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %s", d.Id(), err)
@@ -478,7 +478,7 @@ func resourceCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AcmpcaUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ACM PCA Certificate Authority (%s) tags: %s", d.Id(), err)
 		}
 	}
