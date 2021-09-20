@@ -123,7 +123,7 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {
-		params.Addresses = expandStringSet(v.(*schema.Set))
+		params.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -180,7 +180,7 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.IPSet.ARN)
 	d.Set("lock_token", resp.LockToken)
 
-	if err := d.Set("addresses", flattenStringSet(resp.IPSet.Addresses)); err != nil {
+	if err := d.Set("addresses", flex.FlattenStringSet(resp.IPSet.Addresses)); err != nil {
 		return fmt.Errorf("Error setting addresses: %s", err)
 	}
 
@@ -218,7 +218,7 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {
-		params.Addresses = expandStringSet(v.(*schema.Set))
+		params.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("description"); ok {

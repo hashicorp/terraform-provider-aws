@@ -104,7 +104,7 @@ func dataSourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", resp.IPSet.Description)
 	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
 
-	if err := d.Set("addresses", flattenStringList(resp.IPSet.Addresses)); err != nil {
+	if err := d.Set("addresses", flex.FlattenStringList(resp.IPSet.Addresses)); err != nil {
 		return fmt.Errorf("error setting addresses: %w", err)
 	}
 
