@@ -4,8 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -41,7 +40,7 @@ func statusMLTransform(conn *glue.Glue, transformId string) resource.StateRefres
 // statusRegistry fetches the Registry and its Status
 func statusRegistry(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindRegistryByID(conn, id)
+		output, err := FindRegistryByID(conn, id)
 		if err != nil {
 			return nil, registryStatusUnknown, err
 		}
@@ -57,7 +56,7 @@ func statusRegistry(conn *glue.Glue, id string) resource.StateRefreshFunc {
 // statusSchema fetches the Schema and its Status
 func statusSchema(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindSchemaByID(conn, id)
+		output, err := FindSchemaByID(conn, id)
 		if err != nil {
 			return nil, schemaStatusUnknown, err
 		}
@@ -73,7 +72,7 @@ func statusSchema(conn *glue.Glue, id string) resource.StateRefreshFunc {
 // statusSchemaVersion fetches the Schema Version and its Status
 func statusSchemaVersion(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindSchemaVersionByID(conn, id)
+		output, err := FindSchemaVersionByID(conn, id)
 		if err != nil {
 			return nil, schemaVersionStatusUnknown, err
 		}
@@ -109,7 +108,7 @@ func statusTrigger(conn *glue.Glue, triggerName string) resource.StateRefreshFun
 
 func statusGlueDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindDevEndpointByName(conn, name)
+		output, err := FindDevEndpointByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

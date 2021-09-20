@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -9,10 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -108,7 +105,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
-		input.RegistryId = tfglue.createAwsRegistryID(v.(string))
+		input.RegistryId = createAwsRegistryID(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -126,7 +123,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(aws.StringValue(output.SchemaArn))
 
-	_, err = waiter.waitSchemaAvailable(conn, d.Id())
+	_, err = waitSchemaAvailable(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for Glue Schema (%s) to be Available: %w", d.Id(), err)
 	}
@@ -139,7 +136,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.FindSchemaByID(conn, d.Id())
+	output, err := FindSchemaByID(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
@@ -184,7 +181,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	schemeDefOutput, err := finder.FindSchemaVersionByID(conn, d.Id())
+	schemeDefOutput, err := FindSchemaVersionByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Glue Schema Definition (%s): %w", d.Id(), err)
 	}
@@ -198,7 +195,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateSchemaInput{
-		SchemaId: tfglue.createAwsSchemaID(d.Id()),
+		SchemaId: createAwsSchemaID(d.Id()),
 		SchemaVersionNumber: &glue.SchemaVersionNumber{
 			LatestVersion: aws.Bool(true),
 		},
@@ -222,7 +219,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Glue Schema (%s): %w", d.Id(), err)
 		}
 
-		_, err = waiter.waitSchemaAvailable(conn, d.Id())
+		_, err = waitSchemaAvailable(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error waiting for Glue Schema (%s) to be Available: %w", d.Id(), err)
 		}
@@ -237,7 +234,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("schema_definition") {
 		defInput := &glue.RegisterSchemaVersionInput{
-			SchemaId:         tfglue.createAwsSchemaID(d.Id()),
+			SchemaId:         createAwsSchemaID(d.Id()),
 			SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		}
 
@@ -246,7 +243,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Glue Schema Definition (%s): %w", d.Id(), err)
 		}
 
-		_, err = waiter.waitSchemaVersionAvailable(conn, d.Id())
+		_, err = waitSchemaVersionAvailable(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error waiting for Glue Schema Version (%s) to be Available: %w", d.Id(), err)
 		}
@@ -260,7 +257,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{
-		SchemaId: tfglue.createAwsSchemaID(d.Id()),
+		SchemaId: createAwsSchemaID(d.Id()),
 	}
 
 	_, err := conn.DeleteSchema(input)
@@ -271,7 +268,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Glue Schema (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitSchemaDeleted(conn, d.Id())
+	_, err = waitSchemaDeleted(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil

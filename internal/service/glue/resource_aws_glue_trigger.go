@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -12,13 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceTrigger() *schema.Resource {
@@ -215,7 +213,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateTrigger(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
@@ -236,7 +234,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
-	if _, err := waiter.waitTriggerCreated(conn, d.Id()); err != nil {
+	if _, err := waitTriggerCreated(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
@@ -263,7 +261,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.FindTriggerByName(conn, d.Id())
+	output, err := FindTriggerByName(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
@@ -366,7 +364,7 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Glue Trigger (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.waitTriggerCreated(conn, d.Id()); err != nil {
+		if _, err := waitTriggerCreated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Glue Trigger (%s) to be Update: %w", d.Id(), err)
 		}
 	}
@@ -418,7 +416,7 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
-	if _, err := waiter.waitTriggerDeleted(conn, d.Id()); err != nil {
+	if _, err := waitTriggerDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}

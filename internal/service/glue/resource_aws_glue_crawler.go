@@ -1,4 +1,4 @@
-package aws
+package glue
 
 import (
 	"fmt"
@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceCrawler() *schema.Resource {
@@ -287,7 +287,7 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry for IAM eventual consistency
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err = glueConn.CreateCrawler(crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
@@ -608,7 +608,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Retry for IAM eventual consistency
-		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 			_, err := glueConn.UpdateCrawler(updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx

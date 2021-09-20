@@ -1,4 +1,4 @@
-package aws
+package glue_test
 
 import (
 	"fmt"
@@ -9,12 +9,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func init() {
@@ -1120,7 +1120,7 @@ func testAccCheckGlueTableDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if _, err := finder.FindTableByName(conn, catalogId, dbName, resourceName); err != nil {
+		if _, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName); err != nil {
 			//Verify the error is what we want
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
@@ -1150,7 +1150,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := finder.FindTableByName(conn, catalogId, dbName, resourceName)
+		out, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err
 		}

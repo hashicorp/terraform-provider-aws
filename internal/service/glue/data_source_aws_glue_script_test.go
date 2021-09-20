@@ -1,4 +1,4 @@
-package aws
+package glue_test
 
 import (
 	"regexp"

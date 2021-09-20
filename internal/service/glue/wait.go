@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -158,8 +157,8 @@ func waitTriggerDeleted(conn *glue.Glue, triggerName string) (*glue.GetTriggerOu
 
 func waitGlueDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfglue.devEndpointStatusProvisioning},
-		Target:  []string{tfglue.devEndpointStatusReady},
+		Pending: []string{devEndpointStatusProvisioning},
+		Target:  []string{devEndpointStatusReady},
 		Refresh: statusGlueDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
@@ -167,7 +166,7 @@ func waitGlueDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*glue.DevEndpoint); ok {
-		if status := aws.StringValue(output.Status); status == tfglue.devEndpointStatusFailed {
+		if status := aws.StringValue(output.Status); status == devEndpointStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
 		}
 
@@ -179,7 +178,7 @@ func waitGlueDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint
 
 func waitGlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfglue.devEndpointStatusTerminating},
+		Pending: []string{devEndpointStatusTerminating},
 		Target:  []string{},
 		Refresh: statusGlueDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
@@ -188,7 +187,7 @@ func waitGlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*glue.DevEndpoint); ok {
-		if status := aws.StringValue(output.Status); status == tfglue.devEndpointStatusFailed {
+		if status := aws.StringValue(output.Status); status == devEndpointStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
 		}
 
