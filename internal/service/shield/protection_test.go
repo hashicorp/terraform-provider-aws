@@ -17,7 +17,7 @@ import (
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 )
 
-func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
+func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -48,7 +48,7 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
+func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -79,7 +79,7 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_disappears(t *testing.T) {
+func TestAccShieldProtection_disappears(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -105,7 +105,7 @@ func TestAccAWSShieldProtection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Alb(t *testing.T) {
+func TestAccShieldProtection_alb(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -136,7 +136,7 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Elb(t *testing.T) {
+func TestAccShieldProtection_elb(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -167,7 +167,7 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
+func TestAccShieldProtection_cloudFront(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -199,7 +199,7 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
+func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 
@@ -251,7 +251,7 @@ func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Route53(t *testing.T) {
+func TestAccShieldProtection_route53(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := sdkacctest.RandString(10)
 

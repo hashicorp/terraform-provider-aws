@@ -16,7 +16,7 @@ import (
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 )
 
-func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
+func TestAccShieldProtectionGroup_basic(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -51,7 +51,7 @@ func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
+func TestAccShieldProtectionGroup_disappears(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -77,7 +77,7 @@ func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
+func TestAccShieldProtectionGroup_aggregation(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -119,7 +119,7 @@ func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
+func TestAccShieldProtectionGroup_members(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -151,7 +151,7 @@ func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
+func TestAccShieldProtectionGroup_protectionGroupID(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
 	testID1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	testID2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -194,7 +194,7 @@ func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
+func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
