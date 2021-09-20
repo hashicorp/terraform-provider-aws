@@ -32,7 +32,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).CloudFormationConn
-	stackSets, err := listCloudFormationStackSets(conn)
+	stackSets, err := tfcloudformation.ListStackSets(conn)
 
 	if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		log.Printf("[WARN] Skipping CloudFormation StackSet Instance sweep for %s: %s", region, err)
@@ -47,7 +47,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 
 	for _, stackSet := range stackSets {
 		stackSetName := aws.StringValue(stackSet.StackSetName)
-		instances, err := listCloudFormationStackSetInstances(conn, stackSetName)
+		instances, err := tfcloudformation.ListStackSetInstances(conn, stackSetName)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error listing CloudFormation StackSet (%s) Instances: %w", stackSetName, err)
@@ -151,7 +151,7 @@ func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSetInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,8 +177,8 @@ func TestAccAWSCloudFormationStackSetInstance_disappears_StackSet(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(stackSetResourceName, &stackSet1),
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSetInstance(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSet(), stackSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -314,7 +314,7 @@ func testAccCheckCloudFormationStackSetInstanceExists(resourceName string, stack
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(rs.Primary.ID)
+		stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -374,7 +374,7 @@ func testAccCheckAWSCloudFormationStackSetInstanceDestroy(s *terraform.State) er
 			continue
 		}
 
-		stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(rs.Primary.ID)
+		stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -177,7 +177,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
-	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
+	stackSetName, accountID, region, err := StackSetInstanceParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -231,7 +231,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	if d.HasChange("parameter_overrides") {
-		stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
+		stackSetName, accountID, region, err := StackSetInstanceParseID(d.Id())
 
 		if err != nil {
 			return err
@@ -267,7 +267,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
-	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
+	stackSetName, accountID, region, err := StackSetInstanceParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -303,7 +303,7 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string, string, error) {
+func StackSetInstanceParseID(id string) (string, string, string, error) {
 	idFormatErr := fmt.Errorf("unexpected format of ID (%s), expected NAME,ACCOUNT,REGION", id)
 
 	parts := strings.SplitN(id, ",", 3)
@@ -314,7 +314,7 @@ func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string
 	return parts[0], parts[1], parts[2], nil
 }
 
-func listCloudFormationStackSetInstances(conn *cloudformation.CloudFormation, stackSetName string) ([]*cloudformation.StackInstanceSummary, error) {
+func ListStackSetInstances(conn *cloudformation.CloudFormation, stackSetName string) ([]*cloudformation.StackInstanceSummary, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackSetName: aws.String(stackSetName),
 	}

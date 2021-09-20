@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func testSweepCloudformationStackSets(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).CloudFormationConn
-	stackSets, err := listCloudFormationStackSets(conn)
+	stackSets, err := tfcloudformation.ListStackSets(conn)
 
 	if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
@@ -129,7 +130,7 @@ func TestAccAWSCloudFormationStackSet_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

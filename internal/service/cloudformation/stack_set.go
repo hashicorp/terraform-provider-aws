@@ -351,7 +351,7 @@ func resourceStackSetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func listCloudFormationStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
+func ListStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
