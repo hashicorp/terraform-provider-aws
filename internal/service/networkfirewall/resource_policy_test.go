@@ -16,7 +16,7 @@ import (
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
-func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
+func TestAccNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -51,7 +51,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
+func TestAccNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -86,7 +86,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallResourcePolicy_disappears(t *testing.T) {
+func TestAccNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -108,7 +108,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallResourcePolicy_disappears_FirewallPolicy(t *testing.T) {
+func TestAccNetworkFirewallResourcePolicy_Disappears_firewallPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -130,7 +130,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears_FirewallPolicy(t *testin
 	})
 }
 
-func TestAccAwsNetworkFirewallResourcePolicy_disappears_RuleGroup(t *testing.T) {
+func TestAccNetworkFirewallResourcePolicy_Disappears_ruleGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 

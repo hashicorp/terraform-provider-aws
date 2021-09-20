@@ -79,7 +79,7 @@ func testSweepNetworkFirewallRuleGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_basic_rulesSourceList(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -117,7 +117,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rulesSourceList(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_basic_statefulRule(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -164,7 +164,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statefulRule(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -206,7 +206,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_basic_rules(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_Basic_rules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
@@ -243,7 +243,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rules(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -292,7 +292,7 @@ func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19414
-func TestAccAwsNetworkFirewallRuleGroup_updateRules(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_updateRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -332,7 +332,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRules(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -377,7 +377,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -454,9 +454,9 @@ func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T
 	})
 }
 
-// TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule validates
+// TestAccNetworkFirewallRuleGroup_updateStatefulRule validates
 // in-place updates to a single stateful_rule configuration block
-func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -499,10 +499,10 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	})
 }
 
-// TestAccAwsNetworkFirewallRuleGroup_updateMultipleStatefulRules validates
+// TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules validates
 // in-place updates to stateful_rule configuration blocks
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16868
-func TestAccAwsNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -580,10 +580,10 @@ func TestAccAwsNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T
 	})
 }
 
-// TestAccAwsNetworkFirewallRuleGroup_statefulRule_action validates in-place
+// TestAccNetworkFirewallRuleGroup_StatefulRule_action validates in-place
 // updates to the "action" argument within 1 stateful_rule configuration block
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16868
-func TestAccAwsNetworkFirewallRuleGroup_statefulRule_action(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -643,7 +643,7 @@ func TestAccAwsNetworkFirewallRuleGroup_statefulRule_action(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16470
-func TestAccAwsNetworkFirewallRuleGroup_statefulRule_header(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_StatefulRule_header(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -703,7 +703,7 @@ func TestAccAwsNetworkFirewallRuleGroup_statefulRule_header(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -752,7 +752,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_tags(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
@@ -795,7 +795,7 @@ func TestAccAwsNetworkFirewallRuleGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_disappears(t *testing.T) {
+func TestAccNetworkFirewallRuleGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 

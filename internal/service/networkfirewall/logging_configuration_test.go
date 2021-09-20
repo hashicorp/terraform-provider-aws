@@ -77,7 +77,7 @@ func testSweepNetworkFirewallLoggingConfigurations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logGroup(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGroup(t *testing.T) {
 	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedLogGroupName := fmt.Sprintf("%s-updated", logGroupName)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -122,7 +122,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logG
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logType(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logType(t *testing.T) {
 	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
@@ -162,7 +162,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logT
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_deliveryStream(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_deliveryStream(t *testing.T) {
 	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedStreamName := fmt.Sprintf("%s-updated", streamName)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -207,7 +207,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_deliver
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_logType(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_logType(t *testing.T) {
 	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
@@ -247,7 +247,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_logType
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_bucketName(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedBucketName := fmt.Sprintf("%s-updated", bucketName)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -291,7 +291,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName(t
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_logType(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_logType(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
@@ -332,7 +332,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_logType(t *t
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
@@ -376,7 +376,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *te
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_updateFirewallArn(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_updateFirewallARN(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
@@ -412,7 +412,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateFirewallArn(t *testing.
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -471,7 +471,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *t
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinationConfigs(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -526,7 +526,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinatio
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDestinationConfig(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDestination(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -581,7 +581,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDes
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestinationConfig(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestination(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -636,7 +636,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDest
 	})
 }
 
-func TestAccAwsNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
+func TestAccNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"

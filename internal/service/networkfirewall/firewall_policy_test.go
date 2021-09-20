@@ -79,7 +79,7 @@ func testSweepNetworkFirewallFirewallPolicies(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_basic(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
@@ -113,7 +113,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
@@ -142,7 +142,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testi
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
@@ -183,7 +183,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t 
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName1 := "aws_networkfirewall_rule_group.test.0"
@@ -223,7 +223,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
@@ -266,7 +266,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *test
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
@@ -311,7 +311,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName1 := "aws_networkfirewall_rule_group.test.0"
@@ -360,7 +360,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReference
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
@@ -393,7 +393,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T)
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
@@ -453,7 +453,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *test
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
@@ -506,7 +506,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *t
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAction(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
@@ -550,7 +550,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustom
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_tags(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
@@ -593,7 +593,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewallPolicy_disappears(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
