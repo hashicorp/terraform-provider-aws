@@ -1,4 +1,4 @@
-package waiter
+package iam
 
 import (
 	"time"

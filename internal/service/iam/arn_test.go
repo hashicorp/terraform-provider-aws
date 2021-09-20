@@ -1,4 +1,4 @@
-package iam_test
+package iam
 
 import (
 	"regexp"
