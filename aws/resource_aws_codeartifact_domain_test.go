@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepCodeArtifactDomains(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -56,7 +56,7 @@ func testSweepCodeArtifactDomains(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CodeArtifact Domain sweep for %s: %s", region, err)
 		return nil
 	}
@@ -75,7 +75,7 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +140,7 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,14 +183,14 @@ func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeArtifactDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,7 +209,7 @@ func testAccCheckAWSCodeArtifactDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
 
 		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
 		if err != nil {
@@ -231,7 +231,7 @@ func testAccCheckAWSCodeArtifactDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+		conn := acctest.Provider.Meta().(*AWSClient).codeartifactconn
 
 		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
 		if err != nil {

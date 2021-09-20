@@ -17,7 +17,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCodeArtifactAuthorizationTokenBasicConfig(rName),
@@ -38,7 +38,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCodeArtifactAuthorizationTokenOwnerConfig(rName),
@@ -59,7 +59,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCodeArtifactAuthorizationTokenDurationConfig(rName),
