@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksMysqlLayer() *schema.Resource {
+func ResourceMySQLLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeDbMaster,
 		DefaultLayerName: "MySQL",

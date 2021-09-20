@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
+func ResourceRDSDBInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOpsworksRdsDbInstanceRegister,
-		Update: resourceAwsOpsworksRdsDbInstanceUpdate,
+		Update: resourceRDSDBInstanceUpdate,
 		Delete: resourceAwsOpsworksRdsDbInstanceDeregister,
-		Read:   resourceAwsOpsworksRdsDbInstanceRead,
+		Read:   resourceRDSDBInstanceRead,
 
 		Schema: map[string]*schema.Schema{
 			"stack_id": {
@@ -41,7 +41,7 @@ func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.UpdateRdsDbInstanceInput{
@@ -67,7 +67,7 @@ func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsOpsworksRdsDbInstanceRead(d, meta)
+	return resourceRDSDBInstanceRead(d, meta)
 }
 
 func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta interface{}) error {
@@ -92,7 +92,7 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeRdsDbInstancesInput{
@@ -144,5 +144,5 @@ func resourceAwsOpsworksRdsDbInstanceRegister(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
 	}
 
-	return resourceAwsOpsworksRdsDbInstanceRead(d, meta)
+	return resourceRDSDBInstanceRead(d, meta)
 }

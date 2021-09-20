@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksMemcachedLayer() *schema.Resource {
+func ResourceMemcachedLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeMemcached,
 		DefaultLayerName: "Memcached",

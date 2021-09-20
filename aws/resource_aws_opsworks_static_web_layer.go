@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksStaticWebLayer() *schema.Resource {
+func ResourceStaticWebLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeWeb,
 		DefaultLayerName: "Static Web Server",

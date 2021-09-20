@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksGangliaLayer() *schema.Resource {
+func ResourceGangliaLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeMonitoringMaster,
 		DefaultLayerName: "Ganglia",

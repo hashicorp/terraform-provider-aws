@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksInstance() *schema.Resource {
+func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksInstanceCreate,
-		Read:   resourceAwsOpsworksInstanceRead,
-		Update: resourceAwsOpsworksInstanceUpdate,
-		Delete: resourceAwsOpsworksInstanceDelete,
+		Create: resourceInstanceCreate,
+		Read:   resourceInstanceRead,
+		Update: resourceInstanceUpdate,
+		Delete: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsOpsworksInstanceImport,
 		},
@@ -462,7 +462,7 @@ func resourceAwsOpsworksInstanceValidate(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeInstancesInput{
@@ -571,7 +571,7 @@ func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) e
 	return err1
 }
 
-func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksInstanceValidate(d)
@@ -731,10 +731,10 @@ func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsOpsworksInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
-func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksInstanceValidate(d)
@@ -812,10 +812,10 @@ func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsOpsworksInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
-func resourceAwsOpsworksInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != "stopped" {

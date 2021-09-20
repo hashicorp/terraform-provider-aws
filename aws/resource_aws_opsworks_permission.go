@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksPermission() *schema.Resource {
+func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOpsworksSetPermission,
 		Update: resourceAwsOpsworksSetPermission,
-		Delete: resourceAwsOpsworksPermissionDelete,
-		Read:   resourceAwsOpsworksPermissionRead,
+		Delete: resourcePermissionDelete,
+		Read:   resourcePermissionRead,
 
 		Schema: map[string]*schema.Schema{
 			"allow_ssh": {
@@ -56,11 +56,11 @@ func resourceAwsOpsworksPermission() *schema.Resource {
 	}
 }
 
-func resourceAwsOpsworksPermissionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribePermissionsInput{
@@ -141,5 +141,5 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	return resourceAwsOpsworksPermissionRead(d, meta)
+	return resourcePermissionRead(d, meta)
 }

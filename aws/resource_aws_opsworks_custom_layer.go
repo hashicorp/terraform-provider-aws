@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksCustomLayer() *schema.Resource {
+func ResourceCustomLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:        opsworks.LayerTypeCustom,
 		CustomShortName: true,
