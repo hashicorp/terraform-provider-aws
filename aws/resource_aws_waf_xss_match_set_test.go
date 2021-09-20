@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -104,12 +105,12 @@ func testSweepWafXssMatchSet(region string) error {
 
 func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`xssmatchset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`xssmatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
@@ -145,13 +146,13 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.XssMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -182,12 +183,12 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +196,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafXssMatchSet(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafXssMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -205,12 +206,12 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
-	setName := acctest.RandomWithPrefix("tf-acc-test")
+	setName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -265,12 +266,12 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
-	setName := acctest.RandomWithPrefix("tf-acc-test")
+	setName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{

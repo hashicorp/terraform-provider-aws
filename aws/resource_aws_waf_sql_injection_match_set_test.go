@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -103,12 +104,12 @@ func testSweepWafSqlInjectionMatchSet(region string) error {
 
 func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -137,13 +138,13 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 
 func TestAccAWSWafSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rNameNew := acctest.RandomWithPrefix("tf-acc-test-new")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rNameNew := sdkacctest.RandomWithPrefix("tf-acc-test-new")
 	resourceName := "aws_waf_sql_injection_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -174,12 +175,12 @@ func TestAccAWSWafSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafSqlInjectionMatchSet_disappears(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -197,12 +198,12 @@ func TestAccAWSWafSqlInjectionMatchSet_disappears(t *testing.T) {
 
 func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -239,12 +240,12 @@ func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 
 func TestAccAWSWafSqlInjectionMatchSet_noTuples(t *testing.T) {
 	var sqlSet waf.SqlInjectionMatchSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{

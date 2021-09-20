@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -104,12 +105,12 @@ func testSweepWafByteMatchSet(region string) error {
 
 func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet
-	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -148,13 +149,13 @@ func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
 
 func TestAccAWSWafByteMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.ByteMatchSet
-	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
-	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
+	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -185,12 +186,12 @@ func TestAccAWSWafByteMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.ByteMatchSet
-	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -253,12 +254,12 @@ func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
 
 func TestAccAWSWafByteMatchSet_noTuples(t *testing.T) {
 	var byteSet waf.ByteMatchSet
-	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -281,12 +282,12 @@ func TestAccAWSWafByteMatchSet_noTuples(t *testing.T) {
 
 func TestAccAWSWafByteMatchSet_disappears(t *testing.T) {
 	var v waf.ByteMatchSet
-	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{

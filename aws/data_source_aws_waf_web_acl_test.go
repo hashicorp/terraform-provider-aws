@@ -6,18 +6,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsWafWebAcl_basic(t *testing.T) {
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_web_acl.web_acl"
 	datasourceName := "data.aws_waf_web_acl.web_acl"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(waf.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, waf.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, waf.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
