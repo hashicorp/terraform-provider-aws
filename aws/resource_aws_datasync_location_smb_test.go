@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepDataSyncLocationSmbs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -34,7 +34,7 @@ func testSweepDataSyncLocationSmbs(region string) error {
 	for {
 		output, err := conn.ListLocations(input)
 
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping DataSync Location SMB sweep for %s: %s", region, err)
 			return nil
 		}
@@ -88,7 +88,7 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +135,7 @@ func TestAccAWSDataSyncLocationSmb_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,7 +158,7 @@ func TestAccAWSDataSyncLocationSmb_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +199,7 @@ func TestAccAWSDataSyncLocationSmb_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationSmbDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_smb" {
@@ -231,7 +231,7 @@ func testAccCheckAWSDataSyncLocationSmbExists(resourceName string, locationSmb *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 		input := &datasync.DescribeLocationSmbInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -254,7 +254,7 @@ func testAccCheckAWSDataSyncLocationSmbExists(resourceName string, locationSmb *
 
 func testAccCheckAWSDataSyncLocationSmbDisappears(location *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,
