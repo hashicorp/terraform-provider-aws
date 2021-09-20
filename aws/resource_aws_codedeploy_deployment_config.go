@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeDeployDeploymentConfig() *schema.Resource {
+func ResourceDeploymentConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeDeployDeploymentConfigCreate,
-		Read:   resourceAwsCodeDeployDeploymentConfigRead,
-		Delete: resourceAwsCodeDeployDeploymentConfigDelete,
+		Create: resourceDeploymentConfigCreate,
+		Read:   resourceDeploymentConfigRead,
+		Delete: resourceDeploymentConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -139,7 +139,7 @@ func resourceAwsCodeDeployDeploymentConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeDeployDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	input := &codedeploy.CreateDeploymentConfigInput{
@@ -156,10 +156,10 @@ func resourceAwsCodeDeployDeploymentConfigCreate(d *schema.ResourceData, meta in
 
 	d.SetId(d.Get("deployment_config_name").(string))
 
-	return resourceAwsCodeDeployDeploymentConfigRead(d, meta)
+	return resourceDeploymentConfigRead(d, meta)
 }
 
-func resourceAwsCodeDeployDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	input := &codedeploy.GetDeploymentConfigInput{
@@ -197,7 +197,7 @@ func resourceAwsCodeDeployDeploymentConfigRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsCodeDeployDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
