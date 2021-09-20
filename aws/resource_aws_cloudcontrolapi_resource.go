@@ -277,7 +277,7 @@ func resourceAwsCloudControlApiResourceCustomizeDiffSchemaDiff(ctx context.Conte
 		return nil
 	}
 
-	cfResourceSchema, err := cfschema.NewResourceJsonSchemaDocument(newSchema)
+	cfResourceSchema, err := cfschema.NewResourceJsonSchemaDocument(cfschema.Sanitize(newSchema))
 
 	if err != nil {
 		return fmt.Errorf("error parsing CloudFormation Resource Schema JSON: %w", err)
