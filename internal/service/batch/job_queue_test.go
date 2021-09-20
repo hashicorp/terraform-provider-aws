@@ -59,7 +59,7 @@ func testSweepBatchJobQueues(region string) error {
 	return nil
 }
 
-func TestAccAWSBatchJobQueue_basic(t *testing.T) {
+func TestAccBatchJobQueue_basic(t *testing.T) {
 	var jobQueue1 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -91,7 +91,7 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
+func TestAccBatchJobQueue_disappears(t *testing.T) {
 	var jobQueue1 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -115,7 +115,7 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8083
-func TestAccAWSBatchJobQueue_ComputeEnvironments_ExternalOrderUpdate(t *testing.T) {
+func TestAccBatchJobQueue_ComputeEnvironments_externalOrderUpdate(t *testing.T) {
 	var jobQueue1 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -142,7 +142,7 @@ func TestAccAWSBatchJobQueue_ComputeEnvironments_ExternalOrderUpdate(t *testing.
 	})
 }
 
-func TestAccAWSBatchJobQueue_Priority(t *testing.T) {
+func TestAccBatchJobQueue_priority(t *testing.T) {
 	var jobQueue1, jobQueue2 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -176,7 +176,7 @@ func TestAccAWSBatchJobQueue_Priority(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobQueue_State(t *testing.T) {
+func TestAccBatchJobQueue_state(t *testing.T) {
 	var jobQueue1, jobQueue2 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -210,7 +210,7 @@ func TestAccAWSBatchJobQueue_State(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchJobQueue_Tags(t *testing.T) {
+func TestAccBatchJobQueue_tags(t *testing.T) {
 	var jobQueue batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

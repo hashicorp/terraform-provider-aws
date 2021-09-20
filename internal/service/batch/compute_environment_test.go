@@ -156,7 +156,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSBatchComputeEnvironment_basic(t *testing.T) {
+func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -189,7 +189,7 @@ func TestAccAWSBatchComputeEnvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
+func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -212,7 +212,7 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_NameGenerated(t *testing.T) {
+func TestAccBatchComputeEnvironment_nameGenerated(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -240,7 +240,7 @@ func TestAccAWSBatchComputeEnvironment_NameGenerated(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_NamePrefix(t *testing.T) {
+func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -268,7 +268,7 @@ func TestAccAWSBatchComputeEnvironment_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
+func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -394,7 +394,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_Ec2KeyPair_ImageId
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
+func TestAccBatchComputeEnvironment_createSpot(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -454,7 +454,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createSpot_AllocationStrategy_BidPercentage(t *testing.T) {
+func TestAccBatchComputeEnvironment_CreateSpotAllocationStrategy_bidPercentage(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -514,7 +514,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot_AllocationStrategy_BidPercenta
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
+func TestAccBatchComputeEnvironment_createFargate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -571,7 +571,7 @@ func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
+func TestAccBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -628,7 +628,7 @@ func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
+func TestAccBatchComputeEnvironment_updateState(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -683,7 +683,7 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
+func TestAccBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -775,7 +775,7 @@ func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
+func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -1093,7 +1093,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
+func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -1157,7 +1157,7 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
+func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -1259,7 +1259,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t *testing.T) {
+func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -1354,7 +1354,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t 
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
+func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -1399,7 +1399,7 @@ func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
+func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -1435,7 +1435,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 
 // Test plan time errors...
 
-func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testing.T) {
+func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1452,7 +1452,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.T) {
+func TestAccBatchComputeEnvironment_createSpotWithoutIAMFleetRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{

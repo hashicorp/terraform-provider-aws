@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsBatchComputeEnvironment_basic(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
 	datasourceName := "data.aws_batch_compute_environment.by_name"
