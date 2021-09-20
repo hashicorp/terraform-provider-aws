@@ -16,7 +16,7 @@ import (
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
-func TestAccAWSXrayGroup_basic(t *testing.T) {
+func TestAccXRayGroup_basic(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -54,7 +54,7 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSXrayGroup_tags(t *testing.T) {
+func TestAccXRayGroup_tags(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -98,7 +98,7 @@ func TestAccAWSXrayGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSXrayGroup_disappears(t *testing.T) {
+func TestAccXRayGroup_disappears(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
