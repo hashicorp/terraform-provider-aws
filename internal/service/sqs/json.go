@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"reflect"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BytesEqual compares two arrays of JSON bytes and returns true if the unmarshaled objects represented by the bytes

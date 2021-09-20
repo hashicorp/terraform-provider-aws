@@ -2,7 +2,6 @@ package sqs
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestBytesEqualQuotedAndUnquoted(t *testing.T) {
