@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -113,7 +113,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["header_value"].(string)))
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -171,7 +171,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -220,7 +220,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -277,7 +277,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -311,7 +311,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -349,7 +349,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -387,7 +387,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 		},
