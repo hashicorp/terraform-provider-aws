@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -83,7 +84,7 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 							id := fmt.Sprintf("%s/%s/%d", appId, profId, aws.Int64Value(item.VersionNumber))
 
 							log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version (%s)", id)
-							r := resourceAwsAppconfigHostedConfigurationVersion()
+							r := ResourceHostedConfigurationVersion()
 							d := r.Data(nil)
 							d.SetId(id)
 
@@ -171,7 +172,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigHostedConfigurationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

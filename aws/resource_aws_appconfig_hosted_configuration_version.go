@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppconfigHostedConfigurationVersion() *schema.Resource {
+func ResourceHostedConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigHostedConfigurationVersionCreate,
-		Read:   resourceAwsAppconfigHostedConfigurationVersionRead,
-		Delete: resourceAwsAppconfigHostedConfigurationVersionDelete,
+		Create: resourceHostedConfigurationVersionCreate,
+		Read:   resourceHostedConfigurationVersionRead,
+		Delete: resourceHostedConfigurationVersionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +68,7 @@ func resourceAwsAppconfigHostedConfigurationVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsAppconfigHostedConfigurationVersionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedConfigurationVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	appID := d.Get("application_id").(string)
@@ -93,10 +93,10 @@ func resourceAwsAppconfigHostedConfigurationVersionCreate(d *schema.ResourceData
 
 	d.SetId(fmt.Sprintf("%s/%s/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.ConfigurationProfileId), aws.Int64Value(output.VersionNumber)))
 
-	return resourceAwsAppconfigHostedConfigurationVersionRead(d, meta)
+	return resourceHostedConfigurationVersionRead(d, meta)
 }
 
-func resourceAwsAppconfigHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
@@ -147,7 +147,7 @@ func resourceAwsAppconfigHostedConfigurationVersionRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsAppconfigHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
