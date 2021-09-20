@@ -15,7 +15,7 @@ func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPricingProductConfigEc2(),
@@ -32,7 +32,7 @@ func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPricingProductConfigRedshift(),
