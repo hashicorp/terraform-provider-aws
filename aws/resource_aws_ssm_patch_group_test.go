@@ -19,7 +19,7 @@ func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,14 +39,14 @@ func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSSMPatchGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchGroupExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSsmPatchGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsmPatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,7 +63,7 @@ func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
 }
 
 func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_patch_group" {
@@ -121,7 +121,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
 
 		group, err := finder.PatchGroup(conn, patchGroup, baselineId)
 
