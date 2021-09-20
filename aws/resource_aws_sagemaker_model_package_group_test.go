@@ -8,11 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -61,12 +62,12 @@ func testSweepSagemakerModelPackageGroups(region string) error {
 
 func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -75,7 +76,7 @@ func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "model_package_group_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -90,12 +91,12 @@ func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -117,12 +118,12 @@ func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -162,12 +163,12 @@ func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -175,7 +176,7 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerModelPackageGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupExists(resourceName, &mpg),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
