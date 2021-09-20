@@ -378,7 +378,7 @@ func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		matchingReportDefinition, err := finder.ReportDefinitionByName(conn, rs.Primary.ID)
+		matchingReportDefinition, err := finder.FindReportDefinitionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Report Definition (%s): %w", rs.Primary.ID, err)
 		}
@@ -402,7 +402,7 @@ func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.Test
 			return fmt.Errorf("Resource not found: %s", resourceName)
 		}
 
-		matchingReportDefinition, err := finder.ReportDefinitionByName(conn, rs.Primary.ID)
+		matchingReportDefinition, err := finder.FindReportDefinitionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Report Definition (%s): %w", rs.Primary.ID, err)
 		}

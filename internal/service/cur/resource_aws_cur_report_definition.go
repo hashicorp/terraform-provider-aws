@@ -163,7 +163,7 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
-	reportDefinition, err := finder.ReportDefinitionByName(conn, d.Id())
+	reportDefinition, err := finder.FindReportDefinitionByName(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Cost And Usage Report Definition (%s): %w", d.Id(), err)

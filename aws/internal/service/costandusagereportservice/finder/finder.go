@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ReportDefinitionByName(conn *costandusagereportservice.CostandUsageReportService, name string) (*costandusagereportservice.ReportDefinition, error) {
+func FindReportDefinitionByName(conn *costandusagereportservice.CostandUsageReportService, name string) (*costandusagereportservice.ReportDefinition, error) {
 	input := &costandusagereportservice.DescribeReportDefinitionsInput{}
 
 	var result *costandusagereportservice.ReportDefinition

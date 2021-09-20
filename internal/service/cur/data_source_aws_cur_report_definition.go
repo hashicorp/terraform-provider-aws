@@ -73,7 +73,7 @@ func dataSourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) er
 
 	reportName := d.Get("report_name").(string)
 
-	reportDefinition, err := finder.ReportDefinitionByName(conn, reportName)
+	reportDefinition, err := finder.FindReportDefinitionByName(conn, reportName)
 
 	if err != nil {
 		return fmt.Errorf("error reading Report Definition (%s): %w", reportName, err)
