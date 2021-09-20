@@ -18,6 +18,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -107,7 +108,7 @@ func s3ConfigurationSchema() *schema.Schema {
 				"bucket_arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 
 				"buffer_size": {
@@ -134,13 +135,13 @@ func s3ConfigurationSchema() *schema.Schema {
 				"kms_key_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 
 				"role_arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 
 				"prefix": {
@@ -159,7 +160,7 @@ func processingConfigurationSchema() *schema.Schema {
 		Type:             schema.TypeList,
 		Optional:         true,
 		MaxItems:         1,
-		DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+		DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
@@ -835,7 +836,7 @@ func ResourceDeliveryStream() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				ConflictsWith:    []string{"kinesis_source_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -856,7 +857,7 @@ func ResourceDeliveryStream() *schema.Resource {
 						"key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 							RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
 						},
 					},
@@ -875,14 +876,14 @@ func ResourceDeliveryStream() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -918,7 +919,7 @@ func ResourceDeliveryStream() *schema.Resource {
 						"bucket_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"buffer_size": {
@@ -1167,7 +1168,7 @@ func ResourceDeliveryStream() *schema.Resource {
 												"role_arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 												"table_name": {
 													Type:     schema.TypeString,
@@ -1193,13 +1194,13 @@ func ResourceDeliveryStream() *schema.Resource {
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"prefix": {
@@ -1250,7 +1251,7 @@ func ResourceDeliveryStream() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"s3_backup_mode": {
@@ -1312,7 +1313,7 @@ func ResourceDeliveryStream() *schema.Resource {
 						"domain_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 							ConflictsWith: []string{"elasticsearch_configuration.0.cluster_endpoint"},
 						},
 
@@ -1338,7 +1339,7 @@ func ResourceDeliveryStream() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"s3_backup_mode": {
@@ -1382,7 +1383,7 @@ func ResourceDeliveryStream() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -1490,7 +1491,7 @@ func ResourceDeliveryStream() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"s3_backup_mode": {
