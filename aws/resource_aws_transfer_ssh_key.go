@@ -26,8 +26,8 @@ func resourceAwsTransferSshKey() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					old = cleanSshKey(old)
-					new = cleanSshKey(new)
+					old = cleanSSHKey(old)
+					new = cleanSSHKey(new)
 					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
 				},
 			},
@@ -148,3 +148,13 @@ func decodeTransferSshKeyId(id string) (string, string, string, error) {
 	}
 	return idParts[0], idParts[1], idParts[2], nil
 }
+func cleanSSHKey(key string) string {
+	// Remove comments from SSH Keys
+	// Comments are anything after "ssh-rsa XXXX" where XXXX is the key.
+	parts := strings.Split(key, " ")
+	if len(parts) > 2 {
+		parts = parts[0:2]
+	}
+	return strings.Join(parts, " ")
+}
+

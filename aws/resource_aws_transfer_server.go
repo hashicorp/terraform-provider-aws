@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func resourceAwsTransferServer() *schema.Resource {
@@ -252,7 +253,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
-		input.Protocols = expandStringSet(v.(*schema.Set))
+		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_policy_name"); ok {
@@ -476,11 +477,11 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 
 				old, new := d.GetChange("endpoint_details.0.security_group_ids")
 
-				if add := expandStringSet(new.(*schema.Set).Difference(old.(*schema.Set))); len(add) > 0 {
+				if add := flex.ExpandStringSet(new.(*schema.Set).Difference(old.(*schema.Set))); len(add) > 0 {
 					input.AddSecurityGroupIds = add
 				}
 
-				if del := expandStringSet(old.(*schema.Set).Difference(new.(*schema.Set))); len(del) > 0 {
+				if del := flex.ExpandStringSet(old.(*schema.Set).Difference(new.(*schema.Set))); len(del) > 0 {
 					input.RemoveSecurityGroupIds = del
 				}
 
@@ -489,7 +490,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 					return fmt.Errorf("error updating Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
 				}
 
-				_, err := ec2waiter.VpcEndpointAvailable(conn, vpcEndpointID, Ec2VpcEndpointCreationTimeout)
+				_, err := ec2waiter.VpcEndpointAvailable(conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout)
 
 				if err != nil {
 					return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)
@@ -533,7 +534,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("protocols") {
-			input.Protocols = expandStringSet(d.Get("protocols").(*schema.Set))
+			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
 		}
 
 		if d.HasChange("security_policy_name") {
@@ -665,15 +666,15 @@ func expandTransferEndpointDetails(tfMap map[string]interface{}) *transfer.Endpo
 	apiObject := &transfer.EndpointDetails{}
 
 	if v, ok := tfMap["address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AddressAllocationIds = expandStringSet(v)
+		apiObject.AddressAllocationIds = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroupIds = expandStringSet(v)
+		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = expandStringSet(v)
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
@@ -759,7 +760,7 @@ func updateTransferServer(conn *transfer.Transfer, input *transfer.UpdateServerI
 	// To prevent accessing the EC2 API directly to check the VPC Endpoint
 	// state, which can require confusing IAM permissions and have other
 	// eventual consistency consideration, we retry only via the Transfer API.
-	err := resource.Retry(Ec2VpcEndpointCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfec2.VPCEndpointCreationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateServer(input)
 
 		if tfawserr.ErrMessageContains(err, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available") {
