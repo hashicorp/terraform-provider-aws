@@ -169,7 +169,7 @@ func TestLambdaPermissionGetFunctionNameFromGovCloudLambdaArn(t *testing.T) {
 	}
 }
 
-func TestAccAWSLambdaPermission_basic(t *testing.T) {
+func TestAccLambdaPermission_basic(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
@@ -207,7 +207,7 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
+func TestAccLambdaPermission_StatementID_duplicate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -224,7 +224,7 @@ func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
+func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
@@ -260,7 +260,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
+func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -296,7 +296,7 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
+func TestAccLambdaPermission_withQualifier(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
@@ -334,7 +334,7 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_disappears(t *testing.T) {
+func TestAccLambdaPermission_disappears(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
@@ -360,7 +360,7 @@ func TestAccAWSLambdaPermission_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
+func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 	var firstStatement tflambda.PolicyStatement
 	var firstStatementModified tflambda.PolicyStatement
 	var secondStatement tflambda.PolicyStatement
@@ -439,7 +439,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_withS3(t *testing.T) {
+func TestAccLambdaPermission_withS3(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
@@ -478,7 +478,7 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
+func TestAccLambdaPermission_withSNS(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
@@ -517,7 +517,7 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
+func TestAccLambdaPermission_withIAMRole(t *testing.T) {
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)

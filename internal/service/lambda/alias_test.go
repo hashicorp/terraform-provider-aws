@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSLambdaAlias_basic(t *testing.T) {
+func TestAccLambdaAlias_basic(t *testing.T) {
 	var conf lambda.AliasConfiguration
 	resourceName := "aws_lambda_alias.test"
 
@@ -56,7 +56,7 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaAlias_FunctionName_Name(t *testing.T) {
+func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 	var conf lambda.AliasConfiguration
 
 	resourceName := "aws_lambda_alias.test"

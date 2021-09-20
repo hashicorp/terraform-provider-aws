@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSLambdaCodeSigningConfig_basic(t *testing.T) {
+func TestAccLambdaCodeSigningConfigDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,7 +27,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaCodeSigningConfig_PolicyConfigId(t *testing.T) {
+func TestAccLambdaCodeSigningConfigDataSource_policyID(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_PolicyConfigId(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
+func TestAccLambdaCodeSigningConfigDataSource_description(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{

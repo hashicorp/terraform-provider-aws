@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
@@ -77,7 +77,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_SQS_basic(t *testing.T) {
+func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
@@ -132,7 +132,7 @@ func TestAccAWSLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
+func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
@@ -176,7 +176,7 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_DynamoDB_FunctionResponseTypes(t *testing.T) {
+func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -212,7 +212,7 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_FunctionResponseTypes(t *testin
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_SQS_BatchWindow(t *testing.T) {
+func TestAccLambdaEventSourceMapping_SQS_batchWindow(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -249,7 +249,7 @@ func TestAccAWSLambdaEventSourceMapping_SQS_BatchWindow(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
+func TestAccLambdaEventSourceMapping_disappears(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -272,7 +272,7 @@ func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testing.T) {
+func TestAccLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -295,7 +295,7 @@ func TestAccAWSLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testi
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_StartingPositionTimestamp(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_startingPositionTimestamp(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -325,7 +325,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_StartingPositionTimestamp(t *tes
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_BatchWindow(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_batchWindow(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -362,7 +362,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BatchWindow(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_parallelizationFactor(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -399,7 +399,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_tumblingWindowInSeconds(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -436,7 +436,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testi
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttempts(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttempts(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -473,7 +473,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttempts(t *testing.
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsZero(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsZero(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -517,7 +517,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsZero(t *test
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsNegativeOne(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsNegativeOne(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -561,7 +561,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsNegativeOne(
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSeconds(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSeconds(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -598,7 +598,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSeconds(t *tes
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSecondsNegativeOne(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSecondsNegativeOne(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -635,7 +635,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSecondsNegativ
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_BisectBatch(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_bisectBatch(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -672,7 +672,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BisectBatch(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_Kinesis_DestinationConfig(t *testing.T) {
+func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -712,7 +712,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_DestinationConfig(t *testing.T) 
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
+func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	eventSourceResourceName := "aws_msk_cluster.test"
@@ -763,7 +763,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
+func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -800,7 +800,7 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
+func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -838,7 +838,7 @@ func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_RabbitMQ(t *testing.T) {
+func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

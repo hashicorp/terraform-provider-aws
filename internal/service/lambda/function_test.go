@@ -73,7 +73,7 @@ func testSweepLambdaFunctions(region string) error {
 	return nil
 }
 
-func TestAccAWSLambdaFunction_basic(t *testing.T) {
+func TestAccLambdaFunction_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -112,7 +112,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_UnpublishedCodeUpdate(t *testing.T) {
+func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 	var conf1, conf2 lambda.GetFunctionOutput
 
 	initialFilename := "test-fixtures/lambdatest.zip"
@@ -172,7 +172,7 @@ func TestAccAWSLambdaFunction_UnpublishedCodeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_disappears(t *testing.T) {
+func TestAccLambdaFunction_disappears(t *testing.T) {
 	var function lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -196,7 +196,7 @@ func TestAccAWSLambdaFunction_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
+func TestAccLambdaFunction_codeSigning(t *testing.T) {
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("Lambda code signing config is not supported in %s partition", got)
 	}
@@ -264,7 +264,7 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
+func TestAccLambdaFunction_concurrency(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -308,7 +308,7 @@ func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
+func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -361,7 +361,7 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
+func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)
@@ -382,7 +382,7 @@ func TestAccAWSLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
+func TestAccLambdaFunction_envVariables(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -445,7 +445,7 @@ func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_Environment_Variables_NoValue(t *testing.T) {
+func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function.test"
@@ -473,7 +473,7 @@ func TestAccAWSLambdaFunction_Environment_Variables_NoValue(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
+func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -520,7 +520,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_versioned(t *testing.T) {
+func TestAccLambdaFunction_versioned(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -558,7 +558,7 @@ func TestAccAWSLambdaFunction_versioned(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
+func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -640,7 +640,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
+func TestAccLambdaFunction_enablePublish(t *testing.T) {
 	var conf1, conf2, conf3 lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -704,7 +704,7 @@ func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_disablePublish(t *testing.T) {
+func TestAccLambdaFunction_disablePublish(t *testing.T) {
 	var conf1, conf2 lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -757,7 +757,7 @@ func TestAccAWSLambdaFunction_disablePublish(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
+func TestAccLambdaFunction_deadLetter(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -808,7 +808,7 @@ func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
+func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -853,7 +853,7 @@ func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
+func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_nil_dlcfg_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_nil_dlcfg_%s", rString)
@@ -875,7 +875,7 @@ func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
+func TestAccLambdaFunction_fileSystem(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -937,7 +937,7 @@ func testAccLambdaImagePreCheck(t *testing.T) {
 	}
 }
 
-func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
+func TestAccLambdaFunction_image(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -1003,7 +1003,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
+func TestAccLambdaFunction_tracing(t *testing.T) {
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("Lambda tracing config is not supported in %s partition", got)
 	}
@@ -1054,7 +1054,7 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 // is not returned if environment variables are not in use. If the API begins saving this
 // value and the kms_key_arn check begins failing, the documentation should be updated.
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6366
-func TestAccAWSLambdaFunction_KmsKeyArn_NoEnvironmentVariables(t *testing.T) {
+func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 	var function1 lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1084,7 +1084,7 @@ func TestAccAWSLambdaFunction_KmsKeyArn_NoEnvironmentVariables(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_Layers(t *testing.T) {
+func TestAccLambdaFunction_layers(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1121,7 +1121,7 @@ func TestAccAWSLambdaFunction_Layers(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_LayersUpdate(t *testing.T) {
+func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1169,7 +1169,7 @@ func TestAccAWSLambdaFunction_LayersUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_VPC(t *testing.T) {
+func TestAccLambdaFunction_vpc(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1208,7 +1208,7 @@ func TestAccAWSLambdaFunction_VPC(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_VPCRemoval(t *testing.T) {
+func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1244,7 +1244,7 @@ func TestAccAWSLambdaFunction_VPCRemoval(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
+func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1297,7 +1297,7 @@ func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
 
 // See https://github.com/hashicorp/terraform/issues/5767
 // and https://github.com/hashicorp/terraform/issues/10272
-func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
+func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1332,7 +1332,7 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 
 // See https://github.com/hashicorp/terraform-provider-aws/issues/17385
 // When the vpc config doesn't change the version shouldn't change
-func TestAccAWSLambdaFunction_VPC_publish_No_Changes(t *testing.T) {
+func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1373,7 +1373,7 @@ func TestAccAWSLambdaFunction_VPC_publish_No_Changes(t *testing.T) {
 
 // See https://github.com/hashicorp/terraform-provider-aws/issues/17385
 // When the vpc config changes the version should change
-func TestAccAWSLambdaFunction_VPC_publish_Has_Changes(t *testing.T) {
+func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1415,7 +1415,7 @@ func TestAccAWSLambdaFunction_VPC_publish_Has_Changes(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10044
-func TestAccAWSLambdaFunction_VpcConfig_ProperIamDependencies(t *testing.T) {
+func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 	var function lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1442,7 +1442,7 @@ func TestAccAWSLambdaFunction_VpcConfig_ProperIamDependencies(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
+func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1475,7 +1475,7 @@ func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_s3(t *testing.T) {
+func TestAccLambdaFunction_s3(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1509,7 +1509,7 @@ func TestAccAWSLambdaFunction_s3(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
+func TestAccLambdaFunction_localUpdate(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -1573,7 +1573,7 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
+func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1637,7 +1637,7 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
+func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_s3Update")
@@ -1700,7 +1700,7 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
+func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_s3Update")
@@ -1763,7 +1763,7 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_tags(t *testing.T) {
+func TestAccLambdaFunction_tags(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1821,7 +1821,7 @@ func TestAccAWSLambdaFunction_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
+func TestAccLambdaFunction_runtimes(t *testing.T) {
 	var v lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1876,7 +1876,7 @@ func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_zip_validation(t *testing.T) {
+func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)

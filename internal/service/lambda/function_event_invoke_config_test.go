@@ -15,7 +15,7 @@ import (
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 )
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -46,7 +46,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunction(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunction(t *testing.T) {
 	var function lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
@@ -71,7 +71,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunction(t *test
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunctionEventInvokeConfig(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunctionEventInvoke(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
@@ -93,7 +93,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunctionEventInv
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Destination(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -132,7 +132,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Desti
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Destination(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -171,7 +171,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Desti
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Remove(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -207,7 +207,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Remove(t *testi
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Swap(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -245,7 +245,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Swap(t *testing
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_FunctionName_Arn(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_FunctionName_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -273,7 +273,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_FunctionName_Arn(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_QualifierFunctionName_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -301,7 +301,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *tes
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
@@ -334,7 +334,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testi
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumRetryAttempts(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
@@ -374,7 +374,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumRetryAttempts(t *testing.T
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_AliasName(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Qualifier_aliasName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -401,7 +401,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_AliasName(t *testing.T)
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionVersion(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Qualifier_functionVersion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -429,7 +429,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionVersion(t *test
 	})
 }
 
-func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_Latest(t *testing.T) {
+func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 

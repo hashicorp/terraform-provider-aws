@@ -37,7 +37,7 @@ func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.Te
 	}
 }
 
-func TestAccDataSourceAwsLambdaInvocation_basic(t *testing.T) {
+func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	testData := "value3"
 
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsLambdaInvocation_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLambdaInvocation_qualifier(t *testing.T) {
+func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	testData := "value3"
 
@@ -75,7 +75,7 @@ func TestAccDataSourceAwsLambdaInvocation_qualifier(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
+func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	testData := "value3"
 

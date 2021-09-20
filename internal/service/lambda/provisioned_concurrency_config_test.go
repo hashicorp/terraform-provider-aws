@@ -15,7 +15,7 @@ import (
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 )
 
-func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
+func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
@@ -44,7 +44,7 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaFunction(t *testing.T) {
+func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *testing.T) {
 	var function lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaFunctionResourceName := "aws_lambda_function.test"
@@ -69,7 +69,7 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaFunction(t *t
 	})
 }
 
-func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaProvisionedConcurrencyConfig(t *testing.T) {
+func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaProvisionedConcurrency(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
@@ -91,7 +91,7 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaProvisionedCo
 	})
 }
 
-func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecutions(t *testing.T) {
+func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
@@ -128,7 +128,7 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecution
 	})
 }
 
-func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing.T) {
+func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"

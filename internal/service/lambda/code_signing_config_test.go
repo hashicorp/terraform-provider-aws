@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
+func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	signingProfile1 := "aws_signer_signing_profile.test1"
 	signingProfile2 := "aws_signer_signing_profile.test2"
@@ -45,7 +45,7 @@ func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaCodeSigningConfig_UpdatePolicy(t *testing.T) {
+func TestAccLambdaCodeSigningConfig_updatePolicy(t *testing.T) {
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	var conf lambda.GetCodeSigningConfigOutput
 
@@ -79,7 +79,7 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
+func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
 	signingProfile1 := "aws_signer_signing_profile.test1"
 	signingProfile2 := "aws_signer_signing_profile.test2"
