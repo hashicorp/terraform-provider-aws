@@ -56,7 +56,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 				Config: testAccAwsRamPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePrincipalAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourcePrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,7 +77,7 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 			return fmt.Errorf("No ID is set")
 		}
 
-		resourceShareARN, principal, err := resourceAwsRamPrincipalAssociationParseId(rs.Primary.ID)
+		resourceShareARN, principal, err := tfram.PrincipalAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing ID (%s): %w", rs.Primary.ID, err)
@@ -118,7 +118,7 @@ func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resourceShareARN, principal, err := decodeRamResourceAssociationID(rs.Primary.ID)
+		resourceShareARN, principal, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err

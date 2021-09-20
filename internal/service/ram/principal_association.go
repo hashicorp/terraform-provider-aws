@@ -82,7 +82,7 @@ func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}
 func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
-	resourceShareArn, principal, err := resourceAwsRamPrincipalAssociationParseId(d.Id())
+	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading RAM Principal Association, parsing ID (%s): %w", d.Id(), err)
 	}
@@ -125,7 +125,7 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
-	resourceShareArn, principal, err := resourceAwsRamPrincipalAssociationParseId(d.Id())
+	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsRamPrincipalAssociationParseId(id string) (string, string, error) {
+func PrincipalAssociationParseID(id string) (string, string, error) {
 	idFormatErr := fmt.Errorf("unexpected format of ID (%s), expected SHARE,PRINCIPAL", id)
 
 	parts := strings.SplitN(id, ",", 2)
