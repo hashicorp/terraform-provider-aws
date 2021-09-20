@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ActionByAccountIDActionIDAndBudgetName(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
