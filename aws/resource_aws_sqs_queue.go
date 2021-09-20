@@ -169,12 +169,12 @@ var (
 // A number of these are marked as computed because if you don't
 // provide a value, SQS will provide you with defaults (which are the
 // default values specified below)
-func resourceAwsSqsQueue() *schema.Resource {
+func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSqsQueueCreate,
-		Read:   resourceAwsSqsQueueRead,
-		Update: resourceAwsSqsQueueUpdate,
-		Delete: resourceAwsSqsQueueDelete,
+		Create: resourceQueueCreate,
+		Read:   resourceQueueRead,
+		Update: resourceQueueUpdate,
+		Delete: resourceQueueDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -187,7 +187,7 @@ func resourceAwsSqsQueue() *schema.Resource {
 	}
 }
 
-func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -259,10 +259,10 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsSqsQueueRead(d, meta)
+	return resourceQueueRead(d, meta)
 }
 
-func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -329,7 +329,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -365,10 +365,10 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsSqsQueueRead(d, meta)
+	return resourceQueueRead(d, meta)
 }
 
-func resourceAwsSqsQueueDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
