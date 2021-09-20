@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
+func DataSourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLakeFormationDataLakeSettingsRead,
+		Read: dataSourceDataLakeSettingsRead,
 
 		Schema: map[string]*schema.Schema{
 			"admins": {
@@ -69,7 +69,7 @@ func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GetDataLakeSettingsInput{}

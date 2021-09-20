@@ -19,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLakeFormationPermissions() *schema.Resource {
+func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationPermissionsCreate,
-		Read:   resourceAwsLakeFormationPermissionsRead,
-		Delete: resourceAwsLakeFormationPermissionsDelete,
+		Create: resourcePermissionsCreate,
+		Read:   resourcePermissionsRead,
+		Delete: resourcePermissionsDelete,
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
@@ -266,7 +266,7 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 // For 2 & 3, some peeking at the config (i.e., d.Get()) is necessary to filter the permissions AWS
 // returns.
 
-func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GrantPermissionsInput{
@@ -345,10 +345,10 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	return resourceAwsLakeFormationPermissionsRead(d, meta)
+	return resourcePermissionsRead(d, meta)
 }
 
-func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.ListPermissionsInput{
@@ -533,7 +533,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.RevokePermissionsInput{

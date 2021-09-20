@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLakeFormationPermissions() *schema.Resource {
+func DataSourcePermissions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLakeFormationPermissionsRead,
+		Read: dataSourcePermissionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
@@ -169,7 +169,7 @@ func dataSourceAwsLakeFormationPermissions() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.ListPermissionsInput{
