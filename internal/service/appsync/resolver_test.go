@@ -16,7 +16,7 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func TestAccAwsAppsyncResolver_basic(t *testing.T) {
+func TestAccAppSyncResolver_basic(t *testing.T) {
 	var resolver1 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -45,7 +45,7 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
+func TestAccAppSyncResolver_disappears(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	var resolver1 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
@@ -71,7 +71,7 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
+func TestAccAppSyncResolver_dataSource(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -105,7 +105,7 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_DataSource_lambda(t *testing.T) {
+func TestAccAppSyncResolver_DataSource_lambda(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -132,7 +132,7 @@ func TestAccAwsAppsyncResolver_DataSource_lambda(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
+func TestAccAppSyncResolver_requestTemplate(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -166,7 +166,7 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
+func TestAccAppSyncResolver_responseTemplate(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -200,7 +200,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
+func TestAccAppSyncResolver_multipleResolvers(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -230,7 +230,7 @@ func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_PipelineConfig(t *testing.T) {
+func TestAccAppSyncResolver_pipeline(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
@@ -258,7 +258,7 @@ func TestAccAwsAppsyncResolver_PipelineConfig(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
+func TestAccAppSyncResolver_caching(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"

@@ -17,7 +17,7 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
+func TestAccAppSyncAPIKey_basic(t *testing.T) {
 	var apiKey appsync.ApiKey
 	dateAfterSevenDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(7)).Truncate(time.Hour)
 	resourceName := "aws_appsync_api_key.test"
@@ -47,7 +47,7 @@ func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncApiKey_Description(t *testing.T) {
+func TestAccAppSyncAPIKey_description(t *testing.T) {
 	var apiKey appsync.ApiKey
 	resourceName := "aws_appsync_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -81,7 +81,7 @@ func TestAccAWSAppsyncApiKey_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
+func TestAccAppSyncAPIKey_expires(t *testing.T) {
 	var apiKey appsync.ApiKey
 	dateAfterTenDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(10)).Truncate(time.Hour)
 	dateAfterTwentyDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(20)).Truncate(time.Hour)

@@ -16,7 +16,7 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func TestAccAwsAppsyncDatasource_basic(t *testing.T) {
+func TestAccAppSyncDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -49,7 +49,7 @@ func TestAccAwsAppsyncDatasource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Description(t *testing.T) {
+func TestAccAppSyncDataSource_description(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -82,7 +82,7 @@ func TestAccAwsAppsyncDatasource_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_DynamoDBConfig_Region(t *testing.T) {
+func TestAccAppSyncDataSource_DynamoDB_region(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -117,7 +117,7 @@ func TestAccAwsAppsyncDatasource_DynamoDBConfig_Region(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_DynamoDBConfig_UseCallerCredentials(t *testing.T) {
+func TestAccAppSyncDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -152,7 +152,7 @@ func TestAccAwsAppsyncDatasource_DynamoDBConfig_UseCallerCredentials(t *testing.
 	})
 }
 
-func TestAccAwsAppsyncDatasource_ElasticsearchConfig_Region(t *testing.T) {
+func TestAccAppSyncDataSource_ElasticSearch_region(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -187,7 +187,7 @@ func TestAccAwsAppsyncDatasource_ElasticsearchConfig_Region(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_HTTPConfig_Endpoint(t *testing.T) {
+func TestAccAppSyncDataSource_HTTP_endpoint(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -224,7 +224,7 @@ func TestAccAwsAppsyncDatasource_HTTPConfig_Endpoint(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Type(t *testing.T) {
+func TestAccAppSyncDataSource_type(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -252,7 +252,7 @@ func TestAccAwsAppsyncDatasource_Type(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Type_DynamoDB(t *testing.T) {
+func TestAccAppSyncDataSource_Type_dynamoDB(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	dynamodbTableResourceName := "aws_dynamodb_table.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -284,7 +284,7 @@ func TestAccAwsAppsyncDatasource_Type_DynamoDB(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Type_Elasticsearch(t *testing.T) {
+func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_appsync_datasource.test"
@@ -315,7 +315,7 @@ func TestAccAwsAppsyncDatasource_Type_Elasticsearch(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Type_HTTP(t *testing.T) {
+func TestAccAppSyncDataSource_Type_http(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
@@ -343,7 +343,7 @@ func TestAccAwsAppsyncDatasource_Type_HTTP(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Type_Lambda(t *testing.T) {
+func TestAccAppSyncDataSource_Type_lambda(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
 	lambdaFunctionResourceName := "aws_lambda_function.test"
@@ -374,7 +374,7 @@ func TestAccAwsAppsyncDatasource_Type_Lambda(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncDatasource_Type_None(t *testing.T) {
+func TestAccAppSyncDataSource_Type_none(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
