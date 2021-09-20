@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
+func TestAccRDSClusterDataSource_basic(t *testing.T) {
 	clusterName := fmt.Sprintf("testaccawsrdscluster-basic-%s", sdkacctest.RandString(10))
 	dataSourceName := "data.aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.test"

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
+func TestAccRDSSecurityGroup_basic(t *testing.T) {
 	var v rds.DBSecurityGroup
 	resourceName := "aws_db_security_group.test"
 	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(5))

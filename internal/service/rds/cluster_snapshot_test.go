@@ -77,7 +77,7 @@ func testSweepDbClusterSnapshots(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
+func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 	var dbClusterSnapshot rds.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_cluster_snapshot.test"
@@ -117,7 +117,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
+func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 	var dbClusterSnapshot rds.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_cluster_snapshot.test"

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRDSEngineVersionDataSource_basic(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 	engine := "oracle-ee"
 	version := "19.0.0.0.ru-2020-07.rur-2020-07.r1"
@@ -50,7 +50,7 @@ func TestAccAWSRDSEngineVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -69,7 +69,7 @@ func TestAccAWSRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSEngineVersionDataSource_preferred(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccAWSRDSEngineVersionDataSource_preferred(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{

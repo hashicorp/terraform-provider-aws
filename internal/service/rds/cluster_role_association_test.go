@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
+func TestAccRDSClusterRoleAssociation_basic(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dbClusterResourceName := "aws_rds_cluster.test"
@@ -46,7 +46,7 @@ func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
+func TestAccRDSClusterRoleAssociation_disappears(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_role_association.test"
@@ -69,7 +69,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
+func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_role_association.test"
@@ -93,7 +93,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
+func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_role_association.test"

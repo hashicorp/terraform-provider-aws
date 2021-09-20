@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDbSubnetGroupDataSource_basic(t *testing.T) {
+func TestAccRDSSubnetGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_subnet_group.test"
 	dataSourceName := "data.aws_db_subnet_group.test"
@@ -36,7 +36,7 @@ func TestAccAWSDbSubnetGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDbSubnetGroupDataSource_nonexistent(t *testing.T) {
+func TestAccRDSSubnetGroupDataSource_nonexistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),

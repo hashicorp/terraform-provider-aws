@@ -15,7 +15,7 @@ import (
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
-func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
+func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -53,7 +53,7 @@ func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyEndpoint_targetRole(t *testing.T) {
+func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -80,7 +80,7 @@ func TestAccAWSDBProxyEndpoint_targetRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
+func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -117,7 +117,7 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyEndpoint_tags(t *testing.T) {
+func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -162,7 +162,7 @@ func TestAccAWSDBProxyEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyEndpoint_disappears(t *testing.T) {
+func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -184,7 +184,7 @@ func TestAccAWSDBProxyEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyEndpoint_disappears_proxy(t *testing.T) {
+func TestAccRDSProxyEndpoint_Disappears_proxy(t *testing.T) {
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

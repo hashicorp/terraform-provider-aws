@@ -66,7 +66,7 @@ func testSweepRdsDbSubnetGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
+func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 
 	resourceName := "aws_db_subnet_group.test"
@@ -97,7 +97,7 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBSubnetGroup_namePrefix(t *testing.T) {
+func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 	var v rds.DBSubnetGroup
 	resourceName := "aws_db_subnet_group.test"
 
@@ -118,7 +118,7 @@ func TestAccAWSDBSubnetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBSubnetGroup_generatedName(t *testing.T) {
+func TestAccRDSSubnetGroup_generatedName(t *testing.T) {
 	var v rds.DBSubnetGroup
 	resourceName := "aws_db_subnet_group.test"
 
@@ -140,7 +140,7 @@ func TestAccAWSDBSubnetGroup_generatedName(t *testing.T) {
 
 // Regression test for https://github.com/hashicorp/terraform/issues/2603 and
 // https://github.com/hashicorp/terraform/issues/2664
-func TestAccAWSDBSubnetGroup_withUndocumentedCharacters(t *testing.T) {
+func TestAccRDSSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 	var v rds.DBSubnetGroup
 
 	testCheck := func(*terraform.State) error {
@@ -173,7 +173,7 @@ func TestAccAWSDBSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
+func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 	var v rds.DBSubnetGroup
 	resourceName := "aws_db_subnet_group.test"
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())

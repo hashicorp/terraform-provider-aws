@@ -15,7 +15,7 @@ import (
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
-func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
+func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 	var dbInstanceRole1 rds.DBInstanceRole
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dbInstanceResourceName := "aws_db_instance.test"
@@ -46,7 +46,7 @@ func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDbInstanceRoleAssociation_disappears(t *testing.T) {
+func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 	var dbInstance1 rds.DBInstance
 	var dbInstanceRole1 rds.DBInstanceRole
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

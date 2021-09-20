@@ -16,7 +16,7 @@ import (
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
-func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -51,7 +51,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -86,7 +86,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T)
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -120,7 +120,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -154,7 +154,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -188,7 +188,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -222,7 +222,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -258,7 +258,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
+func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 	var v rds.DBProxy
 	dbProxyResourceName := "aws_db_proxy.test"
 	resourceName := "aws_db_proxy_default_target_group.test"

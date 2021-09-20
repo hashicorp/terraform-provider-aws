@@ -14,7 +14,7 @@ import (
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
-func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
+func TestAccRDSProxyTarget_instance(t *testing.T) {
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -46,7 +46,7 @@ func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
+func TestAccRDSProxyTarget_cluster(t *testing.T) {
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -78,7 +78,7 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
+func TestAccRDSProxyTarget_disappears(t *testing.T) {
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

@@ -74,7 +74,7 @@ func testSweepDbOptionGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSDBOptionGroup_basic(t *testing.T) {
+func TestAccRDSOptionGroup_basic(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -107,7 +107,7 @@ func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
+func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -135,7 +135,7 @@ func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
+func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 	var v rds.OptionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,7 +162,7 @@ func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
+func TestAccRDSOptionGroup_generatedName(t *testing.T) {
 	var v rds.OptionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -187,7 +187,7 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_OptionGroupDescription(t *testing.T) {
+func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
 	var optionGroup1 rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_option_group.test"
@@ -215,7 +215,7 @@ func TestAccAWSDBOptionGroup_OptionGroupDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_basicDestroyWithInstance(t *testing.T) {
+func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -237,7 +237,7 @@ func TestAccAWSDBOptionGroup_basicDestroyWithInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
+func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -292,7 +292,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_Option_OptionSettings_IAMRole(t *testing.T) {
+func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -323,7 +323,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_IAMRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
+func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -361,7 +361,7 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
+func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -405,7 +405,7 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/1876
-func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing.T) {
+func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T) {
 	var optionGroup1, optionGroup2 rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_option_group.test"
@@ -440,7 +440,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing
 	})
 }
 
-func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
+func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 	var v rds.OptionGroup
 	rName := fmt.Sprintf("option-group-test-terraform-%s", sdkacctest.RandString(5))
 
@@ -470,7 +470,7 @@ func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
+func TestAccRDSOptionGroup_tags(t *testing.T) {
 	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -517,7 +517,7 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7114
-func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
+func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

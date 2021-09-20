@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_basic(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	class := "db.t2.small"
 	engine := "mysql"
@@ -39,7 +39,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClass(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	preferredClass := "db.t2.micro"
 
@@ -59,7 +59,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClass(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_preferredVersion(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	preferredVersion := "5.7.22"
 
@@ -79,7 +79,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClassAndVersion(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	preferredClass := "db.m3.medium"
 	preferredVersion := "5.7.22"
@@ -101,7 +101,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_preferredClassAndVersion(t *test
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsEnhancedMonitoring(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -120,7 +120,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsEnhancedMonitoring(t *te
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIAMDatabaseAuthentication(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -139,7 +139,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIAMDatabaseAuthenticatio
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIops(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +158,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsIops(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsKerberosAuthentication(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,7 +177,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsKerberosAuthentication(t
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsPerformanceInsights(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -200,7 +200,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsPerformanceInsights(t *t
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageAutoscaling(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -219,7 +219,7 @@ func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageAutoscaling(t *te
 	})
 }
 
-func TestAccAWSRdsOrderableDbInstanceDataSource_supportsStorageEncryption(t *testing.T) {
+func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
+func TestAccRDSClusterInstance_basic(t *testing.T) {
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 
@@ -65,7 +65,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
+func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 	rInt := sdkacctest.RandInt()
@@ -102,7 +102,7 @@ func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_az(t *testing.T) {
+func TestAccRDSClusterInstance_az(t *testing.T) {
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
@@ -134,7 +134,7 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
+func TestAccRDSClusterInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster_instance.test"
@@ -167,7 +167,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
+func TestAccRDSClusterInstance_generatedName(t *testing.T) {
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -198,7 +198,7 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
+func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
@@ -230,7 +230,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/5350
-func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
+func TestAccRDSClusterInstance_disappears(t *testing.T) {
 	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 
@@ -253,7 +253,7 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
+func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_instance.test"
@@ -291,7 +291,7 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
+func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rNameSuffix := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
@@ -402,7 +402,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 	}
 }
 
-func TestAccAWSRDSClusterInstance_MonitoringInterval(t *testing.T) {
+func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -454,7 +454,7 @@ func TestAccAWSRDSClusterInstance_MonitoringInterval(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_MonitoringRoleArn_EnabledToDisabled(t *testing.T) {
+func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -493,7 +493,7 @@ func TestAccAWSRDSClusterInstance_MonitoringRoleArn_EnabledToDisabled(t *testing
 	})
 }
 
-func TestAccAWSRDSClusterInstance_MonitoringRoleArn_EnabledToRemoved(t *testing.T) {
+func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -531,7 +531,7 @@ func TestAccAWSRDSClusterInstance_MonitoringRoleArn_EnabledToRemoved(t *testing.
 	})
 }
 
-func TestAccAWSRDSClusterInstance_MonitoringRoleArn_RemovedToEnabled(t *testing.T) {
+func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -569,7 +569,7 @@ func TestAccAWSRDSClusterInstance_MonitoringRoleArn_RemovedToEnabled(t *testing.
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql1(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -601,7 +601,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql1(t *tes
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql2(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL2(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -634,7 +634,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql2(t *tes
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraPostgresql(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -666,7 +666,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraPostgresql(t 
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testing.T) {
 	var dbInstance rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -700,7 +700,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1(t *te
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1_DefaultKeyToCustomKey(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKeyToCustomKey(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -736,7 +736,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1_Defau
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL2(t *testing.T) {
 	var dbInstance rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -771,7 +771,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2(t *te
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2_DefaultKeyToCustomKey(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL2_defaultKeyToCustomKey(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -808,7 +808,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2_Defau
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *testing.T) {
 	var dbInstance rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
@@ -842,7 +842,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql(t
 	})
 }
 
-func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql_DefaultKeyToCustomKey(t *testing.T) {
+func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defaultKeyToCustomKey(t *testing.T) {
 	var dbInstance rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -878,7 +878,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql_D
 	})
 }
 
-func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
+func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_instance.test"
