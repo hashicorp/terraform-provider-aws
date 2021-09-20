@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
@@ -87,7 +88,7 @@ func testAccCheckGlacierVaultLockExists(resourceName string, getVaultLockOutput 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glacierconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
 
 		input := &glacier.GetVaultLockInput{
 			VaultName: aws.String(rs.Primary.ID),
@@ -109,7 +110,7 @@ func testAccCheckGlacierVaultLockExists(resourceName string, getVaultLockOutput 
 }
 
 func testAccCheckGlacierVaultLockDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glacierconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glacier_vault_lock" {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepGlacierVaults(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).glacierconn
+	conn := client.(*conns.AWSClient).GlacierConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, lastPage bool) bool {
@@ -277,7 +278,7 @@ func testAccCheckGlacierVaultExists(name string, vault *glacier.DescribeVaultOut
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glacierconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
 		out, err := conn.DescribeVault(&glacier.DescribeVaultInput{
 			VaultName: aws.String(rs.Primary.ID),
 		})
@@ -312,7 +313,7 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glacierconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
 		out, err := conn.GetVaultNotifications(&glacier.GetVaultNotificationsInput{
 			VaultName: aws.String(rs.Primary.ID),
 		})
@@ -331,7 +332,7 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckGlacierVaultDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glacierconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glacier_vault" {
