@@ -226,7 +226,7 @@ func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPoli
 
 func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	resourceType := aws.String("ResourceTypeList")
-	resourceTypeList := expandStringSet(d.Get("resource_type_list").(*schema.Set))
+	resourceTypeList := flex.ExpandStringSet(d.Get("resource_type_list").(*schema.Set))
 	if t, ok := d.GetOk("resource_type"); ok {
 		resourceType = aws.String(t.(string))
 	}
