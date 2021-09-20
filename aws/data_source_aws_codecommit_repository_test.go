@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf-acctest-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-acctest-%d", sdkacctest.RandInt())
 	resourceName := "aws_codecommit_repository.default"
 	datasourceName := "data.aws_codecommit_repository.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, codecommit.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, codecommit.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
