@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReplicationConfiguration() *schema.Resource {
@@ -50,7 +51,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 												"registry_id": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateAwsAccountId,
+													ValidateFunc: verify.ValidAccountID,
 												},
 											},
 										},
