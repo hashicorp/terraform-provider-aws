@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -65,12 +66,12 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 
 func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -106,12 +107,12 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 
 func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -140,12 +141,12 @@ func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 
 func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
 	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -188,12 +189,12 @@ func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
 
 func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -230,12 +231,12 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 
 func TestAccAWSRedshiftEventSubscription_tagsUpdate(t *testing.T) {
 	var v redshift.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_event_subscription.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
