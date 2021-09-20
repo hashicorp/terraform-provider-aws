@@ -84,7 +84,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().CodestarconnectionsTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateConnection(params)
@@ -124,7 +124,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("host_arn", connection.HostArn)
 	d.Set("provider_type", connection.ProviderType)
 
-	tags, err := tftags.CodestarconnectionsListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeStar Connection (%s): %w", arn, err)
@@ -150,7 +150,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CodestarconnectionsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error Codestar Connection (%s) tags: %w", d.Id(), err)
 		}
 	}
