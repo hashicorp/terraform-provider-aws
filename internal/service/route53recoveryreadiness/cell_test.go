@@ -15,7 +15,7 @@ import (
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 )
 
-func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
+func TestAccRoute53RecoveryReadinessCell_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
@@ -44,7 +44,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessCell_disappears(t *testing.T) {
+func TestAccRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
@@ -66,7 +66,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
+func TestAccRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 	rNameParent := sdkacctest.RandomWithPrefix("tf-acc-test-parent")
 	rNameChild := sdkacctest.RandomWithPrefix("tf-acc-test-child")
 	resourceNameParent := "aws_route53recoveryreadiness_cell.test_parent"
@@ -117,7 +117,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
+func TestAccRoute53RecoveryReadinessCell_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 
@@ -161,7 +161,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessCell_timeout(t *testing.T) {
+func TestAccRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_cell.test"
 

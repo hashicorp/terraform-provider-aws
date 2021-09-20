@@ -17,7 +17,7 @@ import (
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 )
 
-func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
+func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
@@ -52,7 +52,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
+func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
@@ -82,7 +82,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
+func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
@@ -133,7 +133,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
+func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"

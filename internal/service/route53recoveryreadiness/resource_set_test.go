@@ -17,7 +17,7 @@ import (
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 )
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -52,7 +52,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -81,7 +81,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
@@ -132,7 +132,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
@@ -166,7 +166,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) 
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	domainName := "myTestDomain.test"
@@ -209,7 +209,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *tes
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
@@ -246,7 +246,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t 
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
@@ -286,7 +286,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t 
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
+func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cwArn := arn.ARN{
 		AccountID: "123456789012",

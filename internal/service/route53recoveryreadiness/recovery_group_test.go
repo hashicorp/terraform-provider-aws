@@ -15,7 +15,7 @@ import (
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 )
 
-func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
+func TestAccRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 
@@ -43,7 +43,7 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_disappears(t *testing.T) {
+func TestAccRoute53RecoveryReadinessRecoveryGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 
@@ -65,7 +65,7 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_nestedCell(t *testing.T) {
+func TestAccRoute53RecoveryReadinessRecoveryGroup_nestedCell(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rNameCell := sdkacctest.RandomWithPrefix("tf-acc-test-cell")
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
@@ -92,7 +92,7 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_nestedCell(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
+func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
+func TestAccRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
 	resource.ParallelTest(t, resource.TestCase{
