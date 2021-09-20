@@ -60,7 +60,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().MediastoreTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateContainer(input)
@@ -110,7 +110,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Container.Name)
 	d.Set("endpoint", resp.Container.Endpoint)
 
-	tags, err := tftags.MediastoreListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for media store container (%s): %s", arn, err)
@@ -137,7 +137,7 @@ func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.MediastoreUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating media store container (%s) tags: %s", arn, err)
 		}
 	}
