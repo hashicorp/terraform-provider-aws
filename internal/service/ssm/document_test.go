@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
@@ -562,7 +563,7 @@ func TestAccAWSSSMDocument_disappears(t *testing.T) {
 				Config: testAccAWSSSMDocumentBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDocument(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceDocument(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -583,7 +584,7 @@ func TestValidateSSMDocumentPermissions(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		errors := validateSSMDocumentPermissions(s)
+		errors := tfssm.ValidDocumentPermissions(s)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be valid SSM Document Permissions: %v", s, errors)
 		}
@@ -603,7 +604,7 @@ func TestValidateSSMDocumentPermissions(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		errors := validateSSMDocumentPermissions(s)
+		errors := tfssm.ValidDocumentPermissions(s)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be valid SSM Document Permissions: %v", s, errors)
 		}

@@ -100,7 +100,7 @@ func resourceResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) er
 func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
-	syncItem, err := findResourceDataSyncItem(conn, d.Id())
+	syncItem, err := FindResourceDataSyncItem(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func findResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSyncItem, error) {
+func FindResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSyncItem, error) {
 	nextToken := ""
 	for {
 		input := &ssm.ListResourceDataSyncInput{}

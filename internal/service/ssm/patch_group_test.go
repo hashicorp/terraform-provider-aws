@@ -47,7 +47,7 @@ func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
 				Config: testAccAWSSSMPatchGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePatchGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		patchGroup, baselineId, err := parseSsmPatchGroupId(rs.Primary.ID)
+		patchGroup, baselineId, err := tfssm.ParsePatchGroupID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
@@ -117,7 +117,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SSM Patch Baseline ID is set")
 		}
 
-		patchGroup, baselineId, err := parseSsmPatchGroupId(rs.Primary.ID)
+		patchGroup, baselineId, err := tfssm.ParsePatchGroupID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}

@@ -24,7 +24,7 @@ func resourceAwsSsmPatchGroupV0() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmPatchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func PatchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}

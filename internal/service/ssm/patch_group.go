@@ -22,7 +22,7 @@ func ResourcePatchGroup() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsSsmPatchGroupV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsSsmPatchGroupStateUpgradeV0,
+				Upgrade: PatchGroupStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -66,7 +66,7 @@ func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
 func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
-	patchGroup, baselineId, err := parseSsmPatchGroupId(d.Id())
+	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
 	}
@@ -102,7 +102,7 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
-	patchGroup, baselineId, err := parseSsmPatchGroupId(d.Id())
+	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
 	}
@@ -124,7 +124,7 @@ func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func parseSsmPatchGroupId(id string) (string, string, error) {
+func ParsePatchGroupID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

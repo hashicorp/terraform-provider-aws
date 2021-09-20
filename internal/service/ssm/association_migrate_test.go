@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func TestAWSSsmAssociationRuleMigrateState(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAWSSsmAssociationRuleMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsSsmAssociationMigrateState(
+		is, err := tfssm.AssociationMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

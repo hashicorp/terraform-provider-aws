@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepSsmResourceDataSyncs(region string) error {
 		}
 
 		for _, resourceDataSync := range page.ResourceDataSyncItems {
-			r := ResourceResourceDataSync()
+			r := tfssm.ResourceResourceDataSync()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(resourceDataSync.SyncName))
@@ -131,7 +132,7 @@ func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
 		if rs.Type != "aws_ssm_resource_data_sync" {
 			continue
 		}
-		syncItem, err := findResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
+		syncItem, err := tfssm.FindResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
 		if err != nil {
 			return err
 		}

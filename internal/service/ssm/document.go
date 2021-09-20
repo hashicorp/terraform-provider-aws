@@ -198,7 +198,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 	// Validates permissions keys, if set, to be type and account_ids
 	// since ValidateFunc validates only the value not the key.
 	if v, ok := d.GetOk("permissions"); ok {
-		if errors := validateSSMDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
+		if errors := ValidDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
 			return fmt.Errorf("Error validating Permissions: %v", errors)
 		}
 	}
@@ -381,7 +381,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 	// Validates permissions keys, if set, to be type and account_ids
 	// since ValidateFunc validates only the value not the key.
 	if v, ok := d.GetOk("permissions"); ok {
-		if errors := validateSSMDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
+		if errors := ValidDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
 			return fmt.Errorf("Error validating Permissions: %v", errors)
 		}
 	}
@@ -708,7 +708,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 }
 
 //Validates that type and account_ids are defined
-func validateSSMDocumentPermissions(v map[string]interface{}) (errors []error) {
+func ValidDocumentPermissions(v map[string]interface{}) (errors []error) {
 	k := "permissions"
 	t, hasType := v["type"].(string)
 	_, hasAccountIds := v["account_ids"].(string)

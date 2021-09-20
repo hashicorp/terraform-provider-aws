@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
@@ -213,7 +214,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceMaintenanceWindowTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -235,7 +236,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_disappears_window(t *testing.T) {
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
