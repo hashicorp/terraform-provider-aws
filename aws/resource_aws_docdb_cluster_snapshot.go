@@ -127,7 +127,7 @@ func resourceAwsDocDBClusterSnapshotRead(d *schema.ResourceData, meta interface{
 	}
 	resp, err := conn.DescribeDBClusterSnapshots(params)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			log.Printf("[WARN] DocDB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -170,7 +170,7 @@ func resourceAwsDocDBClusterSnapshotDelete(d *schema.ResourceData, meta interfac
 	}
 	_, err := conn.DeleteDBClusterSnapshot(params)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting DocDB Cluster Snapshot %q: %s", d.Id(), err)
@@ -189,7 +189,7 @@ func resourceAwsDocDBClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier
 
 		resp, err := conn.DescribeDBClusterSnapshots(opts)
 		if err != nil {
-			if isAWSErr(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DocDB Cluster Snapshots: %s", err)

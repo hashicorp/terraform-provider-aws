@@ -63,7 +63,7 @@ func testAccCheckDocDBClusterSnapshotDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				continue
 			}
 			return err

@@ -217,14 +217,14 @@ func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
-			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreateDBInstance(createOpts)
 	}
 	if err != nil {
@@ -382,14 +382,14 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.ModifyDBInstance(req)
 		}
 		if err != nil {
@@ -491,7 +491,7 @@ func resourceAwsDocDBInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBIn
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBInstanceNotFoundFault, "") {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)
