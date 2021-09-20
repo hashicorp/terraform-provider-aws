@@ -206,7 +206,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		ApiId:      aws.String(apiId),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
 		StageName:  aws.String(d.Get("name").(string)),
-		Tags:       tags.IgnoreAws().Apigatewayv2Tags(),
+		Tags:       Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("access_log_settings"); ok {
 		req.AccessLogSettings = expandApiGatewayV2AccessLogSettings(v.([]interface{}))
@@ -299,7 +299,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting stage_variables: %s", err)
 	}
 
-	tags := tftags.Apigatewayv2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -417,7 +417,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating API Gateway v2 stage (%s) tags: %s", d.Id(), err)
 		}
 	}

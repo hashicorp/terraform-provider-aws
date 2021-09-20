@@ -120,7 +120,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
 		MutualTlsAuthentication:  expandApiGatewayV2MutualTlsAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
-		Tags:                     tags.IgnoreAws().Apigatewayv2Tags(),
+		Tags:                     Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 domain name: %s", input)
@@ -174,7 +174,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting mutual_tls_authentication: %w", err)
 	}
 
-	tags := tftags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -226,7 +226,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating API Gateway v2 domain name (%s) tags: %w", d.Id(), err)
 		}
 	}
