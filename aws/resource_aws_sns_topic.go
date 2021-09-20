@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTopic() *schema.Resource {
@@ -31,7 +32,7 @@ func ResourceTopic() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsSnsTopicCustomizeDiff,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -173,8 +174,8 @@ func ResourceTopic() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -182,7 +183,7 @@ func ResourceTopic() *schema.Resource {
 func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
@@ -481,7 +482,7 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.SnsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.SnsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -607,7 +608,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
-	tags, err := keyvaluetags.SnsListTags(conn, d.Id())
+	tags, err := tftags.SnsListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
