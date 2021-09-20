@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -48,8 +49,8 @@ func ResourceAnalyzer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -62,14 +63,14 @@ func ResourceAnalyzer() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	analyzerName := d.Get("analyzer_name").(string)
 
 	input := &accessanalyzer.CreateAnalyzerInput{
@@ -135,7 +136,7 @@ func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("analyzer_name", output.Analyzer.Name)
 	d.Set("arn", output.Analyzer.Arn)
 
-	tags := keyvaluetags.AccessanalyzerKeyValueTags(output.Analyzer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.AccessanalyzerKeyValueTags(output.Analyzer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -156,7 +157,7 @@ func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.AccessanalyzerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.AccessanalyzerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Access Analyzer Analyzer (%s) tags: %s", d.Id(), err)
 		}
 	}
