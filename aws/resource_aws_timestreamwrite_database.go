@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsTimestreamWriteDatabase() *schema.Resource {
@@ -68,8 +69,8 @@ func resourceAwsTimestreamWriteDatabase() *schema.Resource {
 }
 
 func resourceAwsTimestreamWriteDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	dbName := d.Get("database_name").(string)
@@ -102,9 +103,9 @@ func resourceAwsTimestreamWriteDatabaseCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsTimestreamWriteDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &timestreamwrite.DescribeDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -155,7 +156,7 @@ func resourceAwsTimestreamWriteDatabaseRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceAwsTimestreamWriteDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 
 	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
@@ -182,7 +183,7 @@ func resourceAwsTimestreamWriteDatabaseUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsTimestreamWriteDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 
 	input := &timestreamwrite.DeleteDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
