@@ -58,7 +58,7 @@ func testSweepDataSyncAgents(region string) error {
 
 			_, err := conn.DeleteAgent(input)
 
-			if isAWSErr(err, "InvalidRequestException", "does not exist") {
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 				continue
 			}
 

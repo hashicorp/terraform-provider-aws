@@ -146,7 +146,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	log.Printf("[DEBUG] Reading DataSync Location Fsx Windows: %#v", input)
 	output, err := conn.DescribeLocationFsxWindows(input)
 
-	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		log.Printf("[WARN] DataSync Location Fsx Windows %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -220,7 +220,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting DataSync Location Fsx Windows File System: %#v", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return nil
 	}
 

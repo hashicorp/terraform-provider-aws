@@ -119,7 +119,7 @@ func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading DataSync Location EFS: %s", input)
 	output, err := conn.DescribeLocationEfs(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location EFS %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -188,7 +188,7 @@ func resourceAwsDataSyncLocationEfsDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Deleting DataSync Location EFS: %s", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		return nil
 	}
 

@@ -144,7 +144,7 @@ func resourceAwsDataSyncLocationSmbRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading DataSync Location SMB: %s", input)
 	output, err := conn.DescribeLocationSmb(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location SMB %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -244,7 +244,7 @@ func resourceAwsDataSyncLocationSmbDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Deleting DataSync Location SMB: %s", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		return nil
 	}
 

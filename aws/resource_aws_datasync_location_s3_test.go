@@ -60,7 +60,7 @@ func testSweepDataSyncLocationS3s(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 				continue
 			}
 
@@ -238,7 +238,7 @@ func testAccCheckAWSDataSyncLocationS3Destroy(s *terraform.State) error {
 
 		_, err := conn.DescribeLocationS3(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 			return nil
 		}
 

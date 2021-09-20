@@ -58,7 +58,7 @@ func testSweepDataSyncTasks(region string) error {
 
 			_, err := conn.DeleteTask(input)
 
-			if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
