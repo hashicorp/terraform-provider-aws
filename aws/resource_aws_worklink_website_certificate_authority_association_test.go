@@ -8,18 +8,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -43,13 +44,13 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *t
 }
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayName(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
-	displayName1 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
-	displayName2 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
+	displayName1 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
+	displayName2 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -77,12 +78,12 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 }
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
-		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
