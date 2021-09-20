@@ -103,7 +103,7 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 			return err
 		}
 
-		output, err := finder.StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
+		output, err := finder.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
 
 		if err != nil {
 			return err

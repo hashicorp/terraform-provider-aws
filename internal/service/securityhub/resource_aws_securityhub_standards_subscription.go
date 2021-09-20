@@ -57,7 +57,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
 
-	_, err = waiter.StandardsSubscriptionCreated(conn, d.Id())
+	_, err = waiter.waitStandardsSubscriptionCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to create: %w", d.Id(), err)
@@ -69,7 +69,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 func resourceStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	output, err := finder.StandardsSubscriptionByARN(conn, d.Id())
+	output, err := finder.FindStandardsSubscriptionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Subscription (%s) not found, removing from state", d.Id())
@@ -94,7 +94,7 @@ func resourceStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error disabling Security Hub Standard (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.StandardsSubscriptionDeleted(conn, d.Id())
+	_, err = waiter.waitStandardsSubscriptionDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to delete: %w", d.Id(), err)

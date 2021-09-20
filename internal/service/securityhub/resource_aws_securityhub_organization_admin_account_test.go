@@ -106,7 +106,7 @@ func testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy(s *terraform.Stat
 			continue
 		}
 
-		adminAccount, err := finder.AdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := finder.FindAdminAccount(conn, rs.Primary.ID)
 
 		// Because of this resource's dependency, the Organizations organization
 		// will be deleted first, resulting in the following valid error
@@ -137,7 +137,7 @@ func testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
-		adminAccount, err := finder.AdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := finder.FindAdminAccount(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

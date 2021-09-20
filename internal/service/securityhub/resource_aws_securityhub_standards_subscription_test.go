@@ -77,7 +77,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
-		output, err := finder.StandardsSubscriptionByARN(conn, rs.Primary.ID)
+		output, err := finder.FindStandardsSubscriptionByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -97,7 +97,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 			continue
 		}
 
-		output, err := finder.StandardsSubscriptionByARN(conn, rs.Primary.ID)
+		output, err := finder.FindStandardsSubscriptionByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

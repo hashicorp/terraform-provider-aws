@@ -93,7 +93,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	control, err := finder.StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
+	control, err := finder.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Control (%s) not found, removing from state", d.Id())

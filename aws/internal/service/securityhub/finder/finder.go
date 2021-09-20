@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AdminAccount(conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
+func FindAdminAccount(conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
 	input := &securityhub.ListOrganizationAdminAccountsInput{}
 	var result *securityhub.AdminAccount
 
@@ -36,7 +36,7 @@ func AdminAccount(conn *securityhub.SecurityHub, adminAccountID string) (*securi
 	return result, err
 }
 
-func Insight(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.Insight, error) {
+func FindInsight(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.Insight, error) {
 	input := &securityhub.GetInsightsInput{
 		InsightArns: aws.StringSlice([]string{arn}),
 		MaxResults:  aws.Int64(1),
@@ -55,7 +55,7 @@ func Insight(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*s
 	return output.Insights[0], nil
 }
 
-func StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.SecurityHub, standardsSubscriptionARN, standardsControlARN string) (*securityhub.StandardsControl, error) {
+func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.SecurityHub, standardsSubscriptionARN, standardsControlARN string) (*securityhub.StandardsControl, error) {
 	input := &securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
 	}
@@ -98,7 +98,7 @@ func StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx contex
 	return output, nil
 }
 
-func StandardsSubscriptionByARN(conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
+func FindStandardsSubscriptionByARN(conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
 	input := &securityhub.GetEnabledStandardsInput{
 		StandardsSubscriptionArns: aws.StringSlice([]string{arn}),
 	}

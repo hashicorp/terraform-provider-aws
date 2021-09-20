@@ -65,7 +65,7 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Disabling Security Hub for account")
 
-	err := resource.Retry(waiter.AdminAccountNotFoundTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.adminAccountNotFoundTimeout, func() *resource.RetryError {
 		_, err := conn.DisableSecurityHub(&securityhub.DisableSecurityHubInput{})
 
 		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator") {

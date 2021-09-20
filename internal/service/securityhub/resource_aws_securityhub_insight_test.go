@@ -447,7 +447,7 @@ func testAccCheckAwsSecurityHubInsightDestroy(s *terraform.State) error {
 			continue
 		}
 
-		insight, err := finder.Insight(context.Background(), conn, rs.Primary.ID)
+		insight, err := finder.FindInsight(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
@@ -476,7 +476,7 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
-		insight, err := finder.Insight(context.Background(), conn, rs.Primary.ID)
+		insight, err := finder.FindInsight(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Security Hub Insight (%s): %w", rs.Primary.ID, err)

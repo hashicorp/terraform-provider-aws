@@ -177,7 +177,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	insight, err := finder.Insight(ctx, conn, d.Id())
+	insight, err := finder.FindInsight(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
