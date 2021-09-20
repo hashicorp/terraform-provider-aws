@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -37,7 +38,7 @@ func testSweepS3BucketObjects(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).s3connUriCleaningDisabled
+	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBuckets(input)
@@ -82,7 +83,7 @@ func testSweepS3BucketObjects(region string) error {
 		}
 
 		if bucketRegion != region {
-			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", bucketName, bucketRegion)
+			log.Printf("[INFO] Skipping S3 Bucket (%s) in different Region: %s", bucketName, bucketRegion)
 			continue
 		}
 
@@ -1422,14 +1423,14 @@ func testAccCheckAWSS3BucketObjectVersionIdEquals(first, second *s3.GetObjectOut
 }
 
 func testAccCheckAWSS3BucketObjectDestroy(s *terraform.State) error {
-	s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_object" {
 			continue
 		}
 
-		_, err := s3conn.HeadObject(
+		_, err := conn.HeadObject(
 			&s3.HeadObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 				Key:     aws.String(rs.Primary.Attributes["key"]),
@@ -1453,7 +1454,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 			return fmt.Errorf("No S3 Bucket Object ID is set")
 		}
 
-		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		input := &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
@@ -1465,7 +1466,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			var err error
-			out, err = s3conn.GetObject(input)
+			out, err = conn.GetObject(input)
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "NoSuchKey" {
 					return resource.RetryableError(
@@ -1480,7 +1481,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			out, err = s3conn.GetObject(input)
+			out, err = conn.GetObject(input)
 		}
 
 		if err != nil {
@@ -1512,9 +1513,9 @@ func testAccCheckAWSS3BucketObjectBody(obj *s3.GetObjectOutput, want string) res
 func testAccCheckAWSS3BucketObjectAcl(n string, expectedPerms []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		out, err := s3conn.GetObjectAcl(&s3.GetObjectAclInput{
+		out, err := conn.GetObjectAcl(&s3.GetObjectAclInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),
 		})
@@ -1540,9 +1541,9 @@ func testAccCheckAWSS3BucketObjectAcl(n string, expectedPerms []string) resource
 func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
+		out, err := conn.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),
 		})
@@ -1570,9 +1571,9 @@ func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource
 func testAccCheckAWSS3BucketObjectSSE(n, expectedSSE string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
+		out, err := conn.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),
 		})
@@ -1614,7 +1615,7 @@ func testAccAWSS3BucketObjectCreateTempFile(t *testing.T, data string) string {
 func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		return keyvaluetags.S3ObjectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
@@ -1623,7 +1624,7 @@ func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[stri
 func testAccCheckAWSS3BucketObjectCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 		got, err := keyvaluetags.S3ObjectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {

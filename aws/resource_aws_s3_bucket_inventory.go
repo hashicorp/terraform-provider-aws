@@ -14,6 +14,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3BucketInventory() *schema.Resource {
@@ -174,7 +175,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 }
 
 func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -251,7 +252,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
 	if err != nil {
@@ -282,7 +283,7 @@ func resourceAwsS3BucketInventoryDelete(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
 	if err != nil {

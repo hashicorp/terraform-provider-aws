@@ -13,6 +13,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3BucketPublicAccessBlock() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsS3BucketPublicAccessBlock() *schema.Resource {
 }
 
 func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 
 	input := &s3.PutPublicAccessBlockInput{
@@ -75,7 +76,7 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] S3 bucket: %s, public access block: %v", bucket, input.PublicAccessBlockConfiguration)
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := s3conn.PutPublicAccessBlock(input)
+		_, err := conn.PutPublicAccessBlock(input)
 
 		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 			return resource.RetryableError(err)
@@ -88,7 +89,7 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = s3conn.PutPublicAccessBlock(input)
+		_, err = conn.PutPublicAccessBlock(input)
 	}
 	if err != nil {
 		return fmt.Errorf("error creating public access block policy for S3 bucket (%s): %s", bucket, err)
@@ -99,7 +100,7 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.GetPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -109,7 +110,7 @@ func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta inter
 	var output *s3.GetPublicAccessBlockOutput
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = s3conn.GetPublicAccessBlock(input)
+		output, err = conn.GetPublicAccessBlock(input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -127,7 +128,7 @@ func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta inter
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = s3conn.GetPublicAccessBlock(input)
+		output, err = conn.GetPublicAccessBlock(input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
@@ -160,7 +161,7 @@ func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsS3BucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.PutPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -173,7 +174,7 @@ func resourceAwsS3BucketPublicAccessBlockUpdate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Updating S3 bucket Public Access Block: %s", input)
-	_, err := s3conn.PutPublicAccessBlock(input)
+	_, err := conn.PutPublicAccessBlock(input)
 
 	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
@@ -205,14 +206,14 @@ func resourceAwsS3BucketPublicAccessBlockUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsS3BucketPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, delete public access block", d.Id())
-	_, err := s3conn.DeletePublicAccessBlock(input)
+	_, err := conn.DeletePublicAccessBlock(input)
 
 	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		return nil

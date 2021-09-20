@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/mitchellh/go-homedir"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
@@ -207,8 +208,8 @@ func resourceAwsS3BucketObject() *schema.Resource {
 }
 
 func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).S3Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
@@ -317,7 +318,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
 	}
 
-	if _, err := s3conn.PutObject(putInput); err != nil {
+	if _, err := conn.PutObject(putInput); err != nil {
 		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
 	}
 
@@ -330,9 +331,9 @@ func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).S3Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -347,7 +348,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = s3conn.HeadObject(input)
+		resp, err = conn.HeadObject(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
@@ -361,7 +362,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = s3conn.HeadObject(input)
+		resp, err = conn.HeadObject(input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -416,7 +417,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return keyvaluetags.S3ObjectListTags(s3conn, bucket, key)
+		return keyvaluetags.S3ObjectListTags(conn, bucket, key)
 	})
 
 	if err != nil {
@@ -448,7 +449,7 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		return resourceAwsS3BucketObjectPut(d, meta)
 	}
 
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -515,7 +516,7 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -526,9 +527,9 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false)
+		err = deleteAllS3ObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteS3ObjectVersion(s3conn, bucket, key, "", false)
+		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
 	}
 
 	if err != nil {
@@ -561,8 +562,8 @@ func resourceAwsS3BucketObjectSetKMS(d *schema.ResourceData, meta interface{}, s
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		kmsconn := meta.(*AWSClient).kmsconn
-		kmsresp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
+		conn := meta.(*conns.AWSClient).KMSConn
+		kmsresp, err := conn.DescribeKey(&kms.DescribeKeyInput{
 			KeyId: aws.String("alias/aws/s3"),
 		})
 		if err != nil {

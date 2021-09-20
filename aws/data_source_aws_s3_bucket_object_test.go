@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const rfc1123RegexPattern = `^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
@@ -439,8 +440,8 @@ func testAccCheckAwsS3ObjectDataSourceExists(n string, obj *s3.GetObjectOutput) 
 			return fmt.Errorf("S3 object data source ID not set")
 		}
 
-		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
-		out, err := s3conn.GetObject(
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		out, err := conn.GetObject(
 			&s3.GetObjectInput{
 				Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 				Key:    aws.String(rs.Primary.Attributes["key"]),

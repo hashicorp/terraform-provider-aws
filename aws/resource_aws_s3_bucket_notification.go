@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3BucketNotification() *schema.Resource {
@@ -131,7 +132,7 @@ func resourceAwsS3BucketNotification() *schema.Resource {
 }
 
 func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 
 	// TopicNotifications
@@ -310,7 +311,7 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
-		_, err := s3conn.PutBucketNotificationConfiguration(i)
+		_, err := conn.PutBucketNotificationConfiguration(i)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -324,7 +325,7 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = s3conn.PutBucketNotificationConfiguration(i)
+		_, err = conn.PutBucketNotificationConfiguration(i)
 	}
 
 	if err != nil {
@@ -337,7 +338,7 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsS3BucketNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	i := &s3.PutBucketNotificationConfigurationInput{
 		Bucket:                    aws.String(d.Id()),
@@ -345,7 +346,7 @@ func resourceAwsS3BucketNotificationDelete(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Deleting notification: %v", d.Id(), i)
-	_, err := s3conn.PutBucketNotificationConfiguration(i)
+	_, err := conn.PutBucketNotificationConfiguration(i)
 
 	if err != nil {
 		return fmt.Errorf("error deleting S3 Bucket Notification Configuration (%s): %w", d.Id(), err)
@@ -355,9 +356,9 @@ func resourceAwsS3BucketNotificationDelete(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
-	notificationConfigs, err := s3conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+	notificationConfigs, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 		Bucket: aws.String(d.Id()),
 	})
 

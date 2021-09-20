@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3BucketOwnershipControls() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsS3BucketOwnershipControls() *schema.Resource {
 }
 
 func resourceAwsS3BucketOwnershipControlsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 
@@ -72,7 +73,7 @@ func resourceAwsS3BucketOwnershipControlsCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsS3BucketOwnershipControlsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.GetBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
@@ -114,7 +115,7 @@ func resourceAwsS3BucketOwnershipControlsRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsS3BucketOwnershipControlsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
@@ -133,7 +134,7 @@ func resourceAwsS3BucketOwnershipControlsUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsS3BucketOwnershipControlsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	input := &s3.DeleteBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),

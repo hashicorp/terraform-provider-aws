@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3ObjectCopy_basic(t *testing.T) {
@@ -83,14 +84,14 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Object(t *testing.T) {
 }
 
 func testAccCheckAWSS3ObjectCopyDestroy(s *terraform.State) error {
-	s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_object_copy" {
 			continue
 		}
 
-		_, err := s3conn.HeadObject(
+		_, err := conn.HeadObject(
 			&s3.HeadObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 				Key:     aws.String(rs.Primary.Attributes["key"]),
@@ -114,8 +115,8 @@ func testAccCheckAWSS3ObjectCopyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Bucket Object ID is set")
 		}
 
-		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
-		_, err := s3conn.GetObject(
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		_, err := conn.GetObject(
 			&s3.GetObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 				Key:     aws.String(rs.Primary.Attributes["key"]),

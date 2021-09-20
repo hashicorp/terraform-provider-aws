@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestExpandS3MetricsFilter(t *testing.T) {
@@ -557,7 +558,7 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 }
 
 func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_metric" {
@@ -607,7 +608,7 @@ func testAccCheckAWSS3BucketMetricsConfigExists(n string, res *s3.MetricsConfigu
 			return fmt.Errorf("No S3 bucket metrics configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		bucket, name, err := resourceAwsS3BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err
