@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"context"
@@ -13,12 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -294,7 +291,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
-	id := tfeks.NodeGroupCreateResourceID(clusterName, nodeGroupName)
+	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 
 	input := &eks.CreateNodegroupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -364,7 +361,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(id)
 
-	_, err = waiter.waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
+	_, err = waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.Errorf("error waiting for EKS Node Group (%s) to create: %s", d.Id(), err)
@@ -378,13 +375,13 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	nodeGroup, err := finder.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Node Group (%s) not found, removing from state", d.Id())
@@ -472,7 +469,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
-	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -523,7 +520,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("error waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
@@ -562,7 +559,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return diag.Errorf("error waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
@@ -582,7 +579,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
-	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
+	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -602,7 +599,7 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error deleting EKS Node Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = waiter.waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete))
+	_, err = waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.Errorf("error waiting for EKS Node Group (%s) to delete: %s", d.Id(), err)

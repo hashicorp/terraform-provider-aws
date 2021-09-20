@@ -1,4 +1,4 @@
-package aws
+package eks_test
 
 import (
 	"context"
@@ -13,14 +13,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func init() {
@@ -268,7 +268,7 @@ func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := finder.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
+		output, err := tfeks.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 		if err != nil {
 			return err
@@ -295,7 +295,7 @@ func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
+		_, err = tfeks.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 		if tfresource.NotFound(err) {
 			continue

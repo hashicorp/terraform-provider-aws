@@ -1,4 +1,4 @@
-package aws
+package eks_test
 
 import (
 	"fmt"
@@ -7,12 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/token"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
@@ -48,7 +48,7 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 
 		name := rs.Primary.Attributes["name"]
 		tok := rs.Primary.Attributes["token"]
-		verifier := token.NewVerifier(name)
+		verifier := tfeks.NewVerifier(name)
 		identity, err := verifier.Verify(tok)
 		if err != nil {
 			return fmt.Errorf("Error verifying token for cluster %q: %v", name, err)

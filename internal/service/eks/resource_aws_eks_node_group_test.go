@@ -1,4 +1,4 @@
-package aws
+package eks_test
 
 import (
 	"fmt"
@@ -13,14 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func init() {
@@ -1052,7 +1052,7 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := finder.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+		output, err := tfeks.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 		if err != nil {
 			return err
@@ -1078,7 +1078,7 @@ func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+		_, err = tfeks.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 		if tfresource.NotFound(err) {
 			continue

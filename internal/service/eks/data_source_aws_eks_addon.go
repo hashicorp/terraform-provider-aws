@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"context"
@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,9 +60,9 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
-	id := tfeks.AddonCreateResourceID(clusterName, addonName)
+	id := AddonCreateResourceID(clusterName, addonName)
 
-	addon, err := finder.FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
+	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", id, err))

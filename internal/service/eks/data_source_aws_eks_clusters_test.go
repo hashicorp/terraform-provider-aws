@@ -1,4 +1,4 @@
-package aws
+package eks_test
 
 import (
 	"testing"

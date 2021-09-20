@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"context"
@@ -14,15 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceAddon() *schema.Resource {
@@ -95,7 +92,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
-	id := tfeks.AddonCreateResourceID(clusterName, addonName)
+	id := AddonCreateResourceID(clusterName, addonName)
 
 	input := &eks.CreateAddonInput{
 		AddonName:          aws.String(addonName),
@@ -119,7 +116,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = tags.IgnoreAws().EksTags()
 	}
 
-	err := resource.RetryContext(ctx, iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
@@ -147,7 +144,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	_, err = waiter.waitAddonCreated(ctx, conn, clusterName, addonName)
+	_, err = waitAddonCreated(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
@@ -171,13 +168,13 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
+	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	addon, err := finder.FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
+	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
@@ -214,7 +211,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
-	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
+	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -249,7 +246,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
+		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
 
 		if err != nil {
 			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
@@ -277,7 +274,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
-	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
+	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -293,7 +290,7 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))
 	}
 
-	_, err = waiter.waitAddonDeleted(ctx, conn, clusterName, addonName)
+	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) to delete: %w", d.Id(), err))

@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -30,7 +29,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName
 
 	if output, ok := outputRaw.(*eks.Addon); ok {
 		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, tfeks.AddonIssuesError(health.Issues))
+			tfresource.SetLastError(err, AddonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -51,7 +50,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName
 
 	if output, ok := outputRaw.(*eks.Addon); ok {
 		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, tfeks.AddonIssuesError(health.Issues))
+			tfresource.SetLastError(err, AddonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -72,7 +71,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, 
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
+			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -127,7 +126,7 @@ func waitClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Du
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
+			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -182,7 +181,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeG
 
 	if output, ok := outputRaw.(*eks.Nodegroup); ok {
 		if status, health := aws.StringValue(output.Status), output.Health; status == eks.NodegroupStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, tfeks.IssuesError(health.Issues))
+			tfresource.SetLastError(err, IssuesError(health.Issues))
 		}
 
 		return output, err
@@ -203,7 +202,7 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.EKS, clusterName, nodeG
 
 	if output, ok := outputRaw.(*eks.Nodegroup); ok {
 		if status, health := aws.StringValue(output.Status), output.Health; status == eks.NodegroupStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, tfeks.IssuesError(health.Issues))
+			tfresource.SetLastError(err, IssuesError(health.Issues))
 		}
 
 		return output, err
@@ -224,7 +223,7 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterNa
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
+			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
 		}
 
 		return output, err

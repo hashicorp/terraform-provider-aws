@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"context"
@@ -7,9 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -145,8 +143,8 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := d.Get("node_group_name").(string)
-	id := tfeks.NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	nodeGroup, err := finder.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 	if err != nil {
 		return diag.Errorf("error reading EKS Node Group (%s): %s", id, err)

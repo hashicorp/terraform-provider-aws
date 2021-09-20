@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"fmt"
@@ -11,15 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceFargateProfile() *schema.Resource {
@@ -108,7 +105,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 
 	clusterName := d.Get("cluster_name").(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
-	id := tfeks.FargateProfileCreateResourceID(clusterName, fargateProfileName)
+	id := FargateProfileCreateResourceID(clusterName, fargateProfileName)
 
 	input := &eks.CreateFargateProfileInput{
 		ClientRequestToken:  aws.String(resource.UniqueId()),
@@ -128,7 +125,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:
@@ -154,7 +151,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(id)
 
-	_, err = waiter.waitFargateProfileCreated(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutCreate))
+	_, err = waitFargateProfileCreated(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EKS Fargate Profile (%s) to create: %w", d.Id(), err)
@@ -168,13 +165,13 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(d.Id())
+	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	fargateProfile, err := finder.FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
+	fargateProfile, err := FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Fargate Profile (%s) not found, removing from state", d.Id())
@@ -231,7 +228,7 @@ func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
-	clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(d.Id())
+	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -256,7 +253,7 @@ func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting EKS Fargate Profile (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitFargateProfileDeleted(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete))
+	_, err = waitFargateProfileDeleted(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EKS Fargate Profile (%s) to delete: %w", d.Id(), err)

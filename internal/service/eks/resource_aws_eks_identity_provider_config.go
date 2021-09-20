@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"context"
@@ -13,11 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -146,7 +143,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandEksOidcIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
-	id := tfeks.IdentityProviderConfigCreateResourceID(clusterName, configName)
+	id := IdentityProviderConfigCreateResourceID(clusterName, configName)
 
 	input := &eks.AssociateIdentityProviderConfigInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -166,7 +163,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(id)
 
-	_, err = waiter.waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate))
+	_, err = waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.Errorf("error waiting for EKS Identity Provider Config (%s) association: %s", d.Id(), err)
@@ -180,13 +177,13 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(d.Id())
+	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	oidc, err := finder.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
+	oidc, err := FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Identity Provider Config (%s) not found, removing from state", d.Id())
@@ -237,7 +234,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
-	clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(d.Id())
+	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -248,7 +245,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &eks.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(tfeks.IdentityProviderConfigTypeOIDC),
+			Type: aws.String(IdentityProviderConfigTypeOIDC),
 		},
 	})
 
@@ -264,7 +261,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
-	_, err = waiter.waitOIDCIdentityProviderConfigDeleted(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutDelete))
+	_, err = waitOIDCIdentityProviderConfigDeleted(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.Errorf("error waiting for EKS Identity Provider Config (%s) disassociation: %s", d.Id(), err)
