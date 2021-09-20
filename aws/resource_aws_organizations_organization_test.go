@@ -291,7 +291,7 @@ func testAccCheckAwsOrganizationsOrganizationDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeOrganization(params)
 
-		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 			return nil
 		}
 

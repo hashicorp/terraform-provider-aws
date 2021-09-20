@@ -171,7 +171,7 @@ func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeAccount(params)
 
-		if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
 			return nil
 		}
 

@@ -166,10 +166,10 @@ func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) e
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 				continue
 			}
-			if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
 				continue
 			}
 			return err
@@ -199,7 +199,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organiza
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
 				return fmt.Errorf("Organizational Unit %q does not exist", rs.Primary.ID)
 			}
 			return err
