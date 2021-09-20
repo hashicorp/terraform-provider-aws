@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
@@ -67,7 +68,7 @@ func resourceAwsChimeVoiceConnectorTermination() *schema.Resource {
 }
 
 func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -104,7 +105,7 @@ func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *sch
 }
 
 func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.GetVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -143,7 +144,7 @@ func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schem
 }
 
 func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
 		termination := &chime.Termination{
@@ -176,7 +177,7 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 }
 
 func resourceAwsChimeVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),
