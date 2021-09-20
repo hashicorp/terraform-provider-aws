@@ -205,7 +205,7 @@ func resourceAwsDynamoDbGlobalTableRetrieve(d *schema.ResourceData, meta interfa
 
 	output, err := dynamodbconn.DescribeGlobalTable(input)
 	if err != nil {
-		if isAWSErr(err, dynamodb.ErrCodeGlobalTableNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeGlobalTableNotFoundException, "") {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DynamoDB Global Table: %s", err)

@@ -395,24 +395,24 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		var err error
 		output, err = conn.CreateTable(req)
 		if err != nil {
-			if isAWSErr(err, "ThrottlingException", "") {
+			if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
 				return resource.RetryableError(err)
 			}
 			// AWS GovCloud (US) and others may reply with the following until their API is updated:
 			// ValidationException: One or more parameter values were invalid: Unsupported input parameter BillingMode
-			if isAWSErr(err, "ValidationException", "Unsupported input parameter BillingMode") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter BillingMode") {
 				req.BillingMode = nil
 				return resource.RetryableError(err)
 			}
 			// AWS GovCloud (US) and others may reply with the following until their API is updated:
 			// ValidationException: Unsupported input parameter Tags
-			if isAWSErr(err, "ValidationException", "Unsupported input parameter Tags") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter Tags") {
 				req.Tags = nil
 				requiresTagging = true
 				return resource.RetryableError(err)
@@ -423,7 +423,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateTable(req)
 	}
 
@@ -796,7 +796,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 
 	err := deleteDynamoDbTable(d.Id(), conn)
 	if err != nil {
-		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
+		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 			return nil
 		}
 		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
@@ -852,13 +852,13 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 		err := resource.Retry(waiter.ReplicaUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
-				if isAWSErr(err, "ThrottlingException", "") {
+				if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
 					return resource.RetryableError(err)
 				}
 
@@ -867,7 +867,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateTable(input)
 		}
 
@@ -924,14 +924,14 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		_, err := conn.UpdateContinuousBackups(input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
-			if isAWSErr(err, dynamodb.ErrCodeContinuousBackupsUnavailableException, "Backups are being enabled") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeContinuousBackupsUnavailableException, "Backups are being enabled") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.UpdateContinuousBackups(input)
 	}
 	if err != nil {
@@ -1085,7 +1085,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
 				return resource.RetryableError(err)
 			}
 			// This handles multiple scenarios in the DynamoDB API:
@@ -1093,10 +1093,10 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
 			// 2. Removing a table from a DynamoDB global table may return:
 			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
-			if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 				return resource.NonRetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -1104,7 +1104,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteTable(input)
 	}
 
@@ -1146,13 +1146,13 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateTable(input)
 				if err != nil {
-					if isAWSErr(err, "ThrottlingException", "") {
+					if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
 						return resource.RetryableError(err)
 					}
-					if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 						return resource.RetryableError(err)
 					}
-					if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
+					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
 						return resource.RetryableError(err)
 					}
 
@@ -1161,7 +1161,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 				return nil
 			})
 
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.UpdateTable(input)
 			}
 
