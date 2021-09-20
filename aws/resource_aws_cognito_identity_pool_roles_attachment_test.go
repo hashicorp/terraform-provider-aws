@@ -211,7 +211,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy(s *terraform.State
 		})
 
 		if err != nil {
-			if isAWSErr(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
