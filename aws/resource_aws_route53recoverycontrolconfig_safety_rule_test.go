@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSRoute53RecoveryControlConfigSafetyRule_assertionRule(t *testing.T) {
@@ -96,7 +97,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_gatingRule(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_safety_rule" {
@@ -124,7 +125,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(name string) re
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(rs.Primary.ID),

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 }
 
 func resourceAwsRoute53RecoveryControlConfigRoutingControlCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.CreateRoutingControlInput{
 		ClientToken:        aws.String(resource.UniqueId()),
@@ -82,7 +83,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlCreate(d *schema.Resou
 }
 
 func resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeRoutingControlInput{
 		RoutingControlArn: aws.String(d.Id()),
@@ -114,7 +115,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d *schema.Resourc
 }
 
 func resourceAwsRoute53RecoveryControlConfigRoutingControlUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.UpdateRoutingControlInput{
 		RoutingControlName: aws.String(d.Get("name").(string)),
@@ -131,7 +132,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlUpdate(d *schema.Resou
 }
 
 func resourceAwsRoute53RecoveryControlConfigRoutingControlDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteRoutingControlInput{
 		RoutingControlArn: aws.String(d.Id()),

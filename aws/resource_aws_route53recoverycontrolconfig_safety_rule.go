@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
@@ -120,7 +121,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleCreate(d *schema.ResourceD
 }
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
@@ -202,7 +203,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleUpdate(d *schema.ResourceD
 }
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
@@ -232,7 +233,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceD
 }
 
 func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	assertionRule := &r53rcc.NewAssertionRule{
 		Name:             aws.String(d.Get("name").(string)),
@@ -268,7 +269,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 }
 
 func createGatingRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	gatingRule := &r53rcc.NewGatingRule{
 		Name:            aws.String(d.Get("name").(string)),
@@ -305,7 +306,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	assertionRuleUpdate := &r53rcc.AssertionRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),
@@ -333,7 +334,7 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	gatingRuleUpdate := &r53rcc.GatingRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),

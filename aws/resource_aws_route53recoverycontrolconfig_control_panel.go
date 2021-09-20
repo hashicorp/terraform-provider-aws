@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
 }
 
 func resourceAwsRoute53RecoveryControlConfigControlPanelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.CreateControlPanelInput{
 		ClientToken:      aws.String(resource.UniqueId()),
@@ -81,7 +82,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelCreate(d *schema.Resourc
 }
 
 func resourceAwsRoute53RecoveryControlConfigControlPanelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
@@ -115,7 +116,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelRead(d *schema.ResourceD
 }
 
 func resourceAwsRoute53RecoveryControlConfigControlPanelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.UpdateControlPanelInput{
 		ControlPanelName: aws.String(d.Get("name").(string)),
@@ -132,7 +133,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelUpdate(d *schema.Resourc
 }
 
 func resourceAwsRoute53RecoveryControlConfigControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
