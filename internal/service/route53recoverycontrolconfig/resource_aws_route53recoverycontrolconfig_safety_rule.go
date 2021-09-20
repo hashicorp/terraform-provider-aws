@@ -1,4 +1,4 @@
-package aws
+package route53recoverycontrolconfig
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -221,7 +220,7 @@ func resourceSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %s", err)
 	}
 
-	_, err = waiter.waitRoute53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
+	_, err = waitRoute53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
@@ -263,7 +262,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waiter.waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
+	if _, err := waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -300,7 +299,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waiter.waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
+	if _, err := waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 

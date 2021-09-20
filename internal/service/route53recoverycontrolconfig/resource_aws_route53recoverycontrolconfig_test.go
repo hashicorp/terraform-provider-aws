@@ -1,4 +1,4 @@
-package aws
+package route53recoverycontrolconfig_test
 
 import (
 	"testing"

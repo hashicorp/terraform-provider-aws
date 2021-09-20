@@ -1,4 +1,4 @@
-package aws
+package route53recoverycontrolconfig
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -77,7 +76,7 @@ func resourceRoutingControlCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(result.RoutingControlArn))
 
-	if _, err := waiter.waitRoute53RecoveryControlConfigRoutingControlCreated(conn, d.Id()); err != nil {
+	if _, err := waitRoute53RecoveryControlConfigRoutingControlCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -150,7 +149,7 @@ func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Routing Control: %w", err)
 	}
 
-	_, err = waiter.waitRoute53RecoveryControlConfigRoutingControlDeleted(conn, d.Id())
+	_, err = waitRoute53RecoveryControlConfigRoutingControlDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil

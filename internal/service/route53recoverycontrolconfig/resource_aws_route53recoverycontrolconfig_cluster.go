@@ -1,4 +1,4 @@
-package aws
+package route53recoverycontrolconfig
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,7 +78,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	result := output.Cluster
 	d.SetId(aws.StringValue(result.ClusterArn))
 
-	if _, err := waiter.waitRoute53RecoveryControlConfigClusterCreated(conn, d.Id()); err != nil {
+	if _, err := waitRoute53RecoveryControlConfigClusterCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -138,7 +137,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Cluster: %s", err)
 	}
 
-	_, err = waiter.waitRoute53RecoveryControlConfigClusterDeleted(conn, d.Id())
+	_, err = waitRoute53RecoveryControlConfigClusterDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
