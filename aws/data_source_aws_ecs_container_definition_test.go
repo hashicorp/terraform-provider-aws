@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_containter_definition_%s", rString)
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
