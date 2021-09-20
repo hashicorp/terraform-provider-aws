@@ -60,7 +60,7 @@ func testSweepSagemakerCodeRepositories(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
+func TestAccSageMakerCodeRepository_basic(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_code_repository.test"
@@ -90,7 +90,7 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
+func TestAccSageMakerCodeRepository_Git_branch(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_code_repository.test"
@@ -121,7 +121,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
+func TestAccSageMakerCodeRepository_Git_secret(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_code_repository.test"
@@ -163,7 +163,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
+func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_code_repository.test"

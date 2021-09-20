@@ -73,7 +73,7 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
+func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -146,7 +146,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig(t *testing.T) {
+func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -192,7 +192,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
+func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"

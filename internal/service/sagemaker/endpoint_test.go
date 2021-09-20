@@ -60,7 +60,7 @@ func testSweepSagemakerEndpoints(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerEndpoint_basic(t *testing.T) {
+func TestAccSageMakerEndpoint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -87,7 +87,7 @@ func TestAccAWSSagemakerEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpoint_EndpointConfigName(t *testing.T) {
+func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_sagemaker_endpoint.test"
@@ -123,7 +123,7 @@ func TestAccAWSSagemakerEndpoint_EndpointConfigName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpoint_Tags(t *testing.T) {
+func TestAccSageMakerEndpoint_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint.test"
 

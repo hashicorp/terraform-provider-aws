@@ -67,7 +67,7 @@ func testSweepSagemakerEndpointConfigurations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -102,7 +102,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_productionVariants_InitialVariantWeight(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeight(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -129,7 +129,7 @@ func TestAccAWSSagemakerEndpointConfiguration_productionVariants_InitialVariantW
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_productionVariants_AcceleratorType(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -155,7 +155,7 @@ func TestAccAWSSagemakerEndpointConfiguration_productionVariants_AcceleratorType
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -181,7 +181,7 @@ func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_tags(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -225,7 +225,7 @@ func TestAccAWSSagemakerEndpointConfiguration_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -258,7 +258,7 @@ func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -281,7 +281,7 @@ func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_async(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -313,7 +313,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_async_notifConfig(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -346,7 +346,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async_notifConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_async_client(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 

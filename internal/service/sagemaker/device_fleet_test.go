@@ -62,7 +62,7 @@ func testSweepSagemakerDeviceFleets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerDeviceFleet_basic(t *testing.T) {
+func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_device_fleet.test"
@@ -96,7 +96,7 @@ func TestAccAWSSagemakerDeviceFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDeviceFleet_description(t *testing.T) {
+func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_device_fleet.test"
@@ -130,7 +130,7 @@ func TestAccAWSSagemakerDeviceFleet_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDeviceFleet_tags(t *testing.T) {
+func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_device_fleet.test"
@@ -175,7 +175,7 @@ func TestAccAWSSagemakerDeviceFleet_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDeviceFleet_disappears(t *testing.T) {
+func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_device_fleet.test"
