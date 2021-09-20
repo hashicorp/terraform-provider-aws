@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 }
 
 func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
 
@@ -105,7 +106,7 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{}) error {
 	var t *applicationautoscaling.ScalableTarget
 
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	namespace := d.Get("service_namespace").(string)
 	dimension := d.Get("scalable_dimension").(string)
@@ -145,7 +146,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Get("resource_id").(string)),

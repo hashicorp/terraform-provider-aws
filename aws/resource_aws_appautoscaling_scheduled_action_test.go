@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/applicationautoscaling/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAppautoscalingScheduledAction_DynamoDB(t *testing.T) {
@@ -550,7 +551,7 @@ func TestAccAWSAppautoscalingScheduledAction_MaxCapacity(t *testing.T) {
 }
 
 func testAccCheckAwsAppautoscalingScheduledActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appautoscaling_scheduled_action" {
@@ -584,7 +585,7 @@ func testAccCheckAwsAppautoscalingScheduledActionExists(name string, obj *applic
 			return fmt.Errorf("Application Autoscaling scheduled action (%s) ID not set", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appautoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
 		sa, err := finder.ScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
 		if err != nil {
