@@ -1,4 +1,4 @@
-package aws
+package simpledb_test
 
 import (
 	"fmt"
