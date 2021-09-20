@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
@@ -165,7 +166,7 @@ func TestAccAWSRedshiftParameterGroup_withTags(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_parameter_group" {
@@ -209,7 +210,7 @@ func testAccCheckAWSRedshiftParameterGroupExists(n string, v *redshift.ClusterPa
 			return fmt.Errorf("No Redshift Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 		opts := redshift.DescribeClusterParameterGroupsInput{
 			ParameterGroupName: aws.String(rs.Primary.ID),
