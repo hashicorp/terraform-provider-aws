@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/macie2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceMember() *schema.Resource {
@@ -38,8 +39,8 @@ func ResourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -95,7 +96,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	accountId := d.Get("account_id").(string)
 	input := &macie2.CreateMemberInput{
@@ -217,7 +218,7 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
-	tags := keyvaluetags.Macie2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Macie2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags", d.Id(), err))
