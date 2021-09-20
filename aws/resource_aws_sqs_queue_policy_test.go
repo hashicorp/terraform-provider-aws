@@ -19,7 +19,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,14 +54,14 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSQSPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSqsQueuePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSqsQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,14 +77,14 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSQSPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), queueResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSqsQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccAWSSQSQueuePolicy_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{

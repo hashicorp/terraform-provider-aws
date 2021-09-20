@@ -38,7 +38,7 @@ func init() {
 }
 
 func testSweepSqsQueues(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -67,7 +67,7 @@ func testSweepSqsQueues(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SQS Queue sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -87,7 +87,7 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,14 +131,14 @@ func TestAccAWSSQSQueue_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSqsQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,7 +152,7 @@ func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -209,7 +209,7 @@ func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +237,7 @@ func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func TestAccAWSSQSQueue_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -311,7 +311,7 @@ func TestAccAWSSQSQueue_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -377,7 +377,7 @@ func TestAccAWSSQSQueue_Policy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -409,14 +409,14 @@ func TestAccAWSSQSQueue_RecentlyDeleted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSqsQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -438,7 +438,7 @@ func TestAccAWSSQSQueue_RedrivePolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -467,7 +467,7 @@ func TestAccAWSSQSQueue_FIFOQueue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -494,7 +494,7 @@ func TestAccAWSSQSQueue_FIFOQueue_ExpectNameError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -513,7 +513,7 @@ func TestAccAWSSQSQueue_FIFOQueue_ContentBasedDeduplication(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -541,7 +541,7 @@ func TestAccAWSSQSQueue_FIFOQueue_HighThroughputMode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -577,7 +577,7 @@ func TestAccAWSSQSQueue_StandardQueue_ExpectContentBasedDeduplicationError(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -596,7 +596,7 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -632,7 +632,7 @@ func TestAccAWSSQSQueue_ZeroVisibilityTimeoutSeconds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -660,7 +660,7 @@ func TestAccAWSSQSQueue_DefaultKmsDataKeyReusePeriodSeconds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -729,7 +729,7 @@ func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) re
 			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sqsconn
+		conn := acctest.Provider.Meta().(*AWSClient).sqsconn
 
 		output, err := finder.QueueAttributesByURL(conn, rs.Primary.ID)
 
@@ -744,7 +744,7 @@ func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) re
 }
 
 func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sqsconn
+	conn := acctest.Provider.Meta().(*AWSClient).sqsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sqs_queue" {
