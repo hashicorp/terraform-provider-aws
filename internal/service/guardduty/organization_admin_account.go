@@ -59,7 +59,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, d.Id())
+	adminAccount, err := GetOrganizationAdminAccount(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading GuardDuty Organization Admin Account (%s): %w", d.Id(), err)
@@ -96,7 +96,7 @@ func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func getGuardDutyOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
+func GetOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
 	input := &guardduty.ListOrganizationAdminAccountsInput{}
 	var result *guardduty.AdminAccount
 

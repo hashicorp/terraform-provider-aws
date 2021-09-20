@@ -118,7 +118,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
+	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
+	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
+	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func guardDutyIpsetRefreshStatusFunc(conn *guardduty.GuardDuty, ipSetID, detecto
 	}
 }
 
-func decodeGuardDutyIpsetID(id string) (ipsetID, detectorID string, err error) {
+func DecodeIPSetID(id string) (ipsetID, detectorID string, err error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
 		err = fmt.Errorf("GuardDuty IPSet ID must be of the form <Detector ID>:<IPSet ID>, was provided: %s", id)

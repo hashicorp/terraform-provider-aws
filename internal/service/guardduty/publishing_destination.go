@@ -85,7 +85,7 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
+	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
 
 	if errStateRead != nil {
 		return errStateRead
@@ -117,7 +117,7 @@ func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{})
 func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
+	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
 
 	if errStateRead != nil {
 		return errStateRead
@@ -144,7 +144,7 @@ func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{
 func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
+	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
 
 	if errStateRead != nil {
 		return errStateRead
@@ -169,7 +169,7 @@ func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func decodeGuardDutyPublishDestinationID(id string) (destinationID, detectorID string, err error) {
+func DecodePublishDestinationID(id string) (destinationID, detectorID string, err error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
 		err = fmt.Errorf("GuardDuty Publishing Destination ID must be of the form <Detector ID>:<Publishing Destination ID>, was provided: %s", id)

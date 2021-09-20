@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
@@ -48,7 +49,7 @@ func testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy(s *terraform.State)
 			continue
 		}
 
-		adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "organization is not in use") {
 			continue
@@ -77,7 +78,7 @@ func testAccCheckAwsGuardDutyOrganizationAdminAccountExists(resourceName string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
-		adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, rs.Primary.ID)
+		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

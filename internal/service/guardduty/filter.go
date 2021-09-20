@@ -167,7 +167,7 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("detector_id"); !ok {
 		// If there is no "detector_id" passed, then it's an import.
-		detectorID, name, err = guardDutyFilterParseID(d.Id())
+		detectorID, name, err = FilterParseID(d.Id())
 		if err != nil {
 			return err
 		}
@@ -294,7 +294,7 @@ func guardDutyFilterCreateID(detectorID, filterName string) string {
 	return detectorID + guardDutyFilterIDSeparator + filterName
 }
 
-func guardDutyFilterParseID(importedId string) (string, string, error) {
+func FilterParseID(importedId string) (string, string, error) {
 	parts := strings.Split(importedId, guardDutyFilterIDSeparator)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)

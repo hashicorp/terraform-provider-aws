@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
@@ -184,7 +185,7 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,7 +201,7 @@ func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		detectorID, filterName, err := guardDutyFilterParseID(rs.Primary.ID)
+		detectorID, filterName, err := tfguardduty.FilterParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -235,7 +236,7 @@ func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilt
 			return fmt.Errorf("No GuardDuty filter is set")
 		}
 
-		detectorID, name, err := guardDutyFilterParseID(rs.Primary.ID)
+		detectorID, name, err := tfguardduty.FilterParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
