@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepGlueTriggers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -49,7 +49,7 @@ func testSweepGlueTriggers(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Trigger sweep for %s: %s", region, err)
 			return nil
 		}
@@ -68,7 +68,7 @@ func TestAccAWSGlueTrigger_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAWSGlueTrigger_Crawler(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccAWSGlueTrigger_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,7 +192,7 @@ func TestAccAWSGlueTrigger_Enabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccAWSGlueTrigger_Predicate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -279,7 +279,7 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -315,7 +315,7 @@ func TestAccAWSGlueTrigger_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -362,7 +362,7 @@ func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -391,7 +391,7 @@ func TestAccAWSGlueTrigger_actions_notify(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -443,7 +443,7 @@ func TestAccAWSGlueTrigger_actions_securityConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -474,7 +474,7 @@ func TestAccAWSGlueTrigger_onDemandDisable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -520,14 +520,14 @@ func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueTriggerConfig_OnDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueTrigger(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -546,7 +546,7 @@ func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger
 			return fmt.Errorf("No Glue Trigger ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := finder.TriggerByName(conn, rs.Primary.ID)
 		if err != nil {
@@ -572,7 +572,7 @@ func testAccCheckAWSGlueTriggerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := finder.TriggerByName(conn, rs.Primary.ID)
 

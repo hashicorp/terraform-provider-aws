@@ -22,7 +22,7 @@ func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName string, set
 			return fmt.Errorf("No Glue Data Catalog Encryption Settings ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
 			CatalogId: aws.String(rs.Primary.ID),

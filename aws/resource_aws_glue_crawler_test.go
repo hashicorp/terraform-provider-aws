@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepGlueCrawlers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -51,7 +51,7 @@ func testSweepGlueCrawlers(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Crawler sweep for %s: %s", region, err)
 			return nil
 		}
@@ -69,7 +69,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +137,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget_scanAll(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,7 +181,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget_scanRate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -299,7 +299,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -342,7 +342,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -403,7 +403,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -445,7 +445,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -497,7 +497,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -553,7 +553,7 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -622,7 +622,7 @@ func TestAccAWSGlueCrawler_S3Target_ConnectionName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -651,7 +651,7 @@ func TestAccAWSGlueCrawler_S3Target_SampleSize(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -687,7 +687,7 @@ func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -728,7 +728,7 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -782,7 +782,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -855,7 +855,7 @@ func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -911,14 +911,14 @@ func TestAccAWSGlueCrawler_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueCrawler(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCrawler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -934,7 +934,7 @@ func TestAccAWSGlueCrawler_Classifiers(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -981,7 +981,7 @@ func TestAccAWSGlueCrawler_Configuration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1022,7 +1022,7 @@ func TestAccAWSGlueCrawler_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1057,7 +1057,7 @@ func TestAccAWSGlueCrawler_Role_ARN_NoPath(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1084,7 +1084,7 @@ func TestAccAWSGlueCrawler_Role_ARN_Path(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1111,7 +1111,7 @@ func TestAccAWSGlueCrawler_Role_Name_Path(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1138,7 +1138,7 @@ func TestAccAWSGlueCrawler_Schedule(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1179,7 +1179,7 @@ func TestAccAWSGlueCrawler_SchemaChangePolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1217,7 +1217,7 @@ func TestAccAWSGlueCrawler_TablePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1251,7 +1251,7 @@ func TestAccAWSGlueCrawler_RemoveTablePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1285,7 +1285,7 @@ func TestAccAWSGlueCrawler_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1330,7 +1330,7 @@ func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1364,7 +1364,7 @@ func TestAccAWSGlueCrawler_lineageConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1407,7 +1407,7 @@ func TestAccAWSGlueCrawler_recrawlPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1453,7 +1453,7 @@ func testAccCheckAWSGlueCrawlerExists(resourceName string, crawler *glue.Crawler
 			return fmt.Errorf("no ID is set")
 		}
 
-		glueConn := testAccProvider.Meta().(*AWSClient).glueconn
+		glueConn := acctest.Provider.Meta().(*AWSClient).glueconn
 		out, err := glueConn.GetCrawler(&glue.GetCrawlerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -1478,7 +1478,7 @@ func testAccCheckAWSGlueCrawlerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		output, err := conn.GetCrawler(&glue.GetCrawlerInput{
 			Name: aws.String(rs.Primary.ID),
 		})

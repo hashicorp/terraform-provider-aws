@@ -21,7 +21,7 @@ func init() {
 }
 
 func testSweepGlueWorkflow(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -30,7 +30,7 @@ func testSweepGlueWorkflow(region string) error {
 	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
-		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping Glue Workflow sweep for %s: %s", region, err)
 			return nil
 		}
@@ -54,7 +54,7 @@ func TestAccAWSGlueWorkflow_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func TestAccAWSGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +126,7 @@ func TestAccAWSGlueWorkflow_DefaultRunProperties(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccAWSGlueWorkflow_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSGlueWorkflow_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -236,14 +236,14 @@ func TestAccAWSGlueWorkflow_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueWorkflowConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueWorkflowExists(resourceName, &workflow),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueWorkflow(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -252,7 +252,7 @@ func TestAccAWSGlueWorkflow_disappears(t *testing.T) {
 }
 
 func testAccPreCheckAWSGlueWorkflow(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 	_, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 
@@ -277,7 +277,7 @@ func testAccCheckAWSGlueWorkflowExists(resourceName string, workflow *glue.Workf
 			return fmt.Errorf("No Glue Workflow ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetWorkflow(&glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),
@@ -305,7 +305,7 @@ func testAccCheckAWSGlueWorkflowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetWorkflow(&glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),

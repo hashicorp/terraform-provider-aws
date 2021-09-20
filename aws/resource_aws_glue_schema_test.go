@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepGlueSchema(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -31,7 +31,7 @@ func testSweepGlueSchema(region string) error {
 	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
 			return nil
 		}
@@ -61,7 +61,7 @@ func TestAccAWSGlueSchema_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func TestAccAWSGlueSchema_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +135,7 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +169,7 @@ func TestAccAWSGlueSchema_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -215,7 +215,7 @@ func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -254,14 +254,14 @@ func TestAccAWSGlueSchema_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueSchema(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -278,14 +278,14 @@ func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueRegistry(), "aws_glue_registry.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueRegistry(), "aws_glue_registry.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -294,7 +294,7 @@ func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
 }
 
 func testAccPreCheckAWSGlueSchema(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
@@ -319,7 +319,7 @@ func testAccCheckAWSGlueSchemaExists(resourceName string, schema *glue.GetSchema
 			return fmt.Errorf("No Glue Schema ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		output, err := finder.SchemaByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -344,7 +344,7 @@ func testAccCheckAWSGlueSchemaDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		output, err := finder.SchemaByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {

@@ -30,7 +30,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +64,7 @@ func TestAccAWSGlueCatalogTable_columnParameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +95,7 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,7 +232,7 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -346,7 +346,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -367,7 +367,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBl
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -389,7 +389,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -430,7 +430,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationB
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -452,7 +452,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -494,7 +494,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -524,7 +524,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -555,7 +555,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -589,7 +589,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -597,7 +597,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -612,7 +612,7 @@ func TestAccAWSGlueCatalogTable_targetTable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -642,7 +642,7 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -650,7 +650,7 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1104,7 +1104,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 func testAccCheckGlueTableDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_catalog_table" {
@@ -1145,7 +1145,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		out, err := finder.TableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err

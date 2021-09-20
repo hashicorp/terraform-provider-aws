@@ -21,7 +21,7 @@ func init() {
 }
 
 func testSweepGlueConnections(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -48,7 +48,7 @@ func testSweepGlueConnections(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Connection sweep for %s: %s", region, err)
 			return nil
 		}
@@ -69,7 +69,7 @@ func TestAccAWSGlueConnection_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +105,7 @@ func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccAWSGlueConnection_Kafka(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,7 +173,7 @@ func TestAccAWSGlueConnection_Network(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func TestAccAWSGlueConnection_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -246,7 +246,7 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -296,7 +296,7 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -335,14 +335,14 @@ func TestAccAWSGlueConnection_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -361,7 +361,7 @@ func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.C
 			return fmt.Errorf("No Glue Connection ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		catalogID, connectionName, err := decodeGlueConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -394,7 +394,7 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		catalogID, connectionName, err := decodeGlueConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
