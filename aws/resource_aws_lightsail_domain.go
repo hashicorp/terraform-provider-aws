@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLightsailDomain() *schema.Resource {
@@ -30,7 +31,7 @@ func resourceAwsLightsailDomain() *schema.Resource {
 }
 
 func resourceAwsLightsailDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 	_, err := conn.CreateDomain(&lightsail.CreateDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
@@ -45,7 +46,7 @@ func resourceAwsLightsailDomainCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsLightsailDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 	resp, err := conn.GetDomain(&lightsail.GetDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
@@ -67,7 +68,7 @@ func resourceAwsLightsailDomainRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsLightsailDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 	_, err := conn.DeleteDomain(&lightsail.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
@@ -44,7 +45,7 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 		_, err := conn.DetachStaticIp(&lightsail.DetachStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -85,7 +86,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentExists(n string, staticIp *lights
 			return errors.New("No Lightsail Static IP Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -113,7 +114,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
