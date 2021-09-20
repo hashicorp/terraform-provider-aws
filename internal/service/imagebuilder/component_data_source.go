@@ -111,7 +111,7 @@ func dataSourceComponentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
-	if err := d.Set("tags", tftags.ImagebuilderKeyValueTags(component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

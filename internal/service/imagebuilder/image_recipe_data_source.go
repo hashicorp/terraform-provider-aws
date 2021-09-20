@@ -158,7 +158,7 @@ func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner", imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	d.Set("tags", tftags.ImagebuilderKeyValueTags(imageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(imageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 

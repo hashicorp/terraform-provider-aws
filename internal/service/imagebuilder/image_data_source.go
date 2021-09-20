@@ -181,7 +181,7 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("output_resources", nil)
 	}
 
-	d.Set("tags", tftags.ImagebuilderKeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("version", image.Version)
 
 	return nil

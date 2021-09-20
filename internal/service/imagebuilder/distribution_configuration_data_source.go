@@ -140,7 +140,7 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	d.Set("tags", tftags.ImagebuilderKeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	return nil
 }

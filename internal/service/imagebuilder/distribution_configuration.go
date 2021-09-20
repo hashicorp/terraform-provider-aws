@@ -164,7 +164,7 @@ func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interf
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ImagebuilderTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateDistributionConfiguration(input)
@@ -215,7 +215,7 @@ func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interfac
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	tags := tftags.ImagebuilderKeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -256,7 +256,7 @@ func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interf
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Image Builder Distribution Configuration (%s): %w", d.Id(), err)
 		}
 	}
