@@ -1,4 +1,4 @@
-package aws
+package appconfig_test
 
 import (
 	"fmt"
