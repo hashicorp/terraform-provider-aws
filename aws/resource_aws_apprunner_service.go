@@ -736,7 +736,7 @@ func expandAppRunnerServiceImageConfiguration(l []interface{}) *apprunner.ImageC
 	}
 
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
-		result.RuntimeEnvironmentVariables = expandStringMap(v)
+		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
@@ -852,7 +852,7 @@ func expandAppRunnerServiceCodeConfigurationValues(l []interface{}) *apprunner.C
 	}
 
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
-		result.RuntimeEnvironmentVariables = expandStringMap(v)
+		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
