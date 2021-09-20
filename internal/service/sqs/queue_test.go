@@ -52,7 +52,7 @@ func testSweepSqsQueues(region string) error {
 		}
 
 		for _, queueUrl := range page.QueueUrls {
-			r := ResourceQueue()
+			r := tfsqs.ResourceQueue()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(queueUrl))
 			err = r.Delete(d, client)
@@ -138,7 +138,7 @@ func TestAccAWSSQSQueue_disappears(t *testing.T) {
 				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueue(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -416,7 +416,7 @@ func TestAccAWSSQSQueue_RecentlyDeleted(t *testing.T) {
 				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueue(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -30,7 +30,7 @@ func ResourceQueuePolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		MigrateState:  resourceAwsSqsQueuePolicyMigrateState,
+		MigrateState:  QueuePolicyMigrateState,
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{

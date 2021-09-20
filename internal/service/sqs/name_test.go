@@ -1,6 +1,7 @@
 package sqs_test
 
 import (
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"testing"
 )
 
@@ -39,7 +40,7 @@ func TestQueueNameFromURL(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got, err := QueueNameFromURL(testCase.URL)
+			got, err := tfsqs.QueueNameFromURL(testCase.URL)
 
 			if err != nil && !testCase.ExpectError {
 				t.Errorf("got unexpected error: %s", err)
