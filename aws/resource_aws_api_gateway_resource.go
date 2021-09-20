@@ -85,7 +85,7 @@ func resourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Resource (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -147,7 +147,7 @@ func resourceAwsApiGatewayResourceDelete(d *schema.ResourceData, meta interface{
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

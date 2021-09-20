@@ -73,7 +73,7 @@ func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interfac
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 API mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -121,7 +121,7 @@ func resourceAwsApiGatewayV2ApiMappingDelete(d *schema.ResourceData, meta interf
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

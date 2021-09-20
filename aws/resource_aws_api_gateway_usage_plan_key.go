@@ -92,7 +92,7 @@ func resourceAwsApiGatewayUsagePlanKeyRead(d *schema.ResourceData, meta interfac
 		KeyId:       aws.String(d.Get("key_id").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Usage Plan Key (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -115,7 +115,7 @@ func resourceAwsApiGatewayUsagePlanKeyDelete(d *schema.ResourceData, meta interf
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 		KeyId:       aws.String(d.Get("key_id").(string)),
 	})
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

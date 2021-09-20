@@ -87,7 +87,7 @@ func resourceAwsApiGatewayRequestValidatorRead(d *schema.ResourceData, meta inte
 
 	out, err := conn.GetRequestValidator(&input)
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Request Validator (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

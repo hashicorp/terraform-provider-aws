@@ -168,7 +168,7 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 
 	authorizer, err := conn.GetAuthorizer(&input)
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] No API Gateway Authorizer found: %s", input)
 			d.SetId("")
 			return nil

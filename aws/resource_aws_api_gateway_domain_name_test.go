@@ -384,7 +384,7 @@ func testAccCheckAWSAPIGatewayDomainNameDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

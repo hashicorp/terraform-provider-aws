@@ -39,7 +39,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteRestApi(input)
 				if err != nil {
-					if isAWSErr(err, apigateway.ErrCodeTooManyRequestsException, "") {
+					if tfawserr.ErrMessageContains(err, apigateway.ErrCodeTooManyRequestsException, "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -227,7 +227,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 						},
 					})
 					if err != nil {
-						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type EDGE is not supported in this region") {
+						if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type EDGE is not supported in this region") {
 							t.Skip("Region does not support EDGE endpoint type")
 						}
 						t.Fatal(err)
@@ -276,7 +276,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 						},
 					})
 					if err != nil {
-						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
+						if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
 							t.Skip("Region does not support PRIVATE endpoint type")
 						}
 						t.Fatal(err)

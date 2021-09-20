@@ -77,7 +77,7 @@ func resourceAwsApiGatewayRestApiPolicyRead(d *schema.ResourceData, meta interfa
 	api, err := conn.GetRestApi(&apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway REST API Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
