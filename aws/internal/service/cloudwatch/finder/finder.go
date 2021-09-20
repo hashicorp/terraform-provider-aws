@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func CompositeAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.CompositeAlarm, error) {
+func FindCompositeAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.CompositeAlarm, error) {
 	input := cloudwatch.DescribeAlarmsInput{
 		AlarmNames: aws.StringSlice([]string{name}),
 		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeCompositeAlarm}),
@@ -26,7 +26,7 @@ func CompositeAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, name
 	return output.CompositeAlarms[0], nil
 }
 
-func MetricAlarmByName(conn *cloudwatch.CloudWatch, name string) (*cloudwatch.MetricAlarm, error) {
+func FindMetricAlarmByName(conn *cloudwatch.CloudWatch, name string) (*cloudwatch.MetricAlarm, error) {
 	input := cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []*string{aws.String(name)},
 		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeMetricAlarm}),

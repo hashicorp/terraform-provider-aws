@@ -160,7 +160,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := waiter.MetricStreamReady(ctx, conn, d.Id())
+	output, err := waiter.WaitMetricStreamReady(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
@@ -229,7 +229,7 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error deleting CloudWatch MetricStream: %s", err))
 	}
 
-	if _, err := waiter.MetricStreamDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waiter.WaitMetricStreamDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error while waiting for CloudWatch Metric Stream (%s) to become deleted: %w", d.Id(), err))
 	}
 

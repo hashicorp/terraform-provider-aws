@@ -308,7 +308,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.MetricAlarmByName(conn, d.Id())
+	resp, err := finder.FindMetricAlarmByName(conn, d.Id())
 	if err != nil {
 		return err
 	}

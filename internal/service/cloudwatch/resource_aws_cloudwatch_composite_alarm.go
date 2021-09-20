@@ -116,7 +116,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Id()
 
-	alarm, err := finder.CompositeAlarmByName(ctx, conn, name)
+	alarm, err := finder.FindCompositeAlarmByName(ctx, conn, name)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
 		log.Printf("[WARN] CloudWatch Composite Alarm %s not found, removing from state", name)
 		d.SetId("")

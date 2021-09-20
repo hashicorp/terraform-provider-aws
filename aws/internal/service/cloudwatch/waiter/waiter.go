@@ -17,14 +17,14 @@ const (
 	StateStopped = "stopped"
 )
 
-func MetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
+func WaitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			StateRunning,
 			StateStopped,
 		},
 		Target:  []string{},
-		Refresh: MetricStreamState(ctx, conn, name),
+		Refresh: StatusMetricStreamState(ctx, conn, name),
 		Timeout: MetricStreamDeleteTimeout,
 	}
 
@@ -37,7 +37,7 @@ func MetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, name 
 	return nil, err
 }
 
-func MetricStreamReady(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
+func WaitMetricStreamReady(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			StateStopped,
@@ -45,7 +45,7 @@ func MetricStreamReady(ctx context.Context, conn *cloudwatch.CloudWatch, name st
 		Target: []string{
 			StateRunning,
 		},
-		Refresh: MetricStreamState(ctx, conn, name),
+		Refresh: StatusMetricStreamState(ctx, conn, name),
 		Timeout: MetricStreamReadyTimeout,
 	}
 

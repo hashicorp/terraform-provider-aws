@@ -421,7 +421,7 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
-		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
+		resp, err := finder.FindMetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -442,7 +442,7 @@ func testAccCheckAWSCloudWatchMetricAlarmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
+		resp, err := finder.FindMetricAlarmByName(conn, rs.Primary.ID)
 		if err == nil {
 			if resp != nil && aws.StringValue(resp.AlarmName) == rs.Primary.ID {
 				return fmt.Errorf("Alarm Still Exists: %s", rs.Primary.ID)
