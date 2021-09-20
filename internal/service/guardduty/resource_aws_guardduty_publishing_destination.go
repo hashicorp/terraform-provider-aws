@@ -73,7 +73,7 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
 
-	_, err = waiter.PublishingDestinationCreated(conn, aws.StringValue(output.DestinationId), detectorID)
+	_, err = waiter.waitPublishingDestinationCreated(conn, aws.StringValue(output.DestinationId), detectorID)
 
 	if err != nil {
 		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %w",

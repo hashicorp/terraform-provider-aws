@@ -211,7 +211,7 @@ func resourceDetectorDelete(d *schema.ResourceData, meta interface{}) error {
 		DetectorId: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.MembershipPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.membershipPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteDetector(input)
 
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {

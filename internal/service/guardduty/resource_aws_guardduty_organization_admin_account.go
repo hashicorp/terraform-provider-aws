@@ -51,7 +51,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(adminAccountID)
 
-	if _, err := waiter.AdminAccountEnabled(conn, d.Id()); err != nil {
+	if _, err := waiter.waitAdminAccountEnabled(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
@@ -91,7 +91,7 @@ func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error disabling GuardDuty Organization Admin Account (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.AdminAccountNotFound(conn, d.Id()); err != nil {
+	if _, err := waiter.waitAdminAccountNotFound(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to disable: %w", d.Id(), err)
 	}
 
