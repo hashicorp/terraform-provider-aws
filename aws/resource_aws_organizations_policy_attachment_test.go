@@ -8,13 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organization.test"
@@ -23,8 +24,8 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -54,14 +55,14 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 }
 
 func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -83,14 +84,14 @@ func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
 }
 
 func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{

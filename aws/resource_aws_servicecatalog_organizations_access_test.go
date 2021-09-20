@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
@@ -15,11 +16,11 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsEnabledPreCheck(t)
-			testAccOrganizationManagementAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogOrganizationsAccessDestroy,
 		Steps: []resource.TestStep{

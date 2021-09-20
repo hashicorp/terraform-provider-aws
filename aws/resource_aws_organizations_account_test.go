@@ -6,29 +6,30 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsOrganizationsAccount_basic(t *testing.T) {
-	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		acctest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
@@ -38,7 +39,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_method"),
-					testAccCheckResourceAttrRfc3339("aws_organizations_account.test", "joined_timestamp"),
+					acctest.CheckResourceAttrRFC3339("aws_organizations_account.test", "joined_timestamp"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "parent_id"),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "name", name),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "email", email),
@@ -56,17 +57,17 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 }
 
 func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
-	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		acctest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 	resourceName := "aws_organizations_account.test"
@@ -74,8 +75,8 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 	parentIdResourceName2 := "aws_organizations_organizational_unit.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
@@ -103,24 +104,24 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 }
 
 func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
-	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		acctest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 	resourceName := "aws_organizations_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -16,8 +17,8 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
@@ -29,12 +30,12 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.arn", resourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.email", resourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.id", resourceName, "master_account_id"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`organization/o-.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`organization/o-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
-					testAccMatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexp.MustCompile(`.+@.+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexp.MustCompile(`r-[a-z0-9]{4,32}`)),
@@ -57,8 +58,8 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
@@ -101,8 +102,8 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
@@ -186,8 +187,8 @@ func testAccAwsOrganizationsOrganization_FeatureSet(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
@@ -212,8 +213,8 @@ func testAccAwsOrganizationsOrganization_FeatureSetForcesNew(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
@@ -246,8 +247,8 @@ func testAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{

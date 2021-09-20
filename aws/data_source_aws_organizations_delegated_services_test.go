@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsOrganizationsDelegatedServices_basic(t *testing.T) {
@@ -17,18 +18,18 @@ func TestAccDataSourceAwsOrganizationsDelegatedServices_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsOrganizationsDelegatedServicesConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", dataSourceIdentity, "account_id"),
-					testAccCheckResourceAttrRfc3339(dataSourceName, "delegated_services.0.delegation_enabled_date"),
+					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_services.0.delegation_enabled_date"),
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.0.service_principal", servicePrincipal),
 				),
 			},
@@ -43,11 +44,11 @@ func TestAccDataSourceAwsOrganizationsDelegatedServices_empty(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsOrganizationsDelegatedServicesEmptyConfig(),
@@ -69,20 +70,20 @@ func TestAccDataSourceAwsOrganizationsDelegatedServices_multiple(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsOrganizationsDelegatedServicesMultipleConfig(servicePrincipal, servicePrincipal2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", dataSourceIdentity, "account_id"),
-					testAccCheckResourceAttrRfc3339(dataSourceName, "delegated_services.0.delegation_enabled_date"),
+					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_services.0.delegation_enabled_date"),
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.0.service_principal", servicePrincipal),
-					testAccCheckResourceAttrRfc3339(dataSourceName, "delegated_services.1.delegation_enabled_date"),
+					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_services.1.delegation_enabled_date"),
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.1.service_principal", servicePrincipal2),
 				),
 			},
@@ -91,7 +92,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedServices_multiple(t *testing.T) {
 }
 
 func testAccDataSourceAwsOrganizationsDelegatedServicesEmptyConfig() string {
-	return testAccAlternateAccountProviderConfig() + `
+	return acctest.ConfigAlternateAccountProvider() + `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
@@ -103,7 +104,7 @@ data "aws_organizations_delegated_services" "test" {
 }
 
 func testAccDataSourceAwsOrganizationsDelegatedServicesConfig(servicePrincipal string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
@@ -120,7 +121,7 @@ data "aws_organizations_delegated_services" "test" {
 }
 
 func testAccDataSourceAwsOrganizationsDelegatedServicesMultipleConfig(servicePrincipal, servicePrincipal2 string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }

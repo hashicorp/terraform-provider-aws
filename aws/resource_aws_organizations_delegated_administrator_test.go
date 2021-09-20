@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
@@ -20,11 +21,11 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -33,8 +34,8 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
-					testAccCheckResourceAttrRfc3339(resourceName, "delegation_enabled_date"),
-					testAccCheckResourceAttrRfc3339(resourceName, "joined_timestamp"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 				),
 			},
 			{
@@ -54,18 +55,18 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsOrganizationsDelegatedAdministrator(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsOrganizationsDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,7 +161,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 }
 
 func testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }

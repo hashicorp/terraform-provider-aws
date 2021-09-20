@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -13,10 +14,10 @@ func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
