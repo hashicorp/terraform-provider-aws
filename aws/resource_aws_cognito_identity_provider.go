@@ -127,7 +127,7 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 	})
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -210,7 +210,7 @@ func resourceAwsCognitoIdentityProviderDelete(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return err

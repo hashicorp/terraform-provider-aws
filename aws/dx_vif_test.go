@@ -54,7 +54,7 @@ func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
 		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
+		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
 			continue
 		}
 		if err != nil {

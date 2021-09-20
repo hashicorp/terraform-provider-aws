@@ -771,12 +771,12 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		runResp, err = conn.RunInstances(runOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 			log.Print("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
 			return resource.RetryableError(err)
 		}
 		// IAM roles can also take time to propagate in AWS:
-		if isAWSErr(err, "InvalidParameterValue", " has no associated IAM Roles") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
 			log.Print("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
@@ -785,13 +785,13 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		runResp, err = conn.RunInstances(runOpts)
 	}
 	// Warn if the AWS Error involves group ids, to help identify situation
 	// where a user uses group ids in security_groups for the Default VPC.
 	//   See https://github.com/hashicorp/terraform/issues/3798
-	if isAWSErr(err, "InvalidParameterValue", "groupId is invalid") {
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "groupId is invalid") {
 		return fmt.Errorf("Error launching instance, possible mismatch of Security Group IDs and Names. See AWS Instance docs here: %s.\n\n\tAWS Error: %w", "https://terraform.io/docs/providers/aws/r/instance.html", err)
 	}
 	if err != nil {
@@ -890,7 +890,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 			log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -1160,7 +1160,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
+		if err != nil && !tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
 
@@ -1262,14 +1262,14 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
-								if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 									return resource.RetryableError(err)
 								}
 								return resource.NonRetryableError(err)
 							}
 							return nil
 						})
-						if isResourceTimeoutError(err) {
+						if tfresource.TimedOut(err) {
 							_, err = conn.ReplaceIamInstanceProfileAssociation(input)
 						}
 						if err != nil {
@@ -1318,7 +1318,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				// Tolerate InvalidParameterCombination error in Classic, otherwise
 				// return the error
-				if !isAWSErr(err, "InvalidParameterCombination", "") {
+				if !tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "") {
 					return err
 				}
 				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
@@ -1761,7 +1761,7 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1792,7 +1792,7 @@ func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.State
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1816,7 +1816,7 @@ func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID str
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1848,7 +1848,7 @@ func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.
 			VolumeIds: []*string{aws.String(volumeID)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidVolumeID.NotFound", "does not exist") {
+			if tfawserr.ErrMessageContains(err, "InvalidVolumeID.NotFound", "does not exist") {
 				return nil, "", nil
 			}
 			log.Printf("Error on VolumeStateRefresh: %s", err)
@@ -1930,14 +1930,14 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
-			if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.AssociateIamInstanceProfile(input)
 	}
 	if err != nil {
@@ -2514,7 +2514,7 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.GetPasswordData(input)
 		if err != nil {
 			return "", fmt.Errorf("Error getting password data: %s", err)
@@ -2751,7 +2751,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
-		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 			return nil
 		}
 		return err
@@ -3097,7 +3097,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 	name, defaultVersion, latestVersion, err := getAwsLaunchTemplateSpecification(conn, id)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidLaunchTemplateId.Malformed", "") || isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.Malformed", "") || tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 			// Instance is tagged with non existent template just set it to nil
 			log.Printf("[WARN] Launch template %s not found, removing from state", id)
 			return nil, nil
@@ -3119,7 +3119,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 	}
 
 	if _, err := conn.DescribeLaunchTemplateVersions(dltvi); err != nil {
-		if isAWSErr(err, "InvalidLaunchTemplateId.VersionNotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.VersionNotFound", "") {
 			// Instance is tagged with non existent template version, just don't set it
 			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, liveVersion)
 			result = append(result, attrs)

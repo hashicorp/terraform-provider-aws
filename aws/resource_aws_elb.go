@@ -320,7 +320,7 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = elbconn.CreateLoadBalancer(elbOpts)
 	}
 	if err != nil {
@@ -516,11 +516,11 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.CreateLoadBalancerListeners(input)
 				if err != nil {
-					if isAWSErr(err, elb.ErrCodeDuplicateListenerException, "") {
+					if tfawserr.ErrMessageContains(err, elb.ErrCodeDuplicateListenerException, "") {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
 						return resource.RetryableError(err)
 					}
-					if isAWSErr(err, elb.ErrCodeCertificateNotFoundException, "Server Certificate not found for the key: arn") {
+					if tfawserr.ErrMessageContains(err, elb.ErrCodeCertificateNotFoundException, "Server Certificate not found for the key: arn") {
 						log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
 						return resource.RetryableError(err)
 					}
@@ -531,7 +531,7 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Successful creation
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = elbconn.CreateLoadBalancerListeners(input)
 			}
 			if err != nil {
@@ -751,7 +751,7 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.AttachLoadBalancerToSubnets(attachOpts)
 				if err != nil {
-					if isAWSErr(err, elb.ErrCodeInvalidConfigurationRequestException, "cannot be attached to multiple subnets in the same AZ") {
+					if tfawserr.ErrMessageContains(err, elb.ErrCodeInvalidConfigurationRequestException, "cannot be attached to multiple subnets in the same AZ") {
 						// eventually consistent issue with removing a subnet in AZ1 and
 						// immediately adding a new one in the same AZ
 						log.Printf("[DEBUG] retrying az association")
@@ -761,7 +761,7 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = elbconn.AttachLoadBalancerToSubnets(attachOpts)
 			}
 			if err != nil {

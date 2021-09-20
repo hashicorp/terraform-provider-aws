@@ -466,8 +466,8 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 		state.creationTimestamp = aws.TimeValue(page.StreamDescription.StreamCreationTimestamp).Unix()
 		state.status = aws.StringValue(page.StreamDescription.StreamStatus)
 		state.retentionPeriod = aws.Int64Value(page.StreamDescription.RetentionPeriodHours)
-		state.openShards = append(state.openShards, flattenShards(openShards(page.StreamDescription.Shards))...)
-		state.closedShards = append(state.closedShards, flattenShards(closedShards(page.StreamDescription.Shards))...)
+		state.openShards = append(state.openShards, flattenShards(filterShards(page.StreamDescription.Shards, true))...)
+		state.closedShards = append(state.closedShards, flattenShards(filterShards(page.StreamDescription.Shards, false))...)
 		state.shardLevelMetrics = flattenKinesisShardLevelMetrics(page.StreamDescription.EnhancedMonitoring)
 		// EncryptionType can be nil in certain APIs, e.g. AWS China
 		if page.StreamDescription.EncryptionType != nil {
@@ -515,14 +515,6 @@ func waitForKinesisToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn s
 			sn, err)
 	}
 	return nil
-}
-
-func openShards(shards []*kinesis.Shard) []*kinesis.Shard {
-	return filterShards(shards, true)
-}
-
-func closedShards(shards []*kinesis.Shard) []*kinesis.Shard {
-	return filterShards(shards, false)
 }
 
 // See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html

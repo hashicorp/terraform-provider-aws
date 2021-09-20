@@ -366,7 +366,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
 			log.Printf("[WARN] VPC Classic Link is not supported in this region")
-		} else if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		} else if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			log.Printf("[WARN] VPC Classic Link functionality you requested is not available for this VPC")
 		} else {
 			return err
@@ -390,8 +390,8 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	respClassiclinkDnsSupport, err := conn.DescribeVpcClassicLinkDnsSupport(describeClassiclinkDnsOpts)
 	if err != nil {
-		if isAWSErr(err, "UnsupportedOperation", "The functionality you requested is not available in this region") ||
-			isAWSErr(err, "AuthFailure", "This request has been administratively disabled") {
+		if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") ||
+			tfawserr.ErrMessageContains(err, "AuthFailure", "This request has been administratively disabled") {
 			log.Printf("[WARN] VPC Classic Link DNS Support is not supported in this region")
 		} else {
 			return err
@@ -595,17 +595,17 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil
 		}
-		if isAWSErr(err, "DependencyViolation", "") {
+		if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(fmt.Errorf("Error deleting VPC: %s", err))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteVpc(deleteVpcOpts)
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil
 		}
 	}
@@ -670,7 +670,7 @@ func Ipv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId string) re
 		}
 		resp, err := conn.DescribeVpcs(describeVpcOpts)
 
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil, "", nil
 		}
 
@@ -811,7 +811,7 @@ func vpcDescribe(conn *ec2.EC2, vpcId string) (*ec2.Vpc, error) {
 		VpcIds: aws.StringSlice([]string{vpcId}),
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil, err
 		}
 		resp = nil

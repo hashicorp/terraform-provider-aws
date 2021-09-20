@@ -114,8 +114,9 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 }
 
 func isCloudWatchDashboardNotFoundErr(err error) bool {
-	return isAWSErr(
+	return tfawserr.ErrMessageContains(
 		err,
 		"ResourceNotFound",
 		"does not exist")
+
 }

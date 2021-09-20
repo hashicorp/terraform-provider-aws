@@ -785,7 +785,7 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 		return
 	}
 	if err != nil {
@@ -798,7 +798,7 @@ func testAccOrganizationsEnabledPreCheck(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 	if err != nil {
@@ -832,7 +832,7 @@ func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
 	}
 	_, err := conn.GetRole(input)
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
 	}
 	if testAccPreCheckSkipError(err) {
@@ -1207,27 +1207,27 @@ func testAccPreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if isAWSErr(err, "AccessDeniedException", "") {
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 		return true
 	}
 	// Ignore missing API endpoints
-	if isAWSErr(err, "RequestError", "send request failed") {
+	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
-	if isAWSErr(err, "UnknownOperationException", "") {
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
 		return true
 	}
-	if isAWSErr(err, "UnsupportedOperation", "") {
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
 		return true
 	}
-	if isAWSErr(err, "InvalidInputException", "Unknown operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
-	if isAWSErr(err, "InvalidAction", "is not valid") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
-	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
 	return false

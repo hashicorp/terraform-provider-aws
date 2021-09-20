@@ -330,7 +330,7 @@ func ec2TransitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resour
 	return func() (interface{}, string, error) {
 		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
 
-		if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 			return nil, ec2.TransitGatewayStateDeleted, nil
 		}
 
@@ -350,7 +350,7 @@ func ec2TransitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTa
 	return func() (interface{}, string, error) {
 		transitGatewayRouteTable, err := ec2DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -370,7 +370,7 @@ func ec2TransitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGat
 	return func() (interface{}, string, error) {
 		transitGatewayAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -390,7 +390,7 @@ func ec2TransitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGateway
 	return func() (interface{}, string, error) {
 		transitGatewayPeeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
 
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
@@ -414,7 +414,7 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 	return func() (interface{}, string, error) {
 		transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, transitGatewayAttachmentID)
 
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
@@ -459,7 +459,7 @@ func waitForEc2TransitGatewayDeletion(conn *ec2.EC2, transitGatewayID string) er
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway (%s) deletion", transitGatewayID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
@@ -495,7 +495,7 @@ func waitForEc2TransitGatewayRouteTableDeletion(conn *ec2.EC2, transitGatewayRou
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Route Table (%s) deletion", transitGatewayRouteTableID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
@@ -531,7 +531,7 @@ func waitForEc2TransitGatewayRouteTableAssociationDeletion(conn *ec2.EC2, transi
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Route Table (%s) disassociation: %s", transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
@@ -592,7 +592,7 @@ func waitForEc2TransitGatewayPeeringAttachmentDeletion(conn *ec2.EC2, transitGat
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Peering Attachment (%s) deletion", transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
@@ -648,7 +648,7 @@ func waitForEc2TransitGatewayVpcAttachmentDeletion(conn *ec2.EC2, transitGateway
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway VPC Attachment (%s) deletion", transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 

@@ -230,7 +230,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			describeAddresses, err = ec2conn.DescribeAddresses(req)
 		}
 		if err != nil {
@@ -384,14 +384,14 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := ec2conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if isAWSErr(err, "InvalidAllocationID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidAllocationID.NotFound", "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = ec2conn.AssociateAddress(assocOpts)
 		}
 		if err != nil {
@@ -469,7 +469,7 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return resource.RetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = ec2conn.ReleaseAddress(input)
 	}
 	if err != nil {

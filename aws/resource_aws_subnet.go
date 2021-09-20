@@ -502,12 +502,12 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 		Refresh: func() (interface{}, string, error) {
 			_, err := conn.DeleteSubnet(req)
 			if err != nil {
-				if isAWSErr(err, "DependencyViolation", "") {
+				if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 					// There is some pending operation, so just retry
 					// in a bit.
 					return 42, "pending", nil
 				}
-				if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
 					return 42, "destroyed", nil
 				}
 
@@ -532,7 +532,7 @@ func SubnetStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 			SubnetIds: []*string{aws.String(id)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on SubnetStateRefresh: %s", err)
@@ -558,7 +558,7 @@ func SubnetIpv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId stri
 		}
 		resp, err := conn.DescribeSubnets(opts)
 		if err != nil {
-			if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on SubnetIpv6CidrStateRefreshFunc: %s", err)

@@ -184,7 +184,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Getting Route53 Hosted Zone: %s", input)
 	output, err := conn.GetHostedZone(input)
 
-	if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 		log.Printf("[WARN] Route53 Hosted Zone (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -345,7 +345,7 @@ func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", input)
 	_, err := conn.DeleteHostedZone(input)
 
-	if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 		return nil
 	}
 

@@ -704,14 +704,14 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	// AWS SDK constant above is currently incorrect
-	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -928,11 +928,11 @@ func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) e
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		return nil
 	}
 	// AWS SDK constant above is currently incorrect
-	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 		return nil
 	}
 	if err != nil {

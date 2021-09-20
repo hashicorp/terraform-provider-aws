@@ -536,17 +536,17 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
-			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
+			if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IamInstanceProfile") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationError", "You are not authorized to perform this operation") {
+			if tfawserr.ErrMessageContains(err, "ValidationError", "You are not authorized to perform this operation") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 	}
 	if err != nil {
@@ -638,11 +638,11 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
 
-		if isAWSErr(err, autoscaling.ErrCodeResourceInUseFault, "") {
+		if tfawserr.ErrMessageContains(err, autoscaling.ErrCodeResourceInUseFault, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "InvalidConfiguration.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") {
 			return nil
 		}
 
@@ -653,7 +653,7 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = autoscalingconn.DeleteLaunchConfiguration(input)
 	}
 

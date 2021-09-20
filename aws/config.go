@@ -727,7 +727,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateGraphqlApi" {
-			if isAWSErr(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
+			if tfawserr.ErrMessageContains(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
@@ -756,7 +756,7 @@ func (c *Config) Client() (interface{}, error) {
 		// after succeeding a few requests.
 		switch r.Operation.Name {
 		case "DeleteOrganizationConfigRule", "DescribeOrganizationConfigRules", "DescribeOrganizationConfigRuleStatuses", "PutOrganizationConfigRule":
-			if !isAWSErr(r.Error, configservice.ErrCodeOrganizationAccessDeniedException, "This action can be only made by AWS Organization's master account.") {
+			if !tfawserr.ErrMessageContains(r.Error, configservice.ErrCodeOrganizationAccessDeniedException, "This action can be only made by AWS Organization's master account.") {
 				return
 			}
 
@@ -790,7 +790,7 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.cfconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if isAWSErr(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
+		if tfawserr.ErrMessageContains(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
@@ -800,32 +800,32 @@ func (c *Config) Client() (interface{}, error) {
 		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
 			return
 		}
-		if isAWSErr(r.Error, dynamodb.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
+		if tfawserr.ErrMessageContains(r.Error, dynamodb.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
 	client.ec2conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateClientVpnEndpoint" {
-			if isAWSErr(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+			if tfawserr.ErrMessageContains(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
 
 		if r.Operation.Name == "CreateVpnConnection" {
-			if isAWSErr(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+			if tfawserr.ErrMessageContains(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
 
 		if r.Operation.Name == "CreateVpnGateway" {
-			if isAWSErr(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
+			if tfawserr.ErrMessageContains(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
 
 		if r.Operation.Name == "AttachVpnGateway" || r.Operation.Name == "DetachVpnGateway" {
-			if isAWSErr(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+			if tfawserr.ErrMessageContains(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
@@ -849,19 +849,19 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.kafkaconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if isAWSErr(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
+		if tfawserr.ErrMessageContains(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateStream" {
-			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
+			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
 		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
-			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
@@ -870,7 +870,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.organizationsconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
-		if isAWSErr(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
+		if tfawserr.ErrMessageContains(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
@@ -896,27 +896,27 @@ func (c *Config) Client() (interface{}, error) {
 
 	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
-		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
+		if tfawserr.ErrMessageContains(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
 			r.Retryable = aws.Bool(true)
 		}
 	})
 
 	client.wafv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if isAWSErr(r.Error, wafv2.ErrCodeWAFInternalErrorException, "Retry your request") {
+		if tfawserr.ErrMessageContains(r.Error, wafv2.ErrCodeWAFInternalErrorException, "Retry your request") {
 			r.Retryable = aws.Bool(true)
 		}
 
-		if isAWSErr(r.Error, wafv2.ErrCodeWAFServiceLinkedRoleErrorException, "Retry") {
+		if tfawserr.ErrMessageContains(r.Error, wafv2.ErrCodeWAFServiceLinkedRoleErrorException, "Retry") {
 			r.Retryable = aws.Bool(true)
 		}
 
 		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" ||
 			r.Operation.Name == "CreateRuleGroup" || r.Operation.Name == "CreateWebACL" {
 			// WAFv2 supports tag on create which can result in the below error codes according to the documentation
-			if isAWSErr(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
+			if tfawserr.ErrMessageContains(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
 				r.Retryable = aws.Bool(true)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "Retry your request") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "Retry your request") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

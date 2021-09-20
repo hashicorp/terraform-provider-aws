@@ -279,17 +279,17 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		t, err = conn.CreateTrail(&input)
 	}
 	if err != nil {
@@ -425,7 +425,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		TrailName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if !isAWSErr(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
+		if !tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
 			return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
 		}
 	}
@@ -482,17 +482,17 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		t, err = conn.UpdateTrail(&input)
 	}
 	if err != nil {

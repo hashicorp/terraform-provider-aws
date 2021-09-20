@@ -144,56 +144,50 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 // These include missing API endpoints and unsupported API calls
 func testSweepSkipSweepError(err error) bool {
 	// Ignore missing API endpoints
-	if isAWSErr(err, "RequestError", "send request failed") {
+	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
-	if isAWSErr(err, "UnsupportedOperation", "") {
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
 		return true
 	}
 	// Ignore more unsupported API calls
 	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
-	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "not permitted in this API version for your account") {
 		return true
 	}
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version") {
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version") {
 		return true
 	}
 	// GovCloud has endpoints that respond with (no message provided):
 	// AccessDeniedException:
 	// Since acceptance test sweepers are best effort and this response is very common,
 	// we allow bypassing this error globally instead of individual test sweeper fixes.
-	if isAWSErr(err, "AccessDeniedException", "") {
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 		return true
 	}
 	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
-	if isAWSErr(err, "BadRequestException", "not supported") {
+	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
 		return true
 	}
 	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
-	if isAWSErr(err, "InvalidAction", "is not valid") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
 	// For example from GovCloud SES.SetActiveReceiptRuleSet.
-	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
 	// For example from us-west-2 Route53 key signing key
-	if isAWSErr(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
+	if tfawserr.ErrMessageContains(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
 		return true
 	}
 	// For example from us-west-2 Route53 zone
-	if isAWSErr(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
+	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
 	return false
 }
 
-// Check sweeper API call error for reasons to skip a specific resource
-// These include AccessDenied or AccessDeniedException for individual resources, e.g. managed by central IT
-func testSweepSkipResourceError(err error) bool {
-	// Since acceptance test sweepers are best effort, we allow bypassing this error globally
-	// instead of individual test sweeper fixes.
-	return tfawserr.ErrCodeContains(err, "AccessDenied")
-}
+
