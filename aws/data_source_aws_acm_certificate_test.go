@@ -39,7 +39,7 @@ func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfig(domain),
@@ -114,7 +114,7 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckAwsAcmCertificateDataSourceConfig(domain),
@@ -163,7 +163,7 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckAwsAcmCertificateDataSourceConfig(domain),
@@ -196,17 +196,17 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 func TestAccAWSAcmCertificateDataSource_KeyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
-	key := tlsRsaPrivateKeyPem(4096)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(4096)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), rName),
+				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
