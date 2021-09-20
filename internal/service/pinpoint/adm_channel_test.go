@@ -43,7 +43,7 @@ func testAccAwsPinpointADMChannelConfigurationFromEnv(t *testing.T) *testAccAwsP
 	return &conf
 }
 
-func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
+func TestAccPinpointAdmChannel_ADM_basic(t *testing.T) {
 	var channel pinpoint.ADMChannelResponse
 	resourceName := "aws_pinpoint_adm_channel.channel"
 

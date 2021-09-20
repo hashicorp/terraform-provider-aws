@@ -15,7 +15,7 @@ import (
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 )
 
-func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
+func TestAccPinpointEmailChannel_basic(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 
@@ -58,7 +58,7 @@ func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
+func TestAccPinpointEmailChannel_set(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -88,7 +88,7 @@ func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointEmailChannel_noRole(t *testing.T) {
+func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -118,7 +118,7 @@ func TestAccAWSPinpointEmailChannel_noRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointEmailChannel_disappears(t *testing.T) {
+func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
 

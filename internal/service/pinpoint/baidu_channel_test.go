@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
+func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 	var channel pinpoint.BaiduChannelResponse
 	resourceName := "aws_pinpoint_baidu_channel.channel"
 

@@ -15,7 +15,7 @@ import (
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 )
 
-func TestAccAWSPinpointEventStream_basic(t *testing.T) {
+func TestAccPinpointEventStream_basic(t *testing.T) {
 	var stream pinpoint.EventStream
 	resourceName := "aws_pinpoint_event_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -54,7 +54,7 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
+func TestAccPinpointEventStream_disappears(t *testing.T) {
 	var stream pinpoint.EventStream
 	resourceName := "aws_pinpoint_event_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
