@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := finder.Cluster(conn, id)
+		cluster, err := finder.FindCluster(conn, id)
 
 		if err != nil {
 			return nil, "", err
@@ -24,9 +24,9 @@ func ClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshF
 	}
 }
 
-func HsmState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusHSMState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := finder.Hsm(conn, id, "")
+		hsm, err := finder.FindHSM(conn, id, "")
 
 		if err != nil {
 			return nil, "", err
