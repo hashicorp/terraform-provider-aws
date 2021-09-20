@@ -1,4 +1,4 @@
-package waiter
+package autoscaling
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
