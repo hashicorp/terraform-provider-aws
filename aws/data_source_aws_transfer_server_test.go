@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
@@ -14,8 +15,8 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -33,13 +34,13 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -62,13 +63,13 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 }
 
 func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
