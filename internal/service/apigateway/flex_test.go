@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestFlattenThrottleSettings(t *testing.T) {

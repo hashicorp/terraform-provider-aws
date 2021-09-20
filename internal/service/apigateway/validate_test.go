@@ -2,7 +2,6 @@ package apigateway
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidUsagePlanQuotaSettings(t *testing.T) {
