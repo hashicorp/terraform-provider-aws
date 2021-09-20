@@ -10,11 +10,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceBucketMetric() *schema.Resource {
@@ -199,7 +200,7 @@ func expandS3MetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = keyvaluetags.New(v).IgnoreAws().S3Tags()
+		tags = tftags.New(v).IgnoreAws().S3Tags()
 	}
 
 	metricsFilter := &s3.MetricsFilter{}
@@ -229,7 +230,7 @@ func flattenS3MetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interfac
 			m["prefix"] = *and.Prefix
 		}
 		if and.Tags != nil {
-			m["tags"] = keyvaluetags.S3KeyValueTags(and.Tags).IgnoreAws().Map()
+			m["tags"] = tftags.S3KeyValueTags(and.Tags).IgnoreAws().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
 		m["prefix"] = *metricsFilter.Prefix
@@ -237,7 +238,7 @@ func flattenS3MetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interfac
 		tags := []*s3.Tag{
 			metricsFilter.Tag,
 		}
-		m["tags"] = keyvaluetags.S3KeyValueTags(tags).IgnoreAws().Map()
+		m["tags"] = tftags.S3KeyValueTags(tags).IgnoreAws().Map()
 	}
 	return m
 }

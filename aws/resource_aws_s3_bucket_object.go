@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/mitchellh/go-homedir"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
@@ -42,7 +43,7 @@ func ResourceBucketObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsS3BucketObjectCustomizeDiff,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -167,8 +168,8 @@ func ResourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"website_redirect": {
 				Type:     schema.TypeString,
@@ -210,7 +211,7 @@ func ResourceBucketObject() *schema.Resource {
 func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 
@@ -417,14 +418,14 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return keyvaluetags.S3ObjectListTags(conn, bucket, key)
+		return objectListTags(conn, bucket, key)
 	})
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	tags, ok := tagsRaw.(keyvaluetags.KeyValueTags)
+	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
 	if !ok {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
@@ -507,7 +508,7 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.S3ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
+		if err := objectUpdateTags(conn, bucket, key, o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

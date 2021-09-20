@@ -25,11 +25,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func init() {
@@ -2932,7 +2933,7 @@ func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheck
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
+		got, err := bucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
 			return err
 		}
@@ -3289,7 +3290,7 @@ func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]str
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		return keyvaluetags.S3BucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
+		return bucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
 	}
 }
 
@@ -3298,12 +3299,12 @@ func testAccCheckAWSS3BucketCheckTags(n string, expectedTags map[string]string) 
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
+		got, err := bucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
 			return err
 		}
 
-		want := keyvaluetags.New(expectedTags)
+		want := tftags.New(expectedTags)
 		if !reflect.DeepEqual(want, got) {
 			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
 		}
