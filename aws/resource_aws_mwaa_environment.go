@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mwaa/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mwaa/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/waiter"
 )
 
 func resourceAwsMwaaEnvironment() *schema.Resource {
