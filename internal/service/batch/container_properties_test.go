@@ -1,8 +1,9 @@
 package batch_test
 
 import (
-	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"testing"
+
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
 func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
