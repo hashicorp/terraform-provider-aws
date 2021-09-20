@@ -247,7 +247,7 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.TagsList = tags.IgnoreAws().CloudtrailTags()
+		input.TagsList = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {
@@ -385,7 +385,7 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", trail.TrailARN)
 	d.Set("home_region", trail.HomeRegion)
 
-	tags, err := tftags.CloudtrailListTags(conn, *trail.TrailARN)
+	tags, err := ListTags(conn, *trail.TrailARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
@@ -506,7 +506,7 @@ func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
