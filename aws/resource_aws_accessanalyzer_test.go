@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // AccessAnalyzer is limited to one per region, so run serially
@@ -38,7 +39,7 @@ func testAccPreCheckAWSAccessAnalyzer(t *testing.T) {
 
 	_, err := conn.ListAnalyzers(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
