@@ -360,7 +360,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 		Name:    aws.String(d.Id()),
 		Version: aws.String(LexIntentVersionLatest),
 	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -480,7 +480,7 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutIntent(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
 		}
 		if err != nil {
@@ -511,7 +511,7 @@ func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error 
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteIntent(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
 		}
 		if err != nil {

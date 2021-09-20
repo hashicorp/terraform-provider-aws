@@ -174,7 +174,7 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 		BotName: aws.String(d.Get("bot_name").(string)),
 		Name:    aws.String(d.Get("name").(string)),
 	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -271,7 +271,7 @@ func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) erro
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBotAlias(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("'%q': bot alias still deleting", d.Id()))
 		}
 		if err != nil {

@@ -288,7 +288,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		Name:           aws.String(d.Id()),
 		VersionOrAlias: aws.String(LexBotVersionLatest),
 	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -385,7 +385,7 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBot(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: bot still updating", d.Id()))
 		}
 		if err != nil {
@@ -416,7 +416,7 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBot(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, bot still deleting", d.Id()))
 		}
 		if err != nil {
