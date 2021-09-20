@@ -40,9 +40,9 @@ var cloudTrailServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "113285607260",
 }
 
-func dataSourceAwsCloudTrailServiceAccount() *schema.Resource {
+func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudTrailServiceAccountRead,
+		Read: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -57,7 +57,7 @@ func dataSourceAwsCloudTrailServiceAccount() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudTrailServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
