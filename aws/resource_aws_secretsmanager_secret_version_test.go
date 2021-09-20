@@ -21,7 +21,7 @@ func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_version" {
@@ -188,7 +188,7 @@ func testAccCheckAwsSecretsManagerSecretVersionExists(resourceName string, versi
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 
 		input := &secretsmanager.GetSecretValueInput{
 			SecretId:  aws.String(secretID),

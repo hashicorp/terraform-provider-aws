@@ -21,7 +21,7 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretRotationDestroy,
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
@@ -59,7 +59,7 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_rotation" {
@@ -94,7 +94,7 @@ func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secr
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 		input := &secretsmanager.DescribeSecretInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}

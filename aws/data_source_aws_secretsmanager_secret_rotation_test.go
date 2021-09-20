@@ -19,7 +19,7 @@ func TestAccDataSourceAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretRotationConfig_NonExistent,

@@ -20,7 +20,7 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretVersionConfig_NonExistent,
@@ -44,7 +44,7 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretVersionConfig_VersionID(rName),
@@ -64,7 +64,7 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionStage(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretVersionConfig_VersionStage_Custom(rName),

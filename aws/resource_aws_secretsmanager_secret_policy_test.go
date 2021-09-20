@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepSecretsManagerSecretPolicies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -55,7 +55,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
 			return nil
 		}
@@ -72,7 +72,7 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,14 +151,14 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,7 +167,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_policy" {
@@ -239,7 +239,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName string, policy
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
 		input := &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}
