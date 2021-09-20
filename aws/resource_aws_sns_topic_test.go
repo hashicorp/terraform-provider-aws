@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {
@@ -645,7 +646,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 			}
 		}
 
-		equivalent := suppressEquivalentJsonDiffs("", actualPolicyText, expectedPolicyText, nil)
+		equivalent := verify.SuppressEquivalentJSONDiffs("", actualPolicyText, expectedPolicyText, nil)
 
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent delivery policy error:\n\nexpected: %s\n\n     got: %s",
