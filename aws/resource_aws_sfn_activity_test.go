@@ -8,18 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSfnActivity_basic(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
@@ -41,12 +42,12 @@ func TestAccAWSSfnActivity_basic(t *testing.T) {
 }
 
 func TestAccAWSSfnActivity_Tags(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
