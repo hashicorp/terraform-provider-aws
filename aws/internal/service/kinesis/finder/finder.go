@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// StreamConsumerByARN returns the stream consumer corresponding to the specified ARN.
+// FindStreamConsumerByARN returns the stream consumer corresponding to the specified ARN.
 // Returns nil if no stream consumer is found.
-func StreamConsumerByARN(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
+func FindStreamConsumerByARN(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
 	input := &kinesis.DescribeStreamConsumerInput{
 		ConsumerARN: aws.String(arn),
 	}

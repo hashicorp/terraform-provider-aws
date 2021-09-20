@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	StreamConsumerCreatedTimeout = 5 * time.Minute
-	StreamConsumerDeletedTimeout = 5 * time.Minute
+	streamConsumerCreatedTimeout = 5 * time.Minute
+	streamConsumerDeletedTimeout = 5 * time.Minute
 )
 
-// StreamConsumerCreated waits for an Stream Consumer to return Active
-func StreamConsumerCreated(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
+// waitStreamConsumerCreated waits for an Stream Consumer to return Active
+func waitStreamConsumerCreated(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesis.ConsumerStatusCreating},
 		Target:  []string{kinesis.ConsumerStatusActive},
-		Refresh: StreamConsumerStatus(conn, arn),
-		Timeout: StreamConsumerCreatedTimeout,
+		Refresh: statusStreamConsumer(conn, arn),
+		Timeout: streamConsumerCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -31,13 +31,13 @@ func StreamConsumerCreated(conn *kinesis.Kinesis, arn string) (*kinesis.Consumer
 	return nil, err
 }
 
-// StreamConsumerDeleted waits for a Stream Consumer to be deleted
-func StreamConsumerDeleted(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
+// waitStreamConsumerDeleted waits for a Stream Consumer to be deleted
+func waitStreamConsumerDeleted(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesis.ConsumerStatusDeleting},
 		Target:  []string{},
-		Refresh: StreamConsumerStatus(conn, arn),
-		Timeout: StreamConsumerDeletedTimeout,
+		Refresh: statusStreamConsumer(conn, arn),
+		Timeout: streamConsumerDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

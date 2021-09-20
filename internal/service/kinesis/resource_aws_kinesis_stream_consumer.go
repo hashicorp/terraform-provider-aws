@@ -75,7 +75,7 @@ func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(output.Consumer.ConsumerARN))
 
-	if _, err := waiter.StreamConsumerCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitStreamConsumerCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) creation: %w", d.Id(), err)
 	}
 
@@ -85,7 +85,7 @@ func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
-	consumer, err := finder.StreamConsumerByARN(conn, d.Id())
+	consumer, err := finder.FindStreamConsumerByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Kinesis Stream Consumer (%s) not found, removing from state", d.Id())
@@ -130,7 +130,7 @@ func resourceStreamConsumerDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Kinesis Stream Consumer (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.StreamConsumerDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitStreamConsumerDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
 			return nil
 		}
