@@ -182,7 +182,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigRuleException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigRuleException, "") {
 			log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
 			d.SetId("")
 			return nil

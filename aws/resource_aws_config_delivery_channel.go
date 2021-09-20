@@ -107,13 +107,13 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		if isAWSErr(err, "InsufficientDeliveryPolicyException", "") {
+		if tfawserr.ErrMessageContains(err, "InsufficientDeliveryPolicyException", "") {
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutDeliveryChannel(&input)
 	}
 	if err != nil {
@@ -178,7 +178,7 @@ func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interfa
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := conn.DeleteDeliveryChannel(&input)
 		if err != nil {
-			if isAWSErr(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {
+			if tfawserr.ErrMessageContains(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {
 				return resource.RetryableError(err)
 			}
 
@@ -186,7 +186,7 @@ func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interfa
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDeliveryChannel(&input)
 	}
 	if err != nil {

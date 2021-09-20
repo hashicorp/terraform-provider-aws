@@ -162,7 +162,7 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 
 	res, err := conn.DescribeConfigurationAggregators(req)
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
 			log.Printf("[WARN] No such configuration aggregator (%s), removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -217,7 +217,7 @@ func resourceAwsConfigConfigurationAggregatorDelete(d *schema.ResourceData, meta
 	}
 	_, err := conn.DeleteConfigurationAggregator(req)
 
-	if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
 		return nil
 	}
 

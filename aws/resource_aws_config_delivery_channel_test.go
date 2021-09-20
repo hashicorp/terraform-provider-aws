@@ -37,7 +37,7 @@ func testSweepConfigDeliveryChannels(region string) error {
 		resp, err = conn.DescribeDeliveryChannels(req)
 		if err != nil {
 			// ThrottlingException: Rate exceeded
-			if isAWSErr(err, "ThrottlingException", "Rate exceeded") {
+			if tfawserr.ErrMessageContains(err, "ThrottlingException", "Rate exceeded") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
