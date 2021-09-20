@@ -200,7 +200,7 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
-		input.PlatformCapabilities = expandStringSet(v.(*schema.Set))
+		input.PlatformCapabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
