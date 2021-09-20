@@ -1,4 +1,4 @@
-//go:generate go run -tags generate generators/servicefilters/main.go
+
 
 package namevaluesfilters
 
