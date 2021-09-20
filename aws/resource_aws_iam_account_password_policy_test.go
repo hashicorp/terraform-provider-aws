@@ -18,7 +18,7 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_password_policy" {
@@ -82,7 +82,7 @@ func testAccCheckAWSIAMAccountPasswordPolicyExists(n string, res *iam.GetAccount
 			return fmt.Errorf("No policy ID is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		resp, err := iamconn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
 		if err != nil {

@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepIamOpenIDConnectProvider(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -48,7 +48,7 @@ func testSweepIamOpenIDConnectProvider(region string) error {
 		}
 	}
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IAM OIDC Provider sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -68,7 +68,7 @@ func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func TestAccAWSIAMOpenIDConnectProvider_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,14 +159,14 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMOpenIDConnectProviderConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamOpenIDConnectProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamOpenIDConnectProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -175,7 +175,7 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_openid_connect_provider" {
@@ -213,7 +213,7 @@ func testAccCheckIAMOpenIDConnectProvider(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*AWSClient).iamconn
 		_, err := conn.GetOpenIDConnectProvider(&iam.GetOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(rs.Primary.ID),
 		})

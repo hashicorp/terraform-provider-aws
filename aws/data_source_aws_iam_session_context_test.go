@@ -99,7 +99,7 @@ func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextConfig(rName, "/", "session-id"),
@@ -122,7 +122,7 @@ func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextConfig(rName, "/this/is/a/long/path/", "session-id"),
@@ -144,7 +144,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/"),
@@ -166,7 +166,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
@@ -187,7 +187,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleUser(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextUserConfig(rName),

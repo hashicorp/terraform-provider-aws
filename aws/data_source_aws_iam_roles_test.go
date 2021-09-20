@@ -18,7 +18,7 @@ func TestAccAWSIAMRolesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMRolesConfigDataSource_basic,
@@ -38,7 +38,7 @@ func TestAccAWSIAMRolesDataSource_nameRegex(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMRolesConfigDataSource_nameRegex(rCount, rName),
@@ -60,7 +60,7 @@ func TestAccAWSIAMRolesDataSource_pathPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMRolesConfigDataSource_pathPrefix(rCount, rName, rPathPrefix),
@@ -79,7 +79,7 @@ func TestAccAWSIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMRolesConfigDataSource_nonExistentPathPrefix,
@@ -101,7 +101,7 @@ func TestAccAWSIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMRolesConfigDataSource_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),

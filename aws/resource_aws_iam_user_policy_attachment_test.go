@@ -23,7 +23,7 @@ func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ func testAccCheckAWSUserPolicyAttachmentExists(n string, c int, out *iam.ListAtt
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*AWSClient).iamconn
 		user := rs.Primary.Attributes["user"]
 
 		attachedPolicies, err := conn.ListAttachedUserPolicies(&iam.ListAttachedUserPoliciesInput{

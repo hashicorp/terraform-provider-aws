@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepIamServiceLinkedRoles(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -68,7 +68,7 @@ func testSweepIamServiceLinkedRoles(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping IAM Service Role sweep for %s: %s", region, err)
 			return nil
 		}
@@ -146,13 +146,13 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
 					// Remove existing if possible
-					conn := testAccProvider.Meta().(*AWSClient).iamconn
+					conn := acctest.Provider.Meta().(*AWSClient).iamconn
 					deletionID, err := deleteIamServiceLinkedRole(conn, name)
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
@@ -197,7 +197,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +226,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -255,7 +255,7 @@ func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 }
 
 func testAccCheckAWSIAMServiceLinkedRoleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_service_linked_role" {
@@ -320,7 +320,7 @@ func testAccCheckAWSIAMServiceLinkedRoleExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*AWSClient).iamconn
 		_, roleName, _, err := decodeIamServiceLinkedRoleID(rs.Primary.ID)
 		if err != nil {
 			return err
