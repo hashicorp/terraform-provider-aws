@@ -9,19 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
-	name := acctest.RandString(10)
-	updatedName := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
+	updatedName := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cognito-identity", regexp.MustCompile(`identitypool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cognito-identity", regexp.MustCompile(`identitypool/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", "false"),
 				),
 			},
@@ -51,12 +52,12 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -94,12 +95,12 @@ func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -136,12 +137,12 @@ func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -179,12 +180,12 @@ func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -195,12 +196,12 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						"client_id":               "7lhlkkfbfb4q5kpp90urffao",
-						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", testAccGetRegion(), testAccGetPartitionDNSSuffix()),
+						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
 						"server_side_token_check": "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						"client_id":               "7lhlkkfbfb4q5kpp90urffao",
-						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Ab129faBb", testAccGetRegion(), testAccGetPartitionDNSSuffix()),
+						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Ab129faBb", acctest.Region(), acctest.PartitionDNSSuffix()),
 						"server_side_token_check": "false",
 					}),
 				),
@@ -217,7 +218,7 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						"client_id":               "6lhlkkfbfb4q5kpp90urffae",
-						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", testAccGetRegion(), testAccGetPartitionDNSSuffix()),
+						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
 						"server_side_token_check": "false",
 					}),
 				),
@@ -234,12 +235,12 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -279,12 +280,12 @@ func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.
 }
 
 func TestAccAWSCognitoIdentityPool_tags(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
@@ -375,7 +376,7 @@ func testAccPreCheckAWSCognitoIdentity(t *testing.T) {
 
 	_, err := conn.ListIdentityPools(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
