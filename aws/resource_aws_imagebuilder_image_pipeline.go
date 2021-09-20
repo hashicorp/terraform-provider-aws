@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsImageBuilderImagePipeline() *schema.Resource {
+func ResourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderImagePipelineCreate,
-		Read:   resourceAwsImageBuilderImagePipelineRead,
-		Update: resourceAwsImageBuilderImagePipelineUpdate,
-		Delete: resourceAwsImageBuilderImagePipelineDelete,
+		Create: resourceImagePipelineCreate,
+		Read:   resourceImagePipelineRead,
+		Update: resourceImagePipelineUpdate,
+		Delete: resourceImagePipelineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -136,7 +136,7 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 	}
 }
 
-func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -194,10 +194,10 @@ func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.ImagePipelineArn))
 
-	return resourceAwsImageBuilderImagePipelineRead(d, meta)
+	return resourceImagePipelineRead(d, meta)
 }
 
-func resourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -266,7 +266,7 @@ func resourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsImageBuilderImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChanges(
@@ -328,10 +328,10 @@ func resourceAwsImageBuilderImagePipelineUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsImageBuilderImagePipelineRead(d, meta)
+	return resourceImagePipelineRead(d, meta)
 }
 
-func resourceAwsImageBuilderImagePipelineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceImagePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteImagePipelineInput{

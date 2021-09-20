@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsImageBuilderComponent() *schema.Resource {
+func ResourceComponent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderComponentCreate,
-		Read:   resourceAwsImageBuilderComponentRead,
-		Update: resourceAwsImageBuilderComponentUpdate,
-		Delete: resourceAwsImageBuilderComponentDelete,
+		Create: resourceComponentCreate,
+		Read:   resourceComponentRead,
+		Update: resourceComponentUpdate,
+		Delete: resourceComponentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -114,7 +114,7 @@ func resourceAwsImageBuilderComponent() *schema.Resource {
 	}
 }
 
-func resourceAwsImageBuilderComponentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceComponentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -175,10 +175,10 @@ func resourceAwsImageBuilderComponentCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.ComponentBuildVersionArn))
 
-	return resourceAwsImageBuilderComponentRead(d, meta)
+	return resourceComponentRead(d, meta)
 }
 
-func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceComponentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -234,7 +234,7 @@ func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsImageBuilderComponentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceComponentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChange("tags_all") {
@@ -245,10 +245,10 @@ func resourceAwsImageBuilderComponentUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsImageBuilderComponentRead(d, meta)
+	return resourceComponentRead(d, meta)
 }
 
-func resourceAwsImageBuilderComponentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceComponentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteComponentInput{

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsImageBuilderComponent() *schema.Resource {
+func DataSourceComponent() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsImageBuilderComponentRead,
+		Read: dataSourceComponentRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -74,7 +74,7 @@ func dataSourceAwsImageBuilderComponent() *schema.Resource {
 	}
 }
 
-func dataSourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceComponentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

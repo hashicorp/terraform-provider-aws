@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
+func ResourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderDistributionConfigurationCreate,
-		Read:   resourceAwsImageBuilderDistributionConfigurationRead,
-		Update: resourceAwsImageBuilderDistributionConfigurationUpdate,
-		Delete: resourceAwsImageBuilderDistributionConfigurationDelete,
+		Create: resourceDistributionConfigurationCreate,
+		Read:   resourceDistributionConfigurationRead,
+		Update: resourceDistributionConfigurationUpdate,
+		Delete: resourceDistributionConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -140,7 +140,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsImageBuilderDistributionConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -177,10 +177,10 @@ func resourceAwsImageBuilderDistributionConfigurationCreate(d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(output.DistributionConfigurationArn))
 
-	return resourceAwsImageBuilderDistributionConfigurationRead(d, meta)
+	return resourceDistributionConfigurationRead(d, meta)
 }
 
-func resourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -227,7 +227,7 @@ func resourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsImageBuilderDistributionConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChanges("description", "distribution") {
@@ -259,10 +259,10 @@ func resourceAwsImageBuilderDistributionConfigurationUpdate(d *schema.ResourceDa
 		}
 	}
 
-	return resourceAwsImageBuilderDistributionConfigurationRead(d, meta)
+	return resourceDistributionConfigurationRead(d, meta)
 }
 
-func resourceAwsImageBuilderDistributionConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDistributionConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{

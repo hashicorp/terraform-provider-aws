@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
+func ResourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderInfrastructureConfigurationCreate,
-		Read:   resourceAwsImageBuilderInfrastructureConfigurationRead,
-		Update: resourceAwsImageBuilderInfrastructureConfigurationUpdate,
-		Delete: resourceAwsImageBuilderInfrastructureConfigurationDelete,
+		Create: resourceInfrastructureConfigurationCreate,
+		Read:   resourceInfrastructureConfigurationRead,
+		Update: resourceInfrastructureConfigurationUpdate,
+		Delete: resourceInfrastructureConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -124,7 +124,7 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -209,10 +209,10 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 
 	d.SetId(aws.StringValue(output.InfrastructureConfigurationArn))
 
-	return resourceAwsImageBuilderInfrastructureConfigurationRead(d, meta)
+	return resourceInfrastructureConfigurationRead(d, meta)
 }
 
-func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -271,7 +271,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 	return nil
 }
 
-func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	if d.HasChanges(
@@ -358,10 +358,10 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 		}
 	}
 
-	return resourceAwsImageBuilderInfrastructureConfigurationRead(d, meta)
+	return resourceInfrastructureConfigurationRead(d, meta)
 }
 
-func resourceAwsImageBuilderInfrastructureConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInfrastructureConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteInfrastructureConfigurationInput{
