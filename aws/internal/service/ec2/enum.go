@@ -23,3 +23,15 @@ const (
 	VpcEndpointStatePendingAcceptance = "pendingAcceptance"
 	VpcEndpointStateRejected          = "rejected"
 )
+
+// See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
+const (
+	EBSSnapshotImportStateActive     = "active"
+	EBSSnapshotImportStateDeleting   = "deleting"
+	EBSSnapshotImportStateDeleted    = "deleted"
+	EBSSnapshotImportStateUpdating   = "updating"
+	EBSSnapshotImportStateValidating = "validating"
+	EBSSnapshotImportStateValidated  = "validated"
+	EBSSnapshotImportStateConverting = "converting"
+	EBSSnapshotImportStateCompleted  = "completed"
+)

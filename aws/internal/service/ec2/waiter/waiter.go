@@ -13,7 +13,6 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -783,4 +782,26 @@ func VpcEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, routeTa
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func EBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{tfec2.EBSSnapshotImportStateActive,
+			tfec2.EBSSnapshotImportStateUpdating,
+			tfec2.EBSSnapshotImportStateValidating,
+			tfec2.EBSSnapshotImportStateValidated,
+			tfec2.EBSSnapshotImportStateConverting,
+		},
+		Target:  []string{tfec2.EBSSnapshotImportStateCompleted},
+		Refresh: EbsSnapshotImportStatus(conn, importTaskID),
+		Timeout: 60 * time.Minute,
+		Delay:   10 * time.Second,
+	}
+
+	detail, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, err
+	} else {
+		return detail.(*ec2.SnapshotTaskDetail), nil
+	}
 }

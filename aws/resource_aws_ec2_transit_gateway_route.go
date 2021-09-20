@@ -81,7 +81,7 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
+	transitGatewayRouteTableID, destination, err := decodeTransitGatewayRouteID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
+	transitGatewayRouteTableID, destination, err := decodeTransitGatewayRouteID(d.Id())
 	if err != nil {
 		return err
 	}
