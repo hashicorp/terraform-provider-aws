@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSQuickSightGroup_basic(t *testing.T) {
@@ -120,7 +121,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 		input := &quicksight.DescribeGroupInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -145,7 +146,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 }
 
 func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group" {
 			continue
@@ -177,7 +178,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 
 func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {

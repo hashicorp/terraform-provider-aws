@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSQuickSightUser_basic(t *testing.T) {
@@ -111,7 +112,7 @@ func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 		input := &quicksight.DescribeUserInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -136,7 +137,7 @@ func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User
 }
 
 func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_user" {
 			continue
@@ -168,7 +169,7 @@ func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
 
 func testAccCheckQuickSightUserDisappears(v *quicksight.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {

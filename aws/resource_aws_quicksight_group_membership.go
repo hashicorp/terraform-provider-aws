@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsQuickSightGroupMembership() *schema.Resource {
@@ -63,9 +64,9 @@ func resourceAwsQuickSightGroupMembership() *schema.Resource {
 }
 
 func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID := meta.(*AWSClient).accountid
+	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
 	groupName := d.Get("group_name").(string)
 	memberName := d.Get("member_name").(string)
@@ -92,7 +93,7 @@ func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.R
 }
 
 func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
 	if err != nil {
@@ -125,7 +126,7 @@ func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsQuickSightGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
 	if err != nil {

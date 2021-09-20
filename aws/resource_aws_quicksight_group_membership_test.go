@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 }
 
 func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group_membership" {
@@ -108,7 +109,7 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 		listInput := &quicksight.ListGroupMembershipsInput{
 			AwsAccountId: aws.String(awsAccountID),
