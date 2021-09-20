@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCodeCommitRepository() *schema.Resource {
@@ -45,7 +46,7 @@ func dataSourceAwsCodeCommitRepository() *schema.Resource {
 }
 
 func dataSourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.GetRepositoryInput{

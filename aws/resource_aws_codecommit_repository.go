@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeCommitRepository() *schema.Resource {
@@ -68,8 +69,8 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 }
 
 func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeCommitConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &codecommit.CreateRepositoryInput{
@@ -99,7 +100,7 @@ func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	if d.HasChange("default_branch") {
 		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
@@ -125,9 +126,9 @@ func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeCommitConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -178,7 +179,7 @@ func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeCommitRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
 	_, err := conn.DeleteRepository(&codecommit.DeleteRepositoryInput{
