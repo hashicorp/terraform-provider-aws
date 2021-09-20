@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUserGroup() *schema.Resource {
@@ -36,7 +37,7 @@ func ResourceUserGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCognitoUserGroupName,
+				ValidateFunc: validUserGroupName,
 			},
 			"precedence": {
 				Type:     schema.TypeInt,
@@ -45,13 +46,13 @@ func ResourceUserGroup() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"user_pool_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCognitoUserPoolId,
+				ValidateFunc: validUserPoolID,
 			},
 		},
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUserPoolClient() *schema.Resource {
@@ -75,7 +76,7 @@ func ResourceUserPoolClient() *schema.Resource {
 							Optional:      true,
 							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
 							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 						},
 						"external_id": {
 							Type:          schema.TypeString,
@@ -87,7 +88,7 @@ func ResourceUserPoolClient() *schema.Resource {
 							Optional:      true,
 							Computed:      true,
 							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 						},
 						"user_data_shared": {
 							Type:     schema.TypeBool,
@@ -468,7 +469,7 @@ func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
 
-	_, err := retryOnAwsCode(cognitoidentityprovider.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode(cognitoidentityprovider.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.UpdateUserPoolClient(params)
 	})
 	if err != nil {

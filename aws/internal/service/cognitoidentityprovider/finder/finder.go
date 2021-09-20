@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
