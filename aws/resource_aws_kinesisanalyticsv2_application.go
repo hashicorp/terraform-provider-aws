@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceApplication() *schema.Resource {
@@ -78,7 +79,7 @@ func ResourceApplication() *schema.Resource {
 															"bucket_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 
 															"file_key": {
@@ -375,7 +376,7 @@ func ResourceApplication() *schema.Resource {
 																		"resource_arn": {
 																			Type:         schema.TypeString,
 																			Required:     true,
-																			ValidateFunc: validateArn,
+																			ValidateFunc: verify.ValidARN,
 																		},
 																	},
 																},
@@ -513,7 +514,7 @@ func ResourceApplication() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},
@@ -532,7 +533,7 @@ func ResourceApplication() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},
@@ -584,7 +585,7 @@ func ResourceApplication() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},
@@ -599,7 +600,7 @@ func ResourceApplication() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},
@@ -614,7 +615,7 @@ func ResourceApplication() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},
@@ -761,7 +762,7 @@ func ResourceApplication() *schema.Resource {
 															"bucket_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 
 															"file_key": {
@@ -849,7 +850,7 @@ func ResourceApplication() *schema.Resource {
 						"log_stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -897,7 +898,7 @@ func ResourceApplication() *schema.Resource {
 			"service_execution_role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"start_application": {
@@ -2534,7 +2535,7 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 			if propertyGroup != nil {
 				mPropertyGroup := map[string]interface{}{
 					"property_group_id": aws.StringValue(propertyGroup.PropertyGroupId),
-					"property_map":      pointersMapToStringList(propertyGroup.PropertyMap),
+					"property_map":      verify.PointersMapToStringList(propertyGroup.PropertyMap),
 				}
 
 				vPropertyGroups = append(vPropertyGroups, mPropertyGroup)
