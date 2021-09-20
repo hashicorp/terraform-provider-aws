@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsDxBgpPeer_basic(t *testing.T) {
+func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 	key := "DX_VIRTUAL_INTERFACE_ID"
 	vifId := os.Getenv(key)
 	if vifId == "" {

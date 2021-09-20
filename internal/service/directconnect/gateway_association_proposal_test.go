@@ -82,7 +82,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
+func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -118,7 +118,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
+func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -156,7 +156,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
+func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -181,7 +181,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
+func TestAccDirectConnectGatewayAssociationProposal_endOfLifeVPN(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -218,7 +218,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
+func TestAccDirectConnectGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 	var proposal directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -255,7 +255,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
+func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)

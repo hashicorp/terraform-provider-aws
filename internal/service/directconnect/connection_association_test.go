@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,7 +33,7 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
+func TestAccDirectConnectConnectionAssociation_multiConns(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsDxConnection_basic(t *testing.T) {
+func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_connection.test"
 	datasourceName := "data.aws_dx_connection.test"

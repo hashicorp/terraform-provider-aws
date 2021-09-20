@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
+func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -75,7 +75,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxHostedPrivateVirtualInterface_AccepterTags(t *testing.T) {
+func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
