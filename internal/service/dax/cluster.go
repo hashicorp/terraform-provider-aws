@@ -201,7 +201,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplicationFactor: aws.Int64(numNodes),
 		SecurityGroupIds:  securityIds,
 		SubnetGroupName:   aws.String(subnetGroupName),
-		Tags:              tags.IgnoreAws().DaxTags(),
+		Tags:              Tags(tags.IgnoreAws()),
 	}
 
 	// optionals can be defaulted by AWS
@@ -341,7 +341,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting server_side_encryption: %s", err)
 	}
 
-	tags, err := tftags.DaxListTags(conn, aws.StringValue(c.ClusterArn))
+	tags, err := ListTags(conn, aws.StringValue(c.ClusterArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DAX Cluster (%s): %s", aws.StringValue(c.ClusterArn), err)
@@ -367,7 +367,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DaxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DAX Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
