@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
