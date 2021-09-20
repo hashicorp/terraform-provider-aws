@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsGuardDutyMember_basic(t *testing.T) {
@@ -15,8 +16,8 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	accountID := "111111111111"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
@@ -44,8 +45,8 @@ func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
 	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
@@ -83,8 +84,8 @@ func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
 	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
@@ -123,8 +124,8 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{

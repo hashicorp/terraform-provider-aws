@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
@@ -20,8 +21,8 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
@@ -34,14 +35,14 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/[a-z0-9]{32}/filter/test-filter$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/[a-z0-9]{32}/filter/test-filter$")),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":    "region",
 						"equals.#": "1",
-						"equals.0": testAccGetRegion(),
+						"equals.0": acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":        "service.additionalInfo.threatListName",
@@ -86,8 +87,8 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":    "region",
 						"equals.#": "1",
-						"equals.0": testAccGetRegion(),
+						"equals.0": acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":        "service.additionalInfo.threatListName",
@@ -130,8 +131,8 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
@@ -171,8 +172,8 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -180,7 +181,7 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyFilter(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGuardDutyFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -406,3 +407,32 @@ resource "aws_guardduty_detector" "test" {
 }
 `
 }
+func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_acmpca_certificate_authority" {
+			continue
+		}
+
+		input := &acmpca.DescribeCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(rs.Primary.ID),
+		}
+
+		output, err := conn.DescribeCertificateAuthority(input)
+
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+				return nil
+			}
+			return err
+		}
+
+		if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
+			return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
+		}
+	}
+
+	return nil
+}
+

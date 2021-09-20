@@ -7,22 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
-	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
-	keyName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
-	keyName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
-	threatintelsetName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
-	threatintelsetName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
+	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	keyName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	keyName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	threatintelsetName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	threatintelsetName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
 				Config: testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyThreatintelsetExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/threatintelset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/threatintelset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
@@ -56,12 +57,12 @@ func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
 }
 
 func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
 		Steps: []resource.TestStep{

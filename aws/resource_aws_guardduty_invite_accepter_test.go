@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
@@ -20,11 +21,11 @@ func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsGuardDutyInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +110,7 @@ func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.
 }
 
 func testAccAwsGuardDutyInviteAccepterConfig_basic(email string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_guardduty_detector" "master" {
   provider = "awsalternate"
 }

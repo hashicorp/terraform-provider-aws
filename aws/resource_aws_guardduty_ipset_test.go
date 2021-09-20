@@ -7,22 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsGuardDutyIpset_basic(t *testing.T) {
-	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
-	keyName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
-	keyName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
-	ipsetName1 := fmt.Sprintf("tf-%s", acctest.RandString(5))
-	ipsetName2 := fmt.Sprintf("tf-%s", acctest.RandString(5))
+	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	keyName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	keyName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	ipsetName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	ipsetName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
 	resourceName := "aws_guardduty_ipset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func testAccAwsGuardDutyIpset_basic(t *testing.T) {
 				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyIpsetExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/ipset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/ipset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
@@ -56,12 +57,12 @@ func testAccAwsGuardDutyIpset_basic(t *testing.T) {
 }
 
 func testAccAwsGuardDutyIpset_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_guardduty_ipset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
