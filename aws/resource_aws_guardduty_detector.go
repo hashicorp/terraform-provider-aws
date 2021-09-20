@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyDetector() *schema.Resource {
+func ResourceDetector() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyDetectorCreate,
-		Read:   resourceAwsGuardDutyDetectorRead,
-		Update: resourceAwsGuardDutyDetectorUpdate,
-		Delete: resourceAwsGuardDutyDetectorDelete,
+		Create: resourceDetectorCreate,
+		Read:   resourceDetectorRead,
+		Update: resourceDetectorUpdate,
+		Delete: resourceDetectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -83,7 +83,7 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -111,10 +111,10 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 	}
 	d.SetId(aws.StringValue(output.DetectorId))
 
-	return resourceAwsGuardDutyDetectorRead(d, meta)
+	return resourceDetectorRead(d, meta)
 }
 
-func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -170,7 +170,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -199,10 +199,10 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsGuardDutyDetectorRead(d, meta)
+	return resourceDetectorRead(d, meta)
 }
 
-func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDetectorDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DeleteDetectorInput{

@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
+func ResourceInviteAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyInviteAccepterCreate,
-		Read:   resourceAwsGuardDutyInviteAccepterRead,
-		Delete: resourceAwsGuardDutyInviteAccepterDelete,
+		Create: resourceInviteAccepterCreate,
+		Read:   resourceInviteAccepterRead,
+		Delete: resourceInviteAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -41,7 +41,7 @@ func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
@@ -104,10 +104,10 @@ func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(detectorID)
 
-	return resourceAwsGuardDutyInviteAccepterRead(d, meta)
+	return resourceInviteAccepterRead(d, meta)
 }
 
-func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.GetMasterAccountInput{
@@ -137,7 +137,7 @@ func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsGuardDutyInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DisassociateFromMasterAccountInput{

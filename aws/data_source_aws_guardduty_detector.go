@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsGuarddutyDetector() *schema.Resource {
+func DataSourceDetector() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsGuarddutyDetectorRead,
+		Read: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -35,7 +35,7 @@ func dataSourceAwsGuarddutyDetector() *schema.Resource {
 	}
 }
 
-func dataSourceAwsGuarddutyDetectorRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorId := d.Get("id").(string)

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyMember() *schema.Resource {
+func ResourceMember() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyMemberCreate,
-		Read:   resourceAwsGuardDutyMemberRead,
-		Update: resourceAwsGuardDutyMemberUpdate,
-		Delete: resourceAwsGuardDutyMemberDelete,
+		Create: resourceMemberCreate,
+		Read:   resourceMemberRead,
+		Update: resourceMemberUpdate,
+		Delete: resourceMemberDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -67,7 +67,7 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
@@ -89,7 +89,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
 
 	if !d.Get("invite").(bool) {
-		return resourceAwsGuardDutyMemberRead(d, meta)
+		return resourceMemberRead(d, meta)
 	}
 
 	imi := &guardduty.InviteMembersInput{
@@ -110,10 +110,10 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error waiting for GuardDuty Member %q invite: %s", d.Id(), err)
 	}
 
-	return resourceAwsGuardDutyMemberRead(d, meta)
+	return resourceMemberRead(d, meta)
 }
 
-func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
@@ -160,7 +160,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsGuardDutyMemberUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
@@ -205,10 +205,10 @@ func resourceAwsGuardDutyMemberUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsGuardDutyMemberRead(d, meta)
+	return resourceMemberRead(d, meta)
 }
 
-func resourceAwsGuardDutyMemberDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())

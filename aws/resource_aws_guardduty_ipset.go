@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyIpset() *schema.Resource {
+func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyIpsetCreate,
-		Read:   resourceAwsGuardDutyIpsetRead,
-		Update: resourceAwsGuardDutyIpsetUpdate,
-		Delete: resourceAwsGuardDutyIpsetDelete,
+		Create: resourceIPSetCreate,
+		Read:   resourceIPSetRead,
+		Update: resourceIPSetUpdate,
+		Delete: resourceIPSetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -71,7 +71,7 @@ func resourceAwsGuardDutyIpset() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -108,10 +108,10 @@ func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
-	return resourceAwsGuardDutyIpsetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -164,7 +164,7 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
@@ -202,10 +202,10 @@ func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsGuardDutyIpsetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsGuardDutyIpsetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())

@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGuardDutyFilter() *schema.Resource {
+func ResourceFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyFilterCreate,
-		Read:   resourceAwsGuardDutyFilterRead,
-		Update: resourceAwsGuardDutyFilterUpdate,
-		Delete: resourceAwsGuardDutyFilterDelete,
+		Create: resourceFilterCreate,
+		Read:   resourceFilterRead,
+		Update: resourceFilterUpdate,
+		Delete: resourceFilterDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -122,7 +122,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 	}
 }
 
-func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -153,10 +153,10 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
-	return resourceAwsGuardDutyFilterRead(d, meta)
+	return resourceFilterRead(d, meta)
 }
 
-func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -227,7 +227,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	if d.HasChanges("action", "description", "finding_criteria", "rank") {
@@ -261,10 +261,10 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsGuardDutyFilterRead(d, meta)
+	return resourceFilterRead(d, meta)
 }
 
-func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorId := d.Get("detector_id").(string)
