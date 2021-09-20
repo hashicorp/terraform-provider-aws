@@ -1,4 +1,4 @@
-package waiter
+package route53recoverycontrolconfig
 
 import (
 	"time"

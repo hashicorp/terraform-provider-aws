@@ -1,4 +1,4 @@
-package waiter
+package route53recoverycontrolconfig
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
