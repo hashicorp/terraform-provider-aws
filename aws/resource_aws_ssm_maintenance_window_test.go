@@ -54,7 +54,7 @@ func testSweepSsmMaintenanceWindows(region string) error {
 
 			_, err := conn.DeleteMaintenanceWindow(input)
 
-			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 				continue
 			}
 
@@ -621,7 +621,7 @@ func testAccCheckAWSSSMMaintenanceWindowDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the SSM Maintenance Window is already destroyed
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 			continue
 		}
 

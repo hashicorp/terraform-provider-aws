@@ -261,7 +261,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 
 	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
 
-	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
 		log.Printf("[WARN] SSM Document not found so removing from state")
 		d.SetId("")
 		return nil
@@ -440,7 +440,7 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err = waiter.DocumentDeleted(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SSM Document (%s) to be Deleted: %w", d.Id(), err)
@@ -679,7 +679,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssmconn
 	updated, err := conn.UpdateDocument(updateDocInput)
 
-	if isAWSErr(err, ssm.ErrCodeDuplicateDocumentContent, "") {
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDuplicateDocumentContent, "") {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 
