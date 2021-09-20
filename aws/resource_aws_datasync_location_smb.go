@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataSyncLocationSmb() *schema.Resource {
+func ResourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationSmbCreate,
-		Read:   resourceAwsDataSyncLocationSmbRead,
-		Update: resourceAwsDataSyncLocationSmbUpdate,
-		Delete: resourceAwsDataSyncLocationSmbDelete,
+		Create: resourceLocationSMBCreate,
+		Read:   resourceLocationSMBRead,
+		Update: resourceLocationSMBUpdate,
+		Delete: resourceLocationSMBDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -103,7 +103,7 @@ func resourceAwsDataSyncLocationSmb() *schema.Resource {
 	}
 }
 
-func resourceAwsDataSyncLocationSmbCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -130,10 +130,10 @@ func resourceAwsDataSyncLocationSmbCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceAwsDataSyncLocationSmbRead(d, meta)
+	return resourceLocationSMBRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationSmbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -202,7 +202,7 @@ func resourceAwsDataSyncLocationSmbRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsDataSyncLocationSmbUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -232,10 +232,10 @@ func resourceAwsDataSyncLocationSmbUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %w", d.Id(), err)
 		}
 	}
-	return resourceAwsDataSyncLocationSmbRead(d, meta)
+	return resourceLocationSMBRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationSmbDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationSMBDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{

@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataSyncTask() *schema.Resource {
+func ResourceTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncTaskCreate,
-		Read:   resourceAwsDataSyncTaskRead,
-		Update: resourceAwsDataSyncTaskUpdate,
-		Delete: resourceAwsDataSyncTaskDelete,
+		Create: resourceTaskCreate,
+		Read:   resourceTaskRead,
+		Update: resourceTaskUpdate,
+		Delete: resourceTaskDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -189,7 +189,7 @@ func resourceAwsDataSyncTask() *schema.Resource {
 	}
 }
 
-func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -230,10 +230,10 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsDataSyncTaskRead(d, meta)
+	return resourceTaskRead(d, meta)
 }
 
-func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -285,7 +285,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -327,10 +327,10 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsDataSyncTaskRead(d, meta)
+	return resourceTaskRead(d, meta)
 }
 
-func resourceAwsDataSyncTaskDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteTaskInput{

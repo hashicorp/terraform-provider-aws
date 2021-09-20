@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -57,7 +58,7 @@ func testSweepDataSyncLocationNfss(region string) error {
 			}
 			log.Printf("[INFO] Deleting DataSync Location Nfs: %s", uri)
 
-			r := resourceAwsDataSyncLocationNfs()
+			r := ResourceLocationNFS()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(location.LocationArn))
 			err = r.Delete(d, client)
