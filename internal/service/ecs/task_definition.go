@@ -432,7 +432,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 	// ClientException: Tags can not be empty.
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().EcsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("task_role_arn"); ok {
@@ -562,7 +562,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
 
-	tags := tftags.EcsKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -641,7 +641,7 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.EcsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %s", d.Id(), err)
 		}
 	}

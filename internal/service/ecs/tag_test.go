@@ -21,12 +21,12 @@ func TestAccAWSEcsTag_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEcsTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEcsTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEcsTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -48,12 +48,12 @@ func TestAccAWSEcsTag_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEcsTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEcsTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEcsTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,12 +71,12 @@ func TestAccAWSEcsTag_ResourceArn_BatchComputeEnvironment(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEcsTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEcsTagConfigResourceArnBatchComputeEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEcsTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 				),
 			},
 			{
@@ -96,12 +96,12 @@ func TestAccAWSEcsTag_Value(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEcsTagDestroy,
+		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEcsTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEcsTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -114,7 +114,7 @@ func TestAccAWSEcsTag_Value(t *testing.T) {
 			{
 				Config: testAccEcsTagConfig(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEcsTagExists(resourceName),
+					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),

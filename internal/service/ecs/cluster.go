@@ -182,7 +182,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ecs.CreateClusterInput{
 		ClusterName:                     aws.String(clusterName),
 		DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
-		Tags:                            tags.IgnoreAws().EcsTags(),
+		Tags:                            Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
@@ -312,7 +312,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags := tftags.EcsKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -355,7 +355,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
 		}
 	}
