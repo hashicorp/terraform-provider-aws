@@ -1,4 +1,4 @@
-package cloudformation_test
+package cloudformation
 
 import (
 	"regexp"

@@ -1,4 +1,4 @@
-package lister
+package cloudformation
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
