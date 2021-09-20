@@ -41,7 +41,7 @@ func testSweepRoute53ResolverQueryLogConfigAssociations(region string) error {
 			id := aws.StringValue(queryLogConfigAssociation.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver Query Log Config Association: %s", id)
-			r := ResourceQueryLogConfigAssociation()
+			r := tfroute53resolver.ResourceQueryLogConfigAssociation()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -111,7 +111,7 @@ func TestAccAWSRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T)
 				Config: testAccRoute53ResolverQueryLogConfigAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigAssociationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueryLogConfigAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceQueryLogConfigAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

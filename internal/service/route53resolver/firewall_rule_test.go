@@ -43,7 +43,7 @@ func testSweepRoute53ResolverFirewallRules(region string) error {
 			id := tfroute53resolver.FirewallRuleCreateID(*firewallRule.FirewallRuleGroupId, *firewallRule.FirewallDomainListId)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule: %s", id)
-			r := ResourceFirewallRule()
+			r := tfroute53resolver.ResourceFirewallRule()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -175,7 +175,7 @@ func TestAccAWSRoute53ResolverFirewallRule_disappears(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewallRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceFirewallRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
