@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -56,7 +56,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -79,7 +79,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -153,7 +153,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T)
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -205,7 +205,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 	var providers []*schema.Provider
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -249,7 +249,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -315,7 +315,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
@@ -358,7 +358,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
+func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"

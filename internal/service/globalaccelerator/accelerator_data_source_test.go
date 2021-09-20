@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataGlobalAcceleratorAccelerator_basic(t *testing.T) {
+func TestAccGlobalAcceleratorAcceleratorDataSource_Data_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	dataSourceName := "data.aws_globalaccelerator_accelerator.test_by_arn"
