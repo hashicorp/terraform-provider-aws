@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 )
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
@@ -162,7 +163,7 @@ func testAccCheckLambdaProvisionedConcurrencyConfigDestroy(s *terraform.State) e
 			continue
 		}
 
-		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
+		functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -205,7 +206,7 @@ func testAccCheckAwsLambdaProvisionedConcurrencyConfigDisappears(resourceName st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
+		functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -235,7 +236,7 @@ func testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
+		functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

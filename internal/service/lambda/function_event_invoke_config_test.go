@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 )
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
@@ -288,7 +289,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", LambdaFunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", tflambda.FunctionVersionLatest),
 				),
 			},
 			{
@@ -442,7 +443,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_Latest(t *testing.T) {
 				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierLatest(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", LambdaFunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", tflambda.FunctionVersionLatest),
 				),
 			},
 			{
@@ -462,7 +463,7 @@ func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) erro
 			continue
 		}
 
-		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
+		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -508,7 +509,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigDisappears(resourceName strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
+		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -541,7 +542,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
+		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

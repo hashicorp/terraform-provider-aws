@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestLambdaPermissionUnmarshalling(t *testing.T) {
-	v := LambdaPolicy{}
+	v := tflambda.Policy{}
 	err := json.Unmarshal(testLambdaPolicy, &v)
 	if err != nil {
 		t.Fatalf("Expected no error when unmarshalling: %s", err)
@@ -65,7 +66,7 @@ func TestLambdaPermissionUnmarshalling(t *testing.T) {
 func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_alias(t *testing.T) {
 	arnWithAlias := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:testalias" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "testalias"
-	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(arnWithAlias)
+	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithAlias)
 	if err != nil {
 		t.Fatalf("Expected no error when getting qualifier: %s", err)
 	}
@@ -77,7 +78,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_alias(t *testin
 func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_govcloud(t *testing.T) {
 	arnWithAlias := "arn:aws-us-gov:lambda:us-gov-west-1:187636751137:function:lambda_function_name:testalias" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "testalias"
-	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(arnWithAlias)
+	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithAlias)
 	if err != nil {
 		t.Fatalf("Expected no error when getting qualifier: %s", err)
 	}
@@ -89,7 +90,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_govcloud(t *tes
 func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_version(t *testing.T) {
 	arnWithVersion := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:223" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "223"
-	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(arnWithVersion)
+	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithVersion)
 	if err != nil {
 		t.Fatalf("Expected no error when getting qualifier: %s", err)
 	}
@@ -100,7 +101,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_version(t *test
 
 func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_invalid(t *testing.T) {
 	invalidArn := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
-	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(invalidArn)
+	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(invalidArn)
 	if err == nil {
 		t.Fatalf("Expected error when getting qualifier")
 	}
@@ -110,7 +111,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_invalid(t *test
 
 	// with trailing colon
 	invalidArn = "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:" // lintignore:AWSAT003,AWSAT005 // unit test
-	qualifier, err = getQualifierFromLambdaAliasOrVersionArn(invalidArn)
+	qualifier, err = tflambda.GetQualifierFromAliasOrVersionARN(invalidArn)
 	if err == nil {
 		t.Fatalf("Expected error when getting qualifier")
 	}
@@ -121,7 +122,7 @@ func TestLambdaPermissionGetQualifierFromLambdaAliasOrVersionArn_invalid(t *test
 
 func TestLambdaPermissionGetFunctionNameFromLambdaArn_invalid(t *testing.T) {
 	invalidArn := "arn:aws:lambda:us-west-2:187636751137:function:" // lintignore:AWSAT003,AWSAT005 // unit test
-	fn, err := getFunctionNameFromLambdaArn(invalidArn)
+	fn, err := tflambda.GetFunctionNameFromARN(invalidArn)
 	if err == nil {
 		t.Fatalf("Expected error when parsing invalid ARN (%q)", invalidArn)
 	}
@@ -132,7 +133,7 @@ func TestLambdaPermissionGetFunctionNameFromLambdaArn_invalid(t *testing.T) {
 
 func TestLambdaPermissionGetFunctionNameFromLambdaArn_valid(t *testing.T) {
 	validArn := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
-	fn, err := getFunctionNameFromLambdaArn(validArn)
+	fn, err := tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
 		t.Fatalf("Expected no error (%q): %q", validArn, err)
 	}
@@ -144,7 +145,7 @@ func TestLambdaPermissionGetFunctionNameFromLambdaArn_valid(t *testing.T) {
 
 	// With qualifier
 	validArn = "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:12" // lintignore:AWSAT003,AWSAT005 // unit test
-	fn, err = getFunctionNameFromLambdaArn(validArn)
+	fn, err = tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
 		t.Fatalf("Expected no error (%q): %q", validArn, err)
 	}
@@ -157,7 +158,7 @@ func TestLambdaPermissionGetFunctionNameFromLambdaArn_valid(t *testing.T) {
 
 func TestLambdaPermissionGetFunctionNameFromGovCloudLambdaArn(t *testing.T) {
 	validArn := "arn:aws-us-gov:lambda:us-gov-west-1:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
-	fn, err := getFunctionNameFromLambdaArn(validArn)
+	fn, err := tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
 		t.Fatalf("Expected no error (%q): %q", validArn, err)
 	}
@@ -169,7 +170,7 @@ func TestLambdaPermissionGetFunctionNameFromGovCloudLambdaArn(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_basic(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_basic_%s", rString)
@@ -224,7 +225,7 @@ func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_raw_fname_%s", rString)
@@ -260,7 +261,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
@@ -296,7 +297,7 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	aliasName := fmt.Sprintf("tf_acc_lambda_perm_alias_w_qualifier_%s", rString)
@@ -360,11 +361,11 @@ func TestAccAWSLambdaPermission_disappears(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
-	var firstStatement LambdaPolicyStatement
-	var firstStatementModified LambdaPolicyStatement
-	var secondStatement LambdaPolicyStatement
-	var secondStatementModified LambdaPolicyStatement
-	var thirdStatement LambdaPolicyStatement
+	var firstStatement tflambda.PolicyStatement
+	var firstStatementModified tflambda.PolicyStatement
+	var secondStatement tflambda.PolicyStatement
+	var secondStatementModified tflambda.PolicyStatement
+	var thirdStatement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
@@ -439,7 +440,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_withS3(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-perm-w-s3-%s", rString)
@@ -478,7 +479,7 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	topicName := fmt.Sprintf("tf_acc_topic_lambda_perm_w_sns_%s", rString)
@@ -517,7 +518,7 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
-	var statement LambdaPolicyStatement
+	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_iam_%s", rString)
@@ -588,7 +589,7 @@ func testAccAWSLambdaPermissionDisappears(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStatement) resource.TestCheckFunc {
+func testAccCheckLambdaPermissionExists(n string, statement *tflambda.PolicyStatement) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -598,7 +599,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStateme
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		// IAM is eventually consistent
-		var foundStatement *LambdaPolicyStatement
+		var foundStatement *tflambda.PolicyStatement
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			var err error
 			foundStatement, err = lambdaPermissionExists(rs, conn)
@@ -674,13 +675,13 @@ func isLambdaPermissionGone(rs *terraform.ResourceState, conn *lambda.Lambda) er
 	}
 
 	policyInBytes := []byte(*resp.Policy)
-	policy := LambdaPolicy{}
+	policy := tflambda.Policy{}
 	err = json.Unmarshal(policyInBytes, &policy)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling Lambda policy (%s): %s", *resp.Policy, err)
 	}
 
-	state, err := findLambdaPolicyStatementById(&policy, rs.Primary.ID)
+	state, err := tflambda.FindPolicyStatementByID(&policy, rs.Primary.ID)
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -694,7 +695,7 @@ func isLambdaPermissionGone(rs *terraform.ResourceState, conn *lambda.Lambda) er
 		rs.Primary.ID, *state)
 }
 
-func lambdaPermissionExists(rs *terraform.ResourceState, conn *lambda.Lambda) (*LambdaPolicyStatement, error) {
+func lambdaPermissionExists(rs *terraform.ResourceState, conn *lambda.Lambda) (*tflambda.PolicyStatement, error) {
 	params := &lambda.GetPolicyInput{
 		FunctionName: aws.String(rs.Primary.Attributes["function_name"]),
 	}
@@ -712,13 +713,13 @@ func lambdaPermissionExists(rs *terraform.ResourceState, conn *lambda.Lambda) (*
 	}
 
 	policyInBytes := []byte(*resp.Policy)
-	policy := LambdaPolicy{}
+	policy := tflambda.Policy{}
 	err = json.Unmarshal(policyInBytes, &policy)
 	if err != nil {
 		return nil, fmt.Errorf("Error unmarshalling Lambda policy: %s", err)
 	}
 
-	return findLambdaPolicyStatementById(&policy, rs.Primary.ID)
+	return tflambda.FindPolicyStatementByID(&policy, rs.Primary.ID)
 }
 
 func testAccAWSCLambdaPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
