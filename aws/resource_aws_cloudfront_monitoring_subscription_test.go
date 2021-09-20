@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepCloudFrontMonitoringSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*conns.AWSClient).CloudFrontConn
 	var sweeperErrs *multierror.Error
 
 	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
@@ -160,7 +161,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 }
 
 func testAccCheckCloudFrontMonitoringSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_monitoring_subscription" {
@@ -195,7 +196,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionExists(n string, v *cloudfront.
 			return fmt.Errorf("No CloudFront Monitoring Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 		out, err := finder.MonitoringSubscriptionByDistributionId(conn, rs.Primary.ID)
 		if err != nil {
 			return err

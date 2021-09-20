@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFrontCachePolicy() *schema.Resource {
@@ -155,7 +156,7 @@ func resourceAwsCloudFrontCachePolicy() *schema.Resource {
 }
 
 func resourceAwsCloudFrontCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.CreateCachePolicyInput{
 		CachePolicyConfig: expandCloudFrontCachePolicyConfig(d),
@@ -173,7 +174,7 @@ func resourceAwsCloudFrontCachePolicyCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 	request := &cloudfront.GetCachePolicyInput{
 		Id: aws.String(d.Id()),
 	}
@@ -197,7 +198,7 @@ func resourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFrontCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdateCachePolicyInput{
 		CachePolicyConfig: expandCloudFrontCachePolicyConfig(d),
@@ -214,7 +215,7 @@ func resourceAwsCloudFrontCachePolicyUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudFrontCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFrontFunction() *schema.Resource {
@@ -73,7 +74,7 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 // resourceAwsCloudFrontFunction maps to:
 // CreateFunction in the API / SDK
 func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	functionName := d.Get("name").(string)
 	input := &cloudfront.CreateFunctionInput{
@@ -114,7 +115,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 // resourceAwsCloudFrontFunctionRead maps to:
 // GetFunction in the API / SDK
 func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	stage := cloudfront.FunctionStageDevelopment
 	if d.Get("publish").(bool) {
@@ -157,7 +158,7 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 // resourceAwsCloudFrontFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
 func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 	etag := d.Get("etag").(string)
 
 	if d.HasChanges("code", "comment", "runtime") {
@@ -201,7 +202,7 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 // resourceAwsCloudFrontFunction maps to:
 // DeleteFunction in the API / SDK
 func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	log.Printf("[INFO] Deleting Cloudfront Function: %s", d.Id())
 	_, err := conn.DeleteFunction(&cloudfront.DeleteFunctionInput{

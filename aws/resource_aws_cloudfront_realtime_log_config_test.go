@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepCloudFrontRealtimeLogConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListRealtimeLogConfigsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -196,7 +197,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 }
 
 func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_realtime_log_config" {
@@ -229,7 +230,7 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 			return fmt.Errorf("No CloudFront Real-time Log Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 		out, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err

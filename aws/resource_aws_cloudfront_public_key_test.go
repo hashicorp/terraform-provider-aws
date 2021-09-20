@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
@@ -135,7 +136,7 @@ func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
 			return fmt.Errorf("No Id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 		params := &cloudfront.GetPublicKeyInput{
 			Id: aws.String(rs.Primary.ID),
@@ -150,7 +151,7 @@ func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
 }
 
 func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_public_key" {

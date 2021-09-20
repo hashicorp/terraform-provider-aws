@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -37,7 +38,7 @@ func testSweepCloudfrontFunctions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListFunctionsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -303,7 +304,7 @@ func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
 }
 
 func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_function" {
@@ -338,7 +339,7 @@ func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFun
 			return fmt.Errorf("Cloudfront Function ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 		output, err := finder.FunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
@@ -96,7 +97,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 }
 
 func testAccCheckCloudFrontOriginAccessIdentityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_origin_access_identity" {
@@ -126,7 +127,7 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloud
 			return fmt.Errorf("No Id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 		params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 			Id: aws.String(rs.Primary.ID),

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepCloudFrontKeyGroup(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*conns.AWSClient).CloudFrontConn
 	var sweeperErrs *multierror.Error
 
 	input := &cloudfront.ListKeyGroupsInput{}
@@ -201,7 +202,7 @@ func testAccCheckCloudFrontKeyGroupExistence(r string) resource.TestCheckFunc {
 			return fmt.Errorf("no Id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 		input := &cloudfront.GetKeyGroupInput{
 			Id: aws.String(rs.Primary.ID),
@@ -216,7 +217,7 @@ func testAccCheckCloudFrontKeyGroupExistence(r string) resource.TestCheckFunc {
 }
 
 func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_key_group" {

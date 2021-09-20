@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCloudFrontDistribution() *schema.Resource {
@@ -58,8 +59,8 @@ func dataSourceAwsCloudFrontDistribution() *schema.Resource {
 
 func dataSourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("id").(string))
-	conn := meta.(*AWSClient).cloudfrontconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFrontConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
