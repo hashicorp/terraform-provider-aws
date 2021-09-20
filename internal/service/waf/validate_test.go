@@ -2,7 +2,6 @@ package waf
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidMetricName(t *testing.T) {
