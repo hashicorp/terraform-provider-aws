@@ -2,7 +2,6 @@ package emr
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidCustomAMIID(t *testing.T) {
