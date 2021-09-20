@@ -301,7 +301,7 @@ func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if !tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			return err
 		}
 	}

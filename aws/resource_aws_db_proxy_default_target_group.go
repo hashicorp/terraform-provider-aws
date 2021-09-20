@@ -96,7 +96,7 @@ func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta inter
 	tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, d.Id())
 
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -224,7 +224,7 @@ func resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName st
 		tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, proxyName)
 
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 				return 42, "", nil
 			}
 			return 42, "", err
