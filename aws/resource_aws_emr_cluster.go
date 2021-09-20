@@ -27,12 +27,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func resourceAwsEMRCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRClusterCreate,
-		Read:   resourceAwsEMRClusterRead,
-		Update: resourceAwsEMRClusterUpdate,
-		Delete: resourceAwsEMRClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -703,7 +703,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 	}
 }
 
-func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -989,10 +989,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsEMRClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1172,7 +1172,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	if d.HasChange("visible_to_all_users") {
@@ -1356,10 +1356,10 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsEMRClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	req := &emr.TerminateJobFlowsInput{

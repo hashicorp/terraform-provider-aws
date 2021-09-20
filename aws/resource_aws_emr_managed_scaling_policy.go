@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
+func ResourceManagedScalingPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRManagedScalingPolicyCreate,
-		Read:   resourceAwsEMRManagedScalingPolicyRead,
-		Delete: resourceAwsEMRManagedScalingPolicyDelete,
+		Create: resourceManagedScalingPolicyCreate,
+		Read:   resourceManagedScalingPolicyRead,
+		Delete: resourceManagedScalingPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -66,7 +66,7 @@ func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
@@ -101,7 +101,7 @@ func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	input := &emr.GetManagedScalingPolicyInput{
@@ -140,7 +140,7 @@ func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsEMRManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
 	input := &emr.RemoveManagedScalingPolicyInput{
