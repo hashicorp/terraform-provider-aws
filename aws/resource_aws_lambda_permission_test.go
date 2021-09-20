@@ -12,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestLambdaPermissionUnmarshalling(t *testing.T) {
@@ -169,7 +170,7 @@ func TestLambdaPermissionGetFunctionNameFromGovCloudLambdaArn(t *testing.T) {
 func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_basic_%s", rString)
 
@@ -177,8 +178,8 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -205,11 +206,11 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -224,7 +225,7 @@ func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
 func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_raw_fname_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_raw_fname_%s", rString)
 
@@ -232,8 +233,8 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -260,15 +261,15 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
 
 	resourceName := "aws_lambda_permission.with_statement_id_prefix"
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -296,7 +297,7 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	aliasName := fmt.Sprintf("tf_acc_lambda_perm_alias_w_qualifier_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_qualifier_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_qualifier_%s", rString)
@@ -305,8 +306,8 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -332,15 +333,15 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_disappears(t *testing.T) {
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
 
 	resourceName := "aws_lambda_permission.first"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -364,7 +365,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 	var secondStatementModified LambdaPolicyStatement
 	var thirdStatement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
 
@@ -375,8 +376,8 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -439,7 +440,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-perm-w-s3-%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_s3_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_s3_%s", rString)
@@ -449,8 +450,8 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 	bucketResourceName := "aws_s3_bucket.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -478,7 +479,7 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	topicName := fmt.Sprintf("tf_acc_topic_lambda_perm_w_sns_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_sns_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_sns_%s", rString)
@@ -488,8 +489,8 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 	snsTopicResourceName := "aws_sns_topic.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -517,7 +518,7 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 	var statement LambdaPolicyStatement
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_iam_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_iam_%s", rString)
 
@@ -526,8 +527,8 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 	functionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
