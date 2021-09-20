@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLifecyclePolicy() *schema.Resource {
@@ -39,7 +40,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				// TODO: Make this not required and if it's not provided then use the default service role, creating it if necessary
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"policy_details": {
 				Type:     schema.TypeList,
