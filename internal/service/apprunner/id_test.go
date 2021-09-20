@@ -1,4 +1,4 @@
-package apprunner_test
+package apprunner
 
 import (
 	"fmt"
