@@ -1,4 +1,4 @@
-package waiter
+package appmesh
 
 import (
 	"time"
