@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepRoute53ResolverRuleAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -46,7 +46,7 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
-			if testSweepSkipSweepError(err) {
+			if acctest.SkipSweepError(err) {
 				log.Printf("[INFO] Skipping Route53 Resolver rule association %q: %s", id, err)
 				continue
 			}
@@ -67,7 +67,7 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Route53 Resolver rule association sweep for %s: %s", region, err)
 			return nil
 		}
@@ -87,7 +87,7 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule_association" {
 			continue
@@ -142,7 +142,7 @@ func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53res
 			return fmt.Errorf("No Route 53 Resolver rule association ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(rs.Primary.ID),
 		})
