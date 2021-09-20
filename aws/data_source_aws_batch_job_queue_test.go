@@ -18,7 +18,7 @@ func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck: acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsBatchJobQueueConfig(rName),

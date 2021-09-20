@@ -30,7 +30,7 @@ func init() {
 }
 
 func testSweepBatchJobDefinitions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -62,7 +62,7 @@ func testSweepBatchJobDefinitions(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Job Definitions sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -81,7 +81,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,14 +118,14 @@ func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBatchJobDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBatchJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +141,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,7 +179,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerProperti
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +217,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -294,7 +294,7 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -321,7 +321,7 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -355,7 +355,7 @@ func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -400,7 +400,7 @@ func TestAccAWSBatchJobDefinition_PropagateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -435,7 +435,7 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 		jobDefinition, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
 
@@ -487,7 +487,7 @@ func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDe
 }
 
 func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_job_definition" {

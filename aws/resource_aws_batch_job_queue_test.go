@@ -7,6 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,7 +23,7 @@ func init() {
 }
 
 func testSweepBatchJobQueues(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -29,7 +31,7 @@ func testSweepBatchJobQueues(region string) error {
 
 	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Batch Job Queue sweep for %s: %s", region, err)
 			return nil
 		}
@@ -63,7 +65,7 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +97,7 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +121,7 @@ func TestAccAWSBatchJobQueue_ComputeEnvironments_ExternalOrderUpdate(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +148,7 @@ func TestAccAWSBatchJobQueue_Priority(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,7 +182,7 @@ func TestAccAWSBatchJobQueue_State(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,7 +216,7 @@ func TestAccAWSBatchJobQueue_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +265,7 @@ func testAccCheckBatchJobQueueExists(n string, jq *batch.JobQueueDetail) resourc
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 		name := rs.Primary.Attributes["name"]
 		queue, err := getJobQueue(conn, name)
 		if err != nil {
@@ -283,7 +285,7 @@ func testAccCheckBatchJobQueueDestroy(s *terraform.State) error {
 		if rs.Type != "aws_batch_job_queue" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 		jq, err := getJobQueue(conn, rs.Primary.Attributes["name"])
 		if err == nil {
 			if jq != nil {
@@ -297,7 +299,7 @@ func testAccCheckBatchJobQueueDestroy(s *terraform.State) error {
 
 func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 		name := aws.StringValue(jobQueue.JobQueueName)
 
 		err := disableBatchJobQueue(name, conn)
@@ -315,7 +317,7 @@ func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resourc
 // For example, Terraform may set a single Compute Environment with Order 0, but the console updates it to 1.
 func testAccCheckBatchJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*AWSClient).batchconn
 
 		input := &batch.UpdateJobQueueInput{
 			ComputeEnvironmentOrder: jobQueue.ComputeEnvironmentOrder,
@@ -501,8 +503,9 @@ resource "aws_batch_job_queue" "test" {
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
+
 func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_launch_template" {
@@ -528,4 +531,3 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 
 	return nil
 }
-
