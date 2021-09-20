@@ -11,10 +11,11 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // These tests need to be serialized, else resources get orphaned after "TooManyRequests" errors.
@@ -164,7 +165,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 		output, err := conn.ImportCertificate(&acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
-			Tags: keyvaluetags.New(map[string]interface{}{
+			Tags: tftags.New(map[string]interface{}{
 				"Name": rName,
 			}).IgnoreAws().AcmTags(),
 		})

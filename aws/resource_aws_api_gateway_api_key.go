@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceAPIKey() *schema.Resource {
@@ -65,18 +66,18 @@ func ResourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway API Key")
 
 	apiKey, err := conn.CreateApiKey(&apigateway.CreateApiKeyInput{
@@ -116,7 +117,7 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := keyvaluetags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -183,7 +184,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

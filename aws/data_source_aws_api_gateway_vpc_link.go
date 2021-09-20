@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVPCLink() *schema.Resource {
@@ -42,7 +43,7 @@ func DataSourceVPCLink() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -84,7 +85,7 @@ func dataSourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", match.Description)
 	d.Set("target_arns", flex.FlattenStringList(match.TargetArns))
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(match.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.ApigatewayKeyValueTags(match.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

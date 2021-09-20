@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceAPIKey() *schema.Resource {
@@ -44,7 +45,7 @@ func DataSourceAPIKey() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -70,7 +71,7 @@ func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled", apiKey.Enabled)
 	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 	return nil

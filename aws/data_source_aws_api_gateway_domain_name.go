@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
@@ -81,7 +82,7 @@ func DataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }
@@ -132,7 +133,7 @@ func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
 	d.Set("security_policy", domainName.SecurityPolicy)
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(domainName.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.ApigatewayKeyValueTags(domainName.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
