@@ -290,7 +290,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(tags) > 0 {
-		elbOpts.Tags = tags.IgnoreAws().ElbTags()
+		elbOpts.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
@@ -452,7 +452,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		}
 	}
 
-	tags, err := tftags.ElbListTags(elbconn, d.Id())
+	tags, err := ListTags(elbconn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
@@ -778,7 +778,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElbUpdateTags(elbconn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(elbconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)
 		}
 	}

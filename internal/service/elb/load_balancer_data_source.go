@@ -304,7 +304,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	tags, err := tftags.ElbListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ELB (%s): %w", d.Id(), err)
