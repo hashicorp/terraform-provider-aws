@@ -54,7 +54,7 @@ func testSweepLaunchConfigurations(region string) error {
 				LaunchConfigurationName: aws.String(name),
 			})
 		if err != nil {
-			if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
 				return nil
 			}
 			return err
@@ -624,7 +624,7 @@ func testAccCheckAWSLaunchConfigurationDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if !isAWSErr(err, "InvalidLaunchConfiguration.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidLaunchConfiguration.NotFound", "") {
 			return err
 		}
 	}

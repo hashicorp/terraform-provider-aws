@@ -751,7 +751,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		if isAWSErr(err, "ValidationError", "Invalid IAM Instance Profile") {
+		if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IAM Instance Profile") {
 			return resource.RetryableError(err)
 		}
 
@@ -761,7 +761,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateAutoScalingGroup(&createOpts)
 	}
 	if err != nil {
@@ -1397,9 +1397,9 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 		// Successful delete
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
 			return nil
 		}
 	}
@@ -1416,7 +1416,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		group, err = getAwsAutoscalingGroup(d.Id(), conn)
 		if group != nil {
 			return fmt.Errorf("Auto Scaling Group still exists")
@@ -1466,7 +1466,7 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.DeleteWarmPool(&deleteopts)
 		}
 		if err != nil {
@@ -1496,7 +1496,7 @@ func waitForWarmPoolDeletion(conn *autoscaling.AutoScaling, d *schema.ResourceDa
 	log.Printf("[DEBUG] Waiting for Auto Scaling Group (%s) Warm Pool deletion", d.Id())
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
@@ -1573,7 +1573,7 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 			fmt.Errorf("Warm pool still has %d instances", len(p.Instances)))
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		p, err = getAwsAutoscalingGroupWarmPool(d.Id(), conn)
 		if err != nil {
 			return fmt.Errorf("error getting Warm Pool info when draining Auto Scaling Group %s: %s", d.Id(), err)
@@ -1661,7 +1661,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 		return resource.RetryableError(
 			fmt.Errorf("Group still has %d instances", len(g.Instances)))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		g, err = getAwsAutoscalingGroup(d.Id(), conn)
 		if err != nil {
 			return fmt.Errorf("Error getting Auto Scaling Group info when draining: %s", err)
@@ -2228,7 +2228,7 @@ func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName str
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.StartInstanceRefresh(input)
 	}
 	if err != nil {

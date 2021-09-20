@@ -53,7 +53,7 @@ func waitForASGCapacity(
 
 		return resource.RetryableError(fmt.Errorf("%q: Waiting up to %s: %s", d.Id(), wait, reason))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*AWSClient).autoscalingconn)
 
 		if err != nil {

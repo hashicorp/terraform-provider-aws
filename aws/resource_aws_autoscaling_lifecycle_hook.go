@@ -78,7 +78,7 @@ func resourceAwsAutoscalingLifecycleHookPutOp(conn *autoscaling.AutoScaling, par
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutLifecycleHook(params)
 	}
 	if err != nil {
