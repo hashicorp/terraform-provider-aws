@@ -2,9 +2,10 @@ package cloudwatchevents_test
 
 import (
 	"context"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 	"reflect"
 	"testing"
+
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
 func testResourceAwsCloudWatchEventTargetStateDataV0() map[string]interface{} {
