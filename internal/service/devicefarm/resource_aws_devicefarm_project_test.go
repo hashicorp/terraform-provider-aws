@@ -1,4 +1,4 @@
-package aws
+package devicefarm_test
 
 import (
 	"fmt"
