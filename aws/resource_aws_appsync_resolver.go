@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceResolver() *schema.Resource {
@@ -145,7 +146,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.CreateResolver(input)
 	})
 
@@ -242,7 +243,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.UpdateResolver(input)
 	})
 
@@ -272,7 +273,7 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err = verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.DeleteResolver(input)
 	})
 
