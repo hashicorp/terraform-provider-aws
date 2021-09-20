@@ -109,7 +109,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        tags.IgnoreAws().MediaconvertTags(),
+		Tags:        Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -163,7 +163,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting Media Convert Queue reservation_plan_settings: %s", err)
 	}
 
-	tags, err := tftags.MediaconvertListTags(conn, aws.StringValue(resp.Queue.Arn))
+	tags, err := ListTags(conn, aws.StringValue(resp.Queue.Arn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %s", d.Id(), err)
@@ -218,7 +218,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.MediaconvertUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
