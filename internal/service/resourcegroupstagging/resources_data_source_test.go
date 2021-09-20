@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.T) {
+func TestAccResourceGroupsTaggingResourcesDataSource_tagFilter(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.
 	})
 }
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDetails(t *testing.T) {
+func TestAccResourceGroupsTaggingResourcesDataSource_includeComplianceDetails(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -53,7 +53,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDeta
 	})
 }
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t *testing.T) {
+func TestAccResourceGroupsTaggingResourcesDataSource_resourceTypeFilters(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -76,7 +76,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t
 	})
 }
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceArnList(t *testing.T) {
+func TestAccResourceGroupsTaggingResourcesDataSource_resourceARNList(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
