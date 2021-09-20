@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWorkspacesIpGroup() *schema.Resource {
+func ResourceIPGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkspacesIpGroupCreate,
-		Read:   resourceAwsWorkspacesIpGroupRead,
-		Update: resourceAwsWorkspacesIpGroupUpdate,
-		Delete: resourceAwsWorkspacesIpGroupDelete,
+		Create: resourceIPGroupCreate,
+		Read:   resourceIPGroupRead,
+		Update: resourceIPGroupUpdate,
+		Delete: resourceIPGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,7 +59,7 @@ func resourceAwsWorkspacesIpGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -78,10 +78,10 @@ func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(resp.GroupId))
 
-	return resourceAwsWorkspacesIpGroupRead(d, meta)
+	return resourceIPGroupRead(d, meta)
 }
 
-func resourceAwsWorkspacesIpGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -132,7 +132,7 @@ func resourceAwsWorkspacesIpGroupRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsWorkspacesIpGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	if d.HasChange("rules") {
@@ -155,10 +155,10 @@ func resourceAwsWorkspacesIpGroupUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsWorkspacesIpGroupRead(d, meta)
+	return resourceIPGroupRead(d, meta)
 }
 
-func resourceAwsWorkspacesIpGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	var found bool

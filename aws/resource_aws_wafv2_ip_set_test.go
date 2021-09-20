@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -49,7 +50,7 @@ func testSweepWafv2IpSets(region string) error {
 		for _, ipSet := range page.IPSets {
 			id := aws.StringValue(ipSet.Id)
 
-			r := resourceAwsWafv2IPSet()
+			r := ResourceIPSet()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", ipSet.LockToken)
@@ -143,7 +144,7 @@ func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &r),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2IPSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

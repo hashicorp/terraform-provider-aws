@@ -9,9 +9,9 @@ import (
 // See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
 var billingAccountId = "386209384616"
 
-func dataSourceAwsBillingServiceAccount() *schema.Resource {
+func DataSourceBillingServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBillingServiceAccountRead,
+		Read: dataSourceBillingServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -22,7 +22,7 @@ func dataSourceAwsBillingServiceAccount() *schema.Resource {
 	}
 }
 
-func dataSourceAwsBillingServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBillingServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(billingAccountId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

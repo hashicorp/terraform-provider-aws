@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafv2IPSet() *schema.Resource {
+func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2IPSetRead,
+		Read: dataSourceIPSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {
@@ -48,7 +48,7 @@ func dataSourceAwsWafv2IPSet() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	name := d.Get("name").(string)
 

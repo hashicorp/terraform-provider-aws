@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCallerIdentity() *schema.Resource {
+func DataSourceCallerIdentity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCallerIdentityRead,
+		Read: dataSourceCallerIdentityRead,
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -33,7 +33,7 @@ func dataSourceAwsCallerIdentity() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).STSConn
 
 	log.Printf("[DEBUG] Reading Caller Identity")
