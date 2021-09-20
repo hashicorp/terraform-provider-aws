@@ -1,4 +1,4 @@
-package aws
+package swf_test
 
 import (
 	"fmt"
