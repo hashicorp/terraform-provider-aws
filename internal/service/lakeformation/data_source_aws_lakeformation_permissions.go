@@ -234,7 +234,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 
-	allPermissions, err := waiter.PermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waiter.waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 

@@ -413,7 +413,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 
-	allPermissions, err := waiter.PermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waiter.waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	if !d.IsNewResource() {
 		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
@@ -577,7 +577,7 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	err := resource.Retry(waiter.PermissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.permissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.RevokePermissions(input)
 		if err != nil {
@@ -616,7 +616,7 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	// You can't just wait until permissions = 0 because there could be many other unrelated permissions
 	// on the resource and filtering is non-trivial for table with columns.
 
-	err = resource.Retry(waiter.PermissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err = resource.Retry(waiter.permissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.RevokePermissions(input)
 

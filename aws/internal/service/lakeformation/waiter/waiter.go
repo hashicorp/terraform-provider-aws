@@ -9,21 +9,21 @@ import (
 )
 
 const (
-	PermissionsReadyTimeout       = 1 * time.Minute
-	PermissionsDeleteRetryTimeout = 30 * time.Second
+	permissionsReadyTimeout       = 1 * time.Minute
+	permissionsDeleteRetryTimeout = 30 * time.Second
 
-	StatusAvailable = "AVAILABLE"
-	StatusNotFound  = "NOT FOUND"
-	StatusFailed    = "FAILED"
-	StatusIAMDelay  = "IAM DELAY"
+	statusAvailable = "AVAILABLE"
+	statusNotFound  = "NOT FOUND"
+	statusFailed    = "FAILED"
+	statusIAMDelay  = "IAM DELAY"
 )
 
-func PermissionsReady(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) ([]*lakeformation.PrincipalResourcePermissions, error) {
+func waitPermissionsReady(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) ([]*lakeformation.PrincipalResourcePermissions, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{StatusNotFound, StatusIAMDelay},
-		Target:  []string{StatusAvailable},
-		Refresh: PermissionsStatus(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
-		Timeout: PermissionsReadyTimeout,
+		Pending: []string{statusNotFound, statusIAMDelay},
+		Target:  []string{statusAvailable},
+		Refresh: statusPermissions(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
+		Timeout: permissionsReadyTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

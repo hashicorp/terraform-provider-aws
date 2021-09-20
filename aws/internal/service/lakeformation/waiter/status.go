@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func PermissionsStatus(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) resource.StateRefreshFunc {
+func statusPermissions(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		var permissions []*lakeformation.PrincipalResourcePermissions
 
@@ -31,24 +31,24 @@ func PermissionsStatus(conn *lakeformation.LakeFormation, input *lakeformation.L
 		})
 
 		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
-			return nil, StatusNotFound, err
+			return nil, statusNotFound, err
 		}
 
 		if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
-			return nil, StatusIAMDelay, nil
+			return nil, statusIAMDelay, nil
 		}
 
 		if err != nil {
-			return nil, StatusFailed, fmt.Errorf("error listing permissions: %w", err)
+			return nil, statusFailed, fmt.Errorf("error listing permissions: %w", err)
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource
 		cleanPermissions := tflakeformation.FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, permissions)
 
 		if len(cleanPermissions) == 0 {
-			return nil, StatusNotFound, nil
+			return nil, statusNotFound, nil
 		}
 
-		return permissions, StatusAvailable, nil
+		return permissions, statusAvailable, nil
 	}
 }
