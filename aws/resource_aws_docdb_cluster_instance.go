@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDocDBClusterInstance() *schema.Resource {
+func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterInstanceCreate,
-		Read:   resourceAwsDocDBClusterInstanceRead,
-		Update: resourceAwsDocDBClusterInstanceUpdate,
-		Delete: resourceAwsDocDBClusterInstanceDelete,
+		Create: resourceClusterInstanceCreate,
+		Read:   resourceClusterInstanceRead,
+		Update: resourceClusterInstanceUpdate,
+		Delete: resourceClusterInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -180,7 +180,7 @@ func resourceAwsDocDBClusterInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -250,10 +250,10 @@ func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for DocDB Instance (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourceAwsDocDBClusterInstanceRead(d, meta)
+	return resourceClusterInstanceRead(d, meta)
 }
 
-func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -343,7 +343,7 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	requestUpdate := false
 
@@ -424,10 +424,10 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 
 	}
 
-	return resourceAwsDocDBClusterInstanceRead(d, meta)
+	return resourceClusterInstanceRead(d, meta)
 }
 
-func resourceAwsDocDBClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	log.Printf("[DEBUG] DocDB Cluster Instance destroy: %v", d.Id())

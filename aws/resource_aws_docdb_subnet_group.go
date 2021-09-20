@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDocDBSubnetGroup() *schema.Resource {
+func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBSubnetGroupCreate,
-		Read:   resourceAwsDocDBSubnetGroupRead,
-		Update: resourceAwsDocDBSubnetGroupUpdate,
-		Delete: resourceAwsDocDBSubnetGroupDelete,
+		Create: resourceSubnetGroupCreate,
+		Read:   resourceSubnetGroupRead,
+		Update: resourceSubnetGroupUpdate,
+		Delete: resourceSubnetGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +68,7 @@ func resourceAwsDocDBSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -99,10 +99,10 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(groupName)
 
-	return resourceAwsDocDBSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -162,7 +162,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	if d.HasChanges("subnet_ids", "description") {
@@ -191,10 +191,10 @@ func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsDocDBSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDocDBSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	delOpts := docdb.DeleteDBSubnetGroupInput{

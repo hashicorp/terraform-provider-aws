@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDocDBCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterCreate,
-		Read:   resourceAwsDocDBClusterRead,
-		Update: resourceAwsDocDBClusterUpdate,
-		Delete: resourceAwsDocDBClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDocDBClusterImport,
 		},
@@ -260,7 +260,7 @@ func resourceAwsDocDBClusterImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -485,10 +485,10 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsDocDBClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -595,7 +595,7 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	requestUpdate := false
 
@@ -696,10 +696,10 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	}
 
-	return resourceAwsDocDBClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 	log.Printf("[DEBUG] Destroying DocDB Cluster (%s)", d.Id())
 

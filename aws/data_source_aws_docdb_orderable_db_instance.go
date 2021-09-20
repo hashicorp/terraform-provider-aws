@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
+func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDocdbOrderableDbInstanceRead,
+		Read: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,
@@ -61,7 +61,7 @@ func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDocdbOrderableDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
