@@ -1,4 +1,4 @@
-package aws
+package datasync_test
 
 import (
 	"errors"
@@ -12,13 +12,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 func init() {
@@ -773,7 +773,7 @@ func testAccCheckAWSDataSyncTaskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindTaskByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindTaskByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -798,7 +798,7 @@ func testAccCheckAWSDataSyncTaskExists(resourceName string, task *datasync.Descr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
-		output, err := finder.FindTaskByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindTaskByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

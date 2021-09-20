@@ -1,4 +1,4 @@
-package aws
+package datasync
 
 import (
 	"fmt"
@@ -9,8 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -148,7 +147,7 @@ func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading DataSync Location NFS (%s): %w", d.Id(), err)
 	}
 
-	subdirectory, err := tfdatasync.SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return err
