@@ -103,7 +103,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy(s *terraform.State
 			continue
 		}
 
-		_, err := finder.SnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+		_, err := finder.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -131,7 +131,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
-		application, err := finder.SnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+		application, err := finder.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 		if err != nil {
 			return err
