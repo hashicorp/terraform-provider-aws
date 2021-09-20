@@ -193,7 +193,7 @@ func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeConfiguration(input)
 		if err != nil {
-			if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

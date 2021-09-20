@@ -1214,7 +1214,7 @@ func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeBroker(input)
 		if err != nil {
-			if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
