@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSAppmeshMesh_basic(t *testing.T) {
+func TestAccAppMeshMeshDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -38,7 +38,7 @@ func TestAccDataSourceAWSAppmeshMesh_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSAppmeshMesh_meshOwner(t *testing.T) {
+func TestAccAppMeshMeshDataSource_meshOwner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -66,7 +66,7 @@ func TestAccDataSourceAWSAppmeshMesh_meshOwner(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSAppmeshMesh_specAndTagsSet(t *testing.T) {
+func TestAccAppMeshMeshDataSource_specAndTagsSet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"

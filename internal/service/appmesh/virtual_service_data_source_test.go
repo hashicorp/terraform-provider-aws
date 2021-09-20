@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSAppmeshVirtualService_virtualNode(t *testing.T) {
+func TestAccAppMeshVirtualServiceDataSource_virtualNode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
@@ -40,7 +40,7 @@ func TestAccDataSourceAWSAppmeshVirtualService_virtualNode(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSAppmeshVirtualService_virtualRouter(t *testing.T) {
+func TestAccAppMeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
