@@ -9,9 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
@@ -81,11 +82,11 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -121,11 +122,11 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 func TestAccAWSAppautoScalingPolicy_disappears(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	resourceName := "aws_appautoscaling_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -144,12 +145,12 @@ func TestAccAWSAppautoScalingPolicy_disappears(t *testing.T) {
 func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
-	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(10))
-	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
+	randClusterName := fmt.Sprintf("cluster%s", sdkacctest.RandString(10))
+	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -225,12 +226,12 @@ func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
 func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
-	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
+	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -258,11 +259,11 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 func TestAccAWSAppautoScalingPolicy_dynamodb_table(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
-	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
+	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -288,13 +289,13 @@ func TestAccAWSAppautoScalingPolicy_dynamodb_table(t *testing.T) {
 
 func TestAccAWSAppautoScalingPolicy_dynamodb_index(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	appautoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -322,13 +323,13 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	var readPolicy1 applicationautoscaling.ScalingPolicy
 	var readPolicy2 applicationautoscaling.ScalingPolicy
 
-	tableName1 := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(5))
-	tableName2 := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(5))
-	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", acctest.RandString(5))
+	tableName1 := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
+	tableName2 := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
+	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -356,12 +357,12 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	var readPolicy applicationautoscaling.ScalingPolicy
 	var writePolicy applicationautoscaling.ScalingPolicy
 
-	tableName := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(5))
-	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", acctest.RandString(5))
+	tableName := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
+	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -402,11 +403,11 @@ func TestAccAWSAppautoScalingPolicy_ResourceId_ForceNew(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
