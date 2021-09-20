@@ -313,7 +313,7 @@ func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting slot type %s: %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexSlotTypeDeleted(conn, d.Id())
+	_, err = waiter.waitLexSlotTypeDeleted(conn, d.Id())
 
 	return err
 }

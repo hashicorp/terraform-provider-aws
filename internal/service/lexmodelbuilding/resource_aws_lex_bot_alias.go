@@ -292,7 +292,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting bot alias '%s': %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexBotAliasDeleted(conn, botAliasName, botName)
+	_, err = waiter.waitLexBotAliasDeleted(conn, botAliasName, botName)
 
 	return err
 }

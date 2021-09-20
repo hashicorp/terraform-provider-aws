@@ -9,88 +9,88 @@ import (
 )
 
 const (
-	LexModelBuildingServiceStatusCreated  = "Created"
-	LexModelBuildingServiceStatusNotFound = "NotFound"
-	LexModelBuildingServiceStatusUnknown  = "Unknown"
+	lexModelBuildingServiceStatusCreated  = "Created"
+	lexModelBuildingServiceStatusNotFound = "NotFound"
+	lexModelBuildingServiceStatusUnknown  = "Unknown"
 )
 
-func LexSlotTypeStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetSlotTypeVersions(&lexmodelbuildingservice.GetSlotTypeVersionsInput{
 			Name: aws.String(id),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, LexModelBuildingServiceStatusUnknown, err
+			return nil, lexModelBuildingServiceStatusUnknown, err
 		}
 
 		if output == nil || len(output.SlotTypes) == 0 {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 
-		return output, LexModelBuildingServiceStatusCreated, nil
+		return output, lexModelBuildingServiceStatusCreated, nil
 	}
 }
 
-func LexIntentStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusLexIntent(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetIntentVersions(&lexmodelbuildingservice.GetIntentVersionsInput{
 			Name: aws.String(id),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, LexModelBuildingServiceStatusUnknown, err
+			return nil, lexModelBuildingServiceStatusUnknown, err
 		}
 
 		if output == nil || len(output.Intents) == 0 {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 
-		return output, LexModelBuildingServiceStatusCreated, nil
+		return output, lexModelBuildingServiceStatusCreated, nil
 	}
 }
 
-func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusLexBot(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetBotVersions(&lexmodelbuildingservice.GetBotVersionsInput{
 			Name: aws.String(id),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, LexModelBuildingServiceStatusUnknown, err
+			return nil, lexModelBuildingServiceStatusUnknown, err
 		}
 
 		if output == nil || len(output.Bots) == 0 {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 
-		return output, LexModelBuildingServiceStatusCreated, nil
+		return output, lexModelBuildingServiceStatusCreated, nil
 	}
 }
 
-func LexBotAliasStatus(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
+func statusLexBotAlias(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 		if err != nil {
-			return nil, LexModelBuildingServiceStatusUnknown, err
+			return nil, lexModelBuildingServiceStatusUnknown, err
 		}
 
 		if output == nil {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
+			return nil, lexModelBuildingServiceStatusNotFound, nil
 		}
 
-		return output, LexModelBuildingServiceStatusCreated, nil
+		return output, lexModelBuildingServiceStatusCreated, nil
 	}
 }

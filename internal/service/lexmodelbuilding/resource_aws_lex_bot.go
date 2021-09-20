@@ -437,7 +437,7 @@ func resourceBotDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting bot %s: %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexBotDeleted(conn, d.Id())
+	_, err = waiter.waitLexBotDeleted(conn, d.Id())
 
 	return err
 }

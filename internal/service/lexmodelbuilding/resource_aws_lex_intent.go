@@ -532,7 +532,7 @@ func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexIntentDeleted(conn, d.Id())
+	_, err = waiter.waitLexIntentDeleted(conn, d.Id())
 
 	return err
 }
