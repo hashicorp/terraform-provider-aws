@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -38,8 +39,8 @@ func testSweepBatchComputeEnvironments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).batchconn
-	iamconn := client.(*AWSClient).iamconn
+	conn := client.(*conns.AWSClient).BatchConn
+	iamconn := client.(*conns.AWSClient).IAMConn
 
 	var sweeperErrs *multierror.Error
 
@@ -1469,7 +1470,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.
 }
 
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_compute_environment" {
@@ -1502,7 +1503,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 			return fmt.Errorf("No Batch Compute Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 		computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
@@ -1517,7 +1518,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 }
 
 func testAccPreCheckAWSBatch(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 

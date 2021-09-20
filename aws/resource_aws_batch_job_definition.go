@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/equivalency"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBatchJobDefinition() *schema.Resource {
@@ -174,8 +175,8 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 }
 
 func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -226,9 +227,9 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	jobDefinition, err := finder.JobDefinitionByARN(conn, d.Id())
 
@@ -293,7 +294,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+	conn := meta.(*conns.AWSClient).BatchConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -307,7 +308,7 @@ func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsBatchJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+	conn := meta.(*conns.AWSClient).BatchConn
 
 	_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
 		JobDefinition: aws.String(d.Id()),

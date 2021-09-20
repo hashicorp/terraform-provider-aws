@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
@@ -210,8 +211,8 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 }
 
 func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	computeEnvironmentName := naming.Generate(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
@@ -256,9 +257,9 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, d.Id())
 
@@ -310,7 +311,7 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+	conn := meta.(*conns.AWSClient).BatchConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &batch.UpdateComputeEnvironmentInput{
@@ -373,7 +374,7 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+	conn := meta.(*conns.AWSClient).BatchConn
 
 	log.Printf("[DEBUG] Disabling Batch Compute Environment (%s)", d.Id())
 	{
