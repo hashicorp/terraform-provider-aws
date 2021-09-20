@@ -334,7 +334,7 @@ func resourceAwsNeptuneEventSubscriptionDelete(d *schema.ResourceData, meta inte
 	}
 
 	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
-		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 			log.Printf("[WARN] Neptune Event Subscription %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -388,7 +388,7 @@ func resourceAwsNeptuneEventSubscriptionRetrieve(name string, conn *neptune.Nept
 
 	describeResp, err := conn.DescribeEventSubscriptions(request)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 			log.Printf("[DEBUG] Neptune Event Subscription (%s) not found", name)
 			return nil, nil
 		}

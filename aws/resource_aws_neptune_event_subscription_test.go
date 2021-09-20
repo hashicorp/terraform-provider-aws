@@ -42,7 +42,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -53,7 +53,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 			}
 
 			_, err = waiter.EventSubscriptionDeleted(conn, name)
-			if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -273,7 +273,7 @@ func testAccCheckAWSNeptuneEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
