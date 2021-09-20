@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTableItem() *schema.Resource {
@@ -245,12 +246,12 @@ func buildDynamoDbTableItemId(tableName string, hashKey string, rangeKey string,
 	id := []string{tableName, hashKey}
 
 	if hashVal, ok := attrs[hashKey]; ok {
-		id = append(id, base64Encode(hashVal.B))
+		id = append(id, verify.Base64Encode(hashVal.B))
 		id = append(id, aws.StringValue(hashVal.S))
 		id = append(id, aws.StringValue(hashVal.N))
 	}
 	if rangeVal, ok := attrs[rangeKey]; ok && rangeKey != "" {
-		id = append(id, rangeKey, base64Encode(rangeVal.B))
+		id = append(id, rangeKey, verify.Base64Encode(rangeVal.B))
 		id = append(id, aws.StringValue(rangeVal.S))
 		id = append(id, aws.StringValue(rangeVal.N))
 	}

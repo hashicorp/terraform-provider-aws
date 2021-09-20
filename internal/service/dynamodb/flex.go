@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func expandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
