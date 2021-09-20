@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEcsService() *schema.Resource {
+func DataSourceService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsServiceRead,
+		Read: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -47,7 +47,7 @@ func dataSourceAwsEcsService() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	clusterArn := d.Get("cluster_arn").(string)

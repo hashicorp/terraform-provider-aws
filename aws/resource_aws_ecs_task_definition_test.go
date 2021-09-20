@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -807,7 +808,7 @@ func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcsTaskDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

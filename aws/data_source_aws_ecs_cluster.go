@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEcsCluster() *schema.Resource {
+func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsClusterRead,
+		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
@@ -65,7 +65,7 @@ func dataSourceAwsEcsCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	params := &ecs.DescribeClustersInput{

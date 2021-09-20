@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepEcsClusters(region string) error {
 			clusterARN := aws.StringValue(clusterARNPtr)
 
 			log.Printf("[INFO] Deleting ECS Cluster: %s", clusterARN)
-			r := resourceAwsEcsCluster()
+			r := ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(clusterARN)
 			err = r.Delete(d, client)
@@ -108,7 +109,7 @@ func TestAccAWSEcsCluster_disappears(t *testing.T) {
 				Config: testAccAWSEcsClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEcsCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

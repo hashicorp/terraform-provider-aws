@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcsService() *schema.Resource {
+func ResourceService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcsServiceCreate,
-		Read:   resourceAwsEcsServiceRead,
-		Update: resourceAwsEcsServiceUpdate,
-		Delete: resourceAwsEcsServiceDelete,
+		Create: resourceServiceCreate,
+		Read:   resourceServiceRead,
+		Update: resourceServiceUpdate,
+		Delete: resourceServiceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsServiceImport,
 		},
@@ -404,7 +404,7 @@ func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*s
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -587,10 +587,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsEcsServiceRead(d, meta)
+	return resourceServiceRead(d, meta)
 }
 
-func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1008,7 +1008,7 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 	return results
 }
 
-func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	updateService := false
 
@@ -1169,10 +1169,10 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsEcsServiceRead(d, meta)
+	return resourceServiceRead(d, meta)
 }
 
-func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	// Check if it's not already gone

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEcsTaskDefinition() *schema.Resource {
+func DataSourceTaskDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsTaskDefinitionRead,
+		Read: dataSourceTaskDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"task_definition": {
@@ -44,7 +44,7 @@ func dataSourceAwsEcsTaskDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	params := &ecs.DescribeTaskDefinitionInput{
