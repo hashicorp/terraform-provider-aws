@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner, name string) (*apprunner.ConnectionSummary, error) {
