@@ -1,4 +1,4 @@
-package aws
+package securityhub
 
 import (
 	"fmt"
@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -57,7 +55,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
 
-	_, err = waiter.waitStandardsSubscriptionCreated(conn, d.Id())
+	_, err = waitStandardsSubscriptionCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to create: %w", d.Id(), err)
@@ -69,7 +67,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 func resourceStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	output, err := finder.FindStandardsSubscriptionByARN(conn, d.Id())
+	output, err := FindStandardsSubscriptionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Subscription (%s) not found, removing from state", d.Id())
@@ -94,7 +92,7 @@ func resourceStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error disabling Security Hub Standard (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitStandardsSubscriptionDeleted(conn, d.Id())
+	_, err = waitStandardsSubscriptionDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to delete: %w", d.Id(), err)

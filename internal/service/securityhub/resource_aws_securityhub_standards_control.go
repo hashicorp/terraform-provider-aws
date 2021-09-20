@@ -1,4 +1,4 @@
-package aws
+package securityhub
 
 import (
 	"context"
@@ -10,9 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -87,13 +85,13 @@ func ResourceStandardsControl() *schema.Resource {
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(d.Id())
+	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	control, err := finder.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
+	control, err := FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Control (%s) not found, removing from state", d.Id())

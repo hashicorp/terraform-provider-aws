@@ -1,4 +1,4 @@
-package aws
+package securityhub_test
 
 import (
 	"fmt"

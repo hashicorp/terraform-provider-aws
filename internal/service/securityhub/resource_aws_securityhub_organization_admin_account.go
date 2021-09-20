@@ -1,4 +1,4 @@
-package aws
+package securityhub
 
 import (
 	"fmt"
@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -53,7 +51,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(adminAccountID)
 
-	if _, err := waiter.waitAdminAccountEnabled(conn, d.Id()); err != nil {
+	if _, err := waitAdminAccountEnabled(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Security Hub Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
@@ -63,7 +61,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	adminAccount, err := finder.FindAdminAccount(conn, d.Id())
+	adminAccount, err := FindAdminAccount(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
@@ -107,7 +105,7 @@ func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error disabling Security Hub Organization Admin Account (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.waitAdminAccountNotFound(conn, d.Id()); err != nil {
+	if _, err := waitAdminAccountNotFound(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Security Hub Organization Admin Account (%s) to disable: %w", d.Id(), err)
 	}
 

@@ -1,4 +1,4 @@
-package aws
+package securityhub_test
 
 import (
 	"context"
@@ -9,13 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
@@ -103,7 +103,7 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 			return err
 		}
 
-		output, err := finder.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
+		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
 
 		if err != nil {
 			return err

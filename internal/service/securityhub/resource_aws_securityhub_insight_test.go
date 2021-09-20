@@ -1,4 +1,4 @@
-package aws
+package securityhub_test
 
 import (
 	"context"
@@ -12,12 +12,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func testAccAwsSecurityHubInsight_basic(t *testing.T) {
@@ -447,7 +447,7 @@ func testAccCheckAwsSecurityHubInsightDestroy(s *terraform.State) error {
 			continue
 		}
 
-		insight, err := finder.FindInsight(context.Background(), conn, rs.Primary.ID)
+		insight, err := tfsecurityhub.FindInsight(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
@@ -476,7 +476,7 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
-		insight, err := finder.FindInsight(context.Background(), conn, rs.Primary.ID)
+		insight, err := tfsecurityhub.FindInsight(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Security Hub Insight (%s): %w", rs.Primary.ID, err)
