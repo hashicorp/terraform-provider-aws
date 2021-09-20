@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRamResourceShare() *schema.Resource {
+func ResourceResourceShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamResourceShareCreate,
-		Read:   resourceAwsRamResourceShareRead,
-		Update: resourceAwsRamResourceShareUpdate,
-		Delete: resourceAwsRamResourceShareDelete,
+		Create: resourceResourceShareCreate,
+		Read:   resourceResourceShareRead,
+		Update: resourceResourceShareUpdate,
+		Delete: resourceResourceShareDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -54,7 +54,7 @@ func resourceAwsRamResourceShare() *schema.Resource {
 	}
 }
 
-func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -81,10 +81,10 @@ func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
 	}
 
-	return resourceAwsRamResourceShareRead(d, meta)
+	return resourceResourceShareRead(d, meta)
 }
 
-func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -136,7 +136,7 @@ func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	if d.HasChanges("name", "allow_external_principals") {
@@ -166,10 +166,10 @@ func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsRamResourceShareRead(d, meta)
+	return resourceResourceShareRead(d, meta)
 }
 
-func resourceAwsRamResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	deleteResourceShareInput := &ram.DeleteResourceShareInput{

@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRamResourceShareAccepter() *schema.Resource {
+func ResourceResourceShareAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamResourceShareAccepterCreate,
-		Read:   resourceAwsRamResourceShareAccepterRead,
-		Delete: resourceAwsRamResourceShareAccepterDelete,
+		Create: resourceResourceShareAccepterCreate,
+		Read:   resourceResourceShareAccepterRead,
+		Delete: resourceResourceShareAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -80,7 +80,7 @@ func resourceAwsRamResourceShareAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	shareARN := d.Get("share_arn").(string)
@@ -122,10 +122,10 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error waiting for RAM resource share (%s) state: %s", d.Id(), err)
 	}
 
-	return resourceAwsRamResourceShareAccepterRead(d, meta)
+	return resourceResourceShareAccepterRead(d, meta)
 }
 
-func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	accountID := meta.(*conns.AWSClient).AccountID
 	conn := meta.(*conns.AWSClient).RAMConn
 
@@ -190,7 +190,7 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	receiverAccountID := d.Get("receiver_account_id").(string)

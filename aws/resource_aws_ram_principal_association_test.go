@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
@@ -57,7 +58,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 				Config: testAccAwsRamPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRamPrincipalAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

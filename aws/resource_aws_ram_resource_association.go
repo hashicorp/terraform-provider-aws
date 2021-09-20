@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRamResourceAssociation() *schema.Resource {
+func ResourceResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamResourceAssociationCreate,
-		Read:   resourceAwsRamResourceAssociationRead,
-		Delete: resourceAwsRamResourceAssociationDelete,
+		Create: resourceResourceAssociationCreate,
+		Read:   resourceResourceAssociationRead,
+		Delete: resourceResourceAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -39,7 +39,7 @@ func resourceAwsRamResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRamResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
@@ -62,10 +62,10 @@ func resourceAwsRamResourceAssociationCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
 	}
 
-	return resourceAwsRamResourceAssociationRead(d, meta)
+	return resourceResourceAssociationRead(d, meta)
 }
 
-func resourceAwsRamResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
@@ -97,7 +97,7 @@ func resourceAwsRamResourceAssociationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsRamResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
