@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEbsSnapshotCopy() *schema.Resource {
+func ResourceEBSSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsSnapshotCopyCreate,
-		Read:   resourceAwsEbsSnapshotCopyRead,
-		Update: resourceAwsEbsSnapshotCopyUpdate,
-		Delete: resourceAwsEbsSnapshotCopyDelete,
+		Create: resourceEBSSnapshotCopyCreate,
+		Read:   resourceEBSSnapshotCopyRead,
+		Update: resourceEBSSnapshotCopyUpdate,
+		Delete: resourceEBSSnapshotCopyDelete,
 
 		CustomizeDiff: SetTagsDiff,
 
@@ -79,7 +79,7 @@ func resourceAwsEbsSnapshotCopy() *schema.Resource {
 	}
 }
 
-func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -111,10 +111,10 @@ func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	return resourceAwsEbsSnapshotCopyRead(d, meta)
+	return resourceEBSSnapshotCopyRead(d, meta)
 }
 
-func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotCopyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -167,7 +167,7 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
@@ -200,7 +200,7 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsEbsSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -210,7 +210,7 @@ func resourceAwsEbsSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsEbsSnapshotRead(d, meta)
+	return resourceEBSSnapshotRead(d, meta)
 }
 
 func resourceAwsEbsSnapshotCopyWaitForAvailable(id string, conn *ec2.EC2) error {

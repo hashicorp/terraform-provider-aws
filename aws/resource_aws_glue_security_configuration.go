@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueSecurityConfiguration() *schema.Resource {
+func ResourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueSecurityConfigurationCreate,
-		Read:   resourceAwsGlueSecurityConfigurationRead,
-		Delete: resourceAwsGlueSecurityConfigurationDelete,
+		Create: resourceSecurityConfigurationCreate,
+		Read:   resourceSecurityConfigurationRead,
+		Delete: resourceSecurityConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -117,7 +117,7 @@ func resourceAwsGlueSecurityConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
@@ -134,10 +134,10 @@ func resourceAwsGlueSecurityConfigurationCreate(d *schema.ResourceData, meta int
 
 	d.SetId(name)
 
-	return resourceAwsGlueSecurityConfigurationRead(d, meta)
+	return resourceSecurityConfigurationRead(d, meta)
 }
 
-func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetSecurityConfigurationInput{
@@ -173,7 +173,7 @@ func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsGlueSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())

@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
+func DataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayPeeringAttachmentRead,
+		Read: dataSourceTransitGatewayPeeringAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
@@ -44,7 +44,7 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

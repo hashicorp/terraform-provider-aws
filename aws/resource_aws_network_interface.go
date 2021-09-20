@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkInterface() *schema.Resource {
+func ResourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkInterfaceCreate,
-		Read:   resourceAwsNetworkInterfaceRead,
-		Update: resourceAwsNetworkInterfaceUpdate,
-		Delete: resourceAwsNetworkInterfaceDelete,
+		Create: resourceNetworkInterfaceCreate,
+		Read:   resourceNetworkInterfaceRead,
+		Update: resourceNetworkInterfaceUpdate,
+		Delete: resourceNetworkInterfaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -143,7 +143,7 @@ func resourceAwsNetworkInterface() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -221,10 +221,10 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsNetworkInterfaceRead(d, meta)
+	return resourceNetworkInterfaceRead(d, meta)
 }
 
-func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -351,7 +351,7 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 	return nil
 }
 
-func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("attachment") {
@@ -574,10 +574,10 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsNetworkInterfaceRead(d, meta)
+	return resourceNetworkInterfaceRead(d, meta)
 }
 
-func resourceAwsNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting ENI: %s", d.Id())

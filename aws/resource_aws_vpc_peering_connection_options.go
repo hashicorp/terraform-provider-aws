@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
+func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcPeeringConnectionOptionsCreate,
-		Read:   resourceAwsVpcPeeringConnectionOptionsRead,
-		Update: resourceAwsVpcPeeringConnectionOptionsUpdate,
-		Delete: resourceAwsVpcPeeringConnectionOptionsDelete,
+		Create: resourceVPCPeeringConnectionOptionsCreate,
+		Read:   resourceVPCPeeringConnectionOptionsRead,
+		Update: resourceVPCPeeringConnectionOptionsUpdate,
+		Delete: resourceVPCPeeringConnectionOptionsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -34,13 +34,13 @@ func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcPeeringConnectionOptionsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("vpc_peering_connection_id").(string))
 
-	return resourceAwsVpcPeeringConnectionOptionsUpdate(d, meta)
+	return resourceVPCPeeringConnectionOptionsUpdate(d, meta)
 }
 
-func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	pc, err := vpcPeeringConnection(conn, d.Id())
@@ -67,7 +67,7 @@ func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	pc, err := vpcPeeringConnection(conn, d.Id())
@@ -132,10 +132,10 @@ func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta i
 		})
 	}
 
-	return resourceAwsVpcPeeringConnectionOptionsRead(d, meta)
+	return resourceVPCPeeringConnectionOptionsRead(d, meta)
 }
 
-func resourceAwsVpcPeeringConnectionOptionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	// Don't do anything with the underlying VPC peering connection.
 	return nil
 }

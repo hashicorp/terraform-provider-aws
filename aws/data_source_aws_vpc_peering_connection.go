@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsVpcPeeringConnection() *schema.Resource {
+func DataSourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcPeeringConnectionRead,
+		Read: dataSourceVPCPeeringConnectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -107,7 +107,7 @@ func dataSourceAwsVpcPeeringConnection() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

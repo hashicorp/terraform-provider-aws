@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsNetworkInterface() *schema.Resource {
+func DataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNetworkInterfaceRead,
+		Read: dataSourceNetworkInterfaceRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -145,7 +145,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 	}
 }
 
-func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

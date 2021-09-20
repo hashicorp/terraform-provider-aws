@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEIPAssociation_instance(t *testing.T) {
@@ -175,7 +176,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEipAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEIPAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

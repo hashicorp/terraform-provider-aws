@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsVpcDhcpOptions() *schema.Resource {
+func DataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcDhcpOptionsRead,
+		Read: dataSourceVPCDHCPOptionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"dhcp_options_id": {
@@ -61,7 +61,7 @@ func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

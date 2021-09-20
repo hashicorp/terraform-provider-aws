@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAMI_basic(t *testing.T) {
@@ -179,7 +180,7 @@ func TestAccAWSAMI_disappears(t *testing.T) {
 				Config: testAccAmiConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAmiExists(resourceName, &ami),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmi(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAMI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

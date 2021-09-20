@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
+func DataSourceLocalGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayRouteTableRead,
+		Read: dataSourceLocalGatewayRouteTableRead,
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {
@@ -48,7 +48,7 @@ func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

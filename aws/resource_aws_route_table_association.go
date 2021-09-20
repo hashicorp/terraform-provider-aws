@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRouteTableAssociation() *schema.Resource {
+func ResourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRouteTableAssociationCreate,
-		Read:   resourceAwsRouteTableAssociationRead,
-		Update: resourceAwsRouteTableAssociationUpdate,
-		Delete: resourceAwsRouteTableAssociationDelete,
+		Create: resourceRouteTableAssociationCreate,
+		Read:   resourceRouteTableAssociationRead,
+		Update: resourceRouteTableAssociationUpdate,
+		Delete: resourceRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRouteTableAssociationImport,
 		},
@@ -49,7 +49,7 @@ func resourceAwsRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -85,10 +85,10 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for Route Table Association (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceAwsRouteTableAssociationRead(d, meta)
+	return resourceRouteTableAssociationRead(d, meta)
 }
 
-func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	association, err := finder.RouteTableAssociationByID(conn, d.Id())
@@ -110,7 +110,7 @@ func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
@@ -126,7 +126,7 @@ func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interfa
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidAssociationIDNotFound) {
 		// Not found, so just create a new one
-		return resourceAwsRouteTableAssociationCreate(d, meta)
+		return resourceRouteTableAssociationCreate(d, meta)
 	}
 
 	if err != nil {
@@ -143,10 +143,10 @@ func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for Route Table Association (%s) update: %w", d.Id(), err)
 	}
 
-	return resourceAwsRouteTableAssociationRead(d, meta)
+	return resourceRouteTableAssociationRead(d, meta)
 }
 
-func resourceAwsRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	return ec2RouteTableAssociationDelete(conn, d.Id())

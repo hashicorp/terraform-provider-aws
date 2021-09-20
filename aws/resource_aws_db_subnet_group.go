@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbSubnetGroup() *schema.Resource {
+func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbSubnetGroupCreate,
-		Read:   resourceAwsDbSubnetGroupRead,
-		Update: resourceAwsDbSubnetGroupUpdate,
-		Delete: resourceAwsDbSubnetGroupDelete,
+		Create: resourceSubnetGroupCreate,
+		Read:   resourceSubnetGroupRead,
+		Update: resourceSubnetGroupUpdate,
+		Delete: resourceSubnetGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -69,7 +69,7 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -104,10 +104,10 @@ func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(createOpts.DBSubnetGroupName))
 	log.Printf("[INFO] DB Subnet Group ID: %s", d.Id())
-	return resourceAwsDbSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -176,7 +176,7 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsDbSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
@@ -209,10 +209,10 @@ func resourceAwsDbSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsDbSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDbSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"destroyed"},

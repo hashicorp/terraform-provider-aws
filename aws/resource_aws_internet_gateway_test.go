@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -266,7 +267,7 @@ func TestAccAWSInternetGateway_disappears(t *testing.T) {
 				Config: testAccInternetGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsInternetGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceInternetGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

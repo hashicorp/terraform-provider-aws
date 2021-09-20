@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
+func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayVpcAttachmentCreate,
-		Read:   resourceAwsEc2TransitGatewayVpcAttachmentRead,
-		Update: resourceAwsEc2TransitGatewayVpcAttachmentUpdate,
-		Delete: resourceAwsEc2TransitGatewayVpcAttachmentDelete,
+		Create: resourceTransitGatewayVPCAttachmentCreate,
+		Read:   resourceTransitGatewayVPCAttachmentRead,
+		Update: resourceTransitGatewayVPCAttachmentUpdate,
+		Delete: resourceTransitGatewayVPCAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -139,10 +139,10 @@ func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAwsEc2TransitGatewayVpcAttachmentRead(d, meta)
+	return resourceTransitGatewayVPCAttachmentRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -231,7 +231,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", "subnet_ids") {
@@ -301,7 +301,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayVpcAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayVPCAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayVpcAttachmentInput{

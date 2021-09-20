@@ -61,12 +61,12 @@ func (slice XmlVpnConnectionConfig) Swap(i, j int) {
 	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
 }
 
-func resourceAwsVpnConnection() *schema.Resource {
+func ResourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnConnectionCreate,
-		Read:   resourceAwsVpnConnectionRead,
-		Update: resourceAwsVpnConnectionUpdate,
-		Delete: resourceAwsVpnConnectionDelete,
+		Create: resourceVPNConnectionCreate,
+		Read:   resourceVPNConnectionRead,
+		Update: resourceVPNConnectionUpdate,
+		Delete: resourceVPNConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -519,7 +519,7 @@ func resourceAwsVpnConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -556,7 +556,7 @@ func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// Read off the API to populate our RO fields.
-	return resourceAwsVpnConnectionRead(d, meta)
+	return resourceVPNConnectionRead(d, meta)
 }
 
 func vpnConnectionRefreshFunc(conn *ec2.EC2, connectionId string) resource.StateRefreshFunc {
@@ -583,7 +583,7 @@ func vpnConnectionRefreshFunc(conn *ec2.EC2, connectionId string) resource.State
 	}
 }
 
-func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -986,7 +986,7 @@ func flattenTunnelOptions(d *schema.ResourceData, vpnConnection *ec2.VpnConnecti
 	return nil
 }
 
-func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if err := modifyVpnConnectionOptions(d, conn); err != nil {
@@ -1006,10 +1006,10 @@ func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsVpnConnectionRead(d, meta)
+	return resourceVPNConnectionRead(d, meta)
 }
 
-func resourceAwsVpnConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{

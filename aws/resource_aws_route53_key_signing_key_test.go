@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete resources
@@ -78,7 +79,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 			}
 
 			for _, dns := range output.KeySigningKeys {
-				r := resourceAwsRoute53KeySigningKey()
+				r := ResourceKeySigningKey()
 				d := r.Data(nil)
 				d.SetId(id)
 				d.Set("hosted_zone_id", id)
@@ -168,7 +169,7 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53KeySigningKeyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53KeySigningKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceKeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
+func DataSourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayRouteTableRead,
+		Read: dataSourceTransitGatewayRouteTableRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,7 +45,7 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

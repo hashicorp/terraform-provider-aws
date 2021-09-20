@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGateway() *schema.Resource {
+func ResourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayCreate,
-		Read:   resourceAwsEc2TransitGatewayRead,
-		Update: resourceAwsEc2TransitGatewayUpdate,
-		Delete: resourceAwsEc2TransitGatewayDelete,
+		Create: resourceTransitGatewayCreate,
+		Read:   resourceTransitGatewayRead,
+		Update: resourceTransitGatewayUpdate,
+		Delete: resourceTransitGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -116,7 +116,7 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -152,10 +152,10 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsEc2TransitGatewayRead(d, meta)
+	return resourceTransitGatewayRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -215,7 +215,7 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
@@ -271,7 +271,7 @@ func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayInput{

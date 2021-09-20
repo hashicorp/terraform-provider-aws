@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcEndpointService() *schema.Resource {
+func ResourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointServiceCreate,
-		Read:   resourceAwsVpcEndpointServiceRead,
-		Update: resourceAwsVpcEndpointServiceUpdate,
-		Delete: resourceAwsVpcEndpointServiceDelete,
+		Create: resourceVPCEndpointServiceCreate,
+		Read:   resourceVPCEndpointServiceRead,
+		Update: resourceVPCEndpointServiceUpdate,
+		Delete: resourceVPCEndpointServiceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -128,7 +128,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -176,10 +176,10 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsVpcEndpointServiceRead(d, meta)
+	return resourceVPCEndpointServiceRead(d, meta)
 }
 
-func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -296,7 +296,7 @@ func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.Private
 	return []interface{}{tfMap}
 }
 
-func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name") {
@@ -350,10 +350,10 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsVpcEndpointServiceRead(d, meta)
+	return resourceVPCEndpointServiceRead(d, meta)
 }
 
-func resourceAwsVpcEndpointServiceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteVpcEndpointServiceConfigurationsInput{

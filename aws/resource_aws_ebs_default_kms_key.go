@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEbsDefaultKmsKey() *schema.Resource {
+func ResourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsDefaultKmsKeyCreate,
-		Read:   resourceAwsEbsDefaultKmsKeyRead,
-		Delete: resourceAwsEbsDefaultKmsKeyDelete,
+		Create: resourceEBSDefaultKMSKeyCreate,
+		Read:   resourceEBSDefaultKMSKeyRead,
+		Delete: resourceEBSDefaultKMSKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -29,7 +29,7 @@ func resourceAwsEbsDefaultKmsKey() *schema.Resource {
 	}
 }
 
-func resourceAwsEbsDefaultKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSDefaultKMSKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.ModifyEbsDefaultKmsKeyId(&ec2.ModifyEbsDefaultKmsKeyIdInput{
@@ -41,10 +41,10 @@ func resourceAwsEbsDefaultKmsKeyCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(resp.KmsKeyId))
 
-	return resourceAwsEbsDefaultKmsKeyRead(d, meta)
+	return resourceEBSDefaultKMSKeyRead(d, meta)
 }
 
-func resourceAwsEbsDefaultKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
@@ -57,7 +57,7 @@ func resourceAwsEbsDefaultKmsKeyRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsEbsDefaultKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSDefaultKMSKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := conn.ResetEbsDefaultKmsKeyId(&ec2.ResetEbsDefaultKmsKeyIdInput{})

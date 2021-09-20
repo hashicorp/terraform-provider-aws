@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53VPCAssociationAuthorization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

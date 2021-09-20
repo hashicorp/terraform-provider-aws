@@ -15,6 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -194,7 +195,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnNetworkAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNNetworkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

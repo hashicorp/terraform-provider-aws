@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -49,7 +50,7 @@ func testSweepSpotFleetRequests(region string) error {
 		for _, config := range page.SpotFleetRequestConfigs {
 			id := aws.StringValue(config.SpotFleetRequestId)
 
-			r := resourceAwsSpotFleetRequest()
+			r := ResourceSpotFleetRequest()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("terminate_instances_with_expiration", true)
@@ -1592,7 +1593,7 @@ func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
 				Config: testAccAWSSpotFleetRequestConfig(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSpotFleetRequest(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSpotFleetRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

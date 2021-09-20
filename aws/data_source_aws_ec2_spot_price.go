@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2SpotPrice() *schema.Resource {
+func DataSourceSpotPrice() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2SpotPriceRead,
+		Read: dataSourceSpotPriceRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -36,7 +36,7 @@ func dataSourceAwsEc2SpotPrice() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2SpotPriceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	now := time.Now()

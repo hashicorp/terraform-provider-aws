@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcEndpointServiceAllowedPrincipal() *schema.Resource {
+func ResourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointServiceAllowedPrincipalCreate,
-		Read:   resourceAwsVpcEndpointServiceAllowedPrincipalRead,
-		Delete: resourceAwsVpcEndpointServiceAllowedPrincipalDelete,
+		Create: resourceVPCEndpointServiceAllowedPrincipalCreate,
+		Read:   resourceVPCEndpointServiceAllowedPrincipalRead,
+		Delete: resourceVPCEndpointServiceAllowedPrincipalDelete,
 
 		Schema: map[string]*schema.Schema{
 			"vpc_endpoint_service_id": {
@@ -32,7 +32,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipal() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcId := d.Get("vpc_endpoint_service_id").(string)
@@ -53,10 +53,10 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData,
 
 	d.SetId(vpcEndpointServiceIdPrincipalArnHash(svcId, arn))
 
-	return resourceAwsVpcEndpointServiceAllowedPrincipalRead(d, meta)
+	return resourceVPCEndpointServiceAllowedPrincipalRead(d, meta)
 }
 
-func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcId := d.Get("vpc_endpoint_service_id").(string)
@@ -89,7 +89,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsVpcEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcId := d.Get("vpc_endpoint_service_id").(string)

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEbsSnapshotIds() *schema.Resource {
+func DataSourceEBSSnapshotIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsSnapshotIdsRead,
+		Read: dataSourceEBSSnapshotIDsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -36,7 +36,7 @@ func dataSourceAwsEbsSnapshotIds() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")

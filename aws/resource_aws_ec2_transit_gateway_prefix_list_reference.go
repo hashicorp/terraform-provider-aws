@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayPrefixListReference() *schema.Resource {
+func ResourceTransitGatewayPrefixListReference() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayPrefixListReferenceCreate,
-		Read:   resourceAwsEc2TransitGatewayPrefixListReferenceRead,
-		Update: resourceAwsEc2TransitGatewayPrefixListReferenceUpdate,
-		Delete: resourceAwsEc2TransitGatewayPrefixListReferenceDelete,
+		Create: resourceTransitGatewayPrefixListReferenceCreate,
+		Read:   resourceTransitGatewayPrefixListReferenceRead,
+		Update: resourceTransitGatewayPrefixListReferenceUpdate,
+		Delete: resourceTransitGatewayPrefixListReferenceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -55,7 +55,7 @@ func resourceAwsEc2TransitGatewayPrefixListReference() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.CreateTransitGatewayPrefixListReferenceInput{}
@@ -92,10 +92,10 @@ func resourceAwsEc2TransitGatewayPrefixListReferenceCreate(d *schema.ResourceDat
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsEc2TransitGatewayPrefixListReferenceRead(d, meta)
+	return resourceTransitGatewayPrefixListReferenceRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, d.Id())
@@ -137,7 +137,7 @@ func resourceAwsEc2TransitGatewayPrefixListReferenceRead(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ModifyTransitGatewayPrefixListReferenceInput{}
@@ -172,10 +172,10 @@ func resourceAwsEc2TransitGatewayPrefixListReferenceUpdate(d *schema.ResourceDat
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) update: %w", d.Id(), err)
 	}
 
-	return resourceAwsEc2TransitGatewayPrefixListReferenceRead(d, meta)
+	return resourceTransitGatewayPrefixListReferenceRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(d.Id())

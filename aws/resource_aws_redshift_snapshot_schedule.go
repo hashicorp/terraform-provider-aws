@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
+func ResourceSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSnapshotScheduleCreate,
-		Read:   resourceAwsRedshiftSnapshotScheduleRead,
-		Update: resourceAwsRedshiftSnapshotScheduleUpdate,
-		Delete: resourceAwsRedshiftSnapshotScheduleDelete,
+		Create: resourceSnapshotScheduleCreate,
+		Read:   resourceSnapshotScheduleRead,
+		Update: resourceSnapshotScheduleUpdate,
+		Delete: resourceSnapshotScheduleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
 
 }
 
-func resourceAwsRedshiftSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -98,10 +98,10 @@ func resourceAwsRedshiftSnapshotScheduleCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(resp.ScheduleIdentifier))
 
-	return resourceAwsRedshiftSnapshotScheduleRead(d, meta)
+	return resourceSnapshotScheduleRead(d, meta)
 }
 
-func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -152,7 +152,7 @@ func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
@@ -179,10 +179,10 @@ func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsRedshiftSnapshotScheduleRead(d, meta)
+	return resourceSnapshotScheduleRead(d, meta)
 }
 
-func resourceAwsRedshiftSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.Get("force_destroy").(bool) {

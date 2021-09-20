@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TrafficMirrorSession() *schema.Resource {
+func ResourceTrafficMirrorSession() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TrafficMirrorSessionCreate,
-		Update: resourceAwsEc2TrafficMirrorSessionUpdate,
-		Read:   resourceAwsEc2TrafficMirrorSessionRead,
-		Delete: resourceAwsEc2TrafficMirrorSessionDelete,
+		Create: resourceTrafficMirrorSessionCreate,
+		Update: resourceTrafficMirrorSessionUpdate,
+		Read:   resourceTrafficMirrorSessionRead,
+		Delete: resourceTrafficMirrorSessionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,7 +71,7 @@ func resourceAwsEc2TrafficMirrorSession() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TrafficMirrorSessionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorSessionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -108,10 +108,10 @@ func resourceAwsEc2TrafficMirrorSessionCreate(d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.StringValue(out.TrafficMirrorSession.TrafficMirrorSessionId))
-	return resourceAwsEc2TrafficMirrorSessionRead(d, meta)
+	return resourceTrafficMirrorSessionRead(d, meta)
 }
 
-func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	sessionId := d.Id()
@@ -182,10 +182,10 @@ func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsEc2TrafficMirrorSessionRead(d, meta)
+	return resourceTrafficMirrorSessionRead(d, meta)
 }
 
-func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -248,7 +248,7 @@ func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsEc2TrafficMirrorSessionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTrafficMirrorSessionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	sessionId := d.Id()

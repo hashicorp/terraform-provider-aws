@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -73,7 +74,7 @@ func testSweepInstances(region string) error {
 					continue
 				}
 
-				r := resourceAwsInstance()
+				r := ResourceInstance()
 				d := r.Data(nil)
 				d.SetId(id)
 				d.Set("disable_api_termination", false)
@@ -3409,7 +3410,7 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 				Config: testAccInstanceConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3889,7 +3890,7 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 }
 
 func TestInstanceHostIDSchema(t *testing.T) {
-	actualSchema := resourceAwsInstance().Schema["host_id"]
+	actualSchema := ResourceInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
@@ -3905,7 +3906,7 @@ func TestInstanceHostIDSchema(t *testing.T) {
 }
 
 func TestInstanceCpuCoreCountSchema(t *testing.T) {
-	actualSchema := resourceAwsInstance().Schema["cpu_core_count"]
+	actualSchema := ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
@@ -3921,7 +3922,7 @@ func TestInstanceCpuCoreCountSchema(t *testing.T) {
 }
 
 func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
-	actualSchema := resourceAwsInstance().Schema["cpu_threads_per_core"]
+	actualSchema := ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,

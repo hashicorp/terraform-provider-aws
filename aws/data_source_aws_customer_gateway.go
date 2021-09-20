@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCustomerGateway() *schema.Resource {
+func DataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCustomerGatewayRead,
+		Read: dataSourceCustomerGatewayRead,
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
 			"id": {
@@ -49,7 +49,7 @@ func dataSourceAwsCustomerGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

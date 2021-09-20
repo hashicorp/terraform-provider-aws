@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVolumeAttachment() *schema.Resource {
+func ResourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVolumeAttachmentCreate,
-		Read:   resourceAwsVolumeAttachmentRead,
-		Update: resourceAwsVolumeAttachmentUpdate,
-		Delete: resourceAwsVolumeAttachmentDelete,
+		Create: resourceVolumeAttachmentCreate,
+		Read:   resourceVolumeAttachmentRead,
+		Update: resourceVolumeAttachmentUpdate,
+		Delete: resourceVolumeAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -70,7 +70,7 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	name := d.Get("device_name").(string)
 	iID := d.Get("instance_id").(string)
@@ -147,7 +147,7 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(volumeAttachmentID(name, vID, iID))
-	return resourceAwsVolumeAttachmentRead(d, meta)
+	return resourceVolumeAttachmentRead(d, meta)
 }
 
 func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID string) resource.StateRefreshFunc {
@@ -187,7 +187,7 @@ func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID 
 	}
 }
 
-func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	request := &ec2.DescribeVolumesInput{
@@ -221,12 +221,12 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsVolumeAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVolumeAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Attaching Volume (%s) is updating which does nothing but updates a few params in state", d.Id())
 	return nil
 }
 
-func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if _, ok := d.GetOk("skip_destroy"); ok {

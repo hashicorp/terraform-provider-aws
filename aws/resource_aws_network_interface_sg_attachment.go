@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
+func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkInterfaceSGAttachmentCreate,
-		Read:   resourceAwsNetworkInterfaceSGAttachmentRead,
-		Delete: resourceAwsNetworkInterfaceSGAttachmentDelete,
+		Create: resourceNetworkInterfaceSGAttachmentCreate,
+		Read:   resourceNetworkInterfaceSGAttachmentRead,
+		Delete: resourceNetworkInterfaceSGAttachmentDelete,
 		Schema: map[string]*schema.Schema{
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -37,10 +37,10 @@ func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
-	awsMutexKV.Lock(mk)
-	defer awsMutexKV.Unlock(mk)
+	conns.GlobalMutexKV.Lock(mk)
+	defer conns.GlobalMutexKV.Unlock(mk)
 
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
@@ -80,10 +80,10 @@ func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta 
 
 	d.SetId(fmt.Sprintf("%s_%s", sgID, interfaceID))
 
-	return resourceAwsNetworkInterfaceSGAttachmentRead(d, meta)
+	return resourceNetworkInterfaceSGAttachmentRead(d, meta)
 }
 
-func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
@@ -145,10 +145,10 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
-	awsMutexKV.Lock(mk)
-	defer awsMutexKV.Unlock(mk)
+	conns.GlobalMutexKV.Lock(mk)
+	defer conns.GlobalMutexKV.Unlock(mk)
 
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)

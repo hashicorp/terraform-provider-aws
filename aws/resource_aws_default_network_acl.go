@@ -21,13 +21,13 @@ const (
 	awsDefaultAclRuleNumberIpv6 = 32768
 )
 
-func resourceAwsDefaultNetworkAcl() *schema.Resource {
+func ResourceDefaultNetworkACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDefaultNetworkAclCreate,
+		Create: resourceDefaultNetworkACLCreate,
 		// We reuse aws_network_acl's read method, the operations are the same
-		Read:   resourceAwsNetworkAclRead,
-		Delete: resourceAwsDefaultNetworkAclDelete,
-		Update: resourceAwsDefaultNetworkAclUpdate,
+		Read:   resourceNetworkACLRead,
+		Delete: resourceDefaultNetworkACLDelete,
+		Update: resourceDefaultNetworkACLUpdate,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("default_network_acl_id", d.Id())
@@ -197,7 +197,7 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 	}
 }
 
-func resourceAwsDefaultNetworkAclCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("default_network_acl_id").(string))
 
 	// revoke all default and pre-existing rules on the default network acl.
@@ -208,10 +208,10 @@ func resourceAwsDefaultNetworkAclCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	return resourceAwsDefaultNetworkAclUpdate(d, meta)
+	return resourceDefaultNetworkACLUpdate(d, meta)
 }
 
-func resourceAwsDefaultNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("ingress") {
@@ -285,10 +285,10 @@ func resourceAwsDefaultNetworkAclUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	// Re-use the exiting Network ACL Resources READ method
-	return resourceAwsNetworkAclRead(d, meta)
+	return resourceNetworkACLRead(d, meta)
 }
 
-func resourceAwsDefaultNetworkAclDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default Network ACL. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

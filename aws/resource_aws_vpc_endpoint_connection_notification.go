@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
+func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointConnectionNotificationCreate,
-		Read:   resourceAwsVpcEndpointConnectionNotificationRead,
-		Update: resourceAwsVpcEndpointConnectionNotificationUpdate,
-		Delete: resourceAwsVpcEndpointConnectionNotificationDelete,
+		Create: resourceVPCEndpointConnectionNotificationCreate,
+		Read:   resourceVPCEndpointConnectionNotificationRead,
+		Update: resourceVPCEndpointConnectionNotificationUpdate,
+		Delete: resourceVPCEndpointConnectionNotificationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointConnectionNotificationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.CreateVpcEndpointConnectionNotificationInput{
@@ -81,10 +81,10 @@ func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(resp.ConnectionNotification.ConnectionNotificationId))
 
-	return resourceAwsVpcEndpointConnectionNotificationRead(d, meta)
+	return resourceVPCEndpointConnectionNotificationRead(d, meta)
 }
 
-func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointConnectionNotificationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeVpcEndpointConnectionNotifications(&ec2.DescribeVpcEndpointConnectionNotificationsInput{
@@ -103,7 +103,7 @@ func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, me
 	return vpcEndpointConnectionNotificationAttributes(d, resp.ConnectionNotificationSet[0])
 }
 
-func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointConnectionNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.ModifyVpcEndpointConnectionNotificationInput{
@@ -123,10 +123,10 @@ func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, 
 		return fmt.Errorf("Error updating VPC Endpoint connection notification: %s", err.Error())
 	}
 
-	return resourceAwsVpcEndpointConnectionNotificationRead(d, meta)
+	return resourceVPCEndpointConnectionNotificationRead(d, meta)
 }
 
-func resourceAwsVpcEndpointConnectionNotificationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointConnectionNotificationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint connection notification: %s", d.Id())

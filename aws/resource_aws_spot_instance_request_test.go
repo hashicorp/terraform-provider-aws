@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
@@ -387,7 +388,7 @@ func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
 				Config: testAccAWSSpotInstanceRequestConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSpotInstanceRequest(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSpotInstanceRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

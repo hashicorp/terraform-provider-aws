@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
+func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointSubnetAssociationCreate,
-		Read:   resourceAwsVpcEndpointSubnetAssociationRead,
-		Delete: resourceAwsVpcEndpointSubnetAssociationDelete,
+		Create: resourceVPCEndpointSubnetAssociationCreate,
+		Read:   resourceVPCEndpointSubnetAssociationRead,
+		Delete: resourceVPCEndpointSubnetAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -46,7 +46,7 @@ func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
@@ -64,8 +64,8 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 	// See https://github.com/hashicorp/terraform-provider-aws/issues/3382.
 	// Prevent concurrent subnet association requests and delay between requests.
 	mk := "vpc_endpoint_subnet_association_" + endpointID
-	awsMutexKV.Lock(mk)
-	defer awsMutexKV.Unlock(mk)
+	conns.GlobalMutexKV.Lock(mk)
+	defer conns.GlobalMutexKV.Unlock(mk)
 
 	c := &resource.StateChangeConf{
 		Delay:   1 * time.Minute,
@@ -91,10 +91,10 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointID, err)
 	}
 
-	return resourceAwsVpcEndpointSubnetAssociationRead(d, meta)
+	return resourceVPCEndpointSubnetAssociationRead(d, meta)
 }
 
-func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
@@ -117,7 +117,7 @@ func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsVpcEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)

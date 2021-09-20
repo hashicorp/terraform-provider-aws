@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepKmsKeys(region string) error {
 				continue
 			}
 
-			r := resourceAwsKmsKey()
+			r := ResourceKey()
 			d := r.Data(nil)
 			d.SetId(kKeyId)
 			d.Set("key_id", kKeyId)
@@ -143,7 +144,7 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

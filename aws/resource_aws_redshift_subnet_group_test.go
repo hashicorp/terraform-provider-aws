@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepRedshiftSubnetGroups(region string) error {
 				continue
 			}
 
-			r := resourceAwsRedshiftSubnetGroup()
+			r := ResourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -128,7 +129,7 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRedshiftSubnetGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

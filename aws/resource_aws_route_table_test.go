@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -194,7 +195,7 @@ func TestAccAWSRouteTable_disappears(t *testing.T) {
 				Config: testAccAWSRouteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -217,7 +218,7 @@ func TestAccAWSRouteTable_disappears_SubnetAssociation(t *testing.T) {
 				Config: testAccAWSRouteTableConfigSubnetAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

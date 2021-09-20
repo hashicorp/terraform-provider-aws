@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
+func DataSourceInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2InstanceTypeOfferingsRead,
+		Read: dataSourceInstanceTypeOfferingsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -40,7 +40,7 @@ func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2InstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}

@@ -18,11 +18,11 @@ const (
 	VpcCidrBlockStateCodeDeleted = "deleted"
 )
 
-func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
+func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpv4CidrBlockAssociationCreate,
-		Read:   resourceAwsVpcIpv4CidrBlockAssociationRead,
-		Delete: resourceAwsVpcIpv4CidrBlockAssociationDelete,
+		Create: resourceVPCIPv4CIDRBlockAssociationCreate,
+		Read:   resourceVPCIPv4CIDRBlockAssociationRead,
+		Delete: resourceVPCIPv4CIDRBlockAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,7 +49,7 @@ func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIPv4CIDRBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.AssociateVpcCidrBlockInput{
@@ -77,10 +77,10 @@ func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("Error waiting for IPv4 CIDR block association (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourceAwsVpcIpv4CidrBlockAssociationRead(d, meta)
+	return resourceVPCIPv4CIDRBlockAssociationRead(d, meta)
 }
 
-func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIPv4CIDRBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeVpcsInput{
@@ -125,7 +125,7 @@ func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsVpcIpv4CidrBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIPv4CIDRBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting VPC IPv4 CIDR block association: %s", d.Id())

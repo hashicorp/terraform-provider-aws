@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -162,7 +163,7 @@ func TestAccAWSEc2TransitGateway_disappears(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TransitGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

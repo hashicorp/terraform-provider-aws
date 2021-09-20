@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
+func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointRouteTableAssociationCreate,
-		Read:   resourceAwsVpcEndpointRouteTableAssociationRead,
-		Delete: resourceAwsVpcEndpointRouteTableAssociationDelete,
+		Create: resourceVPCEndpointRouteTableAssociationCreate,
+		Read:   resourceVPCEndpointRouteTableAssociationRead,
+		Delete: resourceVPCEndpointRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcEndpointRouteTableAssociationImport,
 		},
@@ -40,7 +40,7 @@ func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
@@ -68,10 +68,10 @@ func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, m
 		return fmt.Errorf("error waiting for VPC Endpoint Route Table Association (%s) to become available: %w", id, err)
 	}
 
-	return resourceAwsVpcEndpointRouteTableAssociationRead(d, meta)
+	return resourceVPCEndpointRouteTableAssociationRead(d, meta)
 }
 
-func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
@@ -94,7 +94,7 @@ func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsVpcEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)

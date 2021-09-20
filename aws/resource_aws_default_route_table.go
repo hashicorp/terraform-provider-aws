@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDefaultRouteTable() *schema.Resource {
+func ResourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDefaultRouteTableCreate,
-		Read:   resourceAwsDefaultRouteTableRead,
-		Update: resourceAwsRouteTableUpdate,
-		Delete: resourceAwsDefaultRouteTableDelete,
+		Create: resourceDefaultRouteTableCreate,
+		Read:   resourceDefaultRouteTableRead,
+		Update: resourceRouteTableUpdate,
+		Delete: resourceDefaultRouteTableDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDefaultRouteTableImport,
@@ -141,7 +141,7 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 	}
 }
 
-func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -247,18 +247,18 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsDefaultRouteTableRead(d, meta)
+	return resourceDefaultRouteTableRead(d, meta)
 }
 
-func resourceAwsDefaultRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default_route_table_id", d.Id())
 
 	// re-use regular AWS Route Table READ. This is an extra API call but saves us
 	// from trying to manually keep parity
-	return resourceAwsRouteTableRead(d, meta)
+	return resourceRouteTableRead(d, meta)
 }
 
-func resourceAwsDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default Route Table. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

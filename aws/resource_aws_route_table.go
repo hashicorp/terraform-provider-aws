@@ -41,12 +41,12 @@ var routeTableValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
-func resourceAwsRouteTable() *schema.Resource {
+func ResourceRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRouteTableCreate,
-		Read:   resourceAwsRouteTableRead,
-		Update: resourceAwsRouteTableUpdate,
-		Delete: resourceAwsRouteTableDelete,
+		Create: resourceRouteTableCreate,
+		Read:   resourceRouteTableRead,
+		Update: resourceRouteTableUpdate,
+		Delete: resourceRouteTableDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -163,7 +163,7 @@ func resourceAwsRouteTable() *schema.Resource {
 	}
 }
 
-func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -206,10 +206,10 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsRouteTableRead(d, meta)
+	return resourceRouteTableRead(d, meta)
 }
 
-func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -265,7 +265,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("propagating_vgws") {
@@ -360,10 +360,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsRouteTableRead(d, meta)
+	return resourceRouteTableRead(d, meta)
 }
 
-func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTable, err := finder.RouteTableByID(conn, d.Id())

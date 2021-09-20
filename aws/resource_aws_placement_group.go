@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPlacementGroup() *schema.Resource {
+func ResourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPlacementGroupCreate,
-		Read:   resourceAwsPlacementGroupRead,
-		Update: resourceAwsPlacementGroupUpdate,
-		Delete: resourceAwsPlacementGroupDelete,
+		Create: resourcePlacementGroupCreate,
+		Read:   resourcePlacementGroupRead,
+		Update: resourcePlacementGroupUpdate,
+		Delete: resourcePlacementGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsPlacementGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -111,10 +111,10 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(name)
 
-	return resourceAwsPlacementGroupRead(d, meta)
+	return resourcePlacementGroupRead(d, meta)
 }
 
-func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -163,7 +163,7 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlacementGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -175,10 +175,10 @@ func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsPlacementGroupRead(d, meta)
+	return resourcePlacementGroupRead(d, meta)
 }
 
-func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group %q", d.Id())

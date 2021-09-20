@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEbsSnapshot() *schema.Resource {
+func ResourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsSnapshotCreate,
-		Read:   resourceAwsEbsSnapshotRead,
-		Update: resourceAwsEbsSnapshotUpdate,
-		Delete: resourceAwsEbsSnapshotDelete,
+		Create: resourceEBSSnapshotCreate,
+		Read:   resourceEBSSnapshotRead,
+		Update: resourceEBSSnapshotUpdate,
+		Delete: resourceEBSSnapshotDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsEbsSnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -118,10 +118,10 @@ func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	return resourceAwsEbsSnapshotRead(d, meta)
+	return resourceEBSSnapshotRead(d, meta)
 }
 
-func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -179,7 +179,7 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsEbsSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -189,10 +189,10 @@ func resourceAwsEbsSnapshotUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsEbsSnapshotRead(d, meta)
+	return resourceEBSSnapshotRead(d, meta)
 }
 
-func resourceAwsEbsSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),

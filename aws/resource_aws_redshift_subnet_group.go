@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftSubnetGroup() *schema.Resource {
+func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSubnetGroupCreate,
-		Read:   resourceAwsRedshiftSubnetGroupRead,
-		Update: resourceAwsRedshiftSubnetGroupUpdate,
-		Delete: resourceAwsRedshiftSubnetGroupDelete,
+		Create: resourceSubnetGroupCreate,
+		Read:   resourceSubnetGroupRead,
+		Update: resourceSubnetGroupUpdate,
+		Delete: resourceSubnetGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,7 +62,7 @@ func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsRedshiftSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -88,10 +88,10 @@ func resourceAwsRedshiftSubnetGroupCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(createOpts.ClusterSubnetGroupName))
 	log.Printf("[INFO] Redshift Subnet Group ID: %s", d.Id())
-	return resourceAwsRedshiftSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -141,7 +141,7 @@ func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
@@ -175,10 +175,10 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsRedshiftSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsRedshiftSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	_, err := conn.DeleteClusterSubnetGroup(&redshift.DeleteClusterSubnetGroupInput{

@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
+func ResourceVPNGatewayRoutePropagation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsVpnGatewayRoutePropagationEnable,
-		Read:   resourceAwsVpnGatewayRoutePropagationRead,
+		Read:   resourceVPNGatewayRoutePropagationRead,
 		Delete: resourceAwsVpnGatewayRoutePropagationDisable,
 
 		Schema: map[string]*schema.Schema{
@@ -70,7 +70,7 @@ func resourceAwsVpnGatewayRoutePropagationDisable(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	gwID := d.Get("vpn_gateway_id").(string)

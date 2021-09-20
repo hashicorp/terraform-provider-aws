@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDefaultVpcDhcpOptions() *schema.Resource {
+func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	// reuse aws_vpc_dhcp_options schema, and methods for READ, UPDATE
-	dvpc := resourceAwsVpcDhcpOptions()
-	dvpc.Create = resourceAwsDefaultVpcDhcpOptionsCreate
-	dvpc.Delete = resourceAwsDefaultVpcDhcpOptionsDelete
+	dvpc := ResourceVPCDHCPOptions()
+	dvpc.Create = resourceDefaultVPCDHCPOptionsCreate
+	dvpc.Delete = resourceDefaultVPCDHCPOptionsDelete
 
 	// domain_name is a computed value for Default Default DHCP Options Sets
 	dvpc.Schema["domain_name"] = &schema.Schema{
@@ -42,7 +42,7 @@ func resourceAwsDefaultVpcDhcpOptions() *schema.Resource {
 	return dvpc
 }
 
-func resourceAwsDefaultVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filters := []*ec2.Filter{
@@ -100,10 +100,10 @@ func resourceAwsDefaultVpcDhcpOptionsCreate(d *schema.ResourceData, meta interfa
 	}
 	d.SetId(aws.StringValue(dhcpOptions[0].DhcpOptionsId))
 
-	return resourceAwsVpcDhcpOptionsUpdate(d, meta)
+	return resourceVPCDHCPOptionsUpdate(d, meta)
 }
 
-func resourceAwsDefaultVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default DHCP Options Set. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayRouteTablePropagation() *schema.Resource {
+func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayRouteTablePropagationCreate,
-		Read:   resourceAwsEc2TransitGatewayRouteTablePropagationRead,
-		Delete: resourceAwsEc2TransitGatewayRouteTablePropagationDelete,
+		Create: resourceTransitGatewayRouteTablePropagationCreate,
+		Read:   resourceTransitGatewayRouteTablePropagationRead,
+		Delete: resourceTransitGatewayRouteTablePropagationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,7 +49,7 @@ func resourceAwsEc2TransitGatewayRouteTablePropagation() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayRouteTablePropagationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTablePropagationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
@@ -71,10 +71,10 @@ func resourceAwsEc2TransitGatewayRouteTablePropagationCreate(d *schema.ResourceD
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) propagation (%s) to enable: %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
-	return resourceAwsEc2TransitGatewayRouteTablePropagationRead(d, meta)
+	return resourceTransitGatewayRouteTablePropagationRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayRouteTablePropagationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTablePropagationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTablePropagationID(d.Id())
@@ -112,7 +112,7 @@ func resourceAwsEc2TransitGatewayRouteTablePropagationRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTablePropagationID(d.Id())

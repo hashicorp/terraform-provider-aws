@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -350,7 +351,7 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFlowLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

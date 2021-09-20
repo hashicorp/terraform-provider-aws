@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
 					testAccAWSSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

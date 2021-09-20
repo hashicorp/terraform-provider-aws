@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpnGateway() *schema.Resource {
+func ResourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnGatewayCreate,
-		Read:   resourceAwsVpnGatewayRead,
-		Update: resourceAwsVpnGatewayUpdate,
-		Delete: resourceAwsVpnGatewayDelete,
+		Create: resourceVPNGatewayCreate,
+		Read:   resourceVPNGatewayRead,
+		Update: resourceVPNGatewayUpdate,
+		Delete: resourceVPNGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsVpnGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -95,10 +95,10 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsVpnGatewayRead(d, meta)
+	return resourceVPNGatewayRead(d, meta)
 }
 
-func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -161,7 +161,7 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("vpc_id") {
 		// If we're already attached, detach it first
 		if err := resourceAwsVpnGatewayDetach(d, meta); err != nil {
@@ -184,10 +184,10 @@ func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsVpnGatewayRead(d, meta)
+	return resourceVPNGatewayRead(d, meta)
 }
 
-func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Detach if it is attached

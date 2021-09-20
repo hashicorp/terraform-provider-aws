@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpnConnectionRoute() *schema.Resource {
+func ResourceVPNConnectionRoute() *schema.Resource {
 	return &schema.Resource{
 		// You can't update a route. You can just delete one and make
 		// a new one.
-		Create: resourceAwsVpnConnectionRouteCreate,
-		Read:   resourceAwsVpnConnectionRouteRead,
-		Delete: resourceAwsVpnConnectionRouteDelete,
+		Create: resourceVPNConnectionRouteCreate,
+		Read:   resourceVPNConnectionRouteRead,
+		Delete: resourceVPNConnectionRouteDelete,
 
 		Schema: map[string]*schema.Schema{
 			"destination_cidr_block": {
@@ -38,7 +38,7 @@ func resourceAwsVpnConnectionRoute() *schema.Resource {
 	}
 }
 
-func resourceAwsVpnConnectionRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
@@ -75,10 +75,10 @@ func resourceAwsVpnConnectionRouteCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceAwsVpnConnectionRouteRead(d, meta)
+	return resourceVPNConnectionRouteRead(d, meta)
 }
 
-func resourceAwsVpnConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(d.Id())
@@ -95,7 +95,7 @@ func resourceAwsVpnConnectionRouteRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsVpnConnectionRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock := d.Get("destination_cidr_block").(string)

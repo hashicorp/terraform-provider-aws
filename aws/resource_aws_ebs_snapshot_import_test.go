@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
@@ -107,7 +108,7 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEbsSnapshotImport(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEBSSnapshotImport(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,7 +135,7 @@ func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3BucketObject(), parentResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBucketObject(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

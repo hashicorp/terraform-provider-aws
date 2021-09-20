@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkInterfaceAttachment() *schema.Resource {
+func ResourceNetworkInterfaceAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkInterfaceAttachmentCreate,
-		Read:   resourceAwsNetworkInterfaceAttachmentRead,
-		Delete: resourceAwsNetworkInterfaceAttachmentDelete,
+		Create: resourceNetworkInterfaceAttachmentCreate,
+		Read:   resourceNetworkInterfaceAttachmentRead,
+		Delete: resourceNetworkInterfaceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"device_index": {
@@ -51,7 +51,7 @@ func resourceAwsNetworkInterfaceAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	device_index := d.Get("device_index").(int)
@@ -90,10 +90,10 @@ func resourceAwsNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(resp.AttachmentId))
-	return resourceAwsNetworkInterfaceAttachmentRead(d, meta)
+	return resourceNetworkInterfaceAttachmentRead(d, meta)
 }
 
-func resourceAwsNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	interfaceId := d.Get("network_interface_id").(string)
@@ -133,7 +133,7 @@ func resourceAwsNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsNetworkInterfaceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkInterfaceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	interfaceId := d.Get("network_interface_id").(string)

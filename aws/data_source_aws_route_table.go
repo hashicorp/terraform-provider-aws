@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRouteTable() *schema.Resource {
+func DataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRouteTableRead,
+		Read: dataSourceRouteTableRead,
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
@@ -166,7 +166,7 @@ func dataSourceAwsRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

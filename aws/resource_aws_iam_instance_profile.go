@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamInstanceProfile() *schema.Resource {
+func ResourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamInstanceProfileCreate,
-		Read:   resourceAwsIamInstanceProfileRead,
-		Update: resourceAwsIamInstanceProfileUpdate,
-		Delete: resourceAwsIamInstanceProfileDelete,
+		Create: resourceInstanceProfileCreate,
+		Read:   resourceInstanceProfileRead,
+		Update: resourceInstanceProfileUpdate,
+		Delete: resourceInstanceProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +78,7 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 	}
 }
 
-func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -118,7 +118,7 @@ func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("timed out while waiting for instance profile %s: %w", name, err)
 	}
 
-	return resourceAwsIamInstanceProfileUpdate(d, meta)
+	return resourceInstanceProfileUpdate(d, meta)
 }
 
 func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
@@ -174,7 +174,7 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, conn *iam.IAM) error 
 	return nil
 }
 
-func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("role") {
@@ -206,7 +206,7 @@ func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.GetInstanceProfileInput{
@@ -245,7 +245,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	return instanceProfileReadResult(d, instanceProfile, meta)
 }
 
-func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if err := instanceProfileRemoveAllRoles(d, conn); err != nil {

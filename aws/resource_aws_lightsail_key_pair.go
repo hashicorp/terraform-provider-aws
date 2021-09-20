@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLightsailKeyPair() *schema.Resource {
+func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailKeyPairCreate,
-		Read:   resourceAwsLightsailKeyPairRead,
-		Delete: resourceAwsLightsailKeyPairDelete,
+		Create: resourceKeyPairCreate,
+		Read:   resourceKeyPairRead,
+		Delete: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -77,7 +77,7 @@ func resourceAwsLightsailKeyPair() *schema.Resource {
 	}
 }
 
-func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	var kName string
@@ -165,10 +165,10 @@ func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{})
 		log.Printf("[ERR] Error waiting for KeyPair (%s) to become ready: %s", d.Id(), err)
 	}
 
-	return resourceAwsLightsailKeyPairRead(d, meta)
+	return resourceKeyPairRead(d, meta)
 }
 
-func resourceAwsLightsailKeyPairRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	resp, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
@@ -195,7 +195,7 @@ func resourceAwsLightsailKeyPairRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsLightsailKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	resp, err := conn.DeleteKeyPair(&lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),

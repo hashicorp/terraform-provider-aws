@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKeyPair() *schema.Resource {
+func ResourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsKeyPairCreate,
-		Read:   resourceAwsKeyPairRead,
-		Update: resourceAwsKeyPairUpdate,
-		Delete: resourceAwsKeyPairDelete,
+		Create: resourceKeyPairCreate,
+		Read:   resourceKeyPairRead,
+		Update: resourceKeyPairUpdate,
+		Delete: resourceKeyPairDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +78,7 @@ func resourceAwsKeyPair() *schema.Resource {
 	}
 }
 
-func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -107,10 +107,10 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.KeyName))
 
-	return resourceAwsKeyPairRead(d, meta)
+	return resourceKeyPairRead(d, meta)
 }
 
-func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -167,7 +167,7 @@ func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -177,10 +177,10 @@ func resourceAwsKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsKeyPairRead(d, meta)
+	return resourceKeyPairRead(d, meta)
 }
 
-func resourceAwsKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{

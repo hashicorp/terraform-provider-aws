@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 type TunnelOptions struct {
@@ -668,7 +669,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpnConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

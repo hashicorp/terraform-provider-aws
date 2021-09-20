@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftSecurityGroup() *schema.Resource {
+func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSecurityGroupCreate,
-		Read:   resourceAwsRedshiftSecurityGroupRead,
-		Update: resourceAwsRedshiftSecurityGroupUpdate,
-		Delete: resourceAwsRedshiftSecurityGroupDelete,
+		Create: resourceSecurityGroupCreate,
+		Read:   resourceSecurityGroupRead,
+		Update: resourceSecurityGroupUpdate,
+		Delete: resourceSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsRedshiftSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsRedshiftSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	var err error
@@ -127,10 +127,10 @@ func resourceAwsRedshiftSecurityGroupCreate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	return resourceAwsRedshiftSecurityGroupRead(d, meta)
+	return resourceSecurityGroupRead(d, meta)
 }
 
-func resourceAwsRedshiftSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	sg, err := resourceAwsRedshiftSecurityGroupRetrieve(d, meta)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func resourceAwsRedshiftSecurityGroupRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsRedshiftSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("ingress") {
@@ -200,10 +200,10 @@ func resourceAwsRedshiftSecurityGroupUpdate(d *schema.ResourceData, meta interfa
 		}
 
 	}
-	return resourceAwsRedshiftSecurityGroupRead(d, meta)
+	return resourceSecurityGroupRead(d, meta)
 }
 
-func resourceAwsRedshiftSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	log.Printf("[DEBUG] Redshift Security Group destroy: %v", d.Id())

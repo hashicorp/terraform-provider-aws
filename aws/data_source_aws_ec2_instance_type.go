@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2InstanceType() *schema.Resource {
+func DataSourceInstanceType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2InstanceTypeRead,
+		Read: dataSourceInstanceTypeRead,
 
 		Schema: map[string]*schema.Schema{
 			"auto_recovery_supported": {
@@ -343,7 +343,7 @@ func dataSourceAwsEc2InstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2InstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeInstanceTypesInput{}

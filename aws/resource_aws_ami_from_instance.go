@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAmiFromInstance() *schema.Resource {
+func ResourceAMIFromInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmiFromInstanceCreate,
+		Create: resourceAMIFromInstanceCreate,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
@@ -217,13 +217,13 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 
 		// The remaining operations are shared with the generic aws_ami resource,
 		// since the aws_ami_copy resource only differs in how it's created.
-		Read:   resourceAwsAmiRead,
-		Update: resourceAwsAmiUpdate,
-		Delete: resourceAwsAmiDelete,
+		Read:   resourceAMIRead,
+		Update: resourceAMIUpdate,
+		Delete: resourceAMIDelete,
 	}
 }
 
-func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -249,5 +249,5 @@ func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	return resourceAwsAmiRead(d, meta)
+	return resourceAMIRead(d, meta)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {

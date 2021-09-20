@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsVpcEndpoint() *schema.Resource {
+func DataSourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcEndpointRead,
+		Read: dataSourceVPCEndpointRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -118,7 +118,7 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

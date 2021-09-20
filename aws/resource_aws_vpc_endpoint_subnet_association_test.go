@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
@@ -50,7 +51,7 @@ func TestAccAWSVpcEndpointSubnetAssociation_disappears(t *testing.T) {
 				Config: testAccVpcEndpointSubnetAssociationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointSubnetAssociationExists(resourceName, &vpce),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpointSubnetAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCEndpointSubnetAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

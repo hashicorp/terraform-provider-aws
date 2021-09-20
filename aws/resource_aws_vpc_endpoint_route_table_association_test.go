@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
@@ -54,7 +55,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
 				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCEndpointRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

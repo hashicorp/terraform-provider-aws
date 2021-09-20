@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2CarrierGateway() *schema.Resource {
+func ResourceCarrierGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2CarrierGatewayCreate,
-		Read:   resourceAwsEc2CarrierGatewayRead,
-		Update: resourceAwsEc2CarrierGatewayUpdate,
-		Delete: resourceAwsEc2CarrierGatewayDelete,
+		Create: resourceCarrierGatewayCreate,
+		Read:   resourceCarrierGatewayRead,
+		Update: resourceCarrierGatewayUpdate,
+		Delete: resourceCarrierGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsEc2CarrierGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2CarrierGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCarrierGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -76,10 +76,10 @@ func resourceAwsEc2CarrierGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for EC2 Carrier Gateway (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsEc2CarrierGatewayRead(d, meta)
+	return resourceCarrierGatewayRead(d, meta)
 }
 
-func resourceAwsEc2CarrierGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCarrierGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -127,7 +127,7 @@ func resourceAwsEc2CarrierGatewayRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsEc2CarrierGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCarrierGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -138,10 +138,10 @@ func resourceAwsEc2CarrierGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsEc2CarrierGatewayRead(d, meta)
+	return resourceCarrierGatewayRead(d, meta)
 }
 
-func resourceAwsEc2CarrierGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCarrierGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())

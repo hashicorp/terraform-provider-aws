@@ -20,11 +20,11 @@ const (
 	rdsDbInstanceRoleStatusPending = "PENDING"
 )
 
-func resourceAwsDbInstanceRoleAssociation() *schema.Resource {
+func ResourceInstanceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbInstanceRoleAssociationCreate,
-		Read:   resourceAwsDbInstanceRoleAssociationRead,
-		Delete: resourceAwsDbInstanceRoleAssociationDelete,
+		Create: resourceInstanceRoleAssociationCreate,
+		Read:   resourceInstanceRoleAssociationRead,
+		Delete: resourceInstanceRoleAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -51,7 +51,7 @@ func resourceAwsDbInstanceRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsDbInstanceRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
@@ -76,10 +76,10 @@ func resourceAwsDbInstanceRoleAssociationCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
-	return resourceAwsDbInstanceRoleAssociationRead(d, meta)
+	return resourceInstanceRoleAssociationRead(d, meta)
 }
 
-func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
@@ -113,7 +113,7 @@ func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDbInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())

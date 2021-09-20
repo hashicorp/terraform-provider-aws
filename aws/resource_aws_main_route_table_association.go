@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMainRouteTableAssociation() *schema.Resource {
+func ResourceMainRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMainRouteTableAssociationCreate,
-		Read:   resourceAwsMainRouteTableAssociationRead,
-		Update: resourceAwsMainRouteTableAssociationUpdate,
-		Delete: resourceAwsMainRouteTableAssociationDelete,
+		Create: resourceMainRouteTableAssociationCreate,
+		Read:   resourceMainRouteTableAssociationRead,
+		Update: resourceMainRouteTableAssociationUpdate,
+		Delete: resourceMainRouteTableAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			// We use this field to record the main route table that is automatically
@@ -43,7 +43,7 @@ func resourceAwsMainRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcID := d.Get("vpc_id").(string)
@@ -76,10 +76,10 @@ func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta int
 
 	d.Set("original_route_table_id", association.RouteTableId)
 
-	return resourceAwsMainRouteTableAssociationRead(d, meta)
+	return resourceMainRouteTableAssociationRead(d, meta)
 }
 
-func resourceAwsMainRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMainRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := finder.MainRouteTableAssociationByID(conn, d.Id())
@@ -97,7 +97,7 @@ func resourceAwsMainRouteTableAssociationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -122,10 +122,10 @@ func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for Main Route Table Association (%s) update: %w", d.Id(), err)
 	}
 
-	return resourceAwsMainRouteTableAssociationRead(d, meta)
+	return resourceMainRouteTableAssociationRead(d, meta)
 }
 
-func resourceAwsMainRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMainRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReplaceRouteTableAssociationInput{

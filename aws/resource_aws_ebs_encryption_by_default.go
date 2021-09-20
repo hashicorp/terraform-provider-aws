@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEbsEncryptionByDefault() *schema.Resource {
+func ResourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsEncryptionByDefaultCreate,
-		Read:   resourceAwsEbsEncryptionByDefaultRead,
-		Update: resourceAwsEbsEncryptionByDefaultUpdate,
-		Delete: resourceAwsEbsEncryptionByDefaultDelete,
+		Create: resourceEBSEncryptionByDefaultCreate,
+		Read:   resourceEBSEncryptionByDefaultRead,
+		Update: resourceEBSEncryptionByDefaultUpdate,
+		Delete: resourceEBSEncryptionByDefaultDelete,
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {
@@ -26,7 +26,7 @@ func resourceAwsEbsEncryptionByDefault() *schema.Resource {
 	}
 }
 
-func resourceAwsEbsEncryptionByDefaultCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSEncryptionByDefaultCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	enabled := d.Get("enabled").(bool)
@@ -37,10 +37,10 @@ func resourceAwsEbsEncryptionByDefaultCreate(d *schema.ResourceData, meta interf
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
-	return resourceAwsEbsEncryptionByDefaultRead(d, meta)
+	return resourceEBSEncryptionByDefaultRead(d, meta)
 }
 
-func resourceAwsEbsEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
@@ -53,7 +53,7 @@ func resourceAwsEbsEncryptionByDefaultRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsEbsEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	enabled := d.Get("enabled").(bool)
@@ -61,10 +61,10 @@ func resourceAwsEbsEncryptionByDefaultUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating EBS encryption by default (%t): %s", enabled, err)
 	}
 
-	return resourceAwsEbsEncryptionByDefaultRead(d, meta)
+	return resourceEBSEncryptionByDefaultRead(d, meta)
 }
 
-func resourceAwsEbsEncryptionByDefaultDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSEncryptionByDefaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Removing the resource disables default encryption.

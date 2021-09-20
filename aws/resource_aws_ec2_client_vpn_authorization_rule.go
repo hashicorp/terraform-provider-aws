@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2ClientVpnAuthorizationRule() *schema.Resource {
+func ResourceClientVPNAuthorizationRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnAuthorizationRuleCreate,
-		Read:   resourceAwsEc2ClientVpnAuthorizationRuleRead,
-		Delete: resourceAwsEc2ClientVpnAuthorizationRuleDelete,
+		Create: resourceClientVPNAuthorizationRuleCreate,
+		Read:   resourceClientVPNAuthorizationRuleRead,
+		Delete: resourceClientVPNAuthorizationRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2ClientVpnAuthorizationRuleImport,
 		},
@@ -55,7 +55,7 @@ func resourceAwsEc2ClientVpnAuthorizationRule() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2ClientVpnAuthorizationRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
@@ -95,10 +95,10 @@ func resourceAwsEc2ClientVpnAuthorizationRuleCreate(d *schema.ResourceData, meta
 
 	d.SetId(id)
 
-	return resourceAwsEc2ClientVpnAuthorizationRuleRead(d, meta)
+	return resourceClientVPNAuthorizationRuleRead(d, meta)
 }
 
-func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	result, err := finder.ClientVpnAuthorizationRule(conn,
@@ -132,7 +132,7 @@ func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsEc2ClientVpnAuthorizationRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.RevokeClientVpnIngressInput{

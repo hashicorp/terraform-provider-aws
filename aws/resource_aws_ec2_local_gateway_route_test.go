@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
@@ -58,7 +59,7 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2LocalGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

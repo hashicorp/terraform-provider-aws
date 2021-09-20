@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2AvailabilityZoneGroup() *schema.Resource {
+func ResourceAvailabilityZoneGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2AvailabilityZoneGroupCreate,
-		Read:   resourceAwsEc2AvailabilityZoneGroupRead,
-		Update: resourceAwsEc2AvailabilityZoneGroupUpdate,
+		Create: resourceAvailabilityZoneGroupCreate,
+		Read:   resourceAvailabilityZoneGroupRead,
+		Update: resourceAvailabilityZoneGroupUpdate,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
@@ -45,14 +45,14 @@ func resourceAwsEc2AvailabilityZoneGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2AvailabilityZoneGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAvailabilityZoneGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	configurationOptInStatus := d.Get("opt_in_status").(string)
 
 	d.SetId(d.Get("group_name").(string))
 
-	if err := resourceAwsEc2AvailabilityZoneGroupRead(d, meta); err != nil {
+	if err := resourceAvailabilityZoneGroupRead(d, meta); err != nil {
 		return err
 	}
 
@@ -73,10 +73,10 @@ func resourceAwsEc2AvailabilityZoneGroupCreate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsEc2AvailabilityZoneGroupRead(d, meta)
+	return resourceAvailabilityZoneGroupRead(d, meta)
 }
 
-func resourceAwsEc2AvailabilityZoneGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAvailabilityZoneGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	availabilityZone, err := ec2DescribeAvailabilityZoneGroup(conn, d.Id())
@@ -95,7 +95,7 @@ func resourceAwsEc2AvailabilityZoneGroupRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsEc2AvailabilityZoneGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAvailabilityZoneGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	optInStatus := d.Get("opt_in_status").(string)
 
@@ -112,7 +112,7 @@ func resourceAwsEc2AvailabilityZoneGroupUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error waiting for EC2 Availability Zone Group (%s) opt-in status update: %w", d.Id(), err)
 	}
 
-	return resourceAwsEc2AvailabilityZoneGroupRead(d, meta)
+	return resourceAvailabilityZoneGroupRead(d, meta)
 }
 
 func ec2DescribeAvailabilityZoneGroup(conn *ec2.EC2, groupName string) (*ec2.AvailabilityZone, error) {

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // Route 53 Key Signing Key can only be enabled with KMS Keys in specific regions,
@@ -45,7 +46,7 @@ func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53KeySigningKeyConfigure.Do(func() {
-		testAccProviderRoute53KeySigningKey = Provider()
+		testAccProviderRoute53KeySigningKey = provider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,

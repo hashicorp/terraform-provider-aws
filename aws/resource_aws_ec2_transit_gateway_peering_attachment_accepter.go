@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEc2TransitGatewayPeeringAttachmentAccepter() *schema.Resource {
+func ResourceTransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayPeeringAttachmentAccepterCreate,
-		Read:   resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead,
-		Update: resourceAwsEc2TransitGatewayPeeringAttachmentAccepterUpdate,
-		Delete: resourceAwsEc2TransitGatewayPeeringAttachmentAccepterDelete,
+		Create: resourceTransitGatewayPeeringAttachmentAccepterCreate,
+		Read:   resourceTransitGatewayPeeringAttachmentAccepterRead,
+		Update: resourceTransitGatewayPeeringAttachmentAccepterUpdate,
+		Delete: resourceTransitGatewayPeeringAttachmentAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPeeringAttachmentAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -78,10 +78,10 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterCreate(d *schema.Resou
 		}
 	}
 
-	return resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d, meta)
+	return resourceTransitGatewayPeeringAttachmentAccepterRead(d, meta)
 }
 
-func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPeeringAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -150,7 +150,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d *schema.Resourc
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPeeringAttachmentAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -164,7 +164,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterUpdate(d *schema.Resou
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPeeringAttachmentAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{

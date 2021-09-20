@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
@@ -159,7 +160,7 @@ func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
 				Config: testAccRouteTableAssociationConfigSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbSecurityGroup() *schema.Resource {
+func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbSecurityGroupCreate,
-		Read:   resourceAwsDbSecurityGroupRead,
-		Update: resourceAwsDbSecurityGroupUpdate,
-		Delete: resourceAwsDbSecurityGroupDelete,
+		Create: resourceSecurityGroupCreate,
+		Read:   resourceSecurityGroupRead,
+		Update: resourceSecurityGroupUpdate,
+		Delete: resourceSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -85,7 +85,7 @@ func resourceAwsDbSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDbSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -142,10 +142,10 @@ func resourceAwsDbSecurityGroupCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	return resourceAwsDbSecurityGroupRead(d, meta)
+	return resourceSecurityGroupRead(d, meta)
 }
 
-func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -208,7 +208,7 @@ func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsDbSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {
@@ -255,10 +255,10 @@ func resourceAwsDbSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsDbSecurityGroupRead(d, meta)
+	return resourceSecurityGroupRead(d, meta)
 }
 
-func resourceAwsDbSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] DB Security Group destroy: %v", d.Id())

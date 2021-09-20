@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepEc2PlacementGroups(region string) error {
 	}
 
 	for _, placementGroup := range output.PlacementGroups {
-		r := resourceAwsPlacementGroup()
+		r := ResourcePlacementGroup()
 		d := r.Data(nil)
 
 		d.SetId(aws.StringValue(placementGroup.GroupName))
@@ -160,7 +161,7 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 				Config: testAccAWSPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsPlacementGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePlacementGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

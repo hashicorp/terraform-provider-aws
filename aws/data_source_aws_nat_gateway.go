@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsNatGateway() *schema.Resource {
+func DataSourceNatGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNatGatewayRead,
+		Read: dataSourceNatGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -63,7 +63,7 @@ func dataSourceAwsNatGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

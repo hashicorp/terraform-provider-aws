@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticacheSecurityGroup() *schema.Resource {
+func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheSecurityGroupCreate,
-		Read:   resourceAwsElasticacheSecurityGroupRead,
-		Delete: resourceAwsElasticacheSecurityGroupDelete,
+		Create: resourceSecurityGroupCreate,
+		Read:   resourceSecurityGroupRead,
+		Delete: resourceSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,7 +45,7 @@ func resourceAwsElasticacheSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticacheSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	name := d.Get("name").(string)
@@ -87,7 +87,7 @@ func resourceAwsElasticacheSecurityGroupCreate(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsElasticacheSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	req := &elasticache.DescribeCacheSecurityGroupsInput{
 		CacheSecurityGroupName: aws.String(d.Id()),
@@ -124,7 +124,7 @@ func resourceAwsElasticacheSecurityGroupRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
@@ -150,7 +151,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2TrafficMirrorTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTrafficMirrorTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

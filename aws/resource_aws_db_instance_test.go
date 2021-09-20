@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func testSweepDbInstances(region string) error {
 
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
-			r := resourceAwsDbInstance()
+			r := ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
 			d.Set("skip_final_snapshot", true)
