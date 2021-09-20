@@ -632,7 +632,7 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, v *glue.DevEndpoi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
-		output, err := finder.DevEndpointByName(conn, rs.Primary.ID)
+		output, err := finder.FindDevEndpointByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -652,7 +652,7 @@ func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DevEndpointByName(conn, rs.Primary.ID)
+		_, err := finder.FindDevEndpointByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

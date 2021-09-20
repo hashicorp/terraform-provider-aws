@@ -259,7 +259,7 @@ func resourceDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become available", d.Id())
-	if _, err := waiter.GlueDevEndpointCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitGlueDevEndpointCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -271,7 +271,7 @@ func resourceDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	endpoint, err := finder.DevEndpointByName(conn, d.Id())
+	endpoint, err := finder.FindDevEndpointByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
@@ -525,7 +525,7 @@ func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become terminated", d.Id())
-	if _, err := waiter.GlueDevEndpointDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitGlueDevEndpointDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become terminated: %w", d.Id(), err)
 	}
 

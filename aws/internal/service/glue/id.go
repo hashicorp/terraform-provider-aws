@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ReadAwsGluePartitionID(id string) (catalogID string, dbName string, tableName string, values []string, error error) {
+func readAwsPartitionID(id string) (catalogID string, dbName string, tableName string, values []string, error error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 4 {
 		return "", "", "", []string{}, fmt.Errorf("expected ID in format catalog-id:database-name:table-name:values, received: %s", id)
@@ -19,7 +19,7 @@ func ReadAwsGluePartitionID(id string) (catalogID string, dbName string, tableNa
 	return idParts[0], idParts[1], idParts[2], vals, nil
 }
 
-func CreateAwsGluePartitionID(catalogID, dbName, tableName string, values []interface{}) string {
+func createAwsPartitionID(catalogID, dbName, tableName string, values []interface{}) string {
 	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyAwsGluePartition(values))
 }
 
@@ -33,13 +33,13 @@ func stringifyAwsGluePartition(partValues []interface{}) string {
 	return vals
 }
 
-func CreateAwsGlueRegistryID(id string) *glue.RegistryId {
+func createAwsRegistryID(id string) *glue.RegistryId {
 	return &glue.RegistryId{
 		RegistryArn: aws.String(id),
 	}
 }
 
-func CreateAwsGlueSchemaID(id string) *glue.SchemaId {
+func createAwsSchemaID(id string) *glue.SchemaId {
 	return &glue.SchemaId{
 		SchemaArn: aws.String(id),
 	}

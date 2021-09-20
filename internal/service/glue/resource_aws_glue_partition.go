@@ -220,7 +220,7 @@ func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Glue Partition: %w", err)
 	}
 
-	d.SetId(tfglue.CreateAwsGluePartitionID(catalogID, dbName, tableName, values))
+	d.SetId(tfglue.createAwsPartitionID(catalogID, dbName, tableName, values))
 
 	return resourcePartitionRead(d, meta)
 }
@@ -229,7 +229,7 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
-	partition, err := finder.PartitionByValues(conn, d.Id())
+	partition, err := finder.FindPartitionByValues(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
@@ -270,7 +270,7 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(d.Id())
+	catalogID, dbName, tableName, values, err := tfglue.readAwsPartitionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourcePartitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, dbName, tableName, values, tableErr := tfglue.ReadAwsGluePartitionID(d.Id())
+	catalogID, dbName, tableName, values, tableErr := tfglue.readAwsPartitionID(d.Id())
 	if tableErr != nil {
 		return tableErr
 	}

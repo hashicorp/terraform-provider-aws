@@ -10,15 +10,15 @@ import (
 )
 
 const (
-	MLTransformStatusUnknown   = "Unknown"
-	RegistryStatusUnknown      = "Unknown"
-	SchemaStatusUnknown        = "Unknown"
-	SchemaVersionStatusUnknown = "Unknown"
-	TriggerStatusUnknown       = "Unknown"
+	mlTransformStatusUnknown   = "Unknown"
+	registryStatusUnknown      = "Unknown"
+	schemaStatusUnknown        = "Unknown"
+	schemaVersionStatusUnknown = "Unknown"
+	triggerStatusUnknown       = "Unknown"
 )
 
-// MLTransformStatus fetches the MLTransform and its Status
-func MLTransformStatus(conn *glue.Glue, transformId string) resource.StateRefreshFunc {
+// statusMLTransform fetches the MLTransform and its Status
+func statusMLTransform(conn *glue.Glue, transformId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetMLTransformInput{
 			TransformId: aws.String(transformId),
@@ -27,67 +27,67 @@ func MLTransformStatus(conn *glue.Glue, transformId string) resource.StateRefres
 		output, err := conn.GetMLTransform(input)
 
 		if err != nil {
-			return nil, MLTransformStatusUnknown, err
+			return nil, mlTransformStatusUnknown, err
 		}
 
 		if output == nil {
-			return output, MLTransformStatusUnknown, nil
+			return output, mlTransformStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-// RegistryStatus fetches the Registry and its Status
-func RegistryStatus(conn *glue.Glue, id string) resource.StateRefreshFunc {
+// statusRegistry fetches the Registry and its Status
+func statusRegistry(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.RegistryByID(conn, id)
+		output, err := finder.FindRegistryByID(conn, id)
 		if err != nil {
-			return nil, RegistryStatusUnknown, err
+			return nil, registryStatusUnknown, err
 		}
 
 		if output == nil {
-			return output, RegistryStatusUnknown, nil
+			return output, registryStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-// SchemaStatus fetches the Schema and its Status
-func SchemaStatus(conn *glue.Glue, id string) resource.StateRefreshFunc {
+// statusSchema fetches the Schema and its Status
+func statusSchema(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.SchemaByID(conn, id)
+		output, err := finder.FindSchemaByID(conn, id)
 		if err != nil {
-			return nil, SchemaStatusUnknown, err
+			return nil, schemaStatusUnknown, err
 		}
 
 		if output == nil {
-			return output, SchemaStatusUnknown, nil
+			return output, schemaStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.SchemaStatus), nil
 	}
 }
 
-// SchemaVersionStatus fetches the Schema Version and its Status
-func SchemaVersionStatus(conn *glue.Glue, id string) resource.StateRefreshFunc {
+// statusSchemaVersion fetches the Schema Version and its Status
+func statusSchemaVersion(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.SchemaVersionByID(conn, id)
+		output, err := finder.FindSchemaVersionByID(conn, id)
 		if err != nil {
-			return nil, SchemaVersionStatusUnknown, err
+			return nil, schemaVersionStatusUnknown, err
 		}
 
 		if output == nil {
-			return output, SchemaVersionStatusUnknown, nil
+			return output, schemaVersionStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-// TriggerStatus fetches the Trigger and its Status
-func TriggerStatus(conn *glue.Glue, triggerName string) resource.StateRefreshFunc {
+// statusTrigger fetches the Trigger and its Status
+func statusTrigger(conn *glue.Glue, triggerName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetTriggerInput{
 			Name: aws.String(triggerName),
@@ -96,20 +96,20 @@ func TriggerStatus(conn *glue.Glue, triggerName string) resource.StateRefreshFun
 		output, err := conn.GetTrigger(input)
 
 		if err != nil {
-			return nil, TriggerStatusUnknown, err
+			return nil, triggerStatusUnknown, err
 		}
 
 		if output == nil {
-			return output, TriggerStatusUnknown, nil
+			return output, triggerStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.Trigger.State), nil
 	}
 }
 
-func GlueDevEndpointStatus(conn *glue.Glue, name string) resource.StateRefreshFunc {
+func statusGlueDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DevEndpointByName(conn, name)
+		output, err := finder.FindDevEndpointByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

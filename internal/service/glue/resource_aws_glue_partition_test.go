@@ -177,7 +177,7 @@ func testAccCheckGluePartitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		if _, err := finder.PartitionByValues(conn, rs.Primary.ID); err != nil {
+		if _, err := finder.FindPartitionByValues(conn, rs.Primary.ID); err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
 			}
@@ -201,7 +201,7 @@ func testAccCheckGluePartitionExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := finder.PartitionByValues(conn, rs.Primary.ID)
+		out, err := finder.FindPartitionByValues(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

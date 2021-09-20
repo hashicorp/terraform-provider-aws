@@ -236,7 +236,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
-	if _, err := waiter.TriggerCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitTriggerCreated(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
@@ -263,7 +263,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.TriggerByName(conn, d.Id())
+	output, err := finder.FindTriggerByName(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
@@ -366,7 +366,7 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Glue Trigger (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.TriggerCreated(conn, d.Id()); err != nil {
+		if _, err := waiter.waitTriggerCreated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Glue Trigger (%s) to be Update: %w", d.Id(), err)
 		}
 	}
@@ -418,7 +418,7 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
-	if _, err := waiter.TriggerDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitTriggerDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}

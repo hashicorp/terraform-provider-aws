@@ -387,7 +387,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	out, err := finder.TableByName(conn, catalogID, dbName, name)
+	out, err := finder.FindTableByName(conn, catalogID, dbName, name)
 	if err != nil {
 
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {

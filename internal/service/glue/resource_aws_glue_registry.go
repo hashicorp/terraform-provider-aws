@@ -84,7 +84,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.RegistryByID(conn, d.Id())
+	output, err := finder.FindRegistryByID(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
@@ -130,7 +130,7 @@ func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
-			RegistryId: tfglue.CreateAwsGlueRegistryID(d.Id()),
+			RegistryId: tfglue.createAwsRegistryID(d.Id()),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -159,7 +159,7 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{
-		RegistryId: tfglue.CreateAwsGlueRegistryID(d.Id()),
+		RegistryId: tfglue.createAwsRegistryID(d.Id()),
 	}
 
 	_, err := conn.DeleteRegistry(input)
@@ -170,7 +170,7 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Glue Registry (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.RegistryDeleted(conn, d.Id())
+	_, err = waiter.waitRegistryDeleted(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil

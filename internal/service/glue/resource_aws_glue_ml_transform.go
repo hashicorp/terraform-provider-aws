@@ -379,7 +379,7 @@ func resourceMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Glue ML Transform (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.MLTransformDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitMLTransformDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
