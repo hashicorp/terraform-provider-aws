@@ -1,4 +1,4 @@
-package finder
+package elbv2
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
