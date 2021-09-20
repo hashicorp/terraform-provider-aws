@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceServiceDiscoveryDnsNamespace() *schema.Resource {
@@ -45,7 +46,7 @@ func dataSourceServiceDiscoveryDnsNamespace() *schema.Resource {
 }
 
 func dataSourceServiceDiscoveryDnsNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	name := d.Get("name").(string)
 

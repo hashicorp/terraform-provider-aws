@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepServiceDiscoveryPrivateDnsNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sdconn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
 	var sweeperErrs *multierror.Error
 
 	input := &servicediscovery.ListNamespacesInput{
@@ -253,7 +254,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_private_dns_namespace" {
@@ -287,7 +288,7 @@ func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(name string) resou
 }
 
 func testAccPreCheckAWSServiceDiscovery(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	input := &servicediscovery.ListNamespacesInput{}
 

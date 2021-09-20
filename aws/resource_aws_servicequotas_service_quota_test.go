@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // This resource is different than many since quotas are pre-existing
@@ -156,7 +157,7 @@ func TestAccAwsServiceQuotasServiceQuota_PermissionError(t *testing.T) {
 }
 
 func testAccPreCheckAWSServiceQuotas(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).servicequotasconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
 
 	input := &servicequotas.ListServicesInput{}
 

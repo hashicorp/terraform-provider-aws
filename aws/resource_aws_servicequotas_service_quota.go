@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
@@ -80,7 +81,7 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 }
 
 func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
@@ -135,7 +136,7 @@ func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
 
@@ -234,7 +235,7 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceQuotasServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	value := d.Get("value").(float64)
 	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())

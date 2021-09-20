@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {

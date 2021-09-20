@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepServiceDiscoveryPublicDnsNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sdconn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
 	var sweeperErrs *multierror.Error
 
 	input := &servicediscovery.ListNamespacesInput{
@@ -227,7 +228,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_public_dns_namespace" {
@@ -256,7 +257,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resour
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sdconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 		input := &servicediscovery.GetNamespaceInput{
 			Id: aws.String(rs.Primary.ID),
