@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKmsCiphertext() *schema.Resource {
+func DataSourceCiphertext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsCiphertextRead,
+		Read: dataSourceCiphertextRead,
 
 		Schema: map[string]*schema.Schema{
 			"plaintext": {
@@ -40,7 +40,7 @@ func dataSourceAwsKmsCiphertext() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKmsCiphertextRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCiphertextRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	req := &kms.EncryptInput{

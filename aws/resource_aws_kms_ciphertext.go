@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKmsCiphertext() *schema.Resource {
+func ResourceCiphertext() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsKmsCiphertextCreate,
+		Create: resourceCiphertextCreate,
 		Read:   schema.Noop,
 		Delete: schema.Noop,
 
@@ -47,7 +47,7 @@ func resourceAwsKmsCiphertext() *schema.Resource {
 	}
 }
 
-func resourceAwsKmsCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	//lintignore:R017 // Allow legacy unstable ID usage in managed resource

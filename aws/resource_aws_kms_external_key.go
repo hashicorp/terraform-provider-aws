@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKmsExternalKey() *schema.Resource {
+func ResourceExternalKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKmsExternalKeyCreate,
-		Read:   resourceAwsKmsExternalKeyRead,
-		Update: resourceAwsKmsExternalKeyUpdate,
-		Delete: resourceAwsKmsExternalKeyDelete,
+		Create: resourceExternalKeyCreate,
+		Read:   resourceExternalKeyRead,
+		Update: resourceExternalKeyUpdate,
+		Delete: resourceExternalKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -110,7 +110,7 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 	}
 }
 
-func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -174,10 +174,10 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsKmsExternalKeyRead(d, meta)
+	return resourceExternalKeyRead(d, meta)
 }
 
-func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -221,7 +221,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
@@ -278,10 +278,10 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsKmsExternalKeyRead(d, meta)
+	return resourceExternalKeyRead(d, meta)
 }
 
-func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	input := &kms.ScheduleKeyDeletionInput{

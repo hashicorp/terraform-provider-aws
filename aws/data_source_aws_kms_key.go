@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKmsKey() *schema.Resource {
+func DataSourceKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsKeyRead,
+		Read: dataSourceKeyRead,
 		Schema: map[string]*schema.Schema{
 			"key_id": {
 				Type:         schema.TypeString,
@@ -80,7 +80,7 @@ func dataSourceAwsKmsKey() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	keyId := d.Get("key_id")
 	var grantTokens []*string

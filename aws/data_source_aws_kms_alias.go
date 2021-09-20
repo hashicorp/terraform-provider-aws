@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKmsAlias() *schema.Resource {
+func DataSourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsAliasRead,
+		Read: dataSourceAliasRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -34,7 +34,7 @@ func dataSourceAwsKmsAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	target := d.Get("name").(string)
