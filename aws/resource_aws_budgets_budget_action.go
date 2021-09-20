@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBudgetsBudgetAction() *schema.Resource {
@@ -208,11 +209,11 @@ func resourceAwsBudgetsBudgetAction() *schema.Resource {
 }
 
 func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID := d.Get("account_id").(string)
 	if accountID == "" {
-		accountID = meta.(*AWSClient).accountid
+		accountID = meta.(*conns.AWSClient).AccountID
 	}
 
 	input := &budgets.CreateBudgetActionInput{
@@ -250,7 +251,7 @@ func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
 
@@ -294,9 +295,9 @@ func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
 	d.Set("arn", arn.String())
@@ -305,7 +306,7 @@ func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
 
@@ -358,7 +359,7 @@ func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsBudgetsBudgetActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
 

@@ -16,6 +16,7 @@ import (
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBudgetsBudget() *schema.Resource {
@@ -224,7 +225,7 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 }
 
 func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
@@ -236,7 +237,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 
 	accountID := d.Get("account_id").(string)
 	if accountID == "" {
-		accountID = meta.(*AWSClient).accountid
+		accountID = meta.(*conns.AWSClient).AccountID
 	}
 
 	_, err = conn.CreateBudget(&budgets.CreateBudgetInput{
@@ -263,7 +264,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
 
@@ -285,7 +286,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("account_id", accountID)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("budget/%s", budgetName),
@@ -383,7 +384,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, _, err := tfbudgets.BudgetParseResourceID(d.Id())
 
@@ -414,7 +415,7 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
 
@@ -440,7 +441,7 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	for i, notification := range notifications {
 		subscribers := subscribers[i]
@@ -463,7 +464,7 @@ func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notifi
 }
 
 func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
 
