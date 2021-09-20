@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 )
 
 const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
@@ -241,7 +242,7 @@ func testAccCheckAWSCodePipelineWebhookExists(n string, webhook *codepipeline.Li
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
-		resp, err := getCodePipelineWebhook(conn, rs.Primary.ID)
+		resp, err := tfcodepipeline.GetWebhook(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -396,7 +397,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:GetObjectVersion",
         "s3:GetBucketVersioning"
       ],
-      "Resource": [
+      "tfcodepipeline.Resource": [
         "${aws_s3_bucket.test.arn}",
         "${aws_s3_bucket.test.arn}/*"
       ]
@@ -407,7 +408,7 @@ resource "aws_iam_role_policy" "test" {
         "codebuild:BatchGetBuilds",
         "codebuild:StartBuild"
       ],
-      "Resource": "*"
+      "tfcodepipeline.Resource": "*"
     }
   ]
 }

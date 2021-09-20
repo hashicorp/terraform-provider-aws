@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepCodepipelinePipelines(region string) error {
 		}
 
 		for _, pipeline := range page.Pipelines {
-			r := Resource()
+			r := tfcodepipeline.Resource()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(pipeline.Name))
@@ -197,7 +198,7 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					acctest.CheckResourceDisappears(acctest.Provider, Resource(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.Resource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -719,7 +720,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetObjectVersion",
         "s3:GetBucketVersioning"
       ],
-      "Resource": [
+      "tfcodepipeline.Resource": [
         "${aws_s3_bucket.test.arn}",
         "${aws_s3_bucket.test.arn}/*"
       ]
@@ -730,7 +731,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "codebuild:BatchGetBuilds",
         "codebuild:StartBuild"
       ],
-      "Resource": "*"
+      "tfcodepipeline.Resource": "*"
     }
   ]
 }
@@ -775,7 +776,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetObjectVersion",
         "s3:GetBucketVersioning"
       ],
-      "Resource": [
+      "tfcodepipeline.Resource": [
         "${aws_s3_bucket.test.arn}",
         "${aws_s3_bucket.test.arn}/*"
       ]
@@ -786,14 +787,14 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "codebuild:BatchGetBuilds",
         "codebuild:StartBuild"
       ],
-      "Resource": "*"
+      "tfcodepipeline.Resource": "*"
     },
     {
       "Effect": "Allow",
       "Action": [
         "sts:AssumeRole"
       ],
-      "Resource": "${aws_iam_role.codepipeline_action_role.arn}"
+      "tfcodepipeline.Resource": "${aws_iam_role.codepipeline_action_role.arn}"
     }
   ]
 }
@@ -1027,7 +1028,7 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
         "s3:GetObjectVersion",
         "s3:GetBucketVersioning"
       ],
-      "Resource": [
+      "tfcodepipeline.Resource": [
         "${aws_s3_bucket.test.arn}",
         "${aws_s3_bucket.test.arn}/*"
       ]
@@ -1703,7 +1704,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 
 	for _, tc := range cases {
 		tc := tc
-		_, err := expandAwsCodePipelineArtifactStores(tc.Input)
+		_, err := tfcodepipeline.ExpandArtifactStores(tc.Input)
 		if tc.ExpectedError == "" {
 			if err != nil {
 				t.Errorf("%s: Did not expect an error, but got: %w", tc.Name, err)
