@@ -1,4 +1,4 @@
-package aws
+package fsx
 
 import (
 	"fmt"
@@ -11,10 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -89,7 +87,7 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(result.Backup.BackupId))
 
 	log.Println("[DEBUG] Waiting for FSx backup to become available")
-	if _, err := waiter.waitBackupAvailable(conn, d.Id()); err != nil {
+	if _, err := waitBackupAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for FSx Backup (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -115,7 +113,7 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	backup, err := finder.FindBackupByID(conn, d.Id())
+	backup, err := FindBackupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -168,7 +166,7 @@ func resourceBackupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Waiting for backup to delete")
-	if _, err := waiter.waitBackupDeleted(conn, d.Id()); err != nil {
+	if _, err := waitBackupDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for FSx Backup (%s) to deleted: %w", d.Id(), err)
 	}
 

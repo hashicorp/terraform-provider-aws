@@ -1,4 +1,4 @@
-package aws
+package fsx_test
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func init() {
@@ -223,7 +223,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
-		output, err := finder.FindBackupByID(conn, rs.Primary.ID)
+		output, err := tffsx.FindBackupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -246,7 +246,7 @@ func testAccCheckFsxBackupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindBackupByID(conn, rs.Primary.ID)
+		_, err := tffsx.FindBackupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

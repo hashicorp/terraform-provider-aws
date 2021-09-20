@@ -1,4 +1,4 @@
-package aws
+package fsx_test
 
 import (
 	"fmt"
@@ -12,13 +12,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func init() {
@@ -850,7 +850,7 @@ func testAccCheckFsxWindowsFileSystemExists(resourceName string, fs *fsx.FileSys
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
-		filesystem, err := finder.FindFileSystemByID(conn, rs.Primary.ID)
+		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -873,7 +873,7 @@ func testAccCheckFsxWindowsFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filesystem, err := finder.FindFileSystemByID(conn, rs.Primary.ID)
+		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
