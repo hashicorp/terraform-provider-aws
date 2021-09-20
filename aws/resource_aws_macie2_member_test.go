@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const (
@@ -80,7 +81,7 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 				Config: testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Member(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

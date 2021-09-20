@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsMacie2ClassificationJob_basic(t *testing.T) {
@@ -117,7 +118,7 @@ func testAccAwsMacie2ClassificationJob_disappears(t *testing.T) {
 				Config: testAccAwsMacieClassificationJobconfigNameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2ClassificationJob(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClassificationJob(), resourceName),
 				),
 			},
 		},

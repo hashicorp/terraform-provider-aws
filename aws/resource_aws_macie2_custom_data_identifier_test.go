@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
@@ -91,7 +92,7 @@ func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

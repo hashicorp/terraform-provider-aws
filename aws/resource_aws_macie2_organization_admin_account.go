@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMacie2OrganizationAdminAccount() *schema.Resource {
+func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2OrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceMacie2OrganizationAdminAccountRead,
