@@ -471,7 +471,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
-	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
+	loadBalancers := expandLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
 		input.LoadBalancers = loadBalancers
@@ -705,7 +705,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
+		d.Set("load_balancer", flattenECSLoadBalancers(service.LoadBalancers))
 	}
 
 	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
@@ -802,8 +802,8 @@ func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} 
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = flattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
-	result["subnets"] = flattenStringSet(nc.AwsvpcConfiguration.Subnets)
+	result["security_groups"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result["subnets"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
 		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == ecs.AssignPublicIpEnabled
@@ -819,9 +819,9 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	awsVpcConfig := &ecs.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
 	if val, ok := raw["security_groups"]; ok {
-		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
+		awsVpcConfig.SecurityGroups = flex.ExpandStringSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
+	awsVpcConfig.Subnets = flex.ExpandStringSet(raw["subnets"].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
 		awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpDisabled)
 		if val {

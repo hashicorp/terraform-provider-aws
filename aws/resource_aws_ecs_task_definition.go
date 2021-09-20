@@ -480,7 +480,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("requires_compatibilities"); ok && v.(*schema.Set).Len() > 0 {
-		input.RequiresCompatibilities = expandStringSet(v.(*schema.Set))
+		input.RequiresCompatibilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	proxyConfigs := d.Get("proxy_configuration").([]interface{})
@@ -583,7 +583,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting placement_constraints: %w", err)
 	}
 
-	if err := d.Set("requires_compatibilities", flattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
+	if err := d.Set("requires_compatibilities", flex.FlattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
 		return fmt.Errorf("error setting requires_compatibilities: %w", err)
 	}
 
@@ -848,11 +848,11 @@ func expandEcsVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeCon
 	}
 
 	if v, ok := config["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
-		dockerVol.DriverOpts = expandStringMap(v)
+		dockerVol.DriverOpts = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := config["labels"].(map[string]interface{}); ok && len(v) > 0 {
-		dockerVol.Labels = expandStringMap(v)
+		dockerVol.Labels = flex.ExpandStringMap(v)
 	}
 
 	return dockerVol
