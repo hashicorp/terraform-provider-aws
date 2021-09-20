@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -57,7 +58,7 @@ func testSweepNetworkFirewallFirewalls(region string) error {
 
 			log.Printf("[INFO] Deleting NetworkFirewall Firewall: %s", arn)
 
-			r := resourceAwsNetworkFirewallFirewall()
+			r := ResourceFirewall()
 			d := r.Data(nil)
 			d.SetId(arn)
 			diags := r.DeleteContext(ctx, d, client)
@@ -365,7 +366,7 @@ func TestAccAwsNetworkFirewallFirewall_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallFirewall_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallFirewall(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewall(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

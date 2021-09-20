@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
@@ -100,7 +101,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallResourcePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +123,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears_FirewallPolicy(t *testin
 				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallResourcePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallFirewallPolicy(), "aws_networkfirewall_firewall_policy.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewallPolicy(), "aws_networkfirewall_firewall_policy.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +145,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears_RuleGroup(t *testing.T) 
 				Config: testAccNetworkFirewallResourcePolicy_ruleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallResourcePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallRuleGroup(), "aws_networkfirewall_rule_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRuleGroup(), "aws_networkfirewall_rule_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

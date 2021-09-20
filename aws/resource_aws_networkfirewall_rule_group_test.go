@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -57,7 +58,7 @@ func testSweepNetworkFirewallRuleGroups(region string) error {
 			arn := aws.StringValue(r.Arn)
 			log.Printf("[INFO] Deleting NetworkFirewall Rule Group: %s", arn)
 
-			r := resourceAwsNetworkFirewallRuleGroup()
+			r := ResourceRuleGroup()
 			d := r.Data(nil)
 			d.SetId(arn)
 			diags := r.DeleteContext(ctx, d, client)
@@ -809,7 +810,7 @@ func TestAccAwsNetworkFirewallRuleGroup_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallRuleGroup_basic_rulesSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallRuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

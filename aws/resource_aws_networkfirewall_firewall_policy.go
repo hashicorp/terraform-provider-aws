@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkFirewallFirewallPolicy() *schema.Resource {
+func ResourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsNetworkFirewallFirewallPolicyCreate,
-		ReadContext:   resourceAwsNetworkFirewallFirewallPolicyRead,
-		UpdateContext: resourceAwsNetworkFirewallFirewallPolicyUpdate,
-		DeleteContext: resourceAwsNetworkFirewallFirewallPolicyDelete,
+		CreateContext: resourceFirewallPolicyCreate,
+		ReadContext:   resourceFirewallPolicyRead,
+		UpdateContext: resourceFirewallPolicyUpdate,
+		DeleteContext: resourceFirewallPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -107,7 +107,7 @@ func resourceAwsNetworkFirewallFirewallPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkFirewallFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -137,10 +137,10 @@ func resourceAwsNetworkFirewallFirewallPolicyCreate(ctx context.Context, d *sche
 
 	d.SetId(aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyArn))
 
-	return resourceAwsNetworkFirewallFirewallPolicyRead(ctx, d, meta)
+	return resourceFirewallPolicyRead(ctx, d, meta)
 }
 
-func resourceAwsNetworkFirewallFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -190,7 +190,7 @@ func resourceAwsNetworkFirewallFirewallPolicyRead(ctx context.Context, d *schema
 	return nil
 }
 
-func resourceAwsNetworkFirewallFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	arn := d.Id()
 
@@ -219,10 +219,10 @@ func resourceAwsNetworkFirewallFirewallPolicyUpdate(ctx context.Context, d *sche
 		}
 	}
 
-	return resourceAwsNetworkFirewallFirewallPolicyRead(ctx, d, meta)
+	return resourceFirewallPolicyRead(ctx, d, meta)
 }
 
-func resourceAwsNetworkFirewallFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy %s", d.Id())
