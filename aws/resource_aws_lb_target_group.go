@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTargetGroup() *schema.Resource {
@@ -145,14 +146,14 @@ func ResourceTargetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateLbTargetGroupName,
+				ValidateFunc:  validTargetGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateLbTargetGroupNamePrefix,
+				ValidateFunc:  validTargetGroupNamePrefix,
 			},
 			"port": {
 				Type:         schema.TypeInt,
@@ -168,8 +169,8 @@ func ResourceTargetGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-				ValidateFunc:     validateTypeStringNullableBoolean,
+				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 			},
 			"protocol": {
 				Type:         schema.TypeString,
