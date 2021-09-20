@@ -22,7 +22,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,14 +55,14 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucketLifecycleConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3ControlBucketLifecycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,7 +77,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipa
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,7 +203,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObje
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -244,7 +244,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -344,7 +344,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -383,7 +383,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -416,7 +416,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
 }
 
 func testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket_lifecycle_configuration" {
@@ -469,7 +469,7 @@ func testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName str
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

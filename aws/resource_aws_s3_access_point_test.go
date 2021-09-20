@@ -7,13 +7,15 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -24,7 +26,7 @@ func init() {
 }
 
 func testSweepS3AccessPoints(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -67,7 +69,7 @@ func testSweepS3AccessPoints(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Access Point sweep for %s: %s", region, err)
 		return nil
 	}
@@ -88,7 +90,7 @@ func TestAccAWSS3AccessPoint_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +131,7 @@ func TestAccAWSS3AccessPoint_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +156,7 @@ func TestAccAWSS3AccessPoint_disappears_Bucket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,7 +179,7 @@ func TestAccAWSS3AccessPoint_Bucket_Arn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,7 +260,7 @@ func TestAccAWSS3AccessPoint_Policy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -312,7 +314,7 @@ func TestAccAWSS3AccessPoint_PublicAccessBlockConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -352,7 +354,7 @@ func TestAccAWSS3AccessPoint_VpcConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -400,7 +402,7 @@ func testAccCheckAWSS3AccessPointDisappears(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 		_, err = conn.DeleteAccessPoint(&s3control.DeleteAccessPointInput{
 			AccountId: aws.String(accountId),
@@ -415,7 +417,7 @@ func testAccCheckAWSS3AccessPointDisappears(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSS3AccessPointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_access_point" {
@@ -454,7 +456,7 @@ func testAccCheckAWSS3AccessPointExists(n string, output *s3control.GetAccessPoi
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 		resp, err := conn.GetAccessPoint(&s3control.GetAccessPointInput{
 			AccountId: aws.String(accountId),
@@ -486,7 +488,7 @@ func testAccCheckAWSS3AccessPointHasPolicy(n string, fn func() string) resource.
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
 
 		resp, err := conn.GetAccessPointPolicy(&s3control.GetAccessPointPolicyInput{
 			AccountId: aws.String(accountId),
@@ -710,6 +712,7 @@ resource "aws_s3_access_point" "test" {
 }
 `, rName)
 }
+
 func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -721,7 +724,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -732,4 +735,3 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 		return nil
 	}
 }
-
