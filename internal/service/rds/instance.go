@@ -36,7 +36,7 @@ func ResourceInstance() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsDbInstanceResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsDbInstanceStateUpgradeV0,
+				Upgrade: InstanceStateUpgradeV0,
 				Version: 0,
 			},
 		},

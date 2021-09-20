@@ -176,7 +176,7 @@ func TestAccAWSDBProxyEndpoint_disappears(t *testing.T) {
 				Config: testAccAWSDBProxyEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProxyEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxyEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -198,7 +198,7 @@ func TestAccAWSDBProxyEndpoint_disappears_proxy(t *testing.T) {
 				Config: testAccAWSDBProxyEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProxy(), "aws_db_proxy.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxy(), "aws_db_proxy.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

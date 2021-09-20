@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func init() {
@@ -58,7 +59,7 @@ func testSweepRdsClusters(region string) error {
 			// Automatically remove from global cluster to bypass this error on deletion:
 			// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 			if aws.StringValue(cluster.EngineMode) == "global" {
-				globalCluster, err := rdsDescribeGlobalClusterFromDbClusterARN(conn, aws.StringValue(cluster.DBClusterArn))
+				globalCluster, err := tfrds.DescribeGlobalClusterFromClusterARN(conn, aws.StringValue(cluster.DBClusterArn))
 
 				if err != nil {
 					log.Printf("[ERROR] Failure reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
@@ -94,7 +95,7 @@ func testSweepRdsClusters(region string) error {
 				continue
 			}
 
-			if err := waitForRDSClusterDeletion(conn, id, 40*time.Minute); err != nil {
+			if err := tfrds.WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil {
 				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
 			}
 		}

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
@@ -79,7 +80,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 			return fmt.Errorf("Resource not found: %s", resourceName)
 		}
 
-		dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(rs.Primary.ID)
+		dbInstanceIdentifier, roleArn, err := tfrds.InstanceRoleAssociationDecodeID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading resource ID: %s", err)
@@ -87,7 +88,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		role, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		role, err := tfrds.DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 		if err != nil {
 			return err
@@ -115,13 +116,13 @@ func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(rs.Primary.ID)
+		dbInstanceIdentifier, roleArn, err := tfrds.InstanceRoleAssociationDecodeID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
 
-		dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		dbInstanceRole, err := tfrds.DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 			continue
@@ -157,7 +158,7 @@ func testAccCheckAWSDbInstanceRoleAssociationDisappears(dbInstance *rds.DBInstan
 			return err
 		}
 
-		return waitForRdsDbInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
+		return tfrds.WaitForInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
 	}
 }
 

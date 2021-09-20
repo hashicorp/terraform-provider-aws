@@ -176,7 +176,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+	if err := d.Set("parameter", FlattenParameters(parameters)); err != nil {
 		return fmt.Errorf("error setting parameters: %s", err)
 	}
 
@@ -217,7 +217,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter
-		parameters := expandParameters(ns.Difference(os).List())
+		parameters := ExpandParameters(ns.Difference(os).List())
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.
@@ -244,13 +244,13 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 
 		toRemove := map[string]*rds.Parameter{}
 
-		for _, p := range expandParameters(os.List()) {
+		for _, p := range ExpandParameters(os.List()) {
 			if p.ParameterName != nil {
 				toRemove[*p.ParameterName] = p
 			}
 		}
 
-		for _, p := range expandParameters(ns.List()) {
+		for _, p := range ExpandParameters(ns.List()) {
 			if p.ParameterName != nil {
 				delete(toRemove, *p.ParameterName)
 			}

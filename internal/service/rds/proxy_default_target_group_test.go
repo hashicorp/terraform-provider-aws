@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
@@ -274,7 +275,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 					testAccCheckAWSDBProxyExists(resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProxy(), dbProxyResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

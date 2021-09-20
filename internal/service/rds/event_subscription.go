@@ -162,7 +162,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
+	sub, err := EventSubscriptionRetrieve(d.Id(), conn)
 
 	if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
@@ -223,7 +223,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsDbEventSubscriptionRetrieve(name string, conn *rds.RDS) (*rds.EventSubscription, error) {
+func EventSubscriptionRetrieve(name string, conn *rds.RDS) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
@@ -381,7 +381,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	err = waitForRdsEventSubscriptionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = WaitForEventSubscriptionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for RDS Event Subscription (%s) deletion: %s", d.Id(), err)
@@ -393,7 +393,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resource.StateRefreshFunc {
 
 	return func() (interface{}, string, error) {
-		sub, err := resourceAwsDbEventSubscriptionRetrieve(name, conn)
+		sub, err := EventSubscriptionRetrieve(name, conn)
 
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			return nil, "", nil
@@ -411,7 +411,7 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 	}
 }
 
-func waitForRdsEventSubscriptionDeletion(conn *rds.RDS, name string, timeout time.Duration) error {
+func WaitForEventSubscriptionDeletion(conn *rds.RDS, name string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},

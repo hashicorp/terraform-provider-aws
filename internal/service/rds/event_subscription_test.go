@@ -268,7 +268,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
+		eventSubscription, err := tfrds.EventSubscriptionRetrieve(rs.Primary.ID, conn)
 
 		if err != nil {
 			return err
@@ -292,7 +292,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
+		eventSubscription, err := tfrds.EventSubscriptionRetrieve(rs.Primary.ID, conn)
 
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
@@ -324,7 +324,7 @@ func testAccCheckAWSDBEventSubscriptionDisappears(eventSubscription *rds.EventSu
 			return err
 		}
 
-		return waitForRdsEventSubscriptionDeletion(conn, aws.StringValue(eventSubscription.CustSubscriptionId), 10*time.Minute)
+		return tfrds.WaitForEventSubscriptionDeletion(conn, aws.StringValue(eventSubscription.CustSubscriptionId), 10*time.Minute)
 	}
 }
 

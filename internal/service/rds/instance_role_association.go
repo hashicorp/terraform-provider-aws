@@ -84,13 +84,13 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
+	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading resource ID: %s", err)
 	}
 
-	dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+	dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
@@ -118,7 +118,7 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
+	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading resource ID: %s", err)
@@ -145,14 +145,14 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error disassociating RDS DB Instance (%s) IAM Role (%s): %s", dbInstanceIdentifier, roleArn, err)
 	}
 
-	if err := waitForRdsDbInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
+	if err := WaitForInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
 	return nil
 }
 
-func resourceAwsDbInstanceRoleAssociationDecodeId(id string) (string, string, error) {
+func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
@@ -162,7 +162,7 @@ func resourceAwsDbInstanceRoleAssociationDecodeId(id string) (string, string, er
 	return parts[0], parts[1], nil
 }
 
-func rdsDescribeDbInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
+func DescribeInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(dbInstanceIdentifier),
 	}
@@ -204,7 +204,7 @@ func waitForRdsDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, ro
 		Pending: []string{rdsDbInstanceRoleStatusPending},
 		Target:  []string{rdsDbInstanceRoleStatusActive},
 		Refresh: func() (interface{}, string, error) {
-			dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+			dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 			if err != nil {
 				return nil, "", err
@@ -226,7 +226,7 @@ func waitForRdsDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, ro
 	return err
 }
 
-func waitForRdsDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func WaitForInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			rdsDbInstanceRoleStatusActive,
@@ -234,7 +234,7 @@ func waitForRdsDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier,
 		},
 		Target: []string{rdsDbInstanceRoleStatusDeleted},
 		Refresh: func() (interface{}, string, error) {
-			dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
+			dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 				return &rds.DBInstanceRole{}, rdsDbInstanceRoleStatusDeleted, nil

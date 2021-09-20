@@ -197,7 +197,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		// _and_ the "system"/"engine-default" Source parameters _that appear in the
 		// config_ in the state, or the user gets a perpetual diff. See
 		// terraform-providers/terraform-provider-aws#593 for more context and details.
-		confParams := expandParameters(configParams.List())
+		confParams := ExpandParameters(configParams.List())
 		for _, param := range parameters {
 			if param.Source == nil || param.ParameterName == nil {
 				continue
@@ -222,7 +222,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	err = d.Set("parameter", flattenParameters(userParams))
+	err = d.Set("parameter", FlattenParameters(userParams))
 	if err != nil {
 		return fmt.Errorf("error setting 'parameter' in state: %#v", err)
 	}
@@ -268,7 +268,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter
-		parameters := expandParameters(ns.Difference(os).List())
+		parameters := ExpandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
@@ -276,7 +276,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			for parameters != nil {
 				var paramsToModify []*rds.Parameter
-				paramsToModify, parameters = resourceDBParameterModifyChunk(parameters, maxParamModifyChunk)
+				paramsToModify, parameters = ResourceParameterModifyChunk(parameters, maxParamModifyChunk)
 
 				modifyOpts := rds.ModifyDBParameterGroupInput{
 					DBParameterGroupName: aws.String(d.Get("name").(string)),
@@ -293,13 +293,13 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		toRemove := map[string]*rds.Parameter{}
 
-		for _, p := range expandParameters(os.List()) {
+		for _, p := range ExpandParameters(os.List()) {
 			if p.ParameterName != nil {
 				toRemove[*p.ParameterName] = p
 			}
 		}
 
-		for _, p := range expandParameters(ns.List()) {
+		for _, p := range ExpandParameters(ns.List()) {
 			if p.ParameterName != nil {
 				delete(toRemove, *p.ParameterName)
 			}
@@ -373,7 +373,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsDbParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	// Store the value as a lower case string, to match how we store them in flattenParameters
+	// Store the value as a lower case string, to match how we store them in FlattenParameters
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["name"].(string))))
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
 	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
@@ -383,7 +383,7 @@ func resourceAwsDbParameterHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceDBParameterModifyChunk(all []*rds.Parameter, maxChunkSize int) ([]*rds.Parameter, []*rds.Parameter) {
+func ResourceParameterModifyChunk(all []*rds.Parameter, maxChunkSize int) ([]*rds.Parameter, []*rds.Parameter) {
 	// Since the hash randomly affect the set "order," this attempts to prioritize important
 	// parameters to go in the first chunk (i.e., charset)
 
