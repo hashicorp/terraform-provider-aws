@@ -16,7 +16,7 @@ func TestAccAWSOutpostsSitesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSOutpostsSites(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func testAccCheckOutpostsSitesAttributes(dataSourceName string) resource.TestChe
 }
 
 func testAccPreCheckAWSOutpostsSites(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).outpostsconn
+	conn := acctest.Provider.Meta().(*AWSClient).outpostsconn
 
 	input := &outposts.ListSitesInput{}
 
