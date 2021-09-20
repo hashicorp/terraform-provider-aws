@@ -15,6 +15,7 @@ import (
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceImageRecipe() *schema.Resource {
@@ -59,8 +60,8 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-										ValidateFunc:     validateTypeStringNullableBoolean,
+										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 									},
 									"encrypted": {
 										// Use TypeString to allow an "unspecified" value,
@@ -70,8 +71,8 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
-										ValidateFunc:     validateTypeStringNullableBoolean,
+										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:         schema.TypeInt,
@@ -83,7 +84,7 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -133,7 +134,7 @@ func ResourceImageRecipe() *schema.Resource {
 						"component_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},

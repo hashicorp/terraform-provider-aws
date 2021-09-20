@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDistributionConfiguration() *schema.Resource {
@@ -85,7 +86,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validateAwsAccountId,
+														ValidateFunc: verify.ValidAccountID,
 													},
 												},
 											},
@@ -104,7 +105,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validateAwsAccountId,
+											ValidateFunc: verify.ValidAccountID,
 										},
 										MaxItems: 50,
 									},
@@ -116,7 +117,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 						"region": {
