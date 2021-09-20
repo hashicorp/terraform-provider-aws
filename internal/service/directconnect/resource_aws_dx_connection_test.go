@@ -1,4 +1,4 @@
-package aws
+package directconnect_test
 
 import (
 	"fmt"
@@ -12,13 +12,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func init() {
@@ -233,7 +233,7 @@ func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindConnectionByID(conn, rs.Primary.ID)
+		_, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -262,7 +262,7 @@ func testAccCheckAwsDxConnectionExists(name string, v *directconnect.Connection)
 			return fmt.Errorf("No ID is set")
 		}
 
-		connection, err := finder.FindConnectionByID(conn, rs.Primary.ID)
+		connection, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

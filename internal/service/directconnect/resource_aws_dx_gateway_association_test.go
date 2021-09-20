@@ -1,4 +1,4 @@
-package aws
+package directconnect_test
 
 import (
 	"context"
@@ -14,15 +14,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func init() {
@@ -45,7 +45,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*acctest.SweepResource, 0)
 
-	err = lister.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+	err = tfdirectconnect.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -57,7 +57,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 				DirectConnectGatewayId: aws.String(directConnectGatewayID),
 			}
 
-			err := lister.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := tfdirectconnect.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -125,7 +125,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 				AssociatedGatewayId: aws.String(transitGatewayID),
 			}
 
-			err := lister.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := tfdirectconnect.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -516,7 +516,7 @@ func testAccCheckAwsDxGatewayAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+		_, err := tfdirectconnect.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -544,14 +544,14 @@ func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.Ga
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
-		output, err := finder.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+		output, err := tfdirectconnect.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
 
 		if err != nil {
 			return err
 		}
 
 		if proposalID := rs.Primary.Attributes["proposal_id"]; proposalID != "" {
-			output, err := finder.FindGatewayAssociationProposalByID(conn, proposalID)
+			output, err := tfdirectconnect.FindGatewayAssociationProposalByID(conn, proposalID)
 
 			if err != nil {
 				return err

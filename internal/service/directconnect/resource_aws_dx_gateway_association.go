@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"fmt"
@@ -10,10 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -139,7 +136,7 @@ func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) 
 
 		// For historical reasons the resource ID isn't set to the association ID returned from the API.
 		associationID = aws.StringValue(output.DirectConnectGatewayAssociation.AssociationId)
-		d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, aws.StringValue(output.DirectConnectGatewayAssociation.AssociatedGateway.Id)))
+		d.SetId(GatewayAssociationCreateResourceID(directConnectGatewayID, aws.StringValue(output.DirectConnectGatewayAssociation.AssociatedGateway.Id)))
 	} else {
 		associatedGatewayID := d.Get("associated_gateway_id").(string)
 		input := &directconnect.CreateDirectConnectGatewayAssociationInput{
@@ -160,12 +157,12 @@ func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) 
 
 		// For historical reasons the resource ID isn't set to the association ID returned from the API.
 		associationID = aws.StringValue(output.DirectConnectGatewayAssociation.AssociationId)
-		d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, associatedGatewayID))
+		d.SetId(GatewayAssociationCreateResourceID(directConnectGatewayID, associatedGatewayID))
 	}
 
 	d.Set("dx_gateway_association_id", associationID)
 
-	if _, err := waiter.waitGatewayAssociationCreated(conn, associationID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitGatewayAssociationCreated(conn, associationID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to create: %w", d.Id(), err)
 	}
 
@@ -177,7 +174,7 @@ func resourceGatewayAssociationRead(d *schema.ResourceData, meta interface{}) er
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
-	output, err := finder.FindGatewayAssociationByID(conn, associationID)
+	output, err := FindGatewayAssociationByID(conn, associationID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Gateway Association (%s) not found, removing from state", d.Id())
@@ -229,7 +226,7 @@ func resourceGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.waitGatewayAssociationUpdated(conn, associationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitGatewayAssociationUpdated(conn, associationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to update: %w", d.Id(), err)
 	}
 
@@ -254,7 +251,7 @@ func resourceGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error deleting Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.waitGatewayAssociationDeleted(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitGatewayAssociationDeleted(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -273,13 +270,13 @@ func resourceAwsDxGatewayAssociationImport(d *schema.ResourceData, meta interfac
 	directConnectGatewayID := parts[0]
 	associatedGatewayID := parts[1]
 
-	output, err := finder.FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+	output, err := FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, associatedGatewayID))
+	d.SetId(GatewayAssociationCreateResourceID(directConnectGatewayID, associatedGatewayID))
 	d.Set("dx_gateway_id", output.DirectConnectGatewayId)
 	d.Set("dx_gateway_association_id", output.AssociationId)
 

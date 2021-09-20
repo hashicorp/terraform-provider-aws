@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"context"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,7 +35,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
-				output, err := finder.FindGatewayAssociationProposalByID(conn, d.Id())
+				output, err := FindGatewayAssociationProposalByID(conn, d.Id())
 
 				if tfresource.NotFound(err) {
 					// Proposal may be end-of-life and removed by AWS.
@@ -123,14 +122,14 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	// First attempt to find by proposal ID.
-	output, err := finder.FindGatewayAssociationProposalByID(conn, d.Id())
+	output, err := FindGatewayAssociationProposalByID(conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		// Attempt to find an existing association.
 		directConnectGatewayID := d.Get("dx_gateway_id").(string)
 		associatedGatewayID := d.Get("associated_gateway_id").(string)
 
-		output, err := finder.FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+		output, err := FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())

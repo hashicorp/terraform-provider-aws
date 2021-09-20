@@ -1,4 +1,4 @@
-package aws
+package directconnect_test
 
 import (
 	"fmt"
@@ -11,14 +11,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func init() {
@@ -41,7 +41,7 @@ func testSweepDirectConnectGateways(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*acctest.SweepResource, 0)
 
-	err = lister.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+	err = tfdirectconnect.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -60,7 +60,7 @@ func testSweepDirectConnectGateways(region string) error {
 
 			var associations bool
 
-			err := lister.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := tfdirectconnect.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -203,7 +203,7 @@ func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindGatewayByID(conn, rs.Primary.ID)
+		_, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -231,7 +231,7 @@ func testAccCheckAwsDxGatewayExists(name string, v *directconnect.Gateway) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
-		output, err := finder.FindGatewayByID(conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

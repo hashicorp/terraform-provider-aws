@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"fmt"
@@ -9,10 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -123,7 +121,7 @@ func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	lag, err := finder.FindLagByID(conn, d.Id())
+	lag, err := FindLagByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect LAG (%s) not found, removing from state", d.Id())
@@ -204,7 +202,7 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.Get("force_destroy").(bool) {
-		lag, err := finder.FindLagByID(conn, d.Id())
+		lag, err := FindLagByID(conn, d.Id())
 
 		if tfresource.NotFound(err) {
 			return nil
@@ -232,7 +230,7 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Direct Connect LAG (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitLagDeleted(conn, d.Id())
+	_, err = waitLagDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Direct Connect LAG (%s) delete: %w", d.Id(), err)

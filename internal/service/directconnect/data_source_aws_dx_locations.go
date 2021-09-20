@@ -1,4 +1,4 @@
-package aws
+package directconnect
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +28,7 @@ func DataSourceLocations() *schema.Resource {
 func dataSourceLocationsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	locations, err := finder.FindLocations(conn, &directconnect.DescribeLocationsInput{})
+	locations, err := FindLocations(conn, &directconnect.DescribeLocationsInput{})
 
 	if err != nil {
 		return fmt.Errorf("error reading Direct Connect locations: %w", err)

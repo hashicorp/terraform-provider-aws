@@ -4,14 +4,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func statusConnectionState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindConnectionByID(conn, id)
+		output, err := FindConnectionByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -27,7 +26,7 @@ func statusConnectionState(conn *directconnect.DirectConnect, id string) resourc
 
 func statusGatewayState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindGatewayByID(conn, id)
+		output, err := FindGatewayByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -43,7 +42,7 @@ func statusGatewayState(conn *directconnect.DirectConnect, id string) resource.S
 
 func statusGatewayAssociationState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindGatewayAssociationByID(conn, id)
+		output, err := FindGatewayAssociationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -59,7 +58,7 @@ func statusGatewayAssociationState(conn *directconnect.DirectConnect, id string)
 
 func statusLagState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindLagByID(conn, id)
+		output, err := FindLagByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
