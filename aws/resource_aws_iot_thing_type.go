@@ -86,7 +86,7 @@ func resourceAwsIotThingTypeCreate(d *schema.ResourceData, meta interface{}) err
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.ThingTypeProperties = expandIotThingTypeProperties(config)
+			params.ThingTypeProperties = expandThingTypeProperties(config)
 		}
 	}
 
@@ -139,7 +139,7 @@ func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("arn", out.ThingTypeArn)
 
-	if err := d.Set("properties", flattenIotThingTypeProperties(out.ThingTypeProperties)); err != nil {
+	if err := d.Set("properties", flattenIoTThingTypeProperties(out.ThingTypeProperties)); err != nil {
 		return fmt.Errorf("error setting properties: %s", err)
 	}
 
