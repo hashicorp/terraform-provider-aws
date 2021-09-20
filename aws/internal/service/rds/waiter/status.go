@@ -23,8 +23,8 @@ const (
 	ProxyEndpointStatusUnknown = "Unknown"
 )
 
-// EventSubscriptionStatus fetches the EventSubscription and its Status
-func EventSubscriptionStatus(conn *rds.RDS, subscriptionName string) resource.StateRefreshFunc {
+// StatusEventSubscription fetches the EventSubscription and its Status
+func StatusEventSubscription(conn *rds.RDS, subscriptionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &rds.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(subscriptionName),
@@ -44,10 +44,10 @@ func EventSubscriptionStatus(conn *rds.RDS, subscriptionName string) resource.St
 	}
 }
 
-// DBProxyEndpointStatus fetches the ProxyEndpoint and its Status
-func DBProxyEndpointStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
+// StatusDBProxyEndpoint fetches the ProxyEndpoint and its Status
+func StatusDBProxyEndpoint(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DBProxyEndpoint(conn, id)
+		output, err := finder.FindDBProxyEndpoint(conn, id)
 
 		if err != nil {
 			return nil, ProxyEndpointStatusUnknown, err
@@ -61,9 +61,9 @@ func DBProxyEndpointStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	}
 }
 
-func DBClusterRoleStatus(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
+func StatusDBClusterRole(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+		output, err := finder.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

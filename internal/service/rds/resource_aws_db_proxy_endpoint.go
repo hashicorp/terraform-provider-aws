@@ -117,7 +117,7 @@ func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName}, "/"))
 
-	if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.WaitDBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -129,7 +129,7 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, d.Id())
+	dbProxyEndpoint, err := finder.FindDBProxyEndpoint(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
@@ -203,7 +203,7 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("Error updating DB Proxy Endpoint: %w", err)
 		}
 
-		if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.WaitDBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become modified: %w", d.Id(), err)
 		}
 	}
@@ -236,7 +236,7 @@ func resourceProxyEndpointDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error Deleting DB Proxy Endpoint: %w", err)
 	}
 
-	if _, err := waiter.DBProxyEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.WaitDBProxyEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			return nil
 		}

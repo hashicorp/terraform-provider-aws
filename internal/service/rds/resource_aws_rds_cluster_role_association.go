@@ -68,7 +68,7 @@ func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(tfrds.ClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
 
-	_, err = waiter.DBClusterRoleAssociationCreated(conn, dbClusterID, roleARN)
+	_, err = waiter.WaitDBClusterRoleAssociationCreated(conn, dbClusterID, roleARN)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to create: %w", dbClusterID, roleARN, err)
@@ -86,7 +86,7 @@ func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
 
-	output, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+	output, err := finder.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
@@ -131,7 +131,7 @@ func resourceClusterRoleAssociationDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	_, err = waiter.DBClusterRoleAssociationDeleted(conn, dbClusterID, roleARN)
+	_, err = waiter.WaitDBClusterRoleAssociationDeleted(conn, dbClusterID, roleARN)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to delete: %w", dbClusterID, roleARN, err)

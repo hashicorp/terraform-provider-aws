@@ -118,7 +118,7 @@ func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+		dbProxyTarget, err := finder.FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
 
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			continue
@@ -163,7 +163,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 			return err
 		}
 
-		dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+		dbProxyTarget, err := finder.FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
 
 		if err != nil {
 			return err

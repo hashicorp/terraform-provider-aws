@@ -232,7 +232,7 @@ func testAccCheckAWSDBProxyEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
+		dbProxyEndpoint, err := finder.FindDBProxyEndpoint(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			continue
@@ -263,7 +263,7 @@ func testAccCheckAWSDBProxyEndpointExists(n string, v *rds.DBProxyEndpoint) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
+		dbProxyEndpoint, err := finder.FindDBProxyEndpoint(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

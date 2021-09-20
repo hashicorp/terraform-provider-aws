@@ -58,7 +58,7 @@ func testSweepDbEventSubscriptions(region string) error {
 				continue
 			}
 
-			_, err = waiter.EventSubscriptionDeleted(conn, name)
+			_, err = waiter.WaitEventSubscriptionDeleted(conn, name)
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}

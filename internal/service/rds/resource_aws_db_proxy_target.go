@@ -133,7 +133,7 @@ func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+	dbProxyTarget, err := finder.FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())

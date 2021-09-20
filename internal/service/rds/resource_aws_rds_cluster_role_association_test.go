@@ -136,7 +136,7 @@ func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		role, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+		role, err := finder.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 		if err != nil {
 			return err
@@ -162,7 +162,7 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+		_, err = finder.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 		if tfresource.NotFound(err) {
 			continue

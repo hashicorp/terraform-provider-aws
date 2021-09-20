@@ -529,7 +529,7 @@ func resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(clusterId string, engi
 	}
 	input.AllowMajorVersionUpgrade = aws.Bool(true)
 	input.EngineVersion = aws.String(engineVersion)
-	err := resource.Retry(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.RDSClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 		_, err := conn.ModifyGlobalCluster(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
@@ -559,7 +559,7 @@ func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema
 				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
 				EngineVersion:       aws.String(engineVersion),
 			}
-			err := resource.Retry(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
+			err := resource.Retry(waiter.RDSClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyDBCluster(modInput)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
