@@ -323,7 +323,7 @@ func testAccCheckAWSPinpointEmailChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetEmailChannel(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err

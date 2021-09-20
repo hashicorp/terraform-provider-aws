@@ -239,7 +239,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -252,7 +252,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -304,7 +304,7 @@ func resourceAwsPinpointAppDelete(d *schema.ResourceData, meta interface{}) erro
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

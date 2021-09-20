@@ -174,7 +174,7 @@ func testAccCheckAWSPinpointEventStreamDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetEventStream(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
