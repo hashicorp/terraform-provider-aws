@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceGroup() *schema.Resource {
@@ -63,11 +64,11 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -83,7 +84,7 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := resourcegroups.CreateGroupInput{
 		Description:   aws.String(d.Get("description").(string)),
@@ -141,7 +142,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting resource_query: %s", err)
 	}
 
-	tags, err := keyvaluetags.ResourcegroupsListTags(conn, arn)
+	tags, err := tftags.ResourcegroupsListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
@@ -188,7 +189,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.ResourcegroupsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ResourcegroupsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
