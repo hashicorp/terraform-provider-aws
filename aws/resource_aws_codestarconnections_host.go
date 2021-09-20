@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codestarconnections/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeStarConnectionsHost() *schema.Resource {
@@ -80,7 +81,7 @@ func resourceAwsCodeStarConnectionsHost() *schema.Resource {
 }
 
 func resourceAwsCodeStarConnectionsHostCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	params := &codestarconnections.CreateHostInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -105,7 +106,7 @@ func resourceAwsCodeStarConnectionsHostCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCodeStarConnectionsHostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	input := &codestarconnections.GetHostInput{
 		HostArn: aws.String(d.Id()),
@@ -138,7 +139,7 @@ func resourceAwsCodeStarConnectionsHostRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	if d.HasChanges("provider_endpoint", "vpc_configuration") {
 		input := codestarconnections.UpdateHostInput{
@@ -162,7 +163,7 @@ func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCodeStarConnectionsHostDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	input := &codestarconnections.DeleteHostInput{
 		HostArn: aws.String(d.Id()),

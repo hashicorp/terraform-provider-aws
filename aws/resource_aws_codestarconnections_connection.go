@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codestarconnections/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
@@ -66,8 +67,8 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 }
 
 func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &codestarconnections.CreateConnectionInput{
@@ -97,9 +98,9 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connection, err := finder.ConnectionByArn(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
@@ -144,7 +145,7 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCodeStarConnectionsConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -158,7 +159,7 @@ func resourceAwsCodeStarConnectionsConnectionUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCodeStarConnectionsConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarconnectionsconn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
 
 	_, err := conn.DeleteConnection(&codestarconnections.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
