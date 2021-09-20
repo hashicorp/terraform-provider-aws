@@ -25,7 +25,7 @@ func init() {
 }
 
 func testSweepGameliftAliases(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -52,7 +52,7 @@ func testSweepGameliftAliases(region string) error {
 		return nil
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelift Alias sweep for %s: %s", region, err)
 			return nil
 		}
@@ -99,7 +99,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +150,7 @@ func TestAccAWSGameliftAlias_tags(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,7 +224,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func TestAccAWSGameliftAlias_disappears(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +283,7 @@ func TestAccAWSGameliftAlias_disappears(t *testing.T) {
 
 func testAccCheckAWSGameliftAliasDisappears(res *gamelift.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		input := &gamelift.DeleteAliasInput{AliasId: res.AliasId}
 
@@ -304,7 +304,7 @@ func testAccCheckAWSGameliftAliasExists(n string, res *gamelift.Alias) resource.
 			return fmt.Errorf("No Gamelift Alias ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		out, err := conn.DescribeAlias(&gamelift.DescribeAliasInput{
 			AliasId: aws.String(rs.Primary.ID),
@@ -325,7 +325,7 @@ func testAccCheckAWSGameliftAliasExists(n string, res *gamelift.Alias) resource.
 }
 
 func testAccCheckAWSGameliftAliasDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_alias" {
