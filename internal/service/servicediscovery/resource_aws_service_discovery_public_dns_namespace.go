@@ -82,7 +82,7 @@ func resourcePublicDNSNamespaceCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating Service Discovery Public DNS Namespace (%s): creation response missing Operation ID", name)
 	}
 
-	operation, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
+	operation, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) creation: %w", name, err)
@@ -172,7 +172,7 @@ func resourcePublicDNSNamespaceDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) deletion: %w", d.Id(), err)
 		}
 	}

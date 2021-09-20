@@ -85,7 +85,7 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("error waiting for Service Discovery Instance (%s) register: %w", d.Id(), err)
 		}
 	}
@@ -96,7 +96,7 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
-	instance, err := finder.InstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	instance, err := finder.FindInstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())

@@ -287,7 +287,7 @@ func testAccCheckAwsServiceDiscoveryInstanceExists(name string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := finder.InstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := finder.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		if err != nil {
 			return err
@@ -316,7 +316,7 @@ func testAccCheckAwsServiceDiscoveryInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.InstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := finder.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		if tfresource.NotFound(err) {
 			continue

@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// OperationStatus fetches the Operation and its Status
-func OperationStatus(conn *servicediscovery.ServiceDiscovery, id string) resource.StateRefreshFunc {
+// StatusOperation fetches the Operation and its Status
+func StatusOperation(conn *servicediscovery.ServiceDiscovery, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.OperationByID(conn, id)
+		output, err := finder.FindOperationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

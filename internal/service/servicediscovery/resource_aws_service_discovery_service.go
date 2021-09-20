@@ -193,7 +193,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	service, err := finder.ServiceByID(conn, d.Id())
+	service, err := finder.FindServiceByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
@@ -266,7 +266,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+			if _, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 				return fmt.Errorf("error waiting for Service Discovery Service (%s) update: %w", d.Id(), err)
 			}
 		}
@@ -495,7 +495,7 @@ func deregisterServiceDiscoveryInstance(conn *servicediscovery.ServiceDiscovery,
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("error waiting for Service Discovery Service (%s) Instance (%s) deregister: %w", serviceID, instanceID, err)
 		}
 	}

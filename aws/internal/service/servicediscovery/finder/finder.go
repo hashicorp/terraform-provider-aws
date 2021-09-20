@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func InstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) (*servicediscovery.Instance, error) {
+func FindInstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) (*servicediscovery.Instance, error) {
 	input := &servicediscovery.GetInstanceInput{
 		InstanceId: aws.String(instanceID),
 		ServiceId:  aws.String(serviceID),
@@ -35,7 +35,7 @@ func InstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscovery, s
 	return output.Instance, nil
 }
 
-func OperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
+func FindOperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
 	input := &servicediscovery.GetOperationInput{
 		OperationId: aws.String(id),
 	}
@@ -60,7 +60,7 @@ func OperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*service
 	return output.Operation, nil
 }
 
-func ServiceByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Service, error) {
+func FindServiceByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Service, error) {
 	input := &servicediscovery.GetServiceInput{
 		Id: aws.String(id),
 	}

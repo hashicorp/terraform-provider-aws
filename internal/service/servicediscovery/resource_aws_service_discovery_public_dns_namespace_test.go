@@ -74,7 +74,7 @@ func testSweepServiceDiscoveryPublicDnsNamespaces(region string) error {
 			}
 
 			if output != nil && output.OperationId != nil {
-				if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+				if _, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 					sweeperErr := fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) deletion: %w", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
