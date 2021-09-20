@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
+func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.basic"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -52,7 +52,7 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
+func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.full"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -102,7 +102,7 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	})
 }
 
-func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
+func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
