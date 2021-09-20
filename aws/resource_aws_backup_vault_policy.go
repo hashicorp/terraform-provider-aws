@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfbackup "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/backup"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/backup/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBackupVaultPolicy() *schema.Resource {
