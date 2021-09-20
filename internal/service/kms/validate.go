@@ -3,7 +3,6 @@ package kms
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validateAwsKMSGrantName(v interface{}, k string) (ws []string, es []error) {
