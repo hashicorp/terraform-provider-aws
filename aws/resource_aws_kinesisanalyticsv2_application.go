@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
+func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisAnalyticsV2ApplicationCreate,
-		Read:   resourceAwsKinesisAnalyticsV2ApplicationRead,
-		Update: resourceAwsKinesisAnalyticsV2ApplicationUpdate,
-		Delete: resourceAwsKinesisAnalyticsV2ApplicationDelete,
+		Create: resourceApplicationCreate,
+		Read:   resourceApplicationRead,
+		Update: resourceApplicationUpdate,
+		Delete: resourceApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
 			SetTagsDiff,
@@ -921,7 +921,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -962,10 +962,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1021,7 +1021,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 	applicationName := d.Get("name").(string)
 
@@ -1503,10 +1503,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))

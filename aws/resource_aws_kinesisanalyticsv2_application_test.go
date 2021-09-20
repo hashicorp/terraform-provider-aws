@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 				continue
 			}
 
-			r := resourceAwsKinesisAnalyticsV2Application()
+			r := ResourceApplication()
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
@@ -286,7 +287,7 @@ func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKinesisAnalyticsV2Application(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
