@@ -572,7 +572,7 @@ func resourceAwsElasticTranscoderPresetRead(d *schema.ResourceData, meta interfa
 	})
 
 	if err != nil {
-		if isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
 			d.SetId("")
 			return nil
 		}
