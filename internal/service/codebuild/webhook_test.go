@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
+func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
@@ -49,7 +49,7 @@ func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
+func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
@@ -81,7 +81,7 @@ func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
+func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
@@ -130,7 +130,7 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
+func TestAccCodeBuildWebhook_buildType(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
@@ -172,7 +172,7 @@ func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
+func TestAccCodeBuildWebhook_branchFilter(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
@@ -207,7 +207,7 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
+func TestAccCodeBuildWebhook_filterGroup(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
