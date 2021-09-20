@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -66,7 +66,7 @@ func testSweepSnsTopics(region string) error {
 			_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
 				TopicArn: aws.String(arn),
 			})
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -666,7 +666,7 @@ func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetTopicAttributes(params)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

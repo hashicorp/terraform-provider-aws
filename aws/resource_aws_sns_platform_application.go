@@ -172,14 +172,14 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := snsconn.SetPlatformApplicationAttributes(req)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = snsconn.SetPlatformApplicationAttributes(req)
 	}
 
@@ -212,7 +212,7 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 
 	output, err := snsconn.GetPlatformApplicationAttributes(input)
 
-	if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
