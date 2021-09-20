@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestFlattenResourceRecords(t *testing.T) {

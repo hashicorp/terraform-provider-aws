@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ChangeInfoStatus(conn *route53.Route53, changeID string) resource.StateRefreshFunc {
