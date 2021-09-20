@@ -627,7 +627,7 @@ func expandNetworkFirewallStatefulRuleOptions(l []interface{}) []*networkfirewal
 			Keyword: aws.String(keyword),
 		}
 		if v, ok := tfMap["settings"].(*schema.Set); ok && v.Len() > 0 {
-			option.Settings = expandStringSet(v)
+			option.Settings = flex.ExpandStringSet(v)
 		}
 		ruleOptions = append(ruleOptions, option)
 	}
@@ -649,10 +649,10 @@ func expandNetworkFirewallRulesSourceList(l []interface{}) *networkfirewall.Rule
 		rulesSourceList.GeneratedRulesType = aws.String(v)
 	}
 	if v, ok := tfMap["target_types"].(*schema.Set); ok && v.Len() > 0 {
-		rulesSourceList.TargetTypes = expandStringSet(v)
+		rulesSourceList.TargetTypes = flex.ExpandStringSet(v)
 	}
 	if v, ok := tfMap["targets"].(*schema.Set); ok && v.Len() > 0 {
-		rulesSourceList.Targets = expandStringSet(v)
+		rulesSourceList.Targets = flex.ExpandStringSet(v)
 	}
 
 	return rulesSourceList
@@ -748,7 +748,7 @@ func expandNetworkFirewallIPSets(l []interface{}) map[string]*networkfirewall.IP
 				if ok {
 					if tfSet, ok := tfMap["definition"].(*schema.Set); ok && tfSet.Len() > 0 {
 						ipSet := &networkfirewall.IPSet{
-							Definition: expandStringSet(tfSet),
+							Definition: flex.ExpandStringSet(tfSet),
 						}
 						m[key] = ipSet
 					}
@@ -778,7 +778,7 @@ func expandNetworkFirewallPortSets(l []interface{}) map[string]*networkfirewall.
 				if ok {
 					if tfSet, ok := tfMap["definition"].(*schema.Set); ok && tfSet.Len() > 0 {
 						ipSet := &networkfirewall.PortSet{
-							Definition: expandStringSet(tfSet),
+							Definition: flex.ExpandStringSet(tfSet),
 						}
 						m[key] = ipSet
 					}
@@ -843,10 +843,10 @@ func expandNetworkFirewallTCPFlags(l []interface{}) []*networkfirewall.TCPFlagFi
 		}
 		tcpFlag := &networkfirewall.TCPFlagField{}
 		if v, ok := tfMap["flags"].(*schema.Set); ok && v.Len() > 0 {
-			tcpFlag.Flags = expandStringSet(v)
+			tcpFlag.Flags = flex.ExpandStringSet(v)
 		}
 		if v, ok := tfMap["masks"].(*schema.Set); ok && v.Len() > 0 {
-			tcpFlag.Masks = expandStringSet(v)
+			tcpFlag.Masks = flex.ExpandStringSet(v)
 		}
 		tcpFlags = append(tcpFlags, tcpFlag)
 	}
@@ -870,7 +870,7 @@ func expandNetworkFirewallMatchAttributes(l []interface{}) *networkfirewall.Matc
 		matchAttributes.DestinationPorts = expandNetworkFirewallPortRanges(v.List())
 	}
 	if v, ok := tfMap["protocols"].(*schema.Set); ok && v.Len() > 0 {
-		matchAttributes.Protocols = expandInt64Set(v)
+		matchAttributes.Protocols = flex.ExpandInt64Set(v)
 	}
 	if v, ok := tfMap["source"].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Sources = expandNetworkFirewallAddresses(v.List())
@@ -895,7 +895,7 @@ func expandNetworkFirewallRuleDefinition(l []interface{}) *networkfirewall.RuleD
 	}
 	rd := &networkfirewall.RuleDefinition{}
 	if v, ok := tfMap["actions"].(*schema.Set); ok && v.Len() > 0 {
-		rd.Actions = expandStringSet(v)
+		rd.Actions = flex.ExpandStringSet(v)
 	}
 	if v, ok := tfMap["match_attributes"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		rd.MatchAttributes = expandNetworkFirewallMatchAttributes(v)
@@ -1008,7 +1008,7 @@ func flattenNetworkFirewallIPSet(i *networkfirewall.IPSet) []interface{} {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"definition": flattenStringSet(i.Definition),
+		"definition": flex.FlattenStringSet(i.Definition),
 	}
 
 	return []interface{}{m}
@@ -1019,7 +1019,7 @@ func flattenNetworkFirewallPortSet(p *networkfirewall.PortSet) []interface{} {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"definition": flattenStringSet(p.Definition),
+		"definition": flex.FlattenStringSet(p.Definition),
 	}
 
 	return []interface{}{m}
@@ -1047,8 +1047,8 @@ func flattenNetworkFirewallRulesSourceList(r *networkfirewall.RulesSourceList) [
 
 	m := map[string]interface{}{
 		"generated_rules_type": aws.StringValue(r.GeneratedRulesType),
-		"target_types":         flattenStringSet(r.TargetTypes),
-		"targets":              flattenStringSet(r.Targets),
+		"target_types":         flex.FlattenStringSet(r.TargetTypes),
+		"targets":              flex.FlattenStringSet(r.Targets),
 	}
 
 	return []interface{}{m}
@@ -1140,7 +1140,7 @@ func flattenNetworkFirewallRuleDefinition(r *networkfirewall.RuleDefinition) []i
 	}
 
 	m := map[string]interface{}{
-		"actions":          flattenStringSet(r.Actions),
+		"actions":          flex.FlattenStringSet(r.Actions),
 		"match_attributes": flattenNetworkFirewallMatchAttributes(r.MatchAttributes),
 	}
 
@@ -1155,7 +1155,7 @@ func flattenNetworkFirewallMatchAttributes(ma *networkfirewall.MatchAttributes) 
 	m := map[string]interface{}{
 		"destination":      flattenNetworkFirewallAddresses(ma.Destinations),
 		"destination_port": flattenNetworkFirewallPortRanges(ma.DestinationPorts),
-		"protocols":        flattenInt64Set(ma.Protocols),
+		"protocols":        flex.FlattenInt64Set(ma.Protocols),
 		"source":           flattenNetworkFirewallAddresses(ma.Sources),
 		"source_port":      flattenNetworkFirewallPortRanges(ma.SourcePorts),
 		"tcp_flag":         flattenNetworkFirewallTCPFlags(ma.TCPFlags),
@@ -1204,8 +1204,8 @@ func flattenNetworkFirewallTCPFlags(t []*networkfirewall.TCPFlagField) []interfa
 	flagFields := make([]interface{}, 0, len(t))
 	for _, v := range t {
 		m := map[string]interface{}{
-			"flags": flattenStringSet(v.Flags),
-			"masks": flattenStringSet(v.Masks),
+			"flags": flex.FlattenStringSet(v.Flags),
+			"masks": flex.FlattenStringSet(v.Masks),
 		}
 		flagFields = append(flagFields, m)
 	}

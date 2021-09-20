@@ -310,8 +310,8 @@ func expandNetworkFirewallFirewallPolicy(l []interface{}) *networkfirewall.Firew
 	}
 	lRaw := l[0].(map[string]interface{})
 	policy := &networkfirewall.FirewallPolicy{
-		StatelessDefaultActions:         expandStringSet(lRaw["stateless_default_actions"].(*schema.Set)),
-		StatelessFragmentDefaultActions: expandStringSet(lRaw["stateless_fragment_default_actions"].(*schema.Set)),
+		StatelessDefaultActions:         flex.ExpandStringSet(lRaw["stateless_default_actions"].(*schema.Set)),
+		StatelessFragmentDefaultActions: flex.ExpandStringSet(lRaw["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
 	if v, ok := lRaw["stateful_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
@@ -341,10 +341,10 @@ func flattenNetworkFirewallFirewallPolicy(policy *networkfirewall.FirewallPolicy
 		p["stateless_custom_action"] = flattenNetworkFirewallCustomActions(policy.StatelessCustomActions)
 	}
 	if policy.StatelessDefaultActions != nil {
-		p["stateless_default_actions"] = flattenStringSet(policy.StatelessDefaultActions)
+		p["stateless_default_actions"] = flex.FlattenStringSet(policy.StatelessDefaultActions)
 	}
 	if policy.StatelessFragmentDefaultActions != nil {
-		p["stateless_fragment_default_actions"] = flattenStringSet(policy.StatelessFragmentDefaultActions)
+		p["stateless_fragment_default_actions"] = flex.FlattenStringSet(policy.StatelessFragmentDefaultActions)
 	}
 	if policy.StatelessRuleGroupReferences != nil {
 		p["stateless_rule_group_reference"] = flattenNetworkFirewallPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
