@@ -1,4 +1,4 @@
-package aws
+package apprunner
 
 import (
 	"context"
@@ -11,9 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -99,7 +97,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	c, err := finder.FindConnectionSummaryByName(ctx, conn, d.Id())
+	c, err := FindConnectionSummaryByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] App Runner Connection (%s) not found, removing from state", d.Id())
@@ -177,7 +175,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error deleting App Runner Connection (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.WaitConnectionDeleted(ctx, conn, d.Id()); err != nil {
+	if err := WaitConnectionDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

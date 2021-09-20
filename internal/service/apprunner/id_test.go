@@ -1,11 +1,11 @@
-package apprunner
+package apprunner_test
 
 import (
 	"fmt"
 	"testing"
 
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func TestCustomDomainAssociationParseID(t *testing.T) {

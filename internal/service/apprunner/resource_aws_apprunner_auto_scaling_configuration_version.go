@@ -1,4 +1,4 @@
-package aws
+package apprunner
 
 import (
 	"context"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -119,7 +118,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationCreate(ctx context.Context, d *
 
 	d.SetId(aws.StringValue(output.AutoScalingConfiguration.AutoScalingConfigurationArn))
 
-	if err := waiter.WaitAutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
+	if err := WaitAutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for AutoScaling Configuration Version (%s) creation: %w", d.Id(), err))
 	}
 
@@ -151,7 +150,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationRead(ctx context.Context, d *sc
 		return diag.FromErr(fmt.Errorf("error reading App Runner AutoScaling Configuration Version (%s): empty output", d.Id()))
 	}
 
-	if aws.StringValue(output.AutoScalingConfiguration.Status) == waiter.AutoScalingConfigurationStatusInactive {
+	if aws.StringValue(output.AutoScalingConfiguration.Status) == AutoScalingConfigurationStatusInactive {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading App Runner AutoScaling Configuration Version (%s): %s after creation", d.Id(), aws.StringValue(output.AutoScalingConfiguration.Status)))
 		}
@@ -223,7 +222,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationDelete(ctx context.Context, d *
 		return diag.FromErr(fmt.Errorf("error deleting App Runner AutoScaling Configuration Version (%s): %w", d.Id(), err))
 	}
 
-	if err := waiter.WaitAutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
+	if err := WaitAutoScalingConfigurationInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
