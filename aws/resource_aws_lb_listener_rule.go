@@ -518,14 +518,14 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 			params.Priority = aws.Int64(priority + 1)
 			resp, err = elbconn.CreateRule(params)
 			if err != nil {
-				if isAWSErr(err, elbv2.ErrCodePriorityInUseException, "") {
+				if tfawserr.ErrMessageContains(err, elbv2.ErrCodePriorityInUseException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			priority, err = highestListenerRulePriority(elbconn, listenerArn)
 			if err != nil {
 				return fmt.Errorf("Error getting highest listener rule priority: %w", err)
@@ -561,7 +561,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		var err error
 		resp, err = elbconn.DescribeRules(req)
 		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+			if d.IsNewResource() && tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
 				return resource.RetryableError(err)
 			} else {
 				return resource.NonRetryableError(err)
@@ -569,11 +569,11 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = elbconn.DescribeRules(req)
 	}
 	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
@@ -877,7 +877,7 @@ func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := elbconn.DeleteRule(&elbv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),
 	})
-	if err != nil && !isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
 		return fmt.Errorf("Error deleting LB Listener Rule: %w", err)
 	}
 	return nil

@@ -549,7 +549,7 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			return nil
 		} else {
 			return fmt.Errorf("Unexpected error checking ALB destroyed: %s", err)
