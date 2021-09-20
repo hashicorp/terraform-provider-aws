@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepSsoAdminPermissionSets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -87,7 +87,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -106,7 +106,7 @@ func TestAccAWSSSOAdminPermissionSet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSSSOAdminPermissionSet_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,7 +187,7 @@ func TestAccAWSSSOAdminPermissionSet_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccAWSSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -253,7 +253,7 @@ func TestAccAWSSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +288,7 @@ func TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -327,7 +327,7 @@ func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -352,7 +352,7 @@ func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 }
 
 func testAccCheckAWSSSOAdminPermissionSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_permission_set" {
@@ -397,7 +397,7 @@ func testAccCheckAWSSOAdminPermissionSetExists(resourceName string) resource.Tes
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+		conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
 
 		arn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
 

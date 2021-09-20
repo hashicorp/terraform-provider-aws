@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepSsoAdminAccountAssignments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -108,7 +108,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 				return !lastPage
 			})
 
-			if testSweepSkipSweepError(err) {
+			if acctest.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping SSO Account Assignment sweep (PermissionSet %s) for %s: %s", permissionSetArn, region, err)
 				continue
 			}
@@ -121,7 +121,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -145,7 +145,7 @@ func TestAccAWSSSOAdminAccountAssignment_Basic_Group(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAWSSSOAdminAccountAssignment_Basic_User(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreUserName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -211,14 +211,14 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSSOAdminAccountAssignmentBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSsoAdminAccountAssignment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsoAdminAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,7 +228,7 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSSOAdminAccountAssignmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_account_assignment" {
@@ -276,7 +276,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName string) resourc
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+		conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
 
 		idParts, err := parseSsoAdminAccountAssignmentID(rs.Primary.ID)
 
@@ -362,6 +362,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
 }
 `, userName))
 }
+
 func testAccPreCheckAWSIdentityStoreGroupName(t *testing.T) {
 	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
 		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
@@ -375,4 +376,3 @@ func testAccPreCheckAWSIdentityStoreUserName(t *testing.T) {
 			"This is required until ListUsers API returns results without filtering by name.")
 	}
 }
-

@@ -19,7 +19,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSSSOPermissionSetByArnConfig(rName),
@@ -44,7 +44,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSSSOPermissionSetByNameConfig(rName),
@@ -66,7 +66,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAWSSSOPermissionSetByNameConfig_nonExistent,
