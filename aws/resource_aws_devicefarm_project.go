@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceProject() *schema.Resource {
@@ -37,17 +38,17 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateProjectInput{
@@ -69,7 +70,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(arn)
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.DevicefarmUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := tftags.DevicefarmUpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error updating DeviceFarm Project (%s) tags: %w", arn, err)
 		}
 	}
@@ -103,7 +104,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("default_job_timeout_minutes", project.DefaultJobTimeoutMinutes)
 
-	tags, err := keyvaluetags.DevicefarmListTags(conn, arn)
+	tags, err := tftags.DevicefarmListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DeviceFarm Project (%s): %w", arn, err)
@@ -149,7 +150,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DevicefarmUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.DevicefarmUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DeviceFarm Project (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
