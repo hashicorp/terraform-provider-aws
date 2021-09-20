@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoscalingPolicy() *schema.Resource {
@@ -303,7 +304,7 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 }
 
 func resourceAwsAutoscalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params, err := getAwsAutoscalingPutScalingPolicyInput(d)
 	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Create: %#v", params)
@@ -311,7 +312,7 @@ func resourceAwsAutoscalingPolicyCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	resp, err := autoscalingconn.PutScalingPolicy(&params)
+	resp, err := conn.PutScalingPolicy(&params)
 	if err != nil {
 		return fmt.Errorf("Error putting scaling policy: %s", err)
 	}
@@ -362,7 +363,7 @@ func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAutoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params, inputErr := getAwsAutoscalingPutScalingPolicyInput(d)
 	log.Printf("[DEBUG] AutoScaling PutScalingPolicy on Update: %#v", params)
@@ -370,7 +371,7 @@ func resourceAwsAutoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}
 		return inputErr
 	}
 
-	_, err := autoscalingconn.PutScalingPolicy(&params)
+	_, err := conn.PutScalingPolicy(&params)
 	if err != nil {
 		return err
 	}
@@ -379,7 +380,7 @@ func resourceAwsAutoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAutoscalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	p, err := getAwsAutoscalingPolicy(d, meta)
 	if err != nil {
 		return err
@@ -393,7 +394,7 @@ func resourceAwsAutoscalingPolicyDelete(d *schema.ResourceData, meta interface{}
 		PolicyName:           aws.String(d.Get("name").(string)),
 	}
 	log.Printf("[DEBUG] Deleting Autoscaling Policy opts: %s", params)
-	if _, err := autoscalingconn.DeletePolicy(&params); err != nil {
+	if _, err := conn.DeletePolicy(&params); err != nil {
 		return fmt.Errorf("Autoscaling Scaling Policy: %s ", err)
 	}
 
@@ -510,7 +511,7 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 }
 
 func getAwsAutoscalingPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPolicy, error) {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	params := autoscaling.DescribePoliciesInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
@@ -518,7 +519,7 @@ func getAwsAutoscalingPolicy(d *schema.ResourceData, meta interface{}) (*autosca
 	}
 
 	log.Printf("[DEBUG] AutoScaling Scaling Policy Describe Params: %#v", params)
-	resp, err := autoscalingconn.DescribePolicies(&params)
+	resp, err := conn.DescribePolicies(&params)
 	if err != nil {
 		//A ValidationError here can mean that either the Policy is missing OR the Autoscaling Group is missing
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ValidationError" {

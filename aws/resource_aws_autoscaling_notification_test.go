@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSASGNotification_basic(t *testing.T) {
@@ -120,7 +121,7 @@ func testAccCheckASGNotificationExists(n string, groups []string, asgn *autoscal
 			return fmt.Errorf("No ASG Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: aws.StringSlice(groups),
 			MaxRecords:            aws.Int64(100),
@@ -144,7 +145,7 @@ func testAccCheckASGNDestroy(s *terraform.State) error {
 		}
 
 		groups := []*string{aws.String("foobar1-terraform-test")}
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: groups,
 		}

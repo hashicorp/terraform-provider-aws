@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
@@ -259,7 +260,7 @@ func TestAccAWSAutoscalingPolicy_disappears(t *testing.T) {
 
 func testAccCheckScalingPolicyDisappears(conf *autoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		params := &autoscaling.DeletePolicyInput{
 			AutoScalingGroupName: conf.AutoScalingGroupName,
@@ -426,7 +427,7 @@ func testAccCheckScalingPolicyExists(n string, policy *autoscaling.ScalingPolicy
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		params := &autoscaling.DescribePoliciesInput{
 			AutoScalingGroupName: aws.String(rs.Primary.Attributes["autoscaling_group_name"]),
 			PolicyNames:          []*string{aws.String(rs.Primary.ID)},
@@ -446,7 +447,7 @@ func testAccCheckScalingPolicyExists(n string, policy *autoscaling.ScalingPolicy
 }
 
 func testAccCheckAWSAutoscalingPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group" {

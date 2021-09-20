@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
@@ -101,7 +102,7 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 }
 
 func testAccCheckAWSAutocalingAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_attachment" {
@@ -133,7 +134,7 @@ func testAccCheckAWSAutocalingElbAttachmentExists(asgname string, loadBalancerCo
 			return fmt.Errorf("Not found: %s", asgname)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		asg := rs.Primary.ID
 
 		actual, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
@@ -159,7 +160,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 			return fmt.Errorf("Not found: %s", asgname)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		asg := rs.Primary.ID
 
 		actual, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{

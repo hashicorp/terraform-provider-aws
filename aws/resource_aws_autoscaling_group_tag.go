@@ -9,6 +9,7 @@ import (
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoscalingGroupTag() *schema.Resource {
@@ -54,7 +55,7 @@ func resourceAwsAutoscalingGroupTag() *schema.Resource {
 }
 
 func resourceAwsAutoscalingGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	identifier := d.Get("autoscaling_group_name").(string)
 	tags := d.Get("tag").([]interface{})
@@ -70,7 +71,7 @@ func resourceAwsAutoscalingGroupTagCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAutoscalingGroupTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
@@ -103,7 +104,7 @@ func resourceAwsAutoscalingGroupTagRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAutoscalingGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
@@ -118,7 +119,7 @@ func resourceAwsAutoscalingGroupTagUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAutoscalingGroupTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {

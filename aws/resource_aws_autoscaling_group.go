@@ -29,6 +29,7 @@ import (
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoscalingGroup() *schema.Resource {
@@ -641,7 +642,7 @@ func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autosc
 }
 
 func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	asgName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -818,8 +819,8 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 // TODO: wrap all top-level error returns
 func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AutoScalingConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	g, err := getAwsAutoscalingGroup(d.Id(), conn)
 	if err != nil {
@@ -1010,7 +1011,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.Au
 }
 
 func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	shouldWaitForCapacity := false
 	shouldRefreshInstances := false
 
@@ -1345,7 +1346,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	// Read the Auto Scaling Group first. If it doesn't exist, we're done.
 	// We need the group in order to check if there are instances attached.
@@ -1429,7 +1430,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	if g.WarmPoolConfiguration == nil {
 		// No warm pool configured. Skipping deletion.
@@ -1538,7 +1539,7 @@ func getAwsAutoscalingGroupWarmPool(asgName string, conn *autoscaling.AutoScalin
 }
 
 func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	if d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool) {
 		log.Printf("[DEBUG] Skipping Warm pool drain, force delete was set.")
@@ -1621,7 +1622,7 @@ func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*aut
 }
 
 func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	if d.Get("force_delete").(bool) {
 		log.Printf("[DEBUG] Skipping Auto Scaling Group drain, force_delete was set.")
@@ -1792,12 +1793,12 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 // Nested like: lbName -> instanceId -> instanceState
 func getELBInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]map[string]string, error) {
 	lbInstanceStates := make(map[string]map[string]string)
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	for _, lbName := range g.LoadBalancerNames {
 		lbInstanceStates[aws.StringValue(lbName)] = make(map[string]string)
 		opts := &elb.DescribeInstanceHealthInput{LoadBalancerName: lbName}
-		r, err := elbconn.DescribeInstanceHealth(opts)
+		r, err := conn.DescribeInstanceHealth(opts)
 		if err != nil {
 			return nil, err
 		}
@@ -1821,12 +1822,12 @@ func getELBInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]ma
 // Nested like: targetGroupARN -> instanceId -> instanceState
 func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]map[string]string, error) {
 	targetInstanceStates := make(map[string]map[string]string)
-	elbv2conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
 		targetInstanceStates[aws.StringValue(targetGroupARN)] = make(map[string]string)
 		opts := &elbv2.DescribeTargetHealthInput{TargetGroupArn: targetGroupARN}
-		r, err := elbv2conn.DescribeTargetHealth(opts)
+		r, err := conn.DescribeTargetHealth(opts)
 		if err != nil {
 			return nil, err
 		}

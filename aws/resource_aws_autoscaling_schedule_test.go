@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
@@ -79,12 +80,12 @@ func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 
 func testAccCheckScalingScheduleDisappears(schedule *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		autoscalingconn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		params := &autoscaling.DeleteScheduledActionInput{
 			AutoScalingGroupName: schedule.AutoScalingGroupName,
 			ScheduledActionName:  schedule.ScheduledActionName,
 		}
-		_, err := autoscalingconn.DeleteScheduledAction(params)
+		_, err := conn.DeleteScheduledAction(params)
 		return err
 	}
 }
@@ -214,7 +215,7 @@ func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUp
 		}
 
 		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 		params := &autoscaling.DescribeScheduledActionsInput{
 			AutoScalingGroupName: aws.String(autoScalingGroup),
 			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
@@ -235,7 +236,7 @@ func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUp
 }
 
 func testAccCheckAWSAutoscalingScheduleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_schedule" {

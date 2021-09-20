@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // waitForASGCapacityTimeout gathers the current numbers of healthy instances
@@ -36,7 +37,7 @@ func waitForASGCapacity(
 	log.Printf("[DEBUG] Waiting on %s for capacity...", d.Id())
 
 	err = resource.Retry(wait, func() *resource.RetryError {
-		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*AWSClient).autoscalingconn)
+		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*conns.AWSClient).AutoScalingConn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -54,7 +55,7 @@ func waitForASGCapacity(
 		return resource.RetryableError(fmt.Errorf("%q: Waiting up to %s: %s", d.Id(), wait, reason))
 	})
 	if tfresource.TimedOut(err) {
-		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*AWSClient).autoscalingconn)
+		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*conns.AWSClient).AutoScalingConn)
 
 		if err != nil {
 			return fmt.Errorf("Error getting Auto Scaling Group info: %s", err)
@@ -78,7 +79,7 @@ func waitForASGCapacity(
 
 	recentStatus := ""
 
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 	resp, aErr := conn.DescribeScalingActivities(&autoscaling.DescribeScalingActivitiesInput{
 		AutoScalingGroupName: aws.String(d.Id()),
 		MaxRecords:           aws.Int64(1),
