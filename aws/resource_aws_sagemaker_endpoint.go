@@ -100,7 +100,7 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 
 	endpoint, err := conn.DescribeEndpoint(describeInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			log.Printf("[INFO] unable to find the SageMaker Endpoint resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -188,7 +188,7 @@ func resourceAwsSagemakerEndpointDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteEndpoint(deleteEndpointOpts)
 
-	if isAWSErr(err, "ValidationException", "") {
+	if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 		return nil
 	}
 

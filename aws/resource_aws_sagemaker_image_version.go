@@ -79,7 +79,7 @@ func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface
 
 	image, err := finder.ImageVersionByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find Sagemaker Image Version (%s); removing from state", d.Id())
 			return nil
@@ -107,14 +107,14 @@ func resourceAwsSagemakerImageVersionDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err := conn.DeleteImageVersion(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Sagemaker Image Version (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.ImageVersionDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to delete: %w", d.Id(), err)

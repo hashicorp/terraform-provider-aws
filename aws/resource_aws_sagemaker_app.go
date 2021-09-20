@@ -139,7 +139,7 @@ func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error
 
 	app, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
 			return nil
@@ -215,18 +215,18 @@ func resourceAwsSagemakerAppDelete(d *schema.ResourceData, meta interface{}) err
 
 	if _, err := conn.DeleteApp(input); err != nil {
 
-		if isAWSErr(err, "ValidationException", "has already been deleted") ||
-			isAWSErr(err, "ValidationException", "previously failed and was automatically deleted") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "has already been deleted") ||
+			tfawserr.ErrMessageContains(err, "ValidationException", "previously failed and was automatically deleted") {
 			return nil
 		}
 
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error deleting SageMaker App (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waiter.AppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}
 	}
