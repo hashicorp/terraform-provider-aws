@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidIdentityPoolName(t *testing.T) {

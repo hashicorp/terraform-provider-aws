@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
