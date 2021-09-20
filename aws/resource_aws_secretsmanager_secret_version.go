@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSecretVersion() *schema.Resource {
@@ -80,7 +81,7 @@ func resourceSecretVersionCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("secret_binary"); ok {
 		vs := []byte(v.(string))
 
-		if !isBase64Encoded(vs) {
+		if !verify.IsBase64Encoded(vs) {
 			return fmt.Errorf("expected base64 in secret_binary")
 		}
 
@@ -168,7 +169,7 @@ func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
-	d.Set("secret_binary", base64Encode(output.SecretBinary))
+	d.Set("secret_binary", verify.Base64Encode(output.SecretBinary))
 	d.Set("version_id", output.VersionId)
 	d.Set("arn", output.ARN)
 
