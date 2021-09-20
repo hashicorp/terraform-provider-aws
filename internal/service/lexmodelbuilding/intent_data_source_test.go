@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsLexIntent_basic(t *testing.T) {
+func TestAccLexModelBuildingIntentDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsLexIntent_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLexIntent_withVersion(t *testing.T) {
+func TestAccLexModelBuildingIntentDataSource_withVersion(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"

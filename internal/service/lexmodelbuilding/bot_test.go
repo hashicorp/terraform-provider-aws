@@ -71,7 +71,7 @@ func testSweepLexBots(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsLexBot_basic(t *testing.T) {
+func TestAccLexModelBuildingBot_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -126,7 +126,7 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_version_serial(t *testing.T) {
+func TestAccLexModelBuildingBot_Version_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"LexBot_createVersion":         testAccAwsLexBot_createVersion,
 		"LexBotAlias_botVersion":       testAccAwsLexBotAlias_botVersion,
@@ -190,7 +190,7 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_abortStatement(t *testing.T) {
+func TestAccLexModelBuildingBot_abortStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -250,7 +250,7 @@ func TestAccAwsLexBot_abortStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
+func TestAccLexModelBuildingBot_clarificationPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -306,7 +306,7 @@ func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_childDirected(t *testing.T) {
+func TestAccLexModelBuildingBot_childDirected(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -353,7 +353,7 @@ func TestAccAwsLexBot_childDirected(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_description(t *testing.T) {
+func TestAccLexModelBuildingBot_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -400,7 +400,7 @@ func TestAccAwsLexBot_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_detectSentiment(t *testing.T) {
+func TestAccLexModelBuildingBot_detectSentiment(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -447,7 +447,7 @@ func TestAccAwsLexBot_detectSentiment(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
+func TestAccLexModelBuildingBot_enableModelImprovements(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -495,7 +495,7 @@ func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
+func TestAccLexModelBuildingBot_idleSessionTTLInSeconds(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -542,7 +542,7 @@ func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_intents(t *testing.T) {
+func TestAccLexModelBuildingBot_intents(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -589,7 +589,7 @@ func TestAccAwsLexBot_intents(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_computeVersion(t *testing.T) {
+func TestAccLexModelBuildingBot_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetBotOutput
 	var v2 lexmodelbuildingservice.GetBotAliasOutput
 
@@ -649,7 +649,7 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_locale(t *testing.T) {
+func TestAccLexModelBuildingBot_locale(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -696,7 +696,7 @@ func TestAccAwsLexBot_locale(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_voiceId(t *testing.T) {
+func TestAccLexModelBuildingBot_voiceID(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -743,7 +743,7 @@ func TestAccAwsLexBot_voiceId(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_disappears(t *testing.T) {
+func TestAccLexModelBuildingBot_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)

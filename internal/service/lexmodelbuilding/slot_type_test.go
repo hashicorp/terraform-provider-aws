@@ -71,7 +71,7 @@ func testSweepLexSlotTypes(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsLexSlotType_basic(t *testing.T) {
+func TestAccLexModelBuildingSlotType_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -116,7 +116,7 @@ func TestAccAwsLexSlotType_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_createVersion(t *testing.T) {
+func TestAccLexModelBuildingSlotType_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -162,7 +162,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_description(t *testing.T) {
+func TestAccLexModelBuildingSlotType_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -206,7 +206,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
+func TestAccLexModelBuildingSlotType_enumerationValues(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -255,7 +255,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_name(t *testing.T) {
+func TestAccLexModelBuildingSlotType_name(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID1 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -300,7 +300,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
+func TestAccLexModelBuildingSlotType_valueSelectionStrategy(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -344,7 +344,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_disappears(t *testing.T) {
+func TestAccLexModelBuildingSlotType_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -370,7 +370,7 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexSlotType_computeVersion(t *testing.T) {
+func TestAccLexModelBuildingSlotType_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetSlotTypeOutput
 	var v2 lexmodelbuildingservice.GetIntentOutput
 

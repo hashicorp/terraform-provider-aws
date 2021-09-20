@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
+func TestAccLexModelBuildingBotDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
