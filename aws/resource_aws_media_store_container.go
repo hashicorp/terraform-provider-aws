@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceContainer() *schema.Resource {
@@ -39,18 +40,18 @@ func ResourceContainer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &mediastore.CreateContainerInput{
 		ContainerName: aws.String(d.Get("name").(string)),
@@ -107,7 +108,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Container.Name)
 	d.Set("endpoint", resp.Container.Endpoint)
 
-	tags, err := keyvaluetags.MediastoreListTags(conn, arn)
+	tags, err := tftags.MediastoreListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for media store container (%s): %s", arn, err)
@@ -134,7 +135,7 @@ func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.MediastoreUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.MediastoreUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating media store container (%s) tags: %s", arn, err)
 		}
 	}
