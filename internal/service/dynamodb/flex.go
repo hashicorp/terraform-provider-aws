@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-func expandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
+func ExpandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
 	var attributes map[string]*dynamodb.AttributeValue
 
 	dec := json.NewDecoder(strings.NewReader(input))

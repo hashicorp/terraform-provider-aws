@@ -57,7 +57,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceKinesisStreamingDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +81,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears_DynamoDbTable(t *t
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTable(), tableResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +126,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 			return fmt.Errorf("no ID is set")
 		}
 
-		tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(rs.Primary.ID)
+		tableName, streamArn, err := tfdynamodb.KinesisStreamingDestinationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -156,7 +156,7 @@ func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.Stat
 			continue
 		}
 
-		tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(rs.Primary.ID)
+		tableName, streamArn, err := tfdynamodb.KinesisStreamingDestinationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -74,7 +74,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
+	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -110,7 +110,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
+	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -134,7 +134,7 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func dynamoDbKinesisStreamingDestinationParseId(id string) (string, string, error) {
+func KinesisStreamingDestinationParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

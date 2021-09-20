@@ -614,7 +614,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("global_secondary_index") {
 		var err error
 		o, n := d.GetChange("global_secondary_index")
-		gsiUpdates, err = updateDynamoDbDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
+		gsiUpdates, err = UpdateDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
 
 		if err != nil {
 			return fmt.Errorf("computing difference for DynamoDB Table (%s) Global Secondary Index updates failed: %w", d.Id(), err)
@@ -971,7 +971,7 @@ func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) erro
 	return nil
 }
 
-func updateDynamoDbDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
