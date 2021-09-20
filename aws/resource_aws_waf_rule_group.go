@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRuleGroup() *schema.Resource {
@@ -80,8 +81,8 @@ func resourceAwsWafRuleGroup() *schema.Resource {
 }
 
 func resourceAwsWafRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).WAFConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
@@ -118,9 +119,9 @@ func resourceAwsWafRuleGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WAFConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
@@ -145,9 +146,9 @@ func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -176,7 +177,7 @@ func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsWafRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -200,7 +201,7 @@ func resourceAwsWafRuleGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsWafRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	err := deleteWafRuleGroup(d.Id(), oldRules, conn)

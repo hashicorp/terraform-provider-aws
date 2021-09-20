@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRateBasedRule() *schema.Resource {
@@ -79,8 +80,8 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 }
 
 func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).WAFConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
@@ -118,9 +119,9 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WAFConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(d.Id()),
@@ -149,9 +150,9 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -182,7 +183,7 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChanges("predicates", "rate_limit") {
 		o, n := d.GetChange("predicates")
@@ -207,7 +208,7 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {

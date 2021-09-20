@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafGeoMatchSet() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsWafGeoMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating GeoMatchSet: %s", d.Get("name").(string))
 
@@ -75,7 +76,7 @@ func resourceAwsWafGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading GeoMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetGeoMatchSetInput{
 		GeoMatchSetId: aws.String(d.Id()),
@@ -96,9 +97,9 @@ func resourceAwsWafGeoMatchSetRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("geo_match_constraint", flattenWafGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("geomatchset/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -107,7 +108,7 @@ func resourceAwsWafGeoMatchSetRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsWafGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("geo_match_constraint") {
 		o, n := d.GetChange("geo_match_constraint")
@@ -123,7 +124,7 @@ func resourceAwsWafGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List()
 	if len(oldConstraints) > 0 {

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegexMatchSet() *schema.Resource {
@@ -73,7 +74,7 @@ func resourceAwsWafRegexMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating WAF Regex Match Set: %s", d.Get("name").(string))
 
@@ -96,7 +97,7 @@ func resourceAwsWafRegexMatchSetCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsWafRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading WAF Regex Match Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexMatchSetInput{
 		RegexMatchSetId: aws.String(d.Id()),
@@ -117,9 +118,9 @@ func resourceAwsWafRegexMatchSetRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("regex_match_tuple", flattenWafRegexMatchTuples(resp.RegexMatchSet.RegexMatchTuples))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("regexmatchset/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -128,7 +129,7 @@ func resourceAwsWafRegexMatchSetRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Updating WAF Regex Match Set: %s", d.Get("name").(string))
 
@@ -145,7 +146,7 @@ func resourceAwsWafRegexMatchSetUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsWafRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldTuples := d.Get("regex_match_tuple").(*schema.Set).List()
 	if len(oldTuples) > 0 {
