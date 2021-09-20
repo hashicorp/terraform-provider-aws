@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -86,7 +86,7 @@ func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Invalid JSON value returned by AWS: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%d", hashcode.String(params.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(params.String())))
 	d.Set("result", string(pricingResult))
 	return nil
 }
