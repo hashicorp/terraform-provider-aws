@@ -60,7 +60,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if _, err := waiter.EncryptionConfigAvailable(conn); err != nil {
+	if _, err := waiter.waitEncryptionConfigAvailable(conn); err != nil {
 		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
 	}
 
