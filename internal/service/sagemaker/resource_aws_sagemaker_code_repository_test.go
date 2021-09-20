@@ -1,4 +1,4 @@
-package aws
+package sagemaker_test
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func init() {
@@ -198,7 +198,7 @@ func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		codeRepository, err := finder.FindCodeRepositoryByName(conn, rs.Primary.ID)
+		codeRepository, err := tfsagemaker.FindCodeRepositoryByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find CodeRepository") {
 			continue
@@ -228,7 +228,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.FindCodeRepositoryByName(conn, rs.Primary.ID)
+		resp, err := tfsagemaker.FindCodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

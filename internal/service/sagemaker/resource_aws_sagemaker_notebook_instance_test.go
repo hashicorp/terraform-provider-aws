@@ -1,4 +1,4 @@
-package aws
+package sagemaker_test
 
 import (
 	"errors"
@@ -13,13 +13,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func init() {
@@ -59,7 +59,7 @@ func testSweepSagemakerNotebookInstances(region string) error {
 				continue
 			}
 
-			if _, err := waiter.WaitNotebookInstanceDeleted(conn, name); err != nil {
+			if _, err := tfsagemaker.WaitNotebookInstanceDeleted(conn, name); err != nil {
 				log.Printf("error waiting for sagemaker notebook instance (%s) to delete: %s", name, err)
 				continue
 			}

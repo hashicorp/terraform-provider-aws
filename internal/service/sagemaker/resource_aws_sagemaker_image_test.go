@@ -1,4 +1,4 @@
-package aws
+package sagemaker_test
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func init() {
@@ -251,7 +251,7 @@ func testAccCheckAWSSagemakerImageDestroy(s *terraform.State) error {
 			continue
 		}
 
-		Image, err := finder.FindImageByName(conn, rs.Primary.ID)
+		Image, err := tfsagemaker.FindImageByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -281,7 +281,7 @@ func testAccCheckAWSSagemakerImageExists(n string, image *sagemaker.DescribeImag
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.FindImageByName(conn, rs.Primary.ID)
+		resp, err := tfsagemaker.FindImageByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,4 @@
-package aws
+package sagemaker
 
 import (
 	"fmt"
@@ -11,9 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -123,7 +121,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(appArn)
 
-	if _, err := waiter.WaitAppInService(conn, domainID, userProfileName, appType, appName); err != nil {
+	if _, err := WaitAppInService(conn, domainID, userProfileName, appType, appName); err != nil {
 		return fmt.Errorf("error waiting for SageMaker App (%s) to create: %w", d.Id(), err)
 	}
 
@@ -140,7 +138,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	app, err := finder.FindAppByName(conn, domainID, userProfileName, appType, appName)
+	app, err := FindAppByName(conn, domainID, userProfileName, appType, appName)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
@@ -228,7 +226,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, err := waiter.WaitAppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
+	if _, err := WaitAppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
 		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}

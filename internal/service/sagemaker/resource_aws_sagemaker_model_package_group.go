@@ -1,4 +1,4 @@
-package aws
+package sagemaker
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,7 +79,7 @@ func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(name)
 
-	if _, err := waiter.WaitModelPackageGroupCompleted(conn, d.Id()); err != nil {
+	if _, err := WaitModelPackageGroupCompleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Sagemaker Model Package Group (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -93,7 +91,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	mpg, err := finder.FindModelPackageGroupByName(conn, d.Id())
+	mpg, err := FindModelPackageGroupByName(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			d.SetId("")
@@ -157,7 +155,7 @@ func resourceModelPackageGroupDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.WaitModelPackageGroupDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitModelPackageGroupDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}

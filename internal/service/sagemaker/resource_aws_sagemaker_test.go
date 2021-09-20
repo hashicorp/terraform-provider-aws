@@ -1,4 +1,4 @@
-package aws
+package sagemaker_test
 
 import (
 	"testing"

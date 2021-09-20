@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -159,7 +158,7 @@ func StatusDomain(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 
 func StatusFeatureGroup(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindFeatureGroupByName(conn, name)
+		output, err := FindFeatureGroupByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
