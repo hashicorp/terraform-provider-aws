@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepTimestreamWriteTables(region string) error {
 			dbName := aws.StringValue(table.TableName)
 
 			log.Printf("[INFO] Deleting Timestream Table (%s) from Database (%s)", tableName, dbName)
-			r := resourceAwsTimestreamWriteTable()
+			r := ResourceTable()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s:%s", tableName, dbName))
 
@@ -128,7 +129,7 @@ func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 				Config: testAccAWSTimestreamWriteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTimestreamWriteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
