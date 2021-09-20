@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCognitoResourceServer() *schema.Resource {
@@ -70,7 +71,7 @@ func resourceAwsCognitoResourceServer() *schema.Resource {
 }
 
 func resourceAwsCognitoResourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	identifier := d.Get("identifier").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -100,7 +101,7 @@ func resourceAwsCognitoResourceServerCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
 	if err != nil {
@@ -153,7 +154,7 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoResourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
 	if err != nil {
@@ -178,7 +179,7 @@ func resourceAwsCognitoResourceServerUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoResourceServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
 	if err != nil {

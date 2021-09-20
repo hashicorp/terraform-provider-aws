@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepCognitoUserPoolDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cognitoidpconn
+	conn := client.(*conns.AWSClient).CognitoIDPConn
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(int64(50)),
@@ -177,7 +178,7 @@ func testAccCheckAWSCognitoUserPoolDomainExists(n string) resource.TestCheckFunc
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 		_, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(rs.Primary.ID),
@@ -188,7 +189,7 @@ func testAccCheckAWSCognitoUserPoolDomainExists(n string) resource.TestCheckFunc
 }
 
 func testAccCheckAWSCognitoUserPoolDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_domain" {
