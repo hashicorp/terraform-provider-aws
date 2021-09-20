@@ -82,7 +82,7 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 	err := resource.Retry(accessAnalyzerOrganizationCreationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAnalyzer(input)
 
-		if isAWSErr(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
+		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
 			return resource.RetryableError(err)
 		}
 
@@ -93,7 +93,7 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateAnalyzer(input)
 	}
 
@@ -173,7 +173,7 @@ func resourceAwsAccessAnalyzerAnalyzerDelete(d *schema.ResourceData, meta interf
 
 	_, err := conn.DeleteAnalyzer(input)
 
-	if isAWSErr(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

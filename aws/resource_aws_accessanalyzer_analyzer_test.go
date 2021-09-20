@@ -162,7 +162,7 @@ func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
 
 		output, err := conn.GetAnalyzer(input)
 
-		if isAWSErr(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
