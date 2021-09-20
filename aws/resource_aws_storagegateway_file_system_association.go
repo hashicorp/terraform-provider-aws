@@ -224,7 +224,7 @@ func resourceAwsStorageGatewayFileSystemAssociationDelete(d *schema.ResourceData
 	}
 
 	if _, err = waiter.FileSystemAssociationDeleted(conn, d.Id(), tfstoragegateway.FileSystemAssociationDeleteTimeout); err != nil {
-		if isResourceNotFoundError(err) {
+		if tfresource.NotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) to be deleted: %w", d.Id(), err)

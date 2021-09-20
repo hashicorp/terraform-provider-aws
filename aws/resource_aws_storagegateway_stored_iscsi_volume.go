@@ -185,7 +185,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 	output, err := conn.DescribeStorediSCSIVolumes(input)
 
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") || isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 			log.Printf("[WARN] Storage Gateway Stored iSCSI volume %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -259,22 +259,22 @@ func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, me
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 		if err != nil {
-			if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
 				return nil
 			}
 			// InvalidGatewayRequestException: The specified gateway is not connected.
 			// Can occur during concurrent DeleteVolume operations
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteVolume(input)
 	}
-	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 		return nil
 	}
 	if err != nil {
