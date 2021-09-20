@@ -3,7 +3,6 @@ package docdb
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidIdentifier(t *testing.T) {
