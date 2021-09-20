@@ -235,7 +235,7 @@ func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		if isAWSErr(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return err

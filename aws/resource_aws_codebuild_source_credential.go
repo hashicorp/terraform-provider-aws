@@ -122,7 +122,7 @@ func resourceAwsCodeBuildSourceCredentialDelete(d *schema.ResourceData, meta int
 	}
 
 	if _, err := conn.DeleteSourceCredentials(deleteOpts); err != nil {
-		if isAWSErr(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Source Credentials(%s): %s", d.Id(), err)
