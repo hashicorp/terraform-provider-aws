@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePlan() *schema.Resource {
@@ -27,7 +28,7 @@ func DataSourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -54,7 +55,7 @@ func dataSourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	tags, err := keyvaluetags.BackupListTags(conn, aws.StringValue(resp.BackupPlanArn))
+	tags, err := tftags.BackupListTags(conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", id, err)
 	}
