@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -19,7 +18,7 @@ const (
 // statusScalingPlan fetches the ScalingPlan and its Status
 func statusScalingPlan(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		scalingPlan, err := finder.FindScalingPlan(conn, scalingPlanName, scalingPlanVersion)
+		scalingPlan, err := FindScalingPlan(conn, scalingPlanName, scalingPlanVersion)
 
 		if tfawserr.ErrCodeEquals(err, autoscalingplans.ErrCodeObjectNotFoundException) {
 			return nil, scalingPlanStatusNotFound, nil
