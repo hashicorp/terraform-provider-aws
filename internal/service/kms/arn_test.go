@@ -1,4 +1,4 @@
-package kms_test
+package kms
 
 import (
 	"regexp"

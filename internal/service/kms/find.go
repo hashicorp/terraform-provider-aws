@@ -1,4 +1,4 @@
-package finder
+package kms
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
