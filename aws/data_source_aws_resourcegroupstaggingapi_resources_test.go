@@ -18,7 +18,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigTagFilter(rName),
@@ -40,7 +40,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDeta
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigIncludeComplianceDetails(rName),
@@ -61,7 +61,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceTypeFilters(rName),
@@ -84,7 +84,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceArnList(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceARNList(rName),
