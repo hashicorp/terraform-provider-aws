@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
@@ -19,13 +20,13 @@ import (
 
 func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -34,11 +35,11 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_basic(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(resourceName, "semantic_version"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", fmt.Sprintf("func-%s", stackName)),
-					testAccCheckResourceAttrRegionalHostnameService(resourceName, "parameters.endpoint", "secretsmanager"),
+					acctest.CheckResourceAttrRegionalHostnameService(resourceName, "parameters.endpoint", "secretsmanager"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.RotationLambdaARN"),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
@@ -70,13 +71,13 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_basic(t *testi
 
 func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_disappears(t *
 				Config: testAccAwsServerlessApplicationRepositoryCloudFormationStackConfig(stackName, appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServerlessApplicationRepositoryCloudFormationStack(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServerlessApplicationRepositoryCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +95,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_disappears(t *
 
 func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *testing.T) {
 	var stack1, stack2, stack3 cloudformation.Stack
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
@@ -104,8 +105,8 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *t
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -151,15 +152,15 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *t
 
 func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_paired(t *testing.T) {
 	var stack cloudformation.Stack
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	const version = "1.1.36"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -179,13 +180,13 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_paired(t *test
 
 func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_Tags(t *testing.T) {
 	var stack cloudformation.Stack
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -224,15 +225,15 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_Tags(t *testin
 
 func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_update(t *testing.T) {
 	var stack cloudformation.Stack
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
-	initialName := acctest.RandomWithPrefix("FuncName1")
-	updatedName := acctest.RandomWithPrefix("FuncName2")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	initialName := sdkacctest.RandomWithPrefix("FuncName1")
+	updatedName := sdkacctest.RandomWithPrefix("FuncName2")
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -240,7 +241,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_update(t *test
 				Config: testAccAWSServerlessApplicationRepositoryCloudFormationStackConfig_updateInitial(stackName, appARN, initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", initialName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value"),
@@ -309,13 +310,13 @@ func testAccAwsServerlessApplicationRepositoryCloudFormationStackNameNoPrefixImp
 func testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID() string {
 	arnRegion := endpoints.UsEast1RegionID
 	arnAccountID := "297356227824"
-	if testAccGetPartition() == endpoints.AwsUsGovPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		arnRegion = endpoints.UsGovWest1RegionID
 		arnAccountID = "023102451235"
 	}
 
 	return arn.ARN{
-		Partition: testAccGetPartition(),
+		Partition: acctest.Partition(),
 		Service:   serverlessrepository.ServiceName,
 		Region:    arnRegion,
 		AccountID: arnAccountID,
@@ -527,3 +528,72 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 }
 `, rName, appARN, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+func testAccCheckAmiDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ami" {
+			continue
+		}
+
+		// Try to find the AMI
+		log.Printf("AMI-ID: %s", rs.Primary.ID)
+		DescribeAmiOpts := &ec2.DescribeImagesInput{
+			ImageIds: []*string{aws.String(rs.Primary.ID)},
+		}
+		resp, err := conn.DescribeImages(DescribeAmiOpts)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, "InvalidAMIID", "NotFound") {
+				log.Printf("[DEBUG] AMI not found, passing")
+				return nil
+			}
+			return err
+		}
+
+		if len(resp.Images) > 0 {
+			state := resp.Images[0].State
+			return fmt.Errorf("AMI %s still exists in the state: %s.", aws.StringValue(resp.Images[0].ImageId),
+				aws.StringValue(state))
+		}
+	}
+	return nil
+}
+
+func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).cfconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_cloudformation_stack" {
+			continue
+		}
+
+		params := cloudformation.DescribeStacksInput{
+			StackName: aws.String(rs.Primary.ID),
+		}
+
+		resp, err := conn.DescribeStacks(&params)
+
+		if err != nil {
+			return err
+		}
+
+		for _, s := range resp.Stacks {
+			if aws.StringValue(s.StackId) == rs.Primary.ID && aws.StringValue(s.StackStatus) != cloudformation.StackStatusDeleteComplete {
+				return fmt.Errorf("CloudFormation stack still exists: %q", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
+func testAccCheckCloudFormationStackNotRecreated(i, j *cloudformation.Stack) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.StackId) != aws.StringValue(j.StackId) {
+			return fmt.Errorf("CloudFormation stack recreated")
+		}
+
+		return nil
+	}
+}
+
