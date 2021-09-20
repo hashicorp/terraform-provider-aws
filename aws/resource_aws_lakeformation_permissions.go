@@ -270,7 +270,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GrantPermissionsInput{
-		Permissions: expandStringList(d.Get("permissions").([]interface{})),
+		Permissions: flex.ExpandStringList(d.Get("permissions").([]interface{})),
 		Principal: &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
@@ -282,7 +282,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
-		input.PermissionsWithGrantOption = expandStringList(v.([]interface{}))
+		input.PermissionsWithGrantOption = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
@@ -398,13 +398,13 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 
 		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
 			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				columnNames = expandStringSet(v)
+				columnNames = flex.ExpandStringSet(v)
 			}
 		}
 
 		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
 			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				excludedColumnNames = expandStringSet(v)
+				excludedColumnNames = flex.ExpandStringSet(v)
 			}
 		}
 	}
@@ -537,8 +537,8 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.RevokePermissionsInput{
-		Permissions:                expandStringList(d.Get("permissions").([]interface{})),
-		PermissionsWithGrantOption: expandStringList(d.Get("permissions_with_grant_option").([]interface{})),
+		Permissions:                flex.ExpandStringList(d.Get("permissions").([]interface{})),
+		PermissionsWithGrantOption: flex.ExpandStringList(d.Get("permissions_with_grant_option").([]interface{})),
 		Principal: &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
@@ -805,7 +805,7 @@ func expandLakeFormationTableWithColumnsResource(tfMap map[string]interface{}) *
 
 	if v, ok := tfMap["column_names"]; ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			apiObject.ColumnNames = expandStringSet(v)
+			apiObject.ColumnNames = flex.ExpandStringSet(v)
 		}
 	}
 
@@ -816,7 +816,7 @@ func expandLakeFormationTableWithColumnsResource(tfMap map[string]interface{}) *
 	if v, ok := tfMap["excluded_column_names"]; ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
 			apiObject.ColumnWildcard = &lakeformation.ColumnWildcard{
-				ExcludedColumnNames: expandStringSet(v),
+				ExcludedColumnNames: flex.ExpandStringSet(v),
 			}
 		}
 	}
@@ -843,7 +843,7 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 		tfMap["catalog_id"] = aws.StringValue(v)
 	}
 
-	tfMap["column_names"] = flattenStringSet(apiObject.ColumnNames)
+	tfMap["column_names"] = flex.FlattenStringSet(apiObject.ColumnNames)
 
 	if v := apiObject.DatabaseName; v != nil {
 		tfMap["database_name"] = aws.StringValue(v)
@@ -851,7 +851,7 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 
 	if v := apiObject.ColumnWildcard; v != nil {
 		tfMap["wildcard"] = true
-		tfMap["excluded_column_names"] = flattenStringSet(v.ExcludedColumnNames)
+		tfMap["excluded_column_names"] = flex.FlattenStringSet(v.ExcludedColumnNames)
 	}
 
 	if v := apiObject.Name; v != nil {
