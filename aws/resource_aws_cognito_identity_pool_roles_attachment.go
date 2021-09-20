@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
+func ResourcePoolRolesAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoIdentityPoolRolesAttachmentCreate,
-		Read:   resourceAwsCognitoIdentityPoolRolesAttachmentRead,
-		Update: resourceAwsCognitoIdentityPoolRolesAttachmentUpdate,
-		Delete: resourceAwsCognitoIdentityPoolRolesAttachmentDelete,
+		Create: resourcePoolRolesAttachmentCreate,
+		Read:   resourcePoolRolesAttachmentRead,
+		Update: resourcePoolRolesAttachmentUpdate,
+		Delete: resourcePoolRolesAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -104,7 +104,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 
 	// Validates role keys to be either authenticated or unauthenticated,
@@ -136,10 +136,10 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 
 	d.SetId(d.Get("identity_pool_id").(string))
 
-	return resourceAwsCognitoIdentityPoolRolesAttachmentRead(d, meta)
+	return resourcePoolRolesAttachmentRead(d, meta)
 }
 
-func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
@@ -168,7 +168,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 
 	// Validates role keys to be either authenticated or unauthenticated,
@@ -208,10 +208,10 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 
 	d.SetId(d.Get("identity_pool_id").(string))
 
-	return resourceAwsCognitoIdentityPoolRolesAttachmentRead(d, meta)
+	return resourcePoolRolesAttachmentRead(d, meta)
 }
 
-func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolRolesAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
