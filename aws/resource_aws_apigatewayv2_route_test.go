@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayV2Route_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func TestAccAWSAPIGatewayV2Route_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2RouteConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2RouteExists(resourceName, &apiId, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayV2Route(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

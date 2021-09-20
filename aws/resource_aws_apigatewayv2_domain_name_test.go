@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepAPIGatewayV2DomainNames(region string) error {
 		}
 
 		for _, domainName := range page.Items {
-			r := resourceAwsApiGatewayV2DomainName()
+			r := ResourceDomainName()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domainName.DomainName))
 			err = r.Delete(d, client)
@@ -126,7 +127,7 @@ func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayV2DomainName(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2Route() *schema.Resource {
+func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2RouteCreate,
-		Read:   resourceAwsApiGatewayV2RouteRead,
-		Update: resourceAwsApiGatewayV2RouteUpdate,
-		Delete: resourceAwsApiGatewayV2RouteDelete,
+		Create: resourceRouteCreate,
+		Read:   resourceRouteRead,
+		Update: resourceRouteUpdate,
+		Delete: resourceRouteDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2RouteImport,
 		},
@@ -97,7 +97,7 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateRouteInput{
@@ -139,10 +139,10 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(resp.RouteId))
 
-	return resourceAwsApiGatewayV2RouteRead(d, meta)
+	return resourceRouteRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
@@ -181,7 +181,7 @@ func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	var requestParameters map[string]*apigatewayv2.ParameterConstraints
@@ -266,10 +266,10 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsApiGatewayV2RouteRead(d, meta)
+	return resourceRouteRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2RouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route (%s)", d.Id())

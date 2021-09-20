@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2DomainName() *schema.Resource {
+func ResourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2DomainNameCreate,
-		Read:   resourceAwsApiGatewayV2DomainNameRead,
-		Update: resourceAwsApiGatewayV2DomainNameUpdate,
-		Delete: resourceAwsApiGatewayV2DomainNameDelete,
+		Create: resourceDomainNameCreate,
+		Read:   resourceDomainNameRead,
+		Update: resourceDomainNameUpdate,
+		Delete: resourceDomainNameDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -111,7 +111,7 @@ func resourceAwsApiGatewayV2DomainName() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2DomainNameCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -137,10 +137,10 @@ func resourceAwsApiGatewayV2DomainNameCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsApiGatewayV2DomainNameRead(d, meta)
+	return resourceDomainNameRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2DomainNameRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -189,7 +189,7 @@ func resourceAwsApiGatewayV2DomainNameRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGatewayV2DomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
@@ -232,10 +232,10 @@ func resourceAwsApiGatewayV2DomainNameUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsApiGatewayV2DomainNameRead(d, meta)
+	return resourceDomainNameRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2DomainNameDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 domain name (%s)", d.Id())

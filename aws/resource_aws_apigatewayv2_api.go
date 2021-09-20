@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2Api() *schema.Resource {
+func ResourceAPI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2ApiCreate,
-		Read:   resourceAwsApiGatewayV2ApiRead,
-		Update: resourceAwsApiGatewayV2ApiUpdate,
-		Delete: resourceAwsApiGatewayV2ApiDelete,
+		Create: resourceAPICreate,
+		Read:   resourceAPIRead,
+		Update: resourceAPIUpdate,
+		Delete: resourceAPIDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -183,7 +183,7 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 
 		corsConfiguration := d.Get("cors_configuration")
 
-		if err := resourceAwsApiGatewayV2ApiRead(d, meta); err != nil {
+		if err := resourceAPIRead(d, meta); err != nil {
 			return err
 		}
 
@@ -215,7 +215,7 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsApiGatewayV2ApiCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -267,10 +267,10 @@ func resourceAwsApiGatewayV2ApiCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	return resourceAwsApiGatewayV2ApiRead(d, meta)
+	return resourceAPIRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -328,7 +328,7 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	deleteCorsConfiguration := false
@@ -396,10 +396,10 @@ func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsApiGatewayV2ApiRead(d, meta)
+	return resourceAPIRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2ApiDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())

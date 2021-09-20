@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2VpcLink() *schema.Resource {
+func ResourceVPCLink() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2VpcLinkCreate,
-		Read:   resourceAwsApiGatewayV2VpcLinkRead,
-		Update: resourceAwsApiGatewayV2VpcLinkUpdate,
-		Delete: resourceAwsApiGatewayV2VpcLinkDelete,
+		Create: resourceVPCLinkCreate,
+		Read:   resourceVPCLinkRead,
+		Update: resourceVPCLinkUpdate,
+		Delete: resourceVPCLinkDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsApiGatewayV2VpcLink() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2VpcLinkCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -80,10 +80,10 @@ func resourceAwsApiGatewayV2VpcLinkCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsApiGatewayV2VpcLinkRead(d, meta)
+	return resourceVPCLinkRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -128,7 +128,7 @@ func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsApiGatewayV2VpcLinkUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	if d.HasChange("name") {
@@ -151,10 +151,10 @@ func resourceAwsApiGatewayV2VpcLinkUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsApiGatewayV2VpcLinkRead(d, meta)
+	return resourceVPCLinkRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2VpcLinkDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link (%s)", d.Id())

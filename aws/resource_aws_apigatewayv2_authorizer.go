@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
+func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2AuthorizerCreate,
-		Read:   resourceAwsApiGatewayV2AuthorizerRead,
-		Update: resourceAwsApiGatewayV2AuthorizerUpdate,
-		Delete: resourceAwsApiGatewayV2AuthorizerDelete,
+		Create: resourceAuthorizerCreate,
+		Read:   resourceAuthorizerRead,
+		Update: resourceAuthorizerUpdate,
+		Delete: resourceAuthorizerDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2AuthorizerImport,
 		},
@@ -92,7 +92,7 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	apiId := d.Get("api_id").(string)
@@ -143,10 +143,10 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.AuthorizerId))
 
-	return resourceAwsApiGatewayV2AuthorizerRead(d, meta)
+	return resourceAuthorizerRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
@@ -179,7 +179,7 @@ func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
@@ -220,10 +220,10 @@ func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating API Gateway v2 authorizer: %s", err)
 	}
 
-	return resourceAwsApiGatewayV2AuthorizerRead(d, meta)
+	return resourceAuthorizerRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2AuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())

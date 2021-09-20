@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsApiGatewayV2Api() *schema.Resource {
+func DataSourceAPI() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsAwsApiGatewayV2ApiRead,
 

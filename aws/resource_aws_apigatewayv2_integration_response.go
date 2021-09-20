@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2IntegrationResponse() *schema.Resource {
+func ResourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2IntegrationResponseCreate,
-		Read:   resourceAwsApiGatewayV2IntegrationResponseRead,
-		Update: resourceAwsApiGatewayV2IntegrationResponseUpdate,
-		Delete: resourceAwsApiGatewayV2IntegrationResponseDelete,
+		Create: resourceIntegrationResponseCreate,
+		Read:   resourceIntegrationResponseRead,
+		Update: resourceIntegrationResponseUpdate,
+		Delete: resourceIntegrationResponseDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2IntegrationResponseImport,
 		},
@@ -58,7 +58,7 @@ func resourceAwsApiGatewayV2IntegrationResponse() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2IntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateIntegrationResponseInput{
@@ -84,10 +84,10 @@ func resourceAwsApiGatewayV2IntegrationResponseCreate(d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(resp.IntegrationResponseId))
 
-	return resourceAwsApiGatewayV2IntegrationResponseRead(d, meta)
+	return resourceIntegrationResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2IntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetIntegrationResponse(&apigatewayv2.GetIntegrationResponseInput{
@@ -115,7 +115,7 @@ func resourceAwsApiGatewayV2IntegrationResponseRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsApiGatewayV2IntegrationResponseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateIntegrationResponseInput{
@@ -142,10 +142,10 @@ func resourceAwsApiGatewayV2IntegrationResponseUpdate(d *schema.ResourceData, me
 		return fmt.Errorf("error updating API Gateway v2 integration response: %s", err)
 	}
 
-	return resourceAwsApiGatewayV2IntegrationResponseRead(d, meta)
+	return resourceIntegrationResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2IntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration response (%s)", d.Id())
