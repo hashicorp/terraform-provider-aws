@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointADMChannel() *schema.Resource {
+func ResourceADMChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointADMChannelUpsert,
-		Read:   resourceAwsPinpointADMChannelRead,
+		Read:   resourceADMChannelRead,
 		Update: resourceAwsPinpointADMChannelUpsert,
-		Delete: resourceAwsPinpointADMChannelDelete,
+		Delete: resourceADMChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,10 +68,10 @@ func resourceAwsPinpointADMChannelUpsert(d *schema.ResourceData, meta interface{
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointADMChannelRead(d, meta)
+	return resourceADMChannelRead(d, meta)
 }
 
-func resourceAwsPinpointADMChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceADMChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint ADM Channel for application %s", d.Id())
@@ -96,7 +96,7 @@ func resourceAwsPinpointADMChannelRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsPinpointADMChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceADMChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete ADM Channel: %s", d.Id())

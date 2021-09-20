@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointBaiduChannel() *schema.Resource {
+func ResourceBaiduChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointBaiduChannelUpsert,
-		Read:   resourceAwsPinpointBaiduChannelRead,
+		Read:   resourceBaiduChannelRead,
 		Update: resourceAwsPinpointBaiduChannelUpsert,
-		Delete: resourceAwsPinpointBaiduChannelDelete,
+		Delete: resourceBaiduChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,10 +68,10 @@ func resourceAwsPinpointBaiduChannelUpsert(d *schema.ResourceData, meta interfac
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointBaiduChannelRead(d, meta)
+	return resourceBaiduChannelRead(d, meta)
 }
 
-func resourceAwsPinpointBaiduChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBaiduChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Baidu Channel for application %s", d.Id())
@@ -96,7 +96,7 @@ func resourceAwsPinpointBaiduChannelRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsPinpointBaiduChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBaiduChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint Baidu Channel for application %s", d.Id())

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointEventStream() *schema.Resource {
+func ResourceEventStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointEventStreamUpsert,
-		Read:   resourceAwsPinpointEventStreamRead,
+		Read:   resourceEventStreamRead,
 		Update: resourceAwsPinpointEventStreamUpsert,
-		Delete: resourceAwsPinpointEventStreamDelete,
+		Delete: resourceEventStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -84,10 +84,10 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointEventStreamRead(d, meta)
+	return resourceEventStreamRead(d, meta)
 }
 
-func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEventStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
@@ -113,7 +113,7 @@ func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsPinpointEventStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEventStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())

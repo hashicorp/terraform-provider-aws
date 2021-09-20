@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointAPNSChannel() *schema.Resource {
+func ResourceAPNSChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointAPNSChannelUpsert,
-		Read:   resourceAwsPinpointAPNSChannelRead,
+		Read:   resourceAPNSChannelRead,
 		Update: resourceAwsPinpointAPNSChannelUpsert,
-		Delete: resourceAwsPinpointAPNSChannelDelete,
+		Delete: resourceAPNSChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -112,10 +112,10 @@ func resourceAwsPinpointAPNSChannelUpsert(d *schema.ResourceData, meta interface
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointAPNSChannelRead(d, meta)
+	return resourceAPNSChannelRead(d, meta)
 }
 
-func resourceAwsPinpointAPNSChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
@@ -141,7 +141,7 @@ func resourceAwsPinpointAPNSChannelRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsPinpointAPNSChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Channel: %s", d.Id())

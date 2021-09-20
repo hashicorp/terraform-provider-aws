@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointSMSChannel() *schema.Resource {
+func ResourceSMSChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointSMSChannelUpsert,
-		Read:   resourceAwsPinpointSMSChannelRead,
+		Read:   resourceSMSChannelRead,
 		Update: resourceAwsPinpointSMSChannelUpsert,
-		Delete: resourceAwsPinpointSMSChannelDelete,
+		Delete: resourceSMSChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,10 +80,10 @@ func resourceAwsPinpointSMSChannelUpsert(d *schema.ResourceData, meta interface{
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointSMSChannelRead(d, meta)
+	return resourceSMSChannelRead(d, meta)
 }
 
-func resourceAwsPinpointSMSChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSMSChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint SMS Channel  for application %s", d.Id())
@@ -111,7 +111,7 @@ func resourceAwsPinpointSMSChannelRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsPinpointSMSChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSMSChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint SMS Channel for application %s", d.Id())

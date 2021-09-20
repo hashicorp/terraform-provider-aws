@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointAPNSSandboxChannel() *schema.Resource {
+func ResourceAPNSSandboxChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointAPNSSandboxChannelUpsert,
-		Read:   resourceAwsPinpointAPNSSandboxChannelRead,
+		Read:   resourceAPNSSandboxChannelRead,
 		Update: resourceAwsPinpointAPNSSandboxChannelUpsert,
-		Delete: resourceAwsPinpointAPNSSandboxChannelDelete,
+		Delete: resourceAPNSSandboxChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -112,10 +112,10 @@ func resourceAwsPinpointAPNSSandboxChannelUpsert(d *schema.ResourceData, meta in
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointAPNSSandboxChannelRead(d, meta)
+	return resourceAPNSSandboxChannelRead(d, meta)
 }
 
-func resourceAwsPinpointAPNSSandboxChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSSandboxChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
@@ -141,7 +141,7 @@ func resourceAwsPinpointAPNSSandboxChannelRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsPinpointAPNSSandboxChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSSandboxChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Sandbox Channel: %s", d.Id())
