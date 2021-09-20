@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceClusterSnapshot() *schema.Resource {
@@ -106,7 +107,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -181,7 +182,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := keyvaluetags.RdsListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
+	tags, err := tftags.RdsListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %w", d.Get("db_cluster_snapshot_arn").(string), err)

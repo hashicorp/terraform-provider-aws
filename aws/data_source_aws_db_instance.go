@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceInstance() *schema.Resource {
@@ -21,7 +22,7 @@ func DataSourceInstance() *schema.Resource {
 				Required: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"address": {
 				Type:     schema.TypeString,
@@ -318,7 +319,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %w", vpcSecurityGroups, err)
 	}
 
-	tags, err := keyvaluetags.RdsListTags(conn, d.Get("db_instance_arn").(string))
+	tags, err := tftags.RdsListTags(conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)

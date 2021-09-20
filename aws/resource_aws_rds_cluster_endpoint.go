@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -73,18 +74,18 @@ func ResourceClusterEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterId := d.Get("cluster_identifier").(string)
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
@@ -167,7 +168,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting static_members: %s", err)
 	}
 
-	tags, err := keyvaluetags.RdsListTags(conn, *arn)
+	tags, err := tftags.RdsListTags(conn, *arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster Endpoint (%s): %s", *arn, err)
@@ -196,7 +197,7 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Cluster Endpoint (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
