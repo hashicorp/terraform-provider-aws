@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 )
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
