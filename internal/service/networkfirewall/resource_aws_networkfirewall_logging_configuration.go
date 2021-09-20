@@ -97,7 +97,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] Reading Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
-	output, err := finder.LoggingConfiguration(ctx, conn, d.Id())
+	output, err := finder.FindLoggingConfiguration(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Logging Configuration for NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -155,7 +155,7 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Deleting Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
-	output, err := finder.LoggingConfiguration(ctx, conn, d.Id())
+	output, err := finder.FindLoggingConfiguration(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil

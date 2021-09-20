@@ -827,7 +827,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
+		output, err := finder.FindRuleGroup(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
 		}
@@ -854,7 +854,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupExists(n string) resource.TestCheckF
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
+		output, err := finder.FindRuleGroup(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

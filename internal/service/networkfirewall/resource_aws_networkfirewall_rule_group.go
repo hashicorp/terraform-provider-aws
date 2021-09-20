@@ -450,7 +450,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Rule Group %s", d.Id())
 
-	output, err := finder.RuleGroup(ctx, conn, d.Id())
+	output, err := finder.FindRuleGroup(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -549,7 +549,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	input := &networkfirewall.DeleteRuleGroupInput{
 		RuleGroupArn: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, waiter.RuleGroupDeleteTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, waiter.ruleGroupDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRuleGroupWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use") {
@@ -571,7 +571,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Rule Group (%s): %w", d.Id(), err))
 	}
 
-	if _, err := waiter.RuleGroupDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waiter.waitRuleGroupDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil
 		}

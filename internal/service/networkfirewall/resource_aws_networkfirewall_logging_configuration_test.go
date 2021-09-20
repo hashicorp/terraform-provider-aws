@@ -669,7 +669,7 @@ func testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy(s *terraform.Stat
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.LoggingConfiguration(context.Background(), conn, rs.Primary.ID)
+		output, err := finder.FindLoggingConfiguration(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
 		}
@@ -696,7 +696,7 @@ func testAccCheckAwsNetworkFirewallLoggingConfigurationExists(n string) resource
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.LoggingConfiguration(context.Background(), conn, rs.Primary.ID)
+		output, err := finder.FindLoggingConfiguration(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

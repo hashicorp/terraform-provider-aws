@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	ResourceStatusFailed  = "Failed"
-	ResourceStatusUnknown = "Unknown"
-	ResourceStatusDeleted = "Deleted"
+	resourceStatusFailed  = "Failed"
+	resourceStatusUnknown = "Unknown"
+	resourceStatusDeleted = "Deleted"
 )
 
-// FirewallCreatedStatus fetches the Firewall and its Status.
+// statusFirewallCreated fetches the Firewall and its Status.
 // A Firewall is READY only when the ConfigurationSyncStateSummary value
 // is IN_SYNC and the Attachment Status values for ALL of the configured
 // subnets are READY.
-func FirewallCreatedStatus(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+func statusFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &networkfirewall.DescribeFirewallInput{
 			FirewallArn: aws.String(arn),
@@ -29,19 +29,19 @@ func FirewallCreatedStatus(ctx context.Context, conn *networkfirewall.NetworkFir
 		output, err := conn.DescribeFirewallWithContext(ctx, input)
 
 		if err != nil {
-			return output, ResourceStatusFailed, err
+			return output, resourceStatusFailed, err
 		}
 
 		if output == nil || output.FirewallStatus == nil {
-			return output, ResourceStatusUnknown, nil
+			return output, resourceStatusUnknown, nil
 		}
 
 		return output.Firewall, aws.StringValue(output.FirewallStatus.Status), nil
 	}
 }
 
-// FirewallUpdatedStatus fetches the Firewall and its Status and UpdateToken.
-func FirewallUpdatedStatus(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+// statusFirewallUpdated fetches the Firewall and its Status and UpdateToken.
+func statusFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &networkfirewall.DescribeFirewallInput{
 			FirewallArn: aws.String(arn),
@@ -50,19 +50,19 @@ func FirewallUpdatedStatus(ctx context.Context, conn *networkfirewall.NetworkFir
 		output, err := conn.DescribeFirewallWithContext(ctx, input)
 
 		if err != nil {
-			return output, ResourceStatusFailed, err
+			return output, resourceStatusFailed, err
 		}
 
 		if output == nil || output.FirewallStatus == nil {
-			return output, ResourceStatusUnknown, nil
+			return output, resourceStatusUnknown, nil
 		}
 
 		return output.UpdateToken, aws.StringValue(output.FirewallStatus.Status), nil
 	}
 }
 
-// FirewallDeletedStatus fetches the Firewall and its Status
-func FirewallDeletedStatus(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+// statusFirewallDeleted fetches the Firewall and its Status
+func statusFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &networkfirewall.DescribeFirewallInput{
 			FirewallArn: aws.String(arn),
@@ -71,23 +71,23 @@ func FirewallDeletedStatus(ctx context.Context, conn *networkfirewall.NetworkFir
 		output, err := conn.DescribeFirewallWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return output, ResourceStatusDeleted, nil
+			return output, resourceStatusDeleted, nil
 		}
 
 		if err != nil {
-			return output, ResourceStatusUnknown, err
+			return output, resourceStatusUnknown, err
 		}
 
 		if output == nil || output.FirewallStatus == nil {
-			return output, ResourceStatusUnknown, nil
+			return output, resourceStatusUnknown, nil
 		}
 
 		return output.Firewall, aws.StringValue(output.FirewallStatus.Status), nil
 	}
 }
 
-// FirewallPolicyStatus fetches the Firewall Policy and its Status
-func FirewallPolicyStatus(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+// statusFirewallPolicy fetches the Firewall Policy and its Status
+func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &networkfirewall.DescribeFirewallPolicyInput{
 			FirewallPolicyArn: aws.String(arn),
@@ -96,23 +96,23 @@ func FirewallPolicyStatus(ctx context.Context, conn *networkfirewall.NetworkFire
 		output, err := conn.DescribeFirewallPolicyWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return output, ResourceStatusDeleted, nil
+			return output, resourceStatusDeleted, nil
 		}
 
 		if err != nil {
-			return nil, ResourceStatusUnknown, err
+			return nil, resourceStatusUnknown, err
 		}
 
 		if output == nil || output.FirewallPolicyResponse == nil {
-			return nil, ResourceStatusUnknown, nil
+			return nil, resourceStatusUnknown, nil
 		}
 
 		return output.FirewallPolicy, aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyStatus), nil
 	}
 }
 
-// RuleGroupStatus fetches the Rule Group and its Status
-func RuleGroupStatus(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+// statusRuleGroup fetches the Rule Group and its Status
+func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &networkfirewall.DescribeRuleGroupInput{
 			RuleGroupArn: aws.String(arn),
@@ -121,15 +121,15 @@ func RuleGroupStatus(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 		output, err := conn.DescribeRuleGroupWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return output, ResourceStatusDeleted, nil
+			return output, resourceStatusDeleted, nil
 		}
 
 		if err != nil {
-			return nil, ResourceStatusUnknown, err
+			return nil, resourceStatusUnknown, err
 		}
 
 		if output == nil || output.RuleGroupResponse == nil {
-			return nil, ResourceStatusUnknown, nil
+			return nil, resourceStatusUnknown, nil
 		}
 
 		return output.RuleGroup, aws.StringValue(output.RuleGroupResponse.RuleGroupStatus), nil

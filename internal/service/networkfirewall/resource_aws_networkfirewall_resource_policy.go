@@ -71,7 +71,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
 
-	policy, err := finder.ResourcePolicy(ctx, conn, resourceArn)
+	policy, err := finder.FindResourcePolicy(ctx, conn, resourceArn)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Resource Policy (for resource: %s) not found, removing from state", resourceArn)
 		d.SetId("")
