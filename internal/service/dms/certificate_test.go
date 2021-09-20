@@ -15,7 +15,7 @@ import (
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
-func TestAccAWSDmsCertificate_basic(t *testing.T) {
+func TestAccDMSCertificate_basic(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := sdkacctest.RandString(8)
 
@@ -41,7 +41,7 @@ func TestAccAWSDmsCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsCertificate_disappears(t *testing.T) {
+func TestAccDMSCertificate_disappears(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := sdkacctest.RandString(8)
 
@@ -63,7 +63,7 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
+func TestAccDMSCertificate_certificateWallet(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -89,7 +89,7 @@ func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsCertificate_tags(t *testing.T) {
+func TestAccDMSCertificate_tags(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := sdkacctest.RandString(8)
 

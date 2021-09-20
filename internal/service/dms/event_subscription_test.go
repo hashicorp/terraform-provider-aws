@@ -16,7 +16,7 @@ import (
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
-func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
+func TestAccDMSEventSubscription_basic(t *testing.T) {
 	var eventSubscription dms.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	snsTopicResourceName := "aws_sns_topic.test"
@@ -51,7 +51,7 @@ func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsEventSubscription_disappears(t *testing.T) {
+func TestAccDMSEventSubscription_disappears(t *testing.T) {
 	var eventSubscription dms.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -74,7 +74,7 @@ func TestAccAWSDmsEventSubscription_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsEventSubscription_Enabled(t *testing.T) {
+func TestAccDMSEventSubscription_enabled(t *testing.T) {
 	var eventSubscription dms.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -115,7 +115,7 @@ func TestAccAWSDmsEventSubscription_Enabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsEventSubscription_EventCategories(t *testing.T) {
+func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 	var eventSubscription dms.EventSubscription
 	resourceName := "aws_dms_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -153,7 +153,7 @@ func TestAccAWSDmsEventSubscription_EventCategories(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsEventSubscription_Tags(t *testing.T) {
+func TestAccDMSEventSubscription_tags(t *testing.T) {
 	var eventSubscription dms.EventSubscription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dms_event_subscription.test"
