@@ -106,7 +106,7 @@ func resourceAwsChimeVoiceConnectorOriginationRead(ctx context.Context, d *schem
 
 	resp, err := conn.GetVoiceConnectorOriginationWithContext(ctx, input)
 
-	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice Connector (%s) origination not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -164,7 +164,7 @@ func resourceAwsChimeVoiceConnectorOriginationDelete(ctx context.Context, d *sch
 
 	_, err := conn.DeleteVoiceConnectorOriginationWithContext(ctx, input)
 
-	if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
