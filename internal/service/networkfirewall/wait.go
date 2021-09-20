@@ -1,4 +1,4 @@
-package waiter
+package networkfirewall
 
 import (
 	"context"
