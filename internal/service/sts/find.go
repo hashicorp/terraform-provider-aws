@@ -3,7 +3,6 @@ package sts
 import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindCallerIdentity(conn *sts.STS) (*sts.GetCallerIdentityOutput, error) {
