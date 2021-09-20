@@ -16,7 +16,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -282,7 +282,7 @@ func TestAccAWSCloudWatchEventTarget_GeneratedTargetId(t *testing.T) {
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "target_id"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "target_id"),
 				),
 			},
 			{

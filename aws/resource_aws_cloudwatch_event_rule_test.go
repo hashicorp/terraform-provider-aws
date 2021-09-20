@@ -13,7 +13,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -356,7 +356,7 @@ func TestAccAWSCloudWatchEventRule_NamePrefix(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRuleConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
 			},
@@ -383,7 +383,7 @@ func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRuleConfigNameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
