@@ -111,7 +111,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	jq, err := getJobQueue(conn, d.Id())
+	jq, err := GetJobQueue(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -201,13 +201,13 @@ func resourceJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Disabling Batch Job Queue %s", name)
-	err := disableBatchJobQueue(name, conn)
+	err := DisableJobQueue(name, conn)
 	if err != nil {
 		return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Batch Job Queue %s", name)
-	err = deleteBatchJobQueue(name, conn)
+	err = DeleteJobQueue(name, conn)
 	if err != nil {
 		return fmt.Errorf("error deleting Batch Job Queue (%s): %s", name, err)
 	}
@@ -225,7 +225,7 @@ func createComputeEnvironmentOrder(order []interface{}) (envs []*batch.ComputeEn
 	return
 }
 
-func deleteBatchJobQueue(jobQueue string, conn *batch.Batch) error {
+func DeleteJobQueue(jobQueue string, conn *batch.Batch) error {
 	_, err := conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
 		JobQueue: aws.String(jobQueue),
 	})
@@ -246,7 +246,7 @@ func deleteBatchJobQueue(jobQueue string, conn *batch.Batch) error {
 	return err
 }
 
-func disableBatchJobQueue(jobQueue string, conn *batch.Batch) error {
+func DisableJobQueue(jobQueue string, conn *batch.Batch) error {
 	_, err := conn.UpdateJobQueue(&batch.UpdateJobQueueInput{
 		JobQueue: aws.String(jobQueue),
 		State:    aws.String(batch.JQStateDisabled),
@@ -267,7 +267,7 @@ func disableBatchJobQueue(jobQueue string, conn *batch.Batch) error {
 	return err
 }
 
-func getJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
+func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	describeOpts := &batch.DescribeJobQueuesInput{
 		JobQueues: []*string{aws.String(sn)},
 	}
@@ -291,7 +291,7 @@ func getJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 
 func batchJobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ce, err := getJobQueue(conn, sn)
+		ce, err := GetJobQueue(conn, sn)
 		if err != nil {
 			return nil, "failed", err
 		}
