@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 )
 
 func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
