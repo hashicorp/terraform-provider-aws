@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFleet() *schema.Resource {
@@ -64,7 +65,7 @@ func ResourceFleet() *schema.Resource {
 			"instance_role_arn": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				Optional:     true,
 			},
 			"description": {
@@ -86,7 +87,7 @@ func ResourceFleet() *schema.Resource {
 						"ip_range": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateCIDRNetworkAddress,
+							ValidateFunc: verify.ValidCIDRNetworkAddress,
 						},
 						"protocol": {
 							Type:     schema.TypeString,
