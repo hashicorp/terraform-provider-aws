@@ -5,24 +5,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	var v ec2.ClientVpnRoute
-	rStr := acctest.RandString(5)
+	rStr := sdkacctest.RandString(5)
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
@@ -49,15 +50,15 @@ func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 
 func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 	var v ec2.ClientVpnRoute
-	rStr := acctest.RandString(5)
+	rStr := sdkacctest.RandString(5)
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
@@ -81,13 +82,13 @@ func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 
 func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 	var v ec2.ClientVpnRoute
-	rStr := acctest.RandString(5)
+	rStr := sdkacctest.RandString(5)
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
@@ -95,7 +96,7 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnRouteConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnRoute(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,7 +151,7 @@ func testAccCheckAwsEc2ClientVpnRouteExists(name string, route *ec2.ClientVpnRou
 }
 
 func testAccEc2ClientVpnRouteConfigBasic(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccEc2ClientVpnRouteVpcBase(rName, 1),
 		testAccEc2ClientVpnRouteAcmCertificateBase(),
 		fmt.Sprintf(`
@@ -187,7 +188,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnRouteConfigDescription(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccEc2ClientVpnRouteVpcBase(rName, 1),
 		testAccEc2ClientVpnRouteAcmCertificateBase(),
 		fmt.Sprintf(`
@@ -225,7 +226,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnRouteVpcBase(rName string, subnetCount int) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 

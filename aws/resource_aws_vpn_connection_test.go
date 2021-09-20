@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 type TunnelOptions struct {
@@ -93,14 +94,14 @@ func testSweepEc2VpnConnections(region string) error {
 }
 
 func TestAccAWSVpnConnection_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -110,7 +111,7 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -131,17 +132,17 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 
 func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 	var vpn ec2.VpnConnection
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -163,14 +164,14 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_Tunnel1InsideCidr(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -192,14 +193,14 @@ func TestAccAWSVpnConnection_Tunnel1InsideCidr(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_Tunnel1InsideIpv6Cidr(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -221,14 +222,14 @@ func TestAccAWSVpnConnection_Tunnel1InsideIpv6Cidr(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_Tunnel1PresharedKey(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -250,9 +251,9 @@ func TestAccAWSVpnConnection_Tunnel1PresharedKey(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	badCidrRangeErr := regexp.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
@@ -297,8 +298,8 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -350,7 +351,7 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, acctest.RandStringFromCharSet(65, acctest.CharSetAlpha), "169.254.254.0/30"),
+				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
@@ -404,8 +405,8 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 
 // TestAccAWSVpnConnection_tunnelOptionsLesser tests less algorithms such as those supported in GovCloud.
 func TestAccAWSVpnConnection_tunnelOptionsLesser(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
@@ -450,8 +451,8 @@ func TestAccAWSVpnConnection_tunnelOptionsLesser(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -473,14 +474,14 @@ func TestAccAWSVpnConnection_tunnelOptionsLesser(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -502,14 +503,14 @@ func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_withEnableAcceleration(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -530,14 +531,14 @@ func TestAccAWSVpnConnection_withEnableAcceleration(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_withIpv6(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -557,14 +558,14 @@ func TestAccAWSVpnConnection_withIpv6(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -603,14 +604,14 @@ func TestAccAWSVpnConnection_tags(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_specifyIpv4(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -627,14 +628,14 @@ func TestAccAWSVpnConnection_specifyIpv4(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_specifyIpv6(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -651,14 +652,14 @@ func TestAccAWSVpnConnection_specifyIpv6(t *testing.T) {
 }
 
 func TestAccAWSVpnConnection_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -666,7 +667,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnConnection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpnConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

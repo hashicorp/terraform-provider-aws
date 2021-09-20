@@ -5,14 +5,15 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -26,11 +27,11 @@ func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -59,8 +60,8 @@ func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 
 func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +76,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
 }
 
 func testAccDataSourceAwsEbsSnapshotIdsConfig_basic() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
@@ -92,7 +93,7 @@ data "aws_ebs_snapshot_ids" "test" {
 }
 
 func testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
@@ -118,7 +119,7 @@ resource "aws_ebs_snapshot" "b" {
 }
 
 func testAccDataSourceAwsEbsSnapshotIdsConfig_sorted2(rName string) string {
-	return composeConfig(testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName), fmt.Sprintf(`
 data "aws_ebs_snapshot_ids" "test" {
   owners = ["self"]
 

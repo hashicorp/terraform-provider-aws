@@ -8,19 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	var ig emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -46,12 +47,12 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 
 func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 	var ig1, ig2 emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -98,12 +99,12 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 
 func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 	var ig emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -141,12 +142,12 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 
 func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 	var ig emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -186,12 +187,12 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
 func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 	var ig emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -218,13 +219,13 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 	var cluster emr.Cluster
 	var ig emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	emrClusterResourceName := "aws_emr_cluster.tf-test-cluster"
 	resourceName := "aws_emr_instance_group.task"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -243,12 +244,12 @@ func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 
 func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 	var ig emr.InstanceGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{

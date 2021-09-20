@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceAwsEc2ManagedPrefixListGetIdByName(name string, id *string, arn *string) resource.TestCheckFunc {
@@ -35,7 +36,7 @@ func testAccDataSourceAwsEc2ManagedPrefixListGetIdByName(name string, id *string
 }
 
 func TestAccDataSourceAwsEc2ManagedPrefixList_basic(t *testing.T) {
-	prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", testAccGetRegion())
+	prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())
 	prefixListId := ""
 	prefixListArn := ""
 
@@ -44,8 +45,8 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	prefixListResourceName := "data.aws_prefix_list.s3_by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +92,7 @@ data "aws_prefix_list" "s3_by_id" {
 `
 
 func TestAccDataSourceAwsEc2ManagedPrefixList_filter(t *testing.T) {
-	prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", testAccGetRegion())
+	prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())
 	prefixListId := ""
 	prefixListArn := ""
 
@@ -99,8 +100,8 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_filter(t *testing.T) {
 	resourceById := "data.aws_ec2_managed_prefix_list.s3_by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -151,8 +152,8 @@ data "aws_ec2_managed_prefix_list" "s3_by_id" {
 
 func TestAccDataSourceAwsEc2ManagedPrefixList_matchesTooMany(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

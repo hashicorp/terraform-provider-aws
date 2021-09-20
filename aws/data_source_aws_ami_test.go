@@ -6,16 +6,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 	resourceName := "data.aws_ami.nat_ami"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -29,7 +30,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 					// deep inspection is not included, simply the count is checked.
 					// Tags and product codes may need more testing, but I'm having a hard time finding images with
 					// these attributes set.
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
@@ -41,7 +42,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^amzn-ami-vpc-nat")),
-					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttr(resourceName, "product_codes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/xvda"),
@@ -65,8 +66,8 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 	resourceName := "data.aws_ami.windows_ami"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +85,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^Windows_Server-2012-R2")),
-					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "platform", "windows"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttr(resourceName, "product_codes.#", "0"),
@@ -109,8 +110,8 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 	resourceName := "data.aws_ami.amzn-ami-minimal-hvm-instance-store"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +127,7 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("amzn-ami-minimal-hvm")),
-					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttr(resourceName, "product_codes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_device_type", "instance-store"),
@@ -148,8 +149,8 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 
 func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -166,11 +167,11 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 func TestAccAWSAmiDataSource_Gp3BlockDevice(t *testing.T) {
 	resourceName := "aws_ami.test"
 	datasourceName := "data.aws_ami.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +183,7 @@ func TestAccAWSAmiDataSource_Gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "block_device_mappings.#", resourceName, "ebs_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "id"),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_device_name", resourceName, "root_device_name"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_snapshot_id", resourceName, "root_snapshot_id"),
@@ -284,7 +285,7 @@ data "aws_ami" "name_regex_filtered_ami" {
 `
 
 func testAccAmiDataSourceConfigGp3BlockDevice(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAmiConfigGp3BlockDevice(rName),
 		`
 data "aws_caller_identity" "current" {}

@@ -7,17 +7,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
-	sName := fmt.Sprintf("test-db-instance-%d", acctest.RandInt())
+	sName := fmt.Sprintf("test-db-instance-%d", sdkacctest.RandInt())
 	var opsdb opsworks.RdsDbInstance
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksRdsDbDestroy,
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
 }
 %s
 %s
-`, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceConfig_basic())
+`, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceBasicConfig())
 }
 
 func testAccAwsOpsworksRdsDbInstanceForceNew(name string) string {
@@ -186,3 +187,42 @@ resource "aws_db_instance" "foo" {
 }
 `, testAccAwsOpsworksStackConfigVpcCreate(name))
 }
+func testAccAWSDBInstanceBasicConfig() string {
+	return acctest.ConfigCompose(testAccAWSDBInstanceConfig_orderableClassMysql(), `
+resource "aws_db_instance" "bar" {
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  name                    = "baz"
+  parameter_group_name    = "default.mysql5.6"
+  password                = "barbarbarbar"
+  skip_final_snapshot     = true
+  username                = "foo"
+
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
+}
+`)
+}
+
+func testAccAWSDBInstanceConfig_orderableClass(engine, version, license string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = %q
+  engine_version = %q
+  license_model  = %q
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t2.medium"]
+}
+`, engine, version, license)
+}
+
+func testAccAWSDBInstanceConfig_orderableClassMysql() string {
+	return testAccAWSDBInstanceConfig_orderableClass("mysql", "5.6.35", "general-public-license")
+}
+

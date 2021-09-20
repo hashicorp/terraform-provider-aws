@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
@@ -14,8 +15,8 @@ func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -43,8 +44,8 @@ func TestAccAWSEbsSnapshotDataSource_Filter(t *testing.T) {
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -63,8 +64,8 @@ func TestAccAWSEbsSnapshotDataSource_MostRecent(t *testing.T) {
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -92,7 +93,7 @@ func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccCheckAwsEbsSnapshotDataSourceConfig = testAccAvailableAZsNoOptInConfig() + `
+var testAccCheckAwsEbsSnapshotDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -108,7 +109,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-var testAccCheckAwsEbsSnapshotDataSourceConfigFilter = testAccAvailableAZsNoOptInConfig() + `
+var testAccCheckAwsEbsSnapshotDataSourceConfigFilter = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -127,7 +128,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-var testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent = testAccAvailableAZsNoOptInConfig() + `
+var testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"

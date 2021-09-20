@@ -6,19 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_vpc_peering_connection_options.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 
 func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing.T) {
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_vpc_peering_connection_options.test"         // Requester
 	resourceNamePeer := "aws_vpc_peering_connection_options.peer"     // Accepter
 	pcxResourceName := "aws_vpc_peering_connection.test"              // Requester
@@ -109,11 +110,11 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +147,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
 							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
 						},
-						testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers),
+						acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers),
 					),
 				),
 			},
@@ -188,7 +189,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
 							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
 						},
-						testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers),
+						acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers),
 					),
 				),
 			},
@@ -198,18 +199,18 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 
 func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T) {
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_vpc_peering_connection_options.test"     // Requester
 	resourceNamePeer := "aws_vpc_peering_connection_options.peer" // Accepter
 	pcxResourceName := "aws_vpc_peering_connection.test"          // Requester
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,7 +292,7 @@ resource "aws_vpc_peering_connection_options" "test" {
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string, dnsResolution, dnsResolutionPeer bool) string {
-	return composeConfig(testAccAlternateRegionProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -357,11 +358,11 @@ resource "aws_vpc_peering_connection_options" "peer" {
     allow_remote_vpc_dns_resolution = %[4]t
   }
 }
-`, rName, testAccGetAlternateRegion(), dnsResolution, dnsResolutionPeer))
+`, rName, acctest.AlternateRegion(), dnsResolution, dnsResolutionPeer))
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName string) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true

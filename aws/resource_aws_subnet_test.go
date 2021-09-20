@@ -10,11 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test subnets
@@ -116,8 +117,8 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
@@ -134,7 +135,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -150,11 +151,11 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 func TestAccAWSSubnet_tags(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -197,14 +198,14 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -220,8 +221,8 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -233,8 +234,8 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "value1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -252,12 +253,12 @@ func TestAccAWSSubnet_defaultTags_updateToProviderOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,8 +272,8 @@ func TestAccAWSSubnet_defaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -295,17 +296,17 @@ func TestAccAWSSubnet_defaultTags_updateToResourceOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -338,17 +339,17 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccSubnetTagsConfig1(rName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -366,8 +367,8 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccSubnetTagsConfig2(rName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -382,8 +383,8 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
 					testAccSubnetTagsConfig1(rName, "resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -403,17 +404,17 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccSubnetTagsConfig1(rName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -429,8 +430,8 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
 					testAccSubnetTagsConfig2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -444,8 +445,8 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccSubnetTagsConfig1(rName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -462,17 +463,17 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 
 func TestAccAWSSubnet_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
 					testAccSubnetTagsConfig1(rName, "overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
@@ -486,12 +487,12 @@ func TestAccAWSSubnet_defaultAndIgnoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -503,15 +504,15 @@ func TestAccAWSSubnet_defaultAndIgnoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: composeConfig(
-					testAccProviderConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
 					testAccSubnetTagsConfig1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
-				Config: composeConfig(
-					testAccProviderConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
 					testAccSubnetTagsConfig1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
@@ -531,9 +532,9 @@ func TestAccAWSSubnet_updateTagsKnownAtApply(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -567,9 +568,9 @@ func TestAccAWSSubnet_ignoreTags(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -581,11 +582,11 @@ func TestAccAWSSubnet_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccSubnetConfig,
+				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccSubnetConfig,
 				PlanOnly: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTagsKeys1("ignorekey1") + testAccSubnetConfig,
+				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccSubnetConfig,
 				PlanOnly: true,
 			},
 		},
@@ -597,8 +598,8 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -637,8 +638,8 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -680,8 +681,8 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -707,8 +708,8 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -716,7 +717,7 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSubnet(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -730,8 +731,8 @@ func TestAccAWSSubnet_CustomerOwnedIpv4Pool(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -756,8 +757,8 @@ func TestAccAWSSubnet_MapCustomerOwnedIpOnLaunch(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -782,8 +783,8 @@ func TestAccAWSSubnet_MapPublicIpOnLaunch(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -823,8 +824,8 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -1023,7 +1024,7 @@ resource "aws_subnet" "test" {
 `
 
 func testAccSubnetConfig_tagsComputedFromVpcDataSource1(tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccSubnetComputedTagsBaseConfig,
 		fmt.Sprintf(`
 locals {
@@ -1035,7 +1036,7 @@ locals {
 }
 
 func testAccSubnetConfig_tagsComputedFromVpcDataSource2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccSubnetComputedTagsBaseConfig,
 		fmt.Sprintf(`
 locals {
@@ -1134,7 +1135,7 @@ resource "aws_subnet" "test" {
 `
 
 func testAccSubnetConfigAvailabilityZoneId() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
