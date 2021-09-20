@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsMqBroker() *schema.Resource {
+func DataSourceBroker() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsmQBrokerRead,
 

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -976,7 +977,7 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 				Config: testAccMqBrokerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMqBroker(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
