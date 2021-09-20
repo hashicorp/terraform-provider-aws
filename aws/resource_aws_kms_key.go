@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceKey() *schema.Resource {
@@ -30,7 +31,7 @@ func ResourceKey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -98,8 +99,8 @@ func ResourceKey() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -107,7 +108,7 @@ func ResourceKey() *schema.Resource {
 func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
@@ -250,11 +251,11 @@ func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS Key (%s) tags: %w", d.Id(), err)
 		}
 
-		if err := waiter.TagsPropagated(conn, d.Id(), keyvaluetags.New(n)); err != nil {
+		if err := waiter.TagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
 			return fmt.Errorf("error waiting for KMS Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
@@ -299,7 +300,7 @@ type kmsKey struct {
 	metadata *kms.KeyMetadata
 	policy   string
 	rotation *bool
-	tags     keyvaluetags.KeyValueTags
+	tags     tftags.KeyValueTags
 }
 
 func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
@@ -334,7 +335,7 @@ func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error
 			}
 		}
 
-		key.tags, err = keyvaluetags.KmsListTags(conn, keyID)
+		key.tags, err = tftags.KmsListTags(conn, keyID)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil, &resource.NotFoundError{LastError: err}
