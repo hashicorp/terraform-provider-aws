@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCodeStarNotificationsNotificationRule_basic(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -46,7 +46,7 @@ func TestAccAWSCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarNotificationsNotificationRule_Status(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_status(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -83,7 +83,7 @@ func TestAccAWSCodeStarNotificationsNotificationRule_Status(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarNotificationsNotificationRule_Targets(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -120,7 +120,7 @@ func TestAccAWSCodeStarNotificationsNotificationRule_Targets(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarNotificationsNotificationRule_Tags(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -163,7 +163,7 @@ func TestAccAWSCodeStarNotificationsNotificationRule_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarNotificationsNotificationRule_EventTypeIds(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
