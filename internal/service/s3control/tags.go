@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Custom S3control tagging functions using similar formatting as other service generated code.

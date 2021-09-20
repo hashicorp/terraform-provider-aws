@@ -3,7 +3,6 @@ package s3control
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func findPublicAccessBlockConfiguration(conn *s3control.S3Control, accountID string) (*s3control.PublicAccessBlockConfiguration, error) {
