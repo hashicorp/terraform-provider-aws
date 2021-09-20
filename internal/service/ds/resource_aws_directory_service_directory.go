@@ -391,7 +391,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryId)
 
-	_, err = waiter.DirectoryCreated(conn, d.Id())
+	_, err = waiter.waitDirectoryCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
@@ -447,7 +447,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dir, err := finder.DirectoryByID(conn, d.Id())
+	dir, err := finder.findDirectoryByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
@@ -529,7 +529,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.DirectoryDeleted(conn, d.Id())
+	_, err = waiter.waitDirectoryDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)

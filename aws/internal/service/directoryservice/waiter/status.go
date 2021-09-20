@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DirectoryByID(conn, id)
+		output, err := finder.findDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
