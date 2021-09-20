@@ -117,7 +117,7 @@ func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}
 
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
-		SubnetIds: expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds: flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
