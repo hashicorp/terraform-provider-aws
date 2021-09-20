@@ -107,7 +107,7 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 		RouteKey:          aws.String(d.Get("route_key").(string)),
 	}
 	if v, ok := d.GetOk("authorization_scopes"); ok {
-		req.AuthorizationScopes = expandStringSet(v.(*schema.Set))
+		req.AuthorizationScopes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("authorizer_id"); ok {
 		req.AuthorizerId = aws.String(v.(string))
@@ -119,7 +119,7 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 		req.OperationName = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("request_models"); ok {
-		req.RequestModels = expandStringMap(v.(map[string]interface{}))
+		req.RequestModels = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("request_parameter"); ok && v.(*schema.Set).Len() > 0 {
 		req.RequestParameters = expandApiGatewayV2RouteRequestParameters(v.(*schema.Set).List())
@@ -161,7 +161,7 @@ func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("api_key_required", resp.ApiKeyRequired)
-	if err := d.Set("authorization_scopes", flattenStringSet(resp.AuthorizationScopes)); err != nil {
+	if err := d.Set("authorization_scopes", flex.FlattenStringSet(resp.AuthorizationScopes)); err != nil {
 		return fmt.Errorf("error setting authorization_scopes: %w", err)
 	}
 	d.Set("authorization_type", resp.AuthorizationType)
@@ -228,7 +228,7 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 			req.ApiKeyRequired = aws.Bool(d.Get("api_key_required").(bool))
 		}
 		if d.HasChange("authorization_scopes") {
-			req.AuthorizationScopes = expandStringSet(d.Get("authorization_scopes").(*schema.Set))
+			req.AuthorizationScopes = flex.ExpandStringSet(d.Get("authorization_scopes").(*schema.Set))
 		}
 		if d.HasChange("authorization_type") {
 			req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
@@ -243,7 +243,7 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 			req.OperationName = aws.String(d.Get("operation_name").(string))
 		}
 		if d.HasChange("request_models") {
-			req.RequestModels = expandStringMap(d.Get("request_models").(map[string]interface{}))
+			req.RequestModels = flex.ExpandStringMap(d.Get("request_models").(map[string]interface{}))
 		}
 		if d.HasChange("request_parameter") {
 			req.RequestParameters = requestParameters

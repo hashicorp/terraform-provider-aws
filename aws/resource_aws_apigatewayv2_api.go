@@ -428,16 +428,16 @@ func expandApiGateway2CorsConfiguration(vConfiguration []interface{}) *apigatewa
 		configuration.AllowCredentials = aws.Bool(vAllowCredentials)
 	}
 	if vAllowHeaders, ok := mConfiguration["allow_headers"].(*schema.Set); ok {
-		configuration.AllowHeaders = expandStringSet(vAllowHeaders)
+		configuration.AllowHeaders = flex.ExpandStringSet(vAllowHeaders)
 	}
 	if vAllowMethods, ok := mConfiguration["allow_methods"].(*schema.Set); ok {
-		configuration.AllowMethods = expandStringSet(vAllowMethods)
+		configuration.AllowMethods = flex.ExpandStringSet(vAllowMethods)
 	}
 	if vAllowOrigins, ok := mConfiguration["allow_origins"].(*schema.Set); ok {
-		configuration.AllowOrigins = expandStringSet(vAllowOrigins)
+		configuration.AllowOrigins = flex.ExpandStringSet(vAllowOrigins)
 	}
 	if vExposeHeaders, ok := mConfiguration["expose_headers"].(*schema.Set); ok {
-		configuration.ExposeHeaders = expandStringSet(vExposeHeaders)
+		configuration.ExposeHeaders = flex.ExpandStringSet(vExposeHeaders)
 	}
 	if vMaxAge, ok := mConfiguration["max_age"].(int); ok {
 		configuration.MaxAge = aws.Int64(int64(vMaxAge))
