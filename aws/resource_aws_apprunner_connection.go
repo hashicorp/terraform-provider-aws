@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppRunnerConnection() *schema.Resource {
+func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppRunnerConnectionCreate,
-		ReadWithoutTimeout:   resourceAwsAppRunnerConnectionRead,
-		UpdateWithoutTimeout: resourceAwsAppRunnerConnectionUpdate,
-		DeleteWithoutTimeout: resourceAwsAppRunnerConnectionDelete,
+		CreateWithoutTimeout: resourceConnectionCreate,
+		ReadWithoutTimeout:   resourceConnectionRead,
+		UpdateWithoutTimeout: resourceConnectionUpdate,
+		DeleteWithoutTimeout: resourceConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -61,7 +61,7 @@ func resourceAwsAppRunnerConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsAppRunnerConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -89,10 +89,10 @@ func resourceAwsAppRunnerConnectionCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(aws.StringValue(output.Connection.ConnectionName))
 
-	return resourceAwsAppRunnerConnectionRead(ctx, d, meta)
+	return resourceConnectionRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -145,7 +145,7 @@ func resourceAwsAppRunnerConnectionRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsAppRunnerConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	if d.HasChange("tags_all") {
@@ -156,10 +156,10 @@ func resourceAwsAppRunnerConnectionUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	return resourceAwsAppRunnerConnectionRead(ctx, d, meta)
+	return resourceConnectionRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteConnectionInput{

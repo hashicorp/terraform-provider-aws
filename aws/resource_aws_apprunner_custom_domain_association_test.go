@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
@@ -75,7 +76,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

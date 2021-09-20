@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppRunnerService() *schema.Resource {
+func ResourceService() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppRunnerServiceCreate,
-		ReadWithoutTimeout:   resourceAwsAppRunnerServiceRead,
-		UpdateWithoutTimeout: resourceAwsAppRunnerServiceUpdate,
-		DeleteWithoutTimeout: resourceAwsAppRunnerServiceDelete,
+		CreateWithoutTimeout: resourceServiceCreate,
+		ReadWithoutTimeout:   resourceServiceRead,
+		UpdateWithoutTimeout: resourceServiceUpdate,
+		DeleteWithoutTimeout: resourceServiceDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -349,7 +349,7 @@ func resourceAwsAppRunnerService() *schema.Resource {
 	}
 }
 
-func resourceAwsAppRunnerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -413,10 +413,10 @@ func resourceAwsAppRunnerServiceCreate(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) creation: %w", d.Id(), err))
 	}
 
-	return resourceAwsAppRunnerServiceRead(ctx, d, meta)
+	return resourceServiceRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -500,7 +500,7 @@ func resourceAwsAppRunnerServiceRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsAppRunnerServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	if d.HasChanges(
@@ -543,10 +543,10 @@ func resourceAwsAppRunnerServiceUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	return resourceAwsAppRunnerServiceRead(ctx, d, meta)
+	return resourceServiceRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteServiceInput{

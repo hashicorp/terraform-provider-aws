@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -56,7 +57,7 @@ func testSweepAppRunnerConnections(region string) error {
 
 			log.Printf("[INFO] Deleting App Runner Connection: %s", name)
 
-			r := resourceAwsAppRunnerConnection()
+			r := ResourceConnection()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("arn", c.ConnectionArn)
@@ -127,7 +128,7 @@ func TestAccAwsAppRunnerConnection_disappears(t *testing.T) {
 				Config: testAccAppRunnerConnection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerConnectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppRunnerConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
