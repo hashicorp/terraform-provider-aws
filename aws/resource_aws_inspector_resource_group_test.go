@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
@@ -45,7 +46,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 
 func testAccCheckAWSInspectorResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

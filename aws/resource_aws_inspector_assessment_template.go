@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAWSInspectorAssessmentTemplate() *schema.Resource {
@@ -57,8 +58,8 @@ func resourceAWSInspectorAssessmentTemplate() *schema.Resource {
 }
 
 func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).InspectorConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &inspector.CreateAssessmentTemplateInput{
@@ -86,9 +87,9 @@ func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).InspectorConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
 		AssessmentTemplateArns: aws.StringSlice([]string{d.Id()}),
@@ -136,7 +137,7 @@ func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsInspectorAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*conns.AWSClient).InspectorConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -150,7 +151,7 @@ func resourceAwsInspectorAssessmentTemplateUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsInspectorAssessmentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*conns.AWSClient).InspectorConn
 
 	_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 		AssessmentTemplateArn: aws.String(d.Id()),

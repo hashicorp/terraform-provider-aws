@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSInspectorTarget_basic(t *testing.T) {
@@ -150,7 +151,7 @@ func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 }
 
 func testAccCheckAWSInspectorTargetAssessmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_inspector_assessment_target" {
@@ -178,7 +179,7 @@ func testAccCheckAWSInspectorTargetExists(name string, target *inspector.Assessm
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 		assessmentTarget, err := describeInspectorAssessmentTarget(conn, rs.Primary.ID)
 
@@ -198,7 +199,7 @@ func testAccCheckAWSInspectorTargetExists(name string, target *inspector.Assessm
 
 func testAccCheckAWSInspectorTargetDisappears(assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 		input := &inspector.DeleteAssessmentTargetInput{
 			AssessmentTargetArn: assessmentTarget.Arn,
