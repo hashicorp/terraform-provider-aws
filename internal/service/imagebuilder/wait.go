@@ -1,4 +1,4 @@
-package waiter
+package imagebuilder
 
 import (
 	"time"
