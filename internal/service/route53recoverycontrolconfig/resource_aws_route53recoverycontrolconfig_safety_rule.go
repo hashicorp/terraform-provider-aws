@@ -221,7 +221,7 @@ func resourceSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %s", err)
 	}
 
-	_, err = waiter.Route53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
+	_, err = waiter.waitRoute53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
@@ -263,7 +263,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waiter.Route53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -300,7 +300,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waiter.Route53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 

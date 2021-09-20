@@ -76,7 +76,7 @@ func resourceControlPanelCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(result.ControlPanelArn))
 
-	if _, err := waiter.Route53RecoveryControlConfigControlPanelCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitRoute53RecoveryControlConfigControlPanelCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -151,7 +151,7 @@ func resourceControlPanelDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	_, err = waiter.Route53RecoveryControlConfigControlPanelDeleted(conn, d.Id())
+	_, err = waiter.waitRoute53RecoveryControlConfigControlPanelDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil

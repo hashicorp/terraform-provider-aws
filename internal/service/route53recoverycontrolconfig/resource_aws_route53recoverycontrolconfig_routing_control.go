@@ -77,7 +77,7 @@ func resourceRoutingControlCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(result.RoutingControlArn))
 
-	if _, err := waiter.Route53RecoveryControlConfigRoutingControlCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitRoute53RecoveryControlConfigRoutingControlCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -150,7 +150,7 @@ func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Routing Control: %w", err)
 	}
 
-	_, err = waiter.Route53RecoveryControlConfigRoutingControlDeleted(conn, d.Id())
+	_, err = waiter.waitRoute53RecoveryControlConfigRoutingControlDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
