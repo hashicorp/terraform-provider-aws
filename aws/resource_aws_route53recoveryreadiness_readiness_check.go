@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53RecoveryReadinessReadinessCheck() *schema.Resource {
@@ -50,8 +51,8 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheck() *schema.Resource {
 }
 
 func resourceAwsRoute53RecoveryReadinessReadinessCheckCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoveryreadinessconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateReadinessCheckInput{
@@ -77,9 +78,9 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckCreate(d *schema.ResourceD
 }
 
 func resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoveryreadinessconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &route53recoveryreadiness.GetReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Id()),
@@ -122,7 +123,7 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d *schema.ResourceDat
 }
 
 func resourceAwsRoute53RecoveryReadinessReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoveryreadinessconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.UpdateReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Get("readiness_check_name").(string)),
@@ -146,7 +147,7 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckUpdate(d *schema.ResourceD
 }
 
 func resourceAwsRoute53RecoveryReadinessReadinessCheckDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoveryreadinessconn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.DeleteReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Id()),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
@@ -167,7 +168,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_readiness_check" {
@@ -194,7 +195,7 @@ func testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(name string) re
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 		input := &route53recoveryreadiness.GetReadinessCheckInput{
 			ReadinessCheckName: aws.String(rs.Primary.ID),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
@@ -320,7 +321,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_resource_set" {
@@ -347,7 +348,7 @@ func testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(name string) resou
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 		input := &route53recoveryreadiness.GetResourceSetInput{
 			ResourceSetName: aws.String(rs.Primary.ID),
@@ -360,7 +361,7 @@ func testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(name string) resou
 }
 
 func testAccPreCheckAwsRoute53RecoveryReadinessResourceSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.ListResourceSetsInput{}
 
