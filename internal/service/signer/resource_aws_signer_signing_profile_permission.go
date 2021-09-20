@@ -1,4 +1,4 @@
-package aws
+package signer
 
 import (
 	"fmt"
@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceSigningProfilePermission() *schema.Resource {
@@ -117,7 +117,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Adding new Signer signing profile permission: %s", addProfilePermissionInput)
 	// Retry for IAM eventual consistency
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AddProfilePermission(addProfilePermissionInput)
 
 		if tfawserr.ErrMessageContains(err, signer.ErrCodeConflictException, "") || tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
@@ -137,7 +137,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error adding new Signer signing profile permission for %q: %s", profileName, err)
 	}
 
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		// IAM is eventually consistent :/
 		err := resourceSigningProfilePermissionRead(d, meta)
 		if err != nil {
@@ -174,7 +174,7 @@ func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Getting Signer signing profile permissions: %s", listProfilePermissionsInput)
 	var listProfilePermissionsOutput *signer.ListProfilePermissionsOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		// IAM is eventually consistent :/
 		var err error
 		listProfilePermissionsOutput, err = conn.ListProfilePermissions(listProfilePermissionsInput)
