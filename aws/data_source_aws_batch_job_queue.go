@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsBatchJobQueue() *schema.Resource {
+func DataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBatchJobQueueRead,
+		Read: dataSourceJobQueueRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -68,7 +68,7 @@ func dataSourceAwsBatchJobQueue() *schema.Resource {
 	}
 }
 
-func dataSourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
