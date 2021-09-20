@@ -3,7 +3,6 @@ package autoscalingplans
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindScalingPlan returns the scaling plan corresponding to the specified name and version.
