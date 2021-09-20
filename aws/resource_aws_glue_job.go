@@ -178,16 +178,16 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("connections"); ok {
 		input.Connections = &glue.ConnectionsList{
-			Connections: expandStringList(v.([]interface{})),
+			Connections: flex.ExpandStringList(v.([]interface{})),
 		}
 	}
 
 	if kv, ok := d.GetOk("default_arguments"); ok {
-		input.DefaultArguments = expandStringMap(kv.(map[string]interface{}))
+		input.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 	}
 
 	if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-		input.NonOverridableArguments = expandStringMap(kv.(map[string]interface{}))
+		input.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -344,16 +344,16 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("connections"); ok {
 			jobUpdate.Connections = &glue.ConnectionsList{
-				Connections: expandStringList(v.([]interface{})),
+				Connections: flex.ExpandStringList(v.([]interface{})),
 			}
 		}
 
 		if kv, ok := d.GetOk("default_arguments"); ok {
-			jobUpdate.DefaultArguments = expandStringMap(kv.(map[string]interface{}))
+			jobUpdate.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
 		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-			jobUpdate.NonOverridableArguments = expandStringMap(kv.(map[string]interface{}))
+			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -474,7 +474,7 @@ func flattenGlueConnectionsList(connectionsList *glue.ConnectionsList) []interfa
 		return []interface{}{}
 	}
 
-	return flattenStringList(connectionsList.Connections)
+	return flex.FlattenStringList(connectionsList.Connections)
 }
 
 func flattenGlueExecutionProperty(executionProperty *glue.ExecutionProperty) []map[string]interface{} {

@@ -166,7 +166,7 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Set("connection_type", connection.ConnectionType)
 	d.Set("description", connection.Description)
-	if err := d.Set("match_criteria", flattenStringList(connection.MatchCriteria)); err != nil {
+	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
 		return fmt.Errorf("error setting match_criteria: %w", err)
 	}
 	d.Set("name", connection.Name)
@@ -261,7 +261,7 @@ func expandGlueConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 	}
 
 	if v, ok := d.GetOk("match_criteria"); ok {
-		connectionInput.MatchCriteria = expandStringList(v.([]interface{}))
+		connectionInput.MatchCriteria = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("physical_connection_requirements"); ok {
@@ -281,7 +281,7 @@ func expandGluePhysicalConnectionRequirements(m map[string]interface{}) *glue.Ph
 	}
 
 	if v, ok := m["security_group_id_list"]; ok {
-		physicalConnectionRequirements.SecurityGroupIdList = expandStringSet(v.(*schema.Set))
+		physicalConnectionRequirements.SecurityGroupIdList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := m["subnet_id"]; ok {
@@ -298,7 +298,7 @@ func flattenGluePhysicalConnectionRequirements(physicalConnectionRequirements *g
 
 	m := map[string]interface{}{
 		"availability_zone":      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
-		"security_group_id_list": flattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
+		"security_group_id_list": flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
 		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}
 

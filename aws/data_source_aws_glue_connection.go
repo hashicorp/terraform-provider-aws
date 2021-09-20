@@ -123,7 +123,7 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error setting physical_connection_requirements: %s", err)
 	}
 
-	if err := d.Set("match_criteria", flattenStringList(connection.MatchCriteria)); err != nil {
+	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
 		return diag.Errorf("error setting match_criteria: %s", err)
 	}
 

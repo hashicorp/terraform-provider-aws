@@ -317,7 +317,7 @@ func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.
 	}
 
 	if v, ok := m["header"].([]interface{}); ok {
-		csvClassifier.Header = expandStringList(v)
+		csvClassifier.Header = flex.ExpandStringList(v)
 	}
 
 	return csvClassifier
@@ -337,7 +337,7 @@ func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.
 	}
 
 	if v, ok := m["header"].([]interface{}); ok {
-		csvClassifier.Header = expandStringList(v)
+		csvClassifier.Header = flex.ExpandStringList(v)
 	}
 
 	return csvClassifier

@@ -99,7 +99,7 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		dbInput.Parameters = expandStringMap(v.(map[string]interface{}))
+		dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -147,7 +147,7 @@ func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		dbInput.Parameters = expandStringMap(v.(map[string]interface{}))
+		dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	dbUpdateInput.DatabaseInput = dbInput

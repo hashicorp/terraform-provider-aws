@@ -67,7 +67,7 @@ func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
-		input.DefaultRunProperties = expandStringMap(kv.(map[string]interface{}))
+		input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -160,7 +160,7 @@ func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if kv, ok := d.GetOk("default_run_properties"); ok {
-			input.DefaultRunProperties = expandStringMap(kv.(map[string]interface{}))
+			input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("description"); ok {

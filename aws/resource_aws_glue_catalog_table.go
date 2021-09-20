@@ -538,7 +538,7 @@ func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		tableInput.Parameters = expandStringMap(v.(map[string]interface{}))
+		tableInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -561,7 +561,7 @@ func expandGlueTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
 func expandGlueTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
 	partitionIndex := &glue.PartitionIndex{
 		IndexName: aws.String(m["index_name"].(string)),
-		Keys:      expandStringSet(m["keys"].(*schema.Set)),
+		Keys:      flex.ExpandStringSet(m["keys"].(*schema.Set)),
 	}
 
 	return partitionIndex
@@ -604,7 +604,7 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	}
 
 	if v, ok := s["bucket_columns"]; ok {
-		storageDescriptor.BucketColumns = expandStringList(v.([]interface{}))
+		storageDescriptor.BucketColumns = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := s["sort_columns"]; ok {
@@ -616,7 +616,7 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	}
 
 	if v, ok := s["parameters"]; ok {
-		storageDescriptor.Parameters = expandStringMap(v.(map[string]interface{}))
+		storageDescriptor.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := s["stored_as_sub_directories"]; ok {
@@ -649,7 +649,7 @@ func expandGlueColumns(columns []interface{}) []*glue.Column {
 		}
 
 		if v, ok := elementMap["parameters"]; ok {
-			column.Parameters = expandStringMap(v.(map[string]interface{}))
+			column.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 
 		columnSlice = append(columnSlice, column)
@@ -671,7 +671,7 @@ func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	}
 
 	if v := s["parameters"]; len(v.(map[string]interface{})) > 0 {
-		serDeInfo.Parameters = expandStringMap(v.(map[string]interface{}))
+		serDeInfo.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v := s["serialization_library"]; len(v.(string)) > 0 {
@@ -710,15 +710,15 @@ func expandGlueSkewedInfo(l []interface{}) *glue.SkewedInfo {
 	skewedInfo := &glue.SkewedInfo{}
 
 	if v, ok := s["skewed_column_names"]; ok {
-		skewedInfo.SkewedColumnNames = expandStringList(v.([]interface{}))
+		skewedInfo.SkewedColumnNames = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := s["skewed_column_value_location_maps"]; ok {
-		skewedInfo.SkewedColumnValueLocationMaps = expandStringMap(v.(map[string]interface{}))
+		skewedInfo.SkewedColumnValueLocationMaps = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := s["skewed_column_values"]; ok {
-		skewedInfo.SkewedColumnValues = expandStringList(v.([]interface{}))
+		skewedInfo.SkewedColumnValues = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	return skewedInfo
@@ -787,7 +787,7 @@ func flattenGlueStorageDescriptor(s *glue.StorageDescriptor) []map[string]interf
 	storageDescriptor["compressed"] = aws.BoolValue(s.Compressed)
 	storageDescriptor["number_of_buckets"] = aws.Int64Value(s.NumberOfBuckets)
 	storageDescriptor["ser_de_info"] = flattenGlueSerDeInfo(s.SerdeInfo)
-	storageDescriptor["bucket_columns"] = flattenStringList(s.BucketColumns)
+	storageDescriptor["bucket_columns"] = flex.FlattenStringList(s.BucketColumns)
 	storageDescriptor["sort_columns"] = flattenGlueOrders(s.SortColumns)
 	storageDescriptor["parameters"] = aws.StringValueMap(s.Parameters)
 	storageDescriptor["skewed_info"] = flattenGlueSkewedInfo(s.SkewedInfo)
@@ -870,7 +870,7 @@ func flattenGluePartitionIndex(c *glue.PartitionIndexDescriptor) map[string]inte
 		for _, key := range c.Keys {
 			names = append(names, key.Name)
 		}
-		partitionIndex["keys"] = flattenStringSet(names)
+		partitionIndex["keys"] = flex.FlattenStringSet(names)
 	}
 
 	return partitionIndex
@@ -920,9 +920,9 @@ func flattenGlueSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
 	skewedInfoSlice := make([]map[string]interface{}, 1)
 
 	skewedInfo := make(map[string]interface{})
-	skewedInfo["skewed_column_names"] = flattenStringList(s.SkewedColumnNames)
+	skewedInfo["skewed_column_names"] = flex.FlattenStringList(s.SkewedColumnNames)
 	skewedInfo["skewed_column_value_location_maps"] = aws.StringValueMap(s.SkewedColumnValueLocationMaps)
-	skewedInfo["skewed_column_values"] = flattenStringList(s.SkewedColumnValues)
+	skewedInfo["skewed_column_values"] = flex.FlattenStringList(s.SkewedColumnValues)
 	skewedInfoSlice[0] = skewedInfo
 
 	return skewedInfoSlice
