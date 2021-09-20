@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
@@ -397,7 +398,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2WebACLLoggingConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWebACLLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -493,7 +494,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2WebACL(), webACLResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

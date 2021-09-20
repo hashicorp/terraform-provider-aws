@@ -17,11 +17,11 @@ const (
 	Wafv2WebACLAssociationCreateTimeout = 5 * time.Minute
 )
 
-func resourceAwsWafv2WebACLAssociation() *schema.Resource {
+func ResourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2WebACLAssociationCreate,
-		Read:   resourceAwsWafv2WebACLAssociationRead,
-		Delete: resourceAwsWafv2WebACLAssociationDelete,
+		Create: resourceWebACLAssociationCreate,
+		Read:   resourceWebACLAssociationRead,
+		Delete: resourceWebACLAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				webAclArn, resourceArn, err := resourceAwsWafv2ACLAssociationDecodeId(d.Id())
@@ -51,7 +51,7 @@ func resourceAwsWafv2WebACLAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	resourceArn := d.Get("resource_arn").(string)
 	webAclArn := d.Get("web_acl_arn").(string)
@@ -80,10 +80,10 @@ func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interf
 	}
 	d.SetId(fmt.Sprintf("%s,%s", webAclArn, resourceArn))
 
-	return resourceAwsWafv2WebACLAssociationRead(d, meta)
+	return resourceWebACLAssociationRead(d, meta)
 }
 
-func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	resourceArn := d.Get("resource_arn").(string)
 	webAclArn := d.Get("web_acl_arn").(string)
@@ -109,7 +109,7 @@ func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsWafv2WebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 Web ACL Association %s", d.Id())

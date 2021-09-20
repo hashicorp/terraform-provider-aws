@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafv2RegexPatternSet() *schema.Resource {
+func DataSourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2RegexPatternSetRead,
+		Read: dataSourceRegexPatternSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -51,7 +51,7 @@ func dataSourceAwsWafv2RegexPatternSet() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	name := d.Get("name").(string)
 

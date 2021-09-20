@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -49,7 +50,7 @@ func testSweepWafv2RegexPatternSets(region string) error {
 		for _, regexPatternSet := range page.RegexPatternSets {
 			id := aws.StringValue(regexPatternSet.Id)
 
-			r := resourceAwsWafv2RegexPatternSet()
+			r := ResourceRegexPatternSet()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", regexPatternSet.LockToken)
@@ -155,7 +156,7 @@ func TestAccAwsWafv2RegexPatternSet_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2RegexPatternSetConfig_Minimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2RegexPatternSetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2RegexPatternSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegexPatternSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -23,12 +23,12 @@ const (
 	Wafv2WebACLDeleteTimeout = 5 * time.Minute
 )
 
-func resourceAwsWafv2WebACL() *schema.Resource {
+func ResourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2WebACLCreate,
-		Read:   resourceAwsWafv2WebACLRead,
-		Update: resourceAwsWafv2WebACLUpdate,
-		Delete: resourceAwsWafv2WebACLDelete,
+		Create: resourceWebACLCreate,
+		Read:   resourceWebACLRead,
+		Update: resourceWebACLUpdate,
+		Delete: resourceWebACLDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -143,7 +143,7 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 	}
 }
 
-func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -191,10 +191,10 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(resp.Summary.Id))
 
-	return resourceAwsWafv2WebACLRead(d, meta)
+	return resourceWebACLRead(d, meta)
 }
 
-func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -257,7 +257,7 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	if d.HasChanges("default_action", "description", "rule", "visibility_config") {
@@ -305,10 +305,10 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsWafv2WebACLRead(d, meta)
+	return resourceWebACLRead(d, meta)
 }
 
-func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL %s", d.Id())

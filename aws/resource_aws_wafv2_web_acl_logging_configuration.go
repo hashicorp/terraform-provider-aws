@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
+func ResourceWebACLLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsWafv2WebACLLoggingConfigurationPut,
-		Read:   resourceAwsWafv2WebACLLoggingConfigurationRead,
+		Read:   resourceWebACLLoggingConfigurationRead,
 		Update: resourceAwsWafv2WebACLLoggingConfigurationPut,
-		Delete: resourceAwsWafv2WebACLLoggingConfigurationDelete,
+		Delete: resourceWebACLLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -221,10 +221,10 @@ func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
 
-	return resourceAwsWafv2WebACLLoggingConfigurationRead(d, meta)
+	return resourceWebACLLoggingConfigurationRead(d, meta)
 }
 
-func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLLoggingConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	input := &wafv2.GetLoggingConfigurationInput{
@@ -271,7 +271,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsWafv2WebACLLoggingConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLLoggingConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	input := &wafv2.DeleteLoggingConfigurationInput{

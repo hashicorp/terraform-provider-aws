@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func testSweepWafv2RuleGroups(region string) error {
 		for _, ruleGroup := range page.RuleGroups {
 			id := aws.StringValue(ruleGroup.Id)
 
-			r := resourceAwsWafv2RuleGroup()
+			r := ResourceRuleGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", ruleGroup.LockToken)
@@ -739,7 +740,7 @@ func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2RuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
