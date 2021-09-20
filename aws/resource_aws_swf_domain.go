@@ -112,7 +112,7 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeDomain(input)
 	if err != nil {
-		if isAWSErr(err, swf.ErrCodeUnknownResourceFault, "") {
+		if tfawserr.ErrMessageContains(err, swf.ErrCodeUnknownResourceFault, "") {
 			log.Printf("[WARN] SWF Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -175,10 +175,10 @@ func resourceAwsSwfDomainDelete(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := conn.DeprecateDomain(input)
 	if err != nil {
-		if isAWSErr(err, swf.ErrCodeDomainDeprecatedFault, "") {
+		if tfawserr.ErrMessageContains(err, swf.ErrCodeDomainDeprecatedFault, "") {
 			return nil
 		}
-		if isAWSErr(err, swf.ErrCodeUnknownResourceFault, "") {
+		if tfawserr.ErrMessageContains(err, swf.ErrCodeUnknownResourceFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SWF Domain: %s", err)
