@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
+func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	var conf apigateway.IntegrationResponse
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 	resourceName := "aws_api_gateway_integration_response.test"
@@ -63,7 +63,7 @@ func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayIntegrationResponse_disappears(t *testing.T) {
+func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	var conf apigateway.IntegrationResponse
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 	resourceName := "aws_api_gateway_integration_response.test"

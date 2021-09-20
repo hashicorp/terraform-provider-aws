@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
+func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	var conf apigateway.UsagePlanKey
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	apiGatewayApiKeyResourceName := "aws_api_gateway_api_key.test"
@@ -50,7 +50,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
+func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 	var conf apigateway.UsagePlanKey
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan_key.test"
@@ -73,7 +73,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlanKey_KeyId_Concurrency(t *testing.T) {
+func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
 	var conf apigateway.UsagePlanKey
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

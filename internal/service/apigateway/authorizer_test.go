@@ -17,7 +17,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"
@@ -66,7 +66,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"
 
@@ -103,7 +103,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16613
-func TestAccAWSAPIGatewayAuthorizer_cognito_authorizerCredentials(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"
 	iamRoleResourceName := "aws_iam_role.lambda"
@@ -133,7 +133,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito_authorizerCredentials(t *testing.T) 
 	})
 }
 
-func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -181,7 +181,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"
@@ -230,7 +230,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -255,7 +255,7 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayAuthorizer_zero_ttl(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"
@@ -283,7 +283,7 @@ func TestAccAWSAPIGatewayAuthorizer_zero_ttl(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
+func TestAccAPIGatewayAuthorizer_disappears(t *testing.T) {
 	var conf apigateway.Authorizer
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_authorizer.test"

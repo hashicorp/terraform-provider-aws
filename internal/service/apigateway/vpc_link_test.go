@@ -63,7 +63,7 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
+func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
@@ -104,7 +104,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
+func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
@@ -159,7 +159,7 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
+func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 

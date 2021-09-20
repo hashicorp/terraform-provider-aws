@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
+func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 	var conf apigateway.ClientCertificate
 	resourceName := "aws_api_gateway_client_certificate.test"
 
@@ -50,7 +50,7 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
+func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 	var conf apigateway.ClientCertificate
 	resourceName := "aws_api_gateway_client_certificate.test"
 
@@ -94,7 +94,7 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
+func TestAccAPIGatewayClientCertificate_disappears(t *testing.T) {
 	var conf apigateway.ClientCertificate
 	resourceName := "aws_api_gateway_client_certificate.test"
 

@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedName := sdkacctest.RandomWithPrefix("tf-acc-test-2")
@@ -57,7 +57,7 @@ func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -104,7 +104,7 @@ func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -158,7 +158,7 @@ func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -206,7 +206,7 @@ func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -261,7 +261,7 @@ func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/2057
-func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -288,7 +288,7 @@ func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -344,7 +344,7 @@ func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -428,7 +428,7 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -461,7 +461,7 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayUsagePlan_disappears(t *testing.T) {
+func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_usage_plan.test"

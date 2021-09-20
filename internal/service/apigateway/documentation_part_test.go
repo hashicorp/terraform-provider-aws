@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
+func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := sdkacctest.RandString(8)
@@ -61,7 +61,7 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
+func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := sdkacctest.RandString(8)
@@ -110,7 +110,7 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
+func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := sdkacctest.RandString(8)
@@ -163,7 +163,7 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
+func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := sdkacctest.RandString(8)

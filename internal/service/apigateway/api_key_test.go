@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
+func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -49,7 +49,7 @@ func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayApiKey_Tags(t *testing.T) {
+func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -94,7 +94,7 @@ func TestAccAWSAPIGatewayApiKey_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
+func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 	var apiKey1, apiKey2 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -129,7 +129,7 @@ func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
+func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 	var apiKey1, apiKey2 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -164,7 +164,7 @@ func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
+func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -191,7 +191,7 @@ func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayApiKey_disappears(t *testing.T) {
+func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	var apiKey1 apigateway.ApiKey
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

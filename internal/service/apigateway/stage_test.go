@@ -16,7 +16,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
+func TestAccAPIGatewayStage_basic(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_stage.test"
@@ -82,7 +82,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12756
-func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
+func TestAccAPIGatewayStage_Disappears_referencingDeployment(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_stage.test"
@@ -109,7 +109,7 @@ func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayStage_disappears(t *testing.T) {
+func TestAccAPIGatewayStage_disappears(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_stage.test"
@@ -132,7 +132,7 @@ func TestAccAWSAPIGatewayStage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
+func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
@@ -201,7 +201,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
+func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_stage.test"

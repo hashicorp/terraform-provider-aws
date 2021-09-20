@@ -15,7 +15,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
+func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 	var conf apigateway.UpdateGatewayResponseOutput
 
 	rName := sdkacctest.RandString(10)
@@ -58,7 +58,7 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayGatewayResponse_disappears(t *testing.T) {
+func TestAccAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	var conf apigateway.UpdateGatewayResponseOutput
 
 	rName := sdkacctest.RandString(10)

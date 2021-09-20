@@ -17,7 +17,7 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
-func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
+func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 	var v apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -50,7 +50,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
+func TestAccAPIGatewayRestAPIPolicy_disappears(t *testing.T) {
 	var v apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -73,7 +73,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
+func TestAccAPIGatewayRestAPIPolicy_Disappears_restAPI(t *testing.T) {
 	var v apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

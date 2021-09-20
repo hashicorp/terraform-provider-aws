@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsApiGatewayRestApi_basic(t *testing.T) {
+func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsApiGatewayRestApi_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsApiGatewayRestApi_EndpointConfiguration_VpcEndpointIds(t *testing.T) {
+func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"

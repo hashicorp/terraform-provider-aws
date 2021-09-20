@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsApiGatewayDomainName_basic(t *testing.T) {
+func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()

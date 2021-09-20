@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
+func TestAccAPIGatewayAccount_basic(t *testing.T) {
 	var conf apigateway.Account
 
 	rInt := sdkacctest.RandInt()
