@@ -63,7 +63,7 @@ func testSweepEcsClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSEcsCluster_basic(t *testing.T) {
+func TestAccECSCluster_basic(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -93,7 +93,7 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_disappears(t *testing.T) {
+func TestAccECSCluster_disappears(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -116,7 +116,7 @@ func TestAccAWSEcsCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_Tags(t *testing.T) {
+func TestAccECSCluster_tags(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -162,7 +162,7 @@ func TestAccAWSEcsCluster_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_SingleCapacityProvider(t *testing.T) {
+func TestAccECSCluster_singleCapacityProvider(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	providerName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -190,7 +190,7 @@ func TestAccAWSEcsCluster_SingleCapacityProvider(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
+func TestAccECSCluster_capacityProviders(t *testing.T) {
 	var cluster ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -221,7 +221,7 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
+func TestAccECSCluster_capacityProvidersUpdate(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -260,7 +260,7 @@ func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
+func TestAccECSCluster_capacityProvidersNoStrategy(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -293,7 +293,7 @@ func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
+func TestAccECSCluster_containerInsights(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
@@ -339,7 +339,7 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_configuration(t *testing.T) {
+func TestAccECSCluster(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"

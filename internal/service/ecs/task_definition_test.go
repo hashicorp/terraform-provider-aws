@@ -76,7 +76,7 @@ func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
+func TestAccECSTaskDefinition_basic(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
@@ -113,7 +113,7 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/2370
-func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
+func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-scratch-volume")
@@ -141,7 +141,7 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
+func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
@@ -183,7 +183,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
+func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
@@ -217,7 +217,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
+func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
@@ -251,7 +251,7 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
+func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
@@ -286,7 +286,7 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
+func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
@@ -322,7 +322,7 @@ func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
+func TestAccECSTaskDefinition_withEFSAccessPoint(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
@@ -362,7 +362,7 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
+func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -404,7 +404,7 @@ func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
+func TestAccECSTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
@@ -435,7 +435,7 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/2694
-func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
+func TestAccECSTaskDefinition_withECSService(t *testing.T) {
 	var def ecs.TaskDefinition
 	var service ecs.Service
 
@@ -474,7 +474,7 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
+func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-role-ecs-td-with-task-role-arn")
@@ -504,7 +504,7 @@ func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
+func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
@@ -535,7 +535,7 @@ func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withIPCMode(t *testing.T) {
+func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
@@ -566,7 +566,7 @@ func TestAccAWSEcsTaskDefinition_withIPCMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withPidMode(t *testing.T) {
+func TestAccECSTaskDefinition_withPidMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
@@ -597,7 +597,7 @@ func TestAccAWSEcsTaskDefinition_withPidMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
+func TestAccECSTaskDefinition_constraint(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-constraint")
@@ -627,7 +627,7 @@ func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
+func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	var before ecs.TaskDefinition
 	var after ecs.TaskDefinition
 
@@ -664,7 +664,7 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/2336
-func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
+func TestAccECSTaskDefinition_arrays(t *testing.T) {
 	var conf ecs.TaskDefinition
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -692,7 +692,7 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
+func TestAccECSTaskDefinition_fargate(t *testing.T) {
 	var conf ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-fargate")
@@ -728,7 +728,7 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
+func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 	var conf ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-fargate")
@@ -761,7 +761,7 @@ func TestAccAWSEcsTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
+func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 	var conf ecs.TaskDefinition
 
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-role-ecs-td-execution-role")
@@ -792,7 +792,7 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
-func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
+func TestAccECSTaskDefinition_disappears(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
@@ -820,7 +820,7 @@ func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
+func TestAccECSTaskDefinition_tags(t *testing.T) {
 	var taskDefinition ecs.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
@@ -866,7 +866,7 @@ func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
+func TestAccECSTaskDefinition_proxy(t *testing.T) {
 	var taskDefinition ecs.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
@@ -904,7 +904,7 @@ func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_inferenceAccelerator(t *testing.T) {
+func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEcsServiceDataSource_basic(t *testing.T) {
+func TestAccECSServiceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecs_service.test"
 	resourceName := "aws_ecs_service.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

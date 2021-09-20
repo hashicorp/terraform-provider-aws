@@ -77,7 +77,7 @@ func testSweepEcsCapacityProviders(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
+func TestAccECSCapacityProvider_basic(t *testing.T) {
 	var provider ecs.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_capacity_provider.test"
@@ -115,7 +115,7 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCapacityProvider_disappears(t *testing.T) {
+func TestAccECSCapacityProvider_disappears(t *testing.T) {
 	var provider ecs.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_capacity_provider.test"
@@ -138,7 +138,7 @@ func TestAccAWSEcsCapacityProvider_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
+func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 	var provider ecs.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_capacity_provider.test"
@@ -187,7 +187,7 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCapacityProvider_ManagedScalingPartial(t *testing.T) {
+func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 	var provider ecs.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_capacity_provider.test"
@@ -222,7 +222,7 @@ func TestAccAWSEcsCapacityProvider_ManagedScalingPartial(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
+func TestAccECSCapacityProvider_tags(t *testing.T) {
 	var provider ecs.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_capacity_provider.test"

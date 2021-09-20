@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
+func TestAccECSClusterDataSource_ecsCluster(t *testing.T) {
 	dataSourceName := "data.aws_ecs_cluster.test"
 	resourceName := "aws_ecs_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -34,7 +34,7 @@ func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsDataSource_ecsClusterContainerInsights(t *testing.T) {
+func TestAccECSClusterDataSource_ecsClusterContainerInsights(t *testing.T) {
 	dataSourceName := "data.aws_ecs_cluster.test"
 	resourceName := "aws_ecs_cluster.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
