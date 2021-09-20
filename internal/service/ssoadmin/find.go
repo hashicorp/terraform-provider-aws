@@ -3,7 +3,6 @@ package ssoadmin
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
