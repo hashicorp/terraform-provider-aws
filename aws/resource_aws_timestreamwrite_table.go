@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTable() *schema.Resource {
@@ -76,19 +77,19 @@ func ResourceTable() *schema.Resource {
 				),
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	tableName := d.Get("table_name").(string)
 	input := &timestreamwrite.CreateTableInput{
@@ -159,7 +160,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("table_name", table.TableName)
 
-	tags, err := keyvaluetags.TimestreamwriteListTags(conn, arn)
+	tags, err := tftags.TimestreamwriteListTags(conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Timestream Table (%s): %w", arn, err))
@@ -205,7 +206,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.TimestreamwriteUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.TimestreamwriteUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Timestream Table (%s) tags: %w", d.Get("arn").(string), err))
 		}
 	}
