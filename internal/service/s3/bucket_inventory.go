@@ -254,7 +254,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
+	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) err
 func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
+	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -486,7 +486,7 @@ func flattenS3InventoryS3BucketDestination(destination *s3.InventoryS3BucketDest
 	return result
 }
 
-func resourceAwsS3BucketInventoryParseID(id string) (string, string, error) {
+func BucketInventoryParseID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("please make sure the ID is in the form BUCKET:NAME (i.e. my-bucket:EntireBucket")

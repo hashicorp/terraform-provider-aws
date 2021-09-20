@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestExpandS3MetricsFilter(t *testing.T) {
@@ -113,7 +114,7 @@ func TestExpandS3MetricsFilter(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := expandS3MetricsFilter(tc.Config)
+		value := tfs3.ExpandMetricsFilter(tc.Config)
 
 		// Sort tags by key for consistency
 		if value.And != nil && value.And.Tags != nil {
@@ -226,7 +227,7 @@ func TestFlattenS3MetricsFilter(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := flattenS3MetricsFilter(tc.S3MetricsFilter)
+		value := tfs3.FlattenMetricsFilter(tc.S3MetricsFilter)
 
 		if !reflect.DeepEqual(value, tc.ExpectedConfig) {
 			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s", i, value, tc.ExpectedConfig)
@@ -241,7 +242,7 @@ func TestResourceAwsS3BucketMetricParseID(t *testing.T) {
 	}
 
 	for _, s := range validIds {
-		_, _, err := resourceAwsS3BucketMetricParseID(s)
+		_, _, err := tfs3.BucketMetricParseID(s)
 		if err != nil {
 			t.Fatalf("%s should be a valid S3 bucket metrics configuration id: %s", s, err)
 		}
@@ -257,7 +258,7 @@ func TestResourceAwsS3BucketMetricParseID(t *testing.T) {
 	}
 
 	for _, s := range invalidIds {
-		_, _, err := resourceAwsS3BucketMetricParseID(s)
+		_, _, err := tfs3.BucketMetricParseID(s)
 		if err == nil {
 			t.Fatalf("%s should not be a valid S3 bucket metrics configuration id", s)
 		}
@@ -566,7 +567,7 @@ func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
 			continue
 		}
 
-		bucket, name, err := resourceAwsS3BucketMetricParseID(rs.Primary.ID)
+		bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -610,7 +611,7 @@ func testAccCheckAWSS3BucketMetricsConfigExists(n string, res *s3.MetricsConfigu
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		bucket, name, err := resourceAwsS3BucketMetricParseID(rs.Primary.ID)
+		bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

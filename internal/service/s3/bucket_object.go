@@ -419,7 +419,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return objectListTags(conn, bucket, key)
+		return ObjectListTags(conn, bucket, key)
 	})
 
 	if err != nil {
@@ -509,7 +509,7 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := objectUpdateTags(conn, bucket, key, o, n); err != nil {
+		if err := ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -529,7 +529,7 @@ func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error 
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = deleteAllS3ObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
 		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
 	}
@@ -632,10 +632,10 @@ func hasS3BucketObjectContentChanges(d verify.ResourceDiffer) bool {
 	return false
 }
 
-// deleteAllS3ObjectVersions deletes all versions of a specified key from an S3 bucket.
+// DeleteAllObjectVersions deletes all versions of a specified key from an S3 bucket.
 // If key is empty then all versions of all objects are deleted.
 // Set force to true to override any S3 object lock protections on object lock enabled buckets.
-func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) error {
+func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) error {
 	input := &s3.ListObjectVersionsInput{
 		Bucket: aws.String(bucketName),
 	}

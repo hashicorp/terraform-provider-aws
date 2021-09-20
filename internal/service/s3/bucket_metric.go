@@ -72,7 +72,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("filter"); ok {
 		filterList := v.([]interface{})
 		if filterMap, ok := filterList[0].(map[string]interface{}); ok {
-			metricsConfiguration.Filter = expandS3MetricsFilter(filterMap)
+			metricsConfiguration.Filter = ExpandMetricsFilter(filterMap)
 		}
 	}
 
@@ -113,7 +113,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, name, err := resourceAwsS3BucketMetricParseID(d.Id())
+	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error 
 func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, name, err := resourceAwsS3BucketMetricParseID(d.Id())
+	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output.MetricsConfiguration.Filter != nil {
-		if err := d.Set("filter", []interface{}{flattenS3MetricsFilter(output.MetricsConfiguration.Filter)}); err != nil {
+		if err := d.Set("filter", []interface{}{FlattenMetricsFilter(output.MetricsConfiguration.Filter)}); err != nil {
 			return err
 		}
 	}
@@ -189,7 +189,7 @@ func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandS3MetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
+func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 	var prefix string
 	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
@@ -218,7 +218,7 @@ func expandS3MetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 	return metricsFilter
 }
 
-func flattenS3MetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{} {
+func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	if metricsFilter.And != nil {
@@ -240,7 +240,7 @@ func flattenS3MetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interfac
 	return m
 }
 
-func resourceAwsS3BucketMetricParseID(id string) (string, string, error) {
+func BucketMetricParseID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("please make sure the ID is in the form BUCKET:NAME (i.e. my-bucket:EntireBucket")

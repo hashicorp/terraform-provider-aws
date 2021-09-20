@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestAccAWSS3BucketInventory_basic(t *testing.T) {
@@ -136,7 +137,7 @@ func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryCon
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		bucket, name, err := resourceAwsS3BucketInventoryParseID(rs.Primary.ID)
+		bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -165,7 +166,7 @@ func testAccCheckAWSS3BucketInventoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		bucket, name, err := resourceAwsS3BucketInventoryParseID(rs.Primary.ID)
+		bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -171,7 +172,7 @@ func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 func TestAccAWSS3Bucket_Basic_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
-	hostedZoneID, _ := HostedZoneIDForRegion(region)
+	hostedZoneID, _ := tfs3.HostedZoneIDForRegion(region)
 	resourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2473,7 +2474,7 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 
 	for _, v := range validDnsNames {
-		if err := validateS3BucketName(v, endpoints.UsWest2RegionID); err != nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
@@ -2490,7 +2491,7 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 
 	for _, v := range invalidDnsNames {
-		if err := validateS3BucketName(v, endpoints.UsWest2RegionID); err == nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
@@ -2507,7 +2508,7 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 
 	for _, v := range validEastNames {
-		if err := validateS3BucketName(v, endpoints.UsEast1RegionID); err != nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
@@ -2518,7 +2519,7 @@ func TestAWSS3BucketName(t *testing.T) {
 	}
 
 	for _, v := range invalidEastNames {
-		if err := validateS3BucketName(v, endpoints.UsEast1RegionID); err == nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
@@ -2565,7 +2566,7 @@ func TestBucketRegionalDomainName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		output, err := BucketRegionalDomainName(bucket, tc.Region)
+		output, err := tfs3.BucketRegionalDomainName(bucket, tc.Region)
 		if tc.ExpectedErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Region, err)
 		}
@@ -2732,7 +2733,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		got := WebsiteEndpoint(testCase.TestingClient, "bucket-name", testCase.LocationConstraint)
+		got := tfs3.WebsiteEndpoint(testCase.TestingClient, "bucket-name", testCase.LocationConstraint)
 		if got.Endpoint != testCase.Expected {
 			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
 		}
@@ -2933,7 +2934,7 @@ func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheck
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		got, err := bucketListTags(conn, rs.Primary.Attributes["bucket"])
+		got, err := tfs3.BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
 			return err
 		}
@@ -3269,7 +3270,7 @@ func testAccCheckS3BucketDomainName(resourceName string, attributeName string, b
 }
 
 func testAccBucketRegionalDomainName(bucket, region string) string {
-	regionalEndpoint, err := BucketRegionalDomainName(bucket, region)
+	regionalEndpoint, err := tfs3.BucketRegionalDomainName(bucket, region)
 	if err != nil {
 		return fmt.Sprintf("Regional endpoint not found for bucket %s", bucket)
 	}
@@ -3278,7 +3279,7 @@ func testAccBucketRegionalDomainName(bucket, region string) string {
 
 func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		website := WebsiteEndpoint(acctest.Provider.Meta().(*conns.AWSClient), bucketName, region)
+		website := tfs3.WebsiteEndpoint(acctest.Provider.Meta().(*conns.AWSClient), bucketName, region)
 		expectedValue := website.Endpoint
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
@@ -3290,7 +3291,7 @@ func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]str
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		return bucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
+		return tfs3.BucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
 	}
 }
 
@@ -3299,7 +3300,7 @@ func testAccCheckAWSS3BucketCheckTags(n string, expectedTags map[string]string) 
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		got, err := bucketListTags(conn, rs.Primary.Attributes["bucket"])
+		got, err := tfs3.BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
 			return err
 		}

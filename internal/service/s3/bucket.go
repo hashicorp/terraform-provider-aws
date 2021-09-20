@@ -664,7 +664,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := validateS3BucketName(bucket, awsRegion); err != nil {
+	if err := ValidBucketName(bucket, awsRegion); err != nil {
 		return fmt.Errorf("Error validating S3 bucket name: %s", err)
 	}
 
@@ -708,7 +708,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Retry due to S3 eventual consistency
 		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			terr := bucketUpdateTags(conn, d.Id(), o, n)
+			terr := BucketUpdateTags(conn, d.Id(), o, n)
 			return nil, terr
 		})
 		if err != nil {
@@ -1319,7 +1319,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return bucketListTags(conn, d.Id())
+		return BucketListTags(conn, d.Id())
 	})
 
 	if err != nil {
@@ -1382,7 +1382,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 			if objectLockConfiguration != nil {
 				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
 			}
-			err = deleteAllS3ObjectVersions(conn, d.Id(), "", objectLockEnabled, false)
+			err = DeleteAllObjectVersions(conn, d.Id(), "", objectLockEnabled, false)
 
 			if err != nil {
 				return fmt.Errorf("error S3 Bucket force_destroy: %s", err)
@@ -2480,10 +2480,10 @@ func normalizeRegion(region string) string {
 	return region
 }
 
-// validateS3BucketName validates any S3 bucket name that is not inside the us-east-1 region.
+// ValidBucketName validates any S3 bucket name that is not inside the us-east-1 region.
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
-func validateS3BucketName(value string, region string) error {
+func ValidBucketName(value string, region string) error {
 	if region != endpoints.UsEast1RegionID {
 		if (len(value) < 3) || (len(value) > 63) {
 			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
