@@ -137,7 +137,7 @@ func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
 			return fmt.Errorf("MediaPackage Channel (%s) not deleted", rs.Primary.ID)
 		}
 
-		if !isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
 			return err
 		}
 	}
