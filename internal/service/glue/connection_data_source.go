@@ -85,7 +85,7 @@ func DataSourceConnection() *schema.Resource {
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).GlueConn
 	id := d.Get("id").(string)
-	catalogID, connectionName, err := decodeGlueConnectionID(id)
+	catalogID, connectionName, err := DecodeConnectionID(id)
 	if err != nil {
 		return diag.Errorf("error decoding Glue Connection %s: %s", id, err)
 	}

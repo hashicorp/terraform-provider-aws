@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -42,7 +43,7 @@ func testSweepGlueCrawlers(region string) error {
 		for _, crawler := range page.Crawlers {
 			name := aws.StringValue(crawler.Name)
 
-			r := ResourceCrawler()
+			r := tfglue.ResourceCrawler()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -921,7 +922,7 @@ func TestAccAWSGlueCrawler_disappears(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCrawler(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCrawler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

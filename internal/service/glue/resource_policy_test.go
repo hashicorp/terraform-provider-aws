@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
@@ -66,7 +67,7 @@ func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 				Config: testAccAWSGlueResourcePolicy_Required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSGlueResourcePolicy(resourceName, "glue:CreateTable"),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

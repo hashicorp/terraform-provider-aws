@@ -178,7 +178,7 @@ func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
-	err := deleteGlueSecurityConfiguration(conn, d.Id())
+	err := DeleteSecurityConfiguration(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting Glue Security Configuration (%s): %s", d.Id(), err)
 	}
@@ -186,7 +186,7 @@ func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func deleteGlueSecurityConfiguration(conn *glue.Glue, name string) error {
+func DeleteSecurityConfiguration(conn *glue.Glue, name string) error {
 	input := &glue.DeleteSecurityConfigurationInput{
 		Name: aws.String(name),
 	}

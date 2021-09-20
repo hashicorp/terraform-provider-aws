@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepGlueConnections(region string) error {
 			name := aws.StringValue(connection.Name)
 
 			log.Printf("[INFO] Deleting Glue Connection: %s", name)
-			err := deleteGlueConnection(conn, catalogID, name)
+			err := tfglue.DeleteConnection(conn, catalogID, name)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", name, err)
 			}
@@ -344,7 +345,7 @@ func TestAccAWSGlueConnection_disappears(t *testing.T) {
 				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -364,7 +365,7 @@ func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.C
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		catalogID, connectionName, err := decodeGlueConnectionID(rs.Primary.ID)
+		catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -397,7 +398,7 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		catalogID, connectionName, err := decodeGlueConnectionID(rs.Primary.ID)
+		catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

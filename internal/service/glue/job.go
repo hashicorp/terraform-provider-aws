@@ -413,7 +413,7 @@ func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	err := deleteGlueJob(conn, d.Id())
+	err := DeleteJob(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting Glue Job (%s): %s", d.Id(), err)
 	}
@@ -421,7 +421,7 @@ func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteGlueJob(conn *glue.Glue, jobName string) error {
+func DeleteJob(conn *glue.Glue, jobName string) error {
 	input := &glue.DeleteJobInput{
 		JobName: aws.String(jobName),
 	}

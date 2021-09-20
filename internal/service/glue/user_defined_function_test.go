@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
@@ -109,7 +110,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserDefinedFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +126,7 @@ func testAccCheckGlueUDFDestroy(s *terraform.State) error {
 			continue
 		}
 
-		catalogId, dbName, funcName, err := readAwsGlueUDFID(rs.Primary.ID)
+		catalogId, dbName, funcName, err := tfglue.ReadUDFID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -159,7 +160,7 @@ func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFu
 			return fmt.Errorf("No ID is set")
 		}
 
-		catalogId, dbName, funcName, err := readAwsGlueUDFID(rs.Primary.ID)
+		catalogId, dbName, funcName, err := tfglue.ReadUDFID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

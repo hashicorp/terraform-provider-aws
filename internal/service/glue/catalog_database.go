@@ -126,7 +126,7 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, name, err := readAwsGlueCatalogID(d.Id())
+	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	catalogID, name, err := readAwsGlueCatalogID(d.Id())
+	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func resourceCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func readAwsGlueCatalogID(id string) (catalogID string, name string, err error) {
+func ReadCatalogID(id string) (catalogID string, name string, err error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected CATALOG-ID:DATABASE-NAME", id)

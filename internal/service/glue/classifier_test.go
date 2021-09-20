@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepGlueClassifiers(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			err := deleteGlueClassifier(conn, name)
+			err := tfglue.DeleteClassifier(conn, name)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
 			}
@@ -437,7 +438,7 @@ func TestAccAWSGlueClassifier_disappears(t *testing.T) {
 				Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClassifier(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

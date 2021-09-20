@@ -195,7 +195,7 @@ func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
-	err := deleteWorkflow(conn, d.Id())
+	err := DeleteWorkflow(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting Glue Workflow (%s): %w", d.Id(), err)
 	}
@@ -203,7 +203,7 @@ func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteWorkflow(conn *glue.Glue, name string) error {
+func DeleteWorkflow(conn *glue.Glue, name string) error {
 	input := &glue.DeleteWorkflowInput{
 		Name: aws.String(name),
 	}
