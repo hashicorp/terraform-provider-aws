@@ -471,7 +471,7 @@ func expandAutoScalingPlansApplicationSource(vApplicationSource []interface{}) *
 			}
 
 			if vValues, ok := mTagFilter["values"].(*schema.Set); ok && vValues.Len() > 0 {
-				tagFilter.Values = expandStringSet(vValues)
+				tagFilter.Values = flex.ExpandStringSet(vValues)
 			}
 
 			tagFilters = append(tagFilters, tagFilter)
@@ -498,7 +498,7 @@ func flattenAutoScalingPlansApplicationSource(applicationSource *autoscalingplan
 		for _, tagFilter := range tagFilters {
 			mTagFilter := map[string]interface{}{
 				"key":    aws.StringValue(tagFilter.Key),
-				"values": flattenStringSet(tagFilter.Values),
+				"values": flex.FlattenStringSet(tagFilter.Values),
 			}
 
 			vTagFilters = append(vTagFilters, mTagFilter)
