@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIotPolicyAttachment() *schema.Resource {
@@ -30,7 +31,7 @@ func resourceAwsIotPolicyAttachment() *schema.Resource {
 }
 
 func resourceAwsIotPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -89,7 +90,7 @@ func getIotPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Poli
 }
 
 func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -112,7 +113,7 @@ func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)

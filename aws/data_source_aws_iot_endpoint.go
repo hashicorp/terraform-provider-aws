@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsIotEndpoint() *schema.Resource {
@@ -32,7 +33,7 @@ func dataSourceAwsIotEndpoint() *schema.Resource {
 }
 
 func dataSourceAwsIotEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 	input := &iot.DescribeEndpointInput{}
 
 	if v, ok := d.GetOk("endpoint_type"); ok {
