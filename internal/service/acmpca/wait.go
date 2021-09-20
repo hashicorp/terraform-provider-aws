@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // waitCertificateAuthorityCreated waits for a CertificateAuthority to return Active or PendingCertificate
