@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestFlattenEnabledMetrics(t *testing.T) {

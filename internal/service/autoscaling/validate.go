@@ -3,7 +3,6 @@ package autoscaling
 import (
 	"fmt"
 	"time"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {
