@@ -26,6 +26,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
@@ -143,7 +144,7 @@ func ResourceBucketObject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
 					if new == "" && d.Get("server_side_encryption") == s3.ServerSideEncryptionAwsKms {
@@ -384,7 +385,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	metadata := pointersMapToStringList(resp.Metadata)
+	metadata := verify.PointersMapToStringList(resp.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -417,7 +418,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return objectListTags(conn, bucket, key)
 	})
 
@@ -605,7 +606,7 @@ func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func hasS3BucketObjectContentChanges(d resourceDiffer) bool {
+func hasS3BucketObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",

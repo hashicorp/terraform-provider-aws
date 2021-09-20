@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceBucketObject() *schema.Resource {
@@ -179,7 +180,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	} else {
 		d.Set("last_modified", "")
 	}
-	d.Set("metadata", pointersMapToStringList(out.Metadata))
+	d.Set("metadata", verify.PointersMapToStringList(out.Metadata))
 	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", out.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(out.ObjectLockRetainUntilDate))

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBucketAnalyticsConfiguration() *schema.Resource {
@@ -93,12 +94,12 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 															"bucket_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 															"bucket_account_id": {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validateAwsAccountId,
+																ValidateFunc: verify.ValidAccountID,
 															},
 															"format": {
 																Type:         schema.TypeString,

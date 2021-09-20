@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceObjectCopy() *schema.Resource {
@@ -180,14 +181,14 @@ func ResourceObjectCopy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				Sensitive:    true,
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				Sensitive:    true,
 			},
 			"last_modified": {
@@ -330,7 +331,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	metadata := pointersMapToStringList(resp.Metadata)
+	metadata := verify.PointersMapToStringList(resp.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -363,7 +364,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return objectListTags(conn, bucket, key)
 	})
 
