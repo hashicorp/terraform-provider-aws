@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
+func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-basic")
 	resourceName := "data.aws_cloudformation_stack.network"
 
@@ -97,7 +97,7 @@ data "aws_cloudformation_stack" "network" {
 `, stackName)
 }
 
-func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
+func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-yaml")
 	resourceName := "data.aws_cloudformation_stack.yaml"
 

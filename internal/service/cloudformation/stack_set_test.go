@@ -73,7 +73,7 @@ func testSweepCloudformationStackSets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
+func TestAccCloudFormationStackSet_basic(t *testing.T) {
 	var stackSet1 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	iamRoleResourceName := "aws_iam_role.test"
@@ -115,7 +115,7 @@ func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_disappears(t *testing.T) {
+func TestAccCloudFormationStackSet_disappears(t *testing.T) {
 	var stackSet1 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
@@ -138,7 +138,7 @@ func TestAccAWSCloudFormationStackSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_AdministrationRoleArn(t *testing.T) {
+func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	iamRoleResourceName1 := "aws_iam_role.test1"
@@ -178,7 +178,7 @@ func TestAccAWSCloudFormationStackSet_AdministrationRoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_Description(t *testing.T) {
+func TestAccCloudFormationStackSet_description(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
@@ -216,7 +216,7 @@ func TestAccAWSCloudFormationStackSet_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_ExecutionRoleName(t *testing.T) {
+func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
@@ -254,7 +254,7 @@ func TestAccAWSCloudFormationStackSet_ExecutionRoleName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_Name(t *testing.T) {
+func TestAccCloudFormationStackSet_name(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -309,7 +309,7 @@ func TestAccAWSCloudFormationStackSet_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_Parameters(t *testing.T) {
+func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
@@ -365,7 +365,7 @@ func TestAccAWSCloudFormationStackSet_Parameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
+func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 	acctest.Skip(t, "this resource does not currently ignore unconfigured CloudFormation template parameters with the Default property")
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform/issues/18863
@@ -417,7 +417,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
+func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 	acctest.Skip(t, "this resource does not currently ignore CloudFormation template parameters with the NoEcho property")
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/55
@@ -461,7 +461,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_PermissionModel_ServiceManaged(t *testing.T) {
+func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) {
 	acctest.Skip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
 
 	var stackSet1 cloudformation.StackSet
@@ -502,7 +502,7 @@ func TestAccAWSCloudFormationStackSet_PermissionModel_ServiceManaged(t *testing.
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_Tags(t *testing.T) {
+func TestAccCloudFormationStackSet_tags(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
@@ -558,7 +558,7 @@ func TestAccAWSCloudFormationStackSet_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_TemplateBody(t *testing.T) {
+func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
@@ -596,7 +596,7 @@ func TestAccAWSCloudFormationStackSet_TemplateBody(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_TemplateUrl(t *testing.T) {
+func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"

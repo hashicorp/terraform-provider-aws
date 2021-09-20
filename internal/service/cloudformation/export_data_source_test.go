@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
+func TestAccCloudFormationExportDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_cloudformation_export.test"
 
@@ -30,7 +30,7 @@ func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudformationExportDataSource_ResourceReference(t *testing.T) {
+func TestAccCloudFormationExportDataSource_resourceReference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_cloudformation_export.test"
 	resourceName := "aws_cloudformation_stack.test"

@@ -23,7 +23,7 @@ import (
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
-func TestAccAwsCloudformationType_basic(t *testing.T) {
+func TestAccCloudFormationType_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccAwsCloudformationTypeZipGenerator(t, typeName)
@@ -61,7 +61,7 @@ func TestAccAwsCloudformationType_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationType_disappears(t *testing.T) {
+func TestAccCloudFormationType_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccAwsCloudformationTypeZipGenerator(t, typeName)
@@ -87,7 +87,7 @@ func TestAccAwsCloudformationType_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationType_ExecutionRoleArn(t *testing.T) {
+func TestAccCloudFormationType_executionRoleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccAwsCloudformationTypeZipGenerator(t, typeName)
@@ -111,7 +111,7 @@ func TestAccAwsCloudformationType_ExecutionRoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationType_LoggingConfig(t *testing.T) {
+func TestAccCloudFormationType_logging(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccAwsCloudformationTypeZipGenerator(t, typeName)

@@ -78,7 +78,7 @@ func testSweepCloudformationStacks(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudFormationStack_basic(t *testing.T) {
+func TestAccCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -106,7 +106,7 @@ func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_CreationFailure_DoNothing(t *testing.T) {
+func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -123,7 +123,7 @@ func TestAccAWSCloudFormationStack_CreationFailure_DoNothing(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_CreationFailure_Delete(t *testing.T) {
+func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccAWSCloudFormationStack_CreationFailure_Delete(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_CreationFailure_Rollback(t *testing.T) {
+func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,7 +157,7 @@ func TestAccAWSCloudFormationStack_CreationFailure_Rollback(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_UpdateFailure(t *testing.T) {
+func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -185,7 +185,7 @@ func TestAccAWSCloudFormationStack_UpdateFailure(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
+func TestAccCloudFormationStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -208,7 +208,7 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
+func TestAccCloudFormationStack_yaml(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -234,7 +234,7 @@ func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
+func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -261,7 +261,7 @@ func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
+func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -320,7 +320,7 @@ func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/4332
-func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
+func TestAccCloudFormationStack_withParams(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -361,7 +361,7 @@ func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/4534
-func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
+func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -394,7 +394,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
+func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -422,7 +422,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/5653
-func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
+func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -455,7 +455,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
+func TestAccCloudFormationStack_withTransform(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
@@ -483,8 +483,8 @@ func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
 	})
 }
 
-// TestAccAWSCloudFormationStack_onFailure verifies https://github.com/hashicorp/terraform-provider-aws/issues/5204
-func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
+// TestAccCloudFormationStack_onFailure verifies https://github.com/hashicorp/terraform-provider-aws/issues/5204
+func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack.test"
