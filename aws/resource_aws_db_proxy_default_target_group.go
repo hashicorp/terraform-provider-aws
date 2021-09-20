@@ -175,7 +175,7 @@ func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoo
 		InitQuery:                 aws.String(config["init_query"].(string)),
 		MaxConnectionsPercent:     aws.Int64(int64(config["max_connections_percent"].(int))),
 		MaxIdleConnectionsPercent: aws.Int64(int64(config["max_idle_connections_percent"].(int))),
-		SessionPinningFilters:     expandStringSet(config["session_pinning_filters"].(*schema.Set)),
+		SessionPinningFilters:     flex.ExpandStringSet(config["session_pinning_filters"].(*schema.Set)),
 	}
 
 	return result
@@ -191,7 +191,7 @@ func flattenDbProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfig
 	m["init_query"] = aws.StringValue(cpc.InitQuery)
 	m["max_connections_percent"] = aws.Int64Value(cpc.MaxConnectionsPercent)
 	m["max_idle_connections_percent"] = aws.Int64Value(cpc.MaxIdleConnectionsPercent)
-	m["session_pinning_filters"] = flattenStringSet(cpc.SessionPinningFilters)
+	m["session_pinning_filters"] = flex.FlattenStringSet(cpc.SessionPinningFilters)
 
 	return []interface{}{m}
 }

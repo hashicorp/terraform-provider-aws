@@ -99,12 +99,12 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
-		VpcSubnetIds:        expandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
+		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 		Tags:                tags.IgnoreAws().RdsTags(),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.VpcSecurityGroupIds = expandStringSet(v)
+		params.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
 	_, err := conn.CreateDBProxyEndpoint(&params)
@@ -164,8 +164,8 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
 	d.Set("vpc_id", dbProxyEndpoint.VpcId)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
-	d.Set("vpc_subnet_ids", flattenStringSet(dbProxyEndpoint.VpcSubnetIds))
-	d.Set("vpc_security_group_ids", flattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
+	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSubnetIds))
+	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
 
 	tags, err := keyvaluetags.RdsListTags(conn, endpointArn)
 
@@ -193,7 +193,7 @@ func resourceAwsDbProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("vpc_security_group_ids") {
 		params := rds.ModifyDBProxyEndpointInput{
 			DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),
-			VpcSecurityGroupIds: expandStringSet(d.Get("vpc_security_group_ids").(*schema.Set)),
+			VpcSecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBProxyEndpoint(&params)
