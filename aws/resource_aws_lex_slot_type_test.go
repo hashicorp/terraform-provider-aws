@@ -24,14 +24,14 @@ func init() {
 }
 
 func testSweepLexSlotTypes(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).lexmodelconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetSlotTypesInput{}
@@ -47,7 +47,7 @@ func testSweepLexSlotTypes(region string) error {
 
 			d.SetId(aws.StringValue(slotType.Name))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -57,11 +57,11 @@ func testSweepLexSlotTypes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Slot Type for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Slot Type for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Lex Slot Type sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -77,7 +77,7 @@ func TestAccAwsLexSlotType_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +162,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,7 +203,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,7 +250,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,7 +291,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -332,14 +332,14 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexSlotTypeExists(rName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLexSlotType(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLexSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -361,7 +361,7 @@ func TestAccAwsLexSlotType_computeVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -412,7 +412,7 @@ func testAccCheckAwsLexSlotTypeExistsWithVersion(rName, slotTypeVersion string, 
 		}
 
 		var err error
-		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
+		conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
 
 		output, err = conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
 			Name:    aws.String(rs.Primary.ID),
@@ -435,7 +435,7 @@ func testAccCheckAwsLexSlotTypeExists(rName string, output *lexmodelbuildingserv
 
 func testAccCheckAwsLexSlotTypeNotExists(slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
+		conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
 
 		_, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
 			Name:    aws.String(slotTypeName),
@@ -453,7 +453,7 @@ func testAccCheckAwsLexSlotTypeNotExists(slotTypeName, slotTypeVersion string) r
 }
 
 func testAccCheckAwsLexSlotTypeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
+	conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_slot_type" {
