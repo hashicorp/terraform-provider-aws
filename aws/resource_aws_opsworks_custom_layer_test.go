@@ -7,22 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`, and Opsworks stacks named `tf-acc`.
 
 func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
@@ -59,13 +60,13 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 }
 
 func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
@@ -104,13 +105,13 @@ func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
 }
 
 func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{

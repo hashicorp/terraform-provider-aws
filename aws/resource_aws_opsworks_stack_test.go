@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 ///////////////////////////////
@@ -17,17 +18,17 @@ import (
 ///////////////////////////////
 
 func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -48,17 +49,17 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 }
 
 func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var before, after opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -85,17 +86,17 @@ func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 }
 
 func TestAccAWSOpsworksStack_vpc(t *testing.T) {
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -134,17 +135,17 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 }
 
 func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -179,16 +180,16 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 
 func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) {
 	resourceName := "aws_opsworks_stack.tf-acc"
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -220,14 +221,14 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 // to create Stack's prior to v0.9.0.
 // See https://github.com/hashicorp/terraform/issues/12842
 func TestAccAWSOpsworksStack_classicEndpoints(t *testing.T) {
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_stack.main"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccRegionPreCheck(t, "us-west-2") }, //lintignore:AWSAT003
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, "us-west-2") }, //lintignore:AWSAT003
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -268,7 +269,7 @@ func testAccPreCheckAWSOpsWorksStacks(t *testing.T) {
 
 	_, err := conn.DescribeStacks(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -542,7 +543,7 @@ func testAccCheckAwsOpsworksStackDestroy(s *terraform.State) error {
 //////////////////////////////////////////////////
 
 func testAccAwsOpsworksStackConfigNoVpcCreate(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -639,7 +640,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 
 func testAccAwsOpsworksStackConfigNoVpcCreateTags(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -740,7 +741,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 
 func testAccAwsOpsworksStackConfigNoVpcUpdateTags(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -841,7 +842,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 
 func testAccAwsOpsworksStackConfigNoVpcCreateUpdateServiceRole(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -987,7 +988,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 ////////////////////////////
 
 func testAccAwsOpsworksStackConfigVpcCreate(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -1103,7 +1104,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 
 func testAccAWSOpsworksStackConfigVpcUpdate(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -1231,7 +1232,7 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 /////////////////////////////////////////
 
 func testAccAWSOpsworksStackConfig_CustomCookbooks_Set(name string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
