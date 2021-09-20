@@ -582,14 +582,14 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshot(&opts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.RestoreDBClusterFromSnapshot(&opts)
 		}
 		if err != nil {
@@ -687,13 +687,13 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			if err != nil {
 				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded.
 				// Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
-				if isAWSErr(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValue", "S3 bucket cannot be found") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "S3 bucket cannot be found") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -701,7 +701,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[DEBUG]: RDS Cluster create response: %s", resp)
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			resp, err = conn.RestoreDBClusterFromS3(createOpts)
 		}
 
@@ -913,14 +913,14 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			var err error
 			resp, err = conn.CreateDBCluster(createOpts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			resp, err = conn.CreateDBCluster(createOpts)
 		}
 		if err != nil {
@@ -992,7 +992,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1118,7 +1118,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 		// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-		if err != nil && !isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
+		if err != nil && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 			return fmt.Errorf("error reading RDS Global Cluster information for DB Cluster (%s): %s", d.Id(), err)
 		}
 
@@ -1236,22 +1236,22 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
+				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
 					return resource.NonRetryableError(err)
 				}
 
-				if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.ModifyDBCluster(req)
 		}
 		if err != nil {
@@ -1371,13 +1371,13 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1385,7 +1385,7 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDBCluster(&deleteOpts)
 	}
 
@@ -1406,7 +1406,7 @@ func resourceAwsRDSClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier st
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
 

@@ -124,7 +124,7 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDBClusterSnapshot(params)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -132,7 +132,7 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateDBClusterSnapshot(params)
 	}
 	if err != nil {
@@ -168,7 +168,7 @@ func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) 
 	}
 	resp, err := conn.DescribeDBClusterSnapshots(params)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			log.Printf("[WARN] RDS DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -244,7 +244,7 @@ func resourceAwsDbClusterSnapshotDelete(d *schema.ResourceData, meta interface{}
 	}
 	_, err := conn.DeleteDBClusterSnapshot(params)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting RDS DB Cluster Snapshot %q: %s", d.Id(), err)
@@ -263,7 +263,7 @@ func resourceAwsDbClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier st
 
 		resp, err := conn.DescribeDBClusterSnapshots(opts)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DB Cluster Snapshots: %s", err)

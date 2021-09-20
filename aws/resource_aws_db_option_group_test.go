@@ -55,7 +55,7 @@ func testSweepDbOptionGroups(region string) error {
 		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteOptionGroup(deleteOpts)
 			if err != nil {
-				if isAWSErr(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
 					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
 					return resource.RetryableError(err)
 				}
@@ -660,7 +660,7 @@ func testAccCheckAWSDBOptionGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if !isAWSErr(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
+		if !tfawserr.ErrMessageContains(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
 			return err
 		}
 	}

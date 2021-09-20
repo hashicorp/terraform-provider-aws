@@ -160,7 +160,7 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 
 	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
 
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -369,7 +369,7 @@ func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface
 
 	_, err := conn.DeleteEventSubscription(&deleteOpts)
 
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 		return nil
 	}
 
@@ -391,7 +391,7 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 	return func() (interface{}, string, error) {
 		sub, err := resourceAwsDbEventSubscriptionRetrieve(name, conn)
 
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			return nil, "", nil
 		}
 

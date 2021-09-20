@@ -297,14 +297,14 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
-			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreateDBInstance(createOpts)
 	}
 	if err != nil {
@@ -571,14 +571,14 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.ModifyDBInstance(req)
 		}
 		if err != nil {
@@ -624,7 +624,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] RDS Cluster Instance destroy configuration: %s", opts)
 	_, err := conn.DeleteDBInstance(&opts)
 
-	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
 		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
 	}
 

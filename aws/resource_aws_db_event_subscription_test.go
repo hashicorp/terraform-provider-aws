@@ -43,7 +43,7 @@ func testSweepDbEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&rds.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -54,7 +54,7 @@ func testSweepDbEventSubscriptions(region string) error {
 			}
 
 			_, err = waiter.EventSubscriptionDeleted(conn, name)
-			if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -291,7 +291,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 
 		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
 
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
