@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 				Config: testAccAWSCloudwatchLogDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchLogDestinationExists(resourceName, &destination),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

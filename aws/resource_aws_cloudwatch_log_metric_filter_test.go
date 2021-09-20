@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
@@ -121,7 +122,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogMetricFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +145,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroup(), "aws_cloudwatch_log_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

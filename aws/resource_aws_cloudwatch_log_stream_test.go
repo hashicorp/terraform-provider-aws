@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchLogStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +82,7 @@ func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &lg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogGroup(), logGroupResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

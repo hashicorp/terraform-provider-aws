@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchLogGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogGroupCreate,
-		Read:   resourceAwsCloudWatchLogGroupRead,
-		Update: resourceAwsCloudWatchLogGroupUpdate,
-		Delete: resourceAwsCloudWatchLogGroupDelete,
+		Create: resourceGroupCreate,
+		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
+		Delete: resourceGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -66,7 +66,7 @@ func resourceAwsCloudWatchLogGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -119,10 +119,10 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsCloudWatchLogGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -185,7 +185,7 @@ func lookupCloudWatchLogGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) 
 	return logGroup, nil
 }
 
-func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	name := d.Id()
@@ -242,10 +242,10 @@ func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsCloudWatchLogGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsCloudWatchLogGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{

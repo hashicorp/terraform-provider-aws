@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
+func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudwatchLogGroupRead,
+		Read: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -38,7 +38,7 @@ func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudwatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig

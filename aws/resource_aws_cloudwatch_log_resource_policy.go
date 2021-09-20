@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchLogResourcePolicy() *schema.Resource {
+func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudWatchLogResourcePolicyPut,
-		Read:   resourceAwsCloudWatchLogResourcePolicyRead,
+		Read:   resourceResourcePolicyRead,
 		Update: resourceAwsCloudWatchLogResourcePolicyPut,
-		Delete: resourceAwsCloudWatchLogResourcePolicyDelete,
+		Delete: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -58,10 +58,10 @@ func resourceAwsCloudWatchLogResourcePolicyPut(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(policyName)
-	return resourceAwsCloudWatchLogResourcePolicyRead(d, meta)
+	return resourceResourcePolicyRead(d, meta)
 }
 
-func resourceAwsCloudWatchLogResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	policyName := d.Get("policy_name").(string)
 	resourcePolicy, exists, err := lookupCloudWatchLogResourcePolicy(conn, policyName, nil)
@@ -79,7 +79,7 @@ func resourceAwsCloudWatchLogResourcePolicyRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsCloudWatchLogResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	input := cloudwatchlogs.DeleteResourcePolicyInput{
 		PolicyName: aws.String(d.Id()),
