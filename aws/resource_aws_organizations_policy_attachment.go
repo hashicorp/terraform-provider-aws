@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
+func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsPolicyAttachmentCreate,
-		Read:   resourceAwsOrganizationsPolicyAttachmentRead,
-		Delete: resourceAwsOrganizationsPolicyAttachmentDelete,
+		Create: resourcePolicyAttachmentCreate,
+		Read:   resourcePolicyAttachmentRead,
+		Delete: resourcePolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -37,7 +37,7 @@ func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	policyID := d.Get("policy_id").(string)
@@ -74,10 +74,10 @@ func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta
 
 	d.SetId(fmt.Sprintf("%s:%s", targetID, policyID))
 
-	return resourceAwsOrganizationsPolicyAttachmentRead(d, meta)
+	return resourcePolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsOrganizationsPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(d.Id())
@@ -122,7 +122,7 @@ func resourceAwsOrganizationsPolicyAttachmentRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsOrganizationsPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(d.Id())

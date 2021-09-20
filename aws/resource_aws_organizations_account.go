@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOrganizationsAccount() *schema.Resource {
+func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsAccountCreate,
-		Read:   resourceAwsOrganizationsAccountRead,
-		Update: resourceAwsOrganizationsAccountUpdate,
-		Delete: resourceAwsOrganizationsAccountDelete,
+		Create: resourceAccountCreate,
+		Read:   resourceAccountRead,
+		Update: resourceAccountUpdate,
+		Delete: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -178,10 +178,10 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsOrganizationsAccountRead(d, meta)
+	return resourceAccountRead(d, meta)
 }
 
-func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -241,7 +241,7 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	if d.HasChange("parent_id") {
@@ -266,10 +266,10 @@ func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsOrganizationsAccountRead(d, meta)
+	return resourceAccountRead(d, meta)
 }
 
-func resourceAwsOrganizationsAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.RemoveAccountFromOrganizationInput{

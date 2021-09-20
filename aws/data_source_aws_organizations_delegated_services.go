@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsOrganizationsDelegatedServices() *schema.Resource {
+func DataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceAwsOrganizationsDelegatedServicesRead,
+		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:         schema.TypeString,
@@ -41,7 +41,7 @@ func dataSourceAwsOrganizationsDelegatedServices() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOrganizationsDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.ListDelegatedServicesForAccountInput{

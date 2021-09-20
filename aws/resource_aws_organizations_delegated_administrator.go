@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOrganizationsDelegatedAdministrator() *schema.Resource {
+func ResourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsOrganizationsDelegatedAdministratorCreate,
-		ReadWithoutTimeout:   resourceAwsOrganizationsDelegatedAdministratorRead,
-		DeleteWithoutTimeout: resourceAwsOrganizationsDelegatedAdministratorDelete,
+		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
+		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
+		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -68,7 +68,7 @@ func resourceAwsOrganizationsDelegatedAdministrator() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationsDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	accountID := d.Get("account_id").(string)
@@ -85,10 +85,10 @@ func resourceAwsOrganizationsDelegatedAdministratorCreate(ctx context.Context, d
 
 	d.SetId(fmt.Sprintf("%s/%s", accountID, servicePrincipal))
 
-	return resourceAwsOrganizationsDelegatedAdministratorRead(ctx, d, meta)
+	return resourceDelegatedAdministratorRead(ctx, d, meta)
 }
 
-func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
@@ -131,7 +131,7 @@ func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *
 	return nil
 }
 
-func resourceAwsOrganizationsDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
