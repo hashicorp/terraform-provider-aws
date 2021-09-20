@@ -149,7 +149,7 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.IdentityPoolTags = tags.IgnoreAws().CognitoidentityTags()
+		params.IdentityPoolTags = Tags(tags.IgnoreAws())
 	}
 
 	entity, err := conn.CreateIdentityPool(params)
@@ -192,7 +192,7 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
-	tags := tftags.CognitoidentityKeyValueTags(ip.IdentityPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ip.IdentityPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -264,7 +264,7 @@ func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CognitoidentityUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %s", arn, err)
 		}
 	}
