@@ -158,7 +158,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceDa
 	_, err := conn.DeleteRecoveryGroup(input)
 
 	if err != nil {
-		if isAWSErr(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Route53 Recovery Readiness RecoveryGroup: %s", err)
@@ -171,7 +171,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceDa
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetRecoveryGroup(gcinput)
 		if err != nil {
-			if isAWSErr(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -179,7 +179,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceDa
 		return resource.RetryableError(fmt.Errorf("Route 53 Recovery Readiness RecoveryGroup (%s) still exists", d.Id()))
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.GetRecoveryGroup(gcinput)
 	}
 
