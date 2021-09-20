@@ -11,9 +11,9 @@ import (
 
 const keyRequestPageSize = 1000
 
-func dataSourceAwsS3BucketObjects() *schema.Resource {
+func DataSourceBucketObjects() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketObjectsRead,
+		Read: dataSourceBucketObjectsRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -64,7 +64,7 @@ func dataSourceAwsS3BucketObjects() *schema.Resource {
 	}
 }
 
-func dataSourceAwsS3BucketObjectsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBucketObjectsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)

@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3BucketInventory() *schema.Resource {
+func ResourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketInventoryPut,
-		Read:   resourceAwsS3BucketInventoryRead,
+		Read:   resourceBucketInventoryRead,
 		Update: resourceAwsS3BucketInventoryPut,
-		Delete: resourceAwsS3BucketInventoryDelete,
+		Delete: resourceBucketInventoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -248,10 +248,10 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-	return resourceAwsS3BucketInventoryRead(d, meta)
+	return resourceBucketInventoryRead(d, meta)
 }
 
-func resourceAwsS3BucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
@@ -282,7 +282,7 @@ func resourceAwsS3BucketInventoryDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
