@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceScalingPlan() *schema.Resource {
@@ -47,7 +48,7 @@ func ResourceScalingPlan() *schema.Resource {
 						"cloudformation_stack_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ValidateFunc:  validateArn,
+							ValidateFunc:  verify.ValidARN,
 							ConflictsWith: []string{"application_source.0.tag_filter"},
 						},
 
