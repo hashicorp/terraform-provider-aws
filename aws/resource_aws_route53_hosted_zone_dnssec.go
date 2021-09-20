@@ -12,6 +12,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53HostedZoneDnssec() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsRoute53HostedZoneDnssec() *schema.Resource {
 }
 
 func resourceAwsRoute53HostedZoneDnssecCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
 	signingStatus := d.Get("signing_status").(string)
@@ -73,7 +74,7 @@ func resourceAwsRoute53HostedZoneDnssecCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRoute53HostedZoneDnssecRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, d.Id())
 
@@ -113,7 +114,7 @@ func resourceAwsRoute53HostedZoneDnssecRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRoute53HostedZoneDnssecUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.HasChange("signing_status") {
 		signingStatus := d.Get("signing_status").(string)
@@ -140,7 +141,7 @@ func resourceAwsRoute53HostedZoneDnssecUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRoute53HostedZoneDnssecDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(d.Id()),

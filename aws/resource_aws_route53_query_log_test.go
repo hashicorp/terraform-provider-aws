@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepRoute53QueryLogs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).r53conn
+	conn := client.(*conns.AWSClient).Route53Conn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
@@ -152,7 +153,7 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 
 func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53QueryLog.Meta().(*conns.AWSClient).Route53Conn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -179,7 +180,7 @@ func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.Qu
 }
 
 func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
-	conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53QueryLog.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_query_log" {

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDelegationSet() *schema.Resource {
@@ -37,7 +38,7 @@ func dataSourceAwsDelegationSet() *schema.Resource {
 }
 
 func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	dSetID := d.Get("id").(string)
 
@@ -60,7 +61,7 @@ func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
 		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
 	}.String()

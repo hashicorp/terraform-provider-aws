@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
@@ -177,7 +178,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 }
 
 func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_zone_association" {
 			continue
@@ -223,7 +224,7 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 

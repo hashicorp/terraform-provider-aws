@@ -13,6 +13,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
@@ -112,7 +113,7 @@ func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53HostedZoneDnssecDestroy(s *terraform.State) error {
-	conn := testAccProviderRoute53KeySigningKey.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_hosted_zone_dnssec" {
@@ -153,7 +154,7 @@ func testAccAwsRoute53HostedZoneDnssecExists(resourceName string) resource.TestC
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProviderRoute53KeySigningKey.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
 		hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, rs.Primary.ID)
 
