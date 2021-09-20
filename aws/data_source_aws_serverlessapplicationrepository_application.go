@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsServerlessApplicationRepositoryApplication() *schema.Resource {
@@ -45,7 +46,7 @@ func dataSourceAwsServerlessApplicationRepositoryApplication() *schema.Resource 
 }
 
 func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).serverlessapplicationrepositoryconn
+	conn := meta.(*conns.AWSClient).ServerlessAppRepoConn
 
 	applicationID := d.Get("application_id").(string)
 	semanticVersion := d.Get("semantic_version").(string)
