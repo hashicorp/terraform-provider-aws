@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepCloudformationStacks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).cfconn
+	conn := client.(*conns.AWSClient).CloudFormationConn
 	input := &cloudformation.ListStacksInput{
 		StackStatusFilter: aws.StringSlice([]string{
 			cloudformation.StackStatusCreateComplete,
@@ -512,7 +513,7 @@ func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 		params := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(rs.Primary.ID),
 		}
@@ -531,7 +532,7 @@ func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack
 }
 
 func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack" {
@@ -570,7 +571,7 @@ func testAccCheckCloudFormationStackNotRecreated(i, j *cloudformation.Stack) res
 
 func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 		input := &cloudformation.DeleteStackInput{
 			StackName: stack.StackName,

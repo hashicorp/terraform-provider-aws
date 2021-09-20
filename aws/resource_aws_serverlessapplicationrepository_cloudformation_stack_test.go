@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
@@ -270,7 +271,7 @@ func testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(n stri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 		params := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(rs.Primary.ID),
 		}
@@ -533,7 +534,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 }
 
 func testAccCheckAmiDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami" {
@@ -564,7 +565,7 @@ func testAccCheckAmiDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack" {

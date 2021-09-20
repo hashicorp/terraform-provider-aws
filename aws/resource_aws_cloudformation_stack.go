@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudFormationStack() *schema.Resource {
@@ -121,8 +122,8 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 }
 
 func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
@@ -202,9 +203,9 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(d.Id()),
@@ -308,8 +309,8 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
@@ -382,7 +383,7 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	requestToken := resource.UniqueId()
 	input := &cloudformation.DeleteStackInput{

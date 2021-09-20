@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepCloudformationStackSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).cfconn
+	conn := client.(*conns.AWSClient).CloudFormationConn
 	stackSets, err := listCloudFormationStackSets(conn)
 
 	if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
@@ -641,7 +642,7 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, stackSet *clo
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 		input := &cloudformation.DescribeStackSetInput{
 			StackSetName: aws.String(rs.Primary.ID),
@@ -664,7 +665,7 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, stackSet *clo
 }
 
 func testAccCheckAWSCloudFormationStackSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set" {
@@ -714,7 +715,7 @@ func testAccCheckCloudFormationStackSetRecreated(i, j *cloudformation.StackSet) 
 }
 
 func testAccPreCheckAWSCloudFormationStackSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSets(input)
