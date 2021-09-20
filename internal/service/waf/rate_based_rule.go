@@ -96,7 +96,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if len(tags) > 0 {
-			params.Tags = tags.IgnoreAws().WafTags()
+			params.Tags = Tags(tags.IgnoreAws())
 		}
 
 		return conn.CreateRateBasedRule(params)
@@ -158,7 +158,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 
-	tagList, err := tftags.WafListTags(conn, arn)
+	tagList, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("Failed to get WAF Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
 	}
@@ -200,7 +200,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
