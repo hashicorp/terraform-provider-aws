@@ -3,7 +3,6 @@ package kafka
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindScramSecrets returns the matching MSK Cluster's associated secrets
