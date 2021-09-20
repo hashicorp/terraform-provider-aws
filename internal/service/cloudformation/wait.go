@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -274,7 +273,7 @@ func WaitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 func getCloudFormationDeletionReasons(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
 
-	err := lister.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) || isStackDeletionEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}
@@ -284,7 +283,7 @@ func getCloudFormationDeletionReasons(conn *cloudformation.CloudFormation, stack
 
 func getCloudFormationRollbackReasons(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
-	err := lister.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) || isRollbackEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}
@@ -295,7 +294,7 @@ func getCloudFormationRollbackReasons(conn *cloudformation.CloudFormation, stack
 func getCloudFormationFailures(conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
 	var failures []string
 
-	err := lister.listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+	err := listStackEventsForOperation(conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
 		if isFailedEvent(e) {
 			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
 		}

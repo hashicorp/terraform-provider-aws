@@ -1,4 +1,4 @@
-package aws
+package cloudformation
 
 import (
 	"context"
@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -166,7 +164,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): empty response", typeName))
 	}
 
-	registrationOutput, err := waiter.WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
+	registrationOutput, err := WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type (%s) registration: %w", typeName, err))
@@ -211,7 +209,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return nil
 	}
 
-	typeARN, versionID, err := tfcloudformation.TypeVersionARNToTypeARNAndVersionID(d.Id())
+	typeARN, versionID, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error parsing CloudFormation Type (%s) ARN: %w", d.Id(), err))
@@ -255,7 +253,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	// Must deregister type if removing final LIVE version. This error can also occur
 	// when the type is already DEPRECATED.
 	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeCFNRegistryException, "is the default version and cannot be deregistered") {
-		typeARN, _, err := tfcloudformation.TypeVersionARNToTypeARNAndVersionID(d.Id())
+		typeARN, _, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error parsing CloudFormation Type (%s) ARN: %w", d.Id(), err))

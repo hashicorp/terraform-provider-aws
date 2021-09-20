@@ -1,4 +1,4 @@
-package aws
+package cloudformation
 
 import (
 	"fmt"
@@ -10,11 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceStackSetInstance() *schema.Resource {
@@ -29,9 +28,9 @@ func ResourceStackSetInstance() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.StackSetInstanceCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(waiter.StackSetInstanceUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(waiter.StackSetInstanceDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(StackSetInstanceCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(StackSetInstanceUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(StackSetInstanceDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -99,7 +98,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		output, err := conn.CreateStackInstances(input)
 
 		if err != nil {
@@ -108,7 +107,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 
 		d.SetId(fmt.Sprintf("%s,%s,%s", stackSetName, accountID, region))
 
-		err = waiter.WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
+		err = WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			// IAM eventual consistency
@@ -160,7 +159,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 
 		d.SetId(fmt.Sprintf("%s,%s,%s", stackSetName, accountID, region))
 
-		err = waiter.WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
+		err = WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) creation: %w", d.Id(), err)
@@ -256,7 +255,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		if err := waiter.WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -296,7 +295,7 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := waiter.WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %s", d.Id(), err)
 	}
 

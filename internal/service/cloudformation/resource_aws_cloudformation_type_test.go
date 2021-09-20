@@ -1,4 +1,4 @@
-package aws
+package cloudformation_test
 
 import (
 	"archive/zip"
