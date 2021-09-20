@@ -350,7 +350,7 @@ func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting user: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.MqKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
