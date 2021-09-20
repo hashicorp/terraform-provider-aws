@@ -1,4 +1,4 @@
-package aws
+package macie2
 
 import (
 	"context"
@@ -13,8 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/macie2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -182,7 +181,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
 	}
 
-	if _, err = waiter.waitMemberInvited(ctx, conn, d.Id()); err != nil {
+	if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
 	}
 
@@ -299,7 +298,7 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
 			}
 
-			if _, err = waiter.waitMemberInvited(ctx, conn, d.Id()); err != nil {
+			if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
 			}
 		} else {

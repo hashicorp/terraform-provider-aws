@@ -1,4 +1,4 @@
-package aws
+package macie2
 
 import (
 	"context"

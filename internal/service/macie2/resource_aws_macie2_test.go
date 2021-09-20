@@ -1,4 +1,4 @@
-package aws
+package macie2_test
 
 import (
 	"testing"
