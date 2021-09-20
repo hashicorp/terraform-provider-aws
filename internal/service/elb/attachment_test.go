@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSELBAttachment_basic(t *testing.T) {
+func TestAccELBAttachment_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -55,7 +55,7 @@ func TestAccAWSELBAttachment_basic(t *testing.T) {
 }
 
 // remove and instance and check that it's correctly re-attached.
-func TestAccAWSELBAttachment_drift(t *testing.T) {
+func TestAccELBAttachment_drift(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 

@@ -16,7 +16,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
+func TestAccELBListenerPolicy_basic(t *testing.T) {
 	rChar := sdkacctest.RandStringFromCharSet(6, sdkacctest.CharSetAlpha)
 	lbName := rChar
 	mcName := rChar

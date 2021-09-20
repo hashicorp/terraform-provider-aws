@@ -15,7 +15,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
+func TestAccELBBackendServerPolicy_basic(t *testing.T) {
 	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
 	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
 	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)

@@ -9,7 +9,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSElbServiceAccount_basic(t *testing.T) {
+func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.main"
@@ -30,7 +30,7 @@ func TestAccAWSElbServiceAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElbServiceAccount_Region(t *testing.T) {
+func TestAccELBServiceAccountDataSource_region(t *testing.T) {
 	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.regional"

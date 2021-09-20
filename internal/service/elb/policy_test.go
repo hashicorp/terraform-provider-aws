@@ -17,7 +17,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
+func TestAccELBPolicy_basic(t *testing.T) {
 	var policy elb.PolicyDescription
 	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
@@ -40,7 +40,7 @@ func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLoadBalancerPolicy_disappears(t *testing.T) {
+func TestAccELBPolicy_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
 	var policy elb.PolicyDescription
 	loadBalancerResourceName := "aws_elb.test-lb"
@@ -75,7 +75,7 @@ func TestAccAWSLoadBalancerPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLoadBalancerPolicy_updateWhileAssigned(t *testing.T) {
+func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	var policy elb.PolicyDescription
 	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"

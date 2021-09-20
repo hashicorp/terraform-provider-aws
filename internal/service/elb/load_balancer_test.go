@@ -67,7 +67,7 @@ func testSweepELBs(region string) error {
 	return nil
 }
 
-func TestAccAWSELB_basic(t *testing.T) {
+func TestAccELBLoadBalancer_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -104,7 +104,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_disappears(t *testing.T) {
+func TestAccELBLoadBalancer_disappears(t *testing.T) {
 	var loadBalancer elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -126,7 +126,7 @@ func TestAccAWSELB_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_fullCharacterRange(t *testing.T) {
+func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 	lbName := fmt.Sprintf("Tf-%d", sdkacctest.RandInt())
@@ -148,7 +148,7 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
+func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 	rName := fmt.Sprintf("tf-test-access-logs-%d", sdkacctest.RandInt())
@@ -188,7 +188,7 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
+func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 	rName := fmt.Sprintf("tf-test-access-logs-%d", sdkacctest.RandInt())
@@ -227,7 +227,7 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_namePrefix(t *testing.T) {
+func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	nameRegex := regexp.MustCompile("^test-")
 	resourceName := "aws_elb.test"
@@ -249,7 +249,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_generatedName(t *testing.T) {
+func TestAccELBLoadBalancer_generatedName(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	generatedNameRegexp := regexp.MustCompile("^tf-lb-")
 	resourceName := "aws_elb.test"
@@ -271,7 +271,7 @@ func TestAccAWSELB_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_generatesNameForZeroValue(t *testing.T) {
+func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	generatedNameRegexp := regexp.MustCompile("^tf-lb-")
 	resourceName := "aws_elb.test"
@@ -293,7 +293,7 @@ func TestAccAWSELB_generatesNameForZeroValue(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_availabilityZones(t *testing.T) {
+func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -322,7 +322,7 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_tags(t *testing.T) {
+func TestAccELBLoadBalancer_tags(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -369,7 +369,7 @@ func TestAccAWSELB_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) {
+func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -410,7 +410,7 @@ func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) 
 	})
 }
 
-func TestAccAWSELB_swap_subnets(t *testing.T) {
+func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -439,7 +439,7 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_InstanceAttaching(t *testing.T) {
+func TestAccELBLoadBalancer_instanceAttaching(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -477,7 +477,7 @@ func TestAccAWSELB_InstanceAttaching(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_listener(t *testing.T) {
+func TestAccELBLoadBalancer_listener(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
@@ -604,7 +604,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_HealthCheck(t *testing.T) {
+func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -630,7 +630,7 @@ func TestAccAWSELB_HealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_Timeout(t *testing.T) {
+func TestAccELBLoadBalancer_timeout(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -655,7 +655,7 @@ func TestAccAWSELB_Timeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_ConnectionDraining(t *testing.T) {
+func TestAccELBLoadBalancer_connectionDraining(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -688,7 +688,7 @@ func TestAccAWSELB_ConnectionDraining(t *testing.T) {
 	})
 }
 
-func TestAccAWSELB_SecurityGroups(t *testing.T) {
+func TestAccELBLoadBalancer_securityGroups(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{

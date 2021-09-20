@@ -15,7 +15,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSAppCookieStickinessPolicy_basic(t *testing.T) {
+func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +51,7 @@ func TestAccAWSAppCookieStickinessPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppCookieStickinessPolicy_disappears_ELB(t *testing.T) {
+func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	elbResourceName := "aws_elb.lb"
 	resourceName := "aws_app_cookie_stickiness_policy.foo"
@@ -130,7 +130,7 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 	}
 }
 
-func TestAccAWSAppCookieStickinessPolicy_disappears(t *testing.T) {
+func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	elbResourceName := "aws_elb.lb"
 	resourceName := "aws_app_cookie_stickiness_policy.foo"

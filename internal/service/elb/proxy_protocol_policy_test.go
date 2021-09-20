@@ -14,7 +14,7 @@ import (
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
-func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
+func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
