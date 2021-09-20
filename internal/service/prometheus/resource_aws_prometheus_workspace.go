@@ -105,7 +105,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.SetId(aws.StringValue(result.WorkspaceId))
 
-	if _, err := waiter.WorkspaceCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waiter.waitWorkspaceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Workspace (%s) to be created: %w", d.Id(), err))
 	}
 
@@ -128,7 +128,7 @@ func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(fmt.Errorf("error deleting Prometheus Workspace (%s): %w", d.Id(), err))
 	}
 
-	if _, err := waiter.WorkspaceDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waiter.waitWorkspaceDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Prometheus Workspace (%s) to be deleted: %w", d.Id(), err))
 	}
 
