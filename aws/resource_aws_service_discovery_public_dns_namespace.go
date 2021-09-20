@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
+func ResourcePublicDNSNamespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryPublicDnsNamespaceCreate,
-		Read:   resourceAwsServiceDiscoveryPublicDnsNamespaceRead,
-		Update: resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate,
-		Delete: resourceAwsServiceDiscoveryPublicDnsNamespaceDelete,
+		Create: resourcePublicDNSNamespaceCreate,
+		Read:   resourcePublicDNSNamespaceRead,
+		Update: resourcePublicDNSNamespaceUpdate,
+		Delete: resourcePublicDNSNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -51,7 +51,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicDNSNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -94,10 +94,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(namespaceID))
 
-	return resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d, meta)
+	return resourcePublicDNSNamespaceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicDNSNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -143,7 +143,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicDNSNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChange("tags_all") {
@@ -153,10 +153,10 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate(d *schema.ResourceData,
 		}
 	}
 
-	return resourceAwsServiceDiscoveryHttpNamespaceRead(d, meta)
+	return resourceHTTPNamespaceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryPublicDnsNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicDNSNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	input := &servicediscovery.DeleteNamespaceInput{

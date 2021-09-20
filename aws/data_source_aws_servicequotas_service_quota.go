@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceQuotasServiceQuota() *schema.Resource {
+func DataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceQuotasServiceQuotaRead,
+		Read: dataSourceServiceQuotaRead,
 
 		Schema: map[string]*schema.Schema{
 			"adjustable": {
@@ -58,7 +58,7 @@ func dataSourceAwsServiceQuotasServiceQuota() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	quotaCode := d.Get("quota_code").(string)

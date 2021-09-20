@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepServiceDiscoveryServices(region string) error {
 		}
 
 		for _, service := range page.Services {
-			r := resourceAwsServiceDiscoveryService()
+			r := ResourceService()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(service.Id))
 			d.Set("force_destroy", true)
@@ -224,7 +225,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceDiscoveryService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
+func ResourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceQuotasServiceQuotaCreate,
-		Read:   resourceAwsServiceQuotasServiceQuotaRead,
-		Update: resourceAwsServiceQuotasServiceQuotaUpdate,
+		Create: resourceServiceQuotaCreate,
+		Read:   resourceServiceQuotaRead,
+		Update: resourceServiceQuotaUpdate,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -80,7 +80,7 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	quotaCode := d.Get("quota_code").(string)
@@ -132,10 +132,10 @@ func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta int
 		d.Set("request_id", output.RequestedQuota.Id)
 	}
 
-	return resourceAwsServiceQuotasServiceQuotaRead(d, meta)
+	return resourceServiceQuotaRead(d, meta)
 }
 
-func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
@@ -234,7 +234,7 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsServiceQuotasServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	value := d.Get("value").(float64)
@@ -262,7 +262,7 @@ func resourceAwsServiceQuotasServiceQuotaUpdate(d *schema.ResourceData, meta int
 
 	d.Set("request_id", output.RequestedQuota.Id)
 
-	return resourceAwsServiceQuotasServiceQuotaRead(d, meta)
+	return resourceServiceQuotaRead(d, meta)
 }
 
 func resourceAwsServiceQuotasServiceQuotaParseID(id string) (string, string, error) {

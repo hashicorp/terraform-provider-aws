@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceServiceDiscoveryDnsNamespace() *schema.Resource {
+func DataSourceDNSNamespace() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceServiceDiscoveryDnsNamespaceRead,
+		ReadWithoutTimeout: dataSourceDNSNamespaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,7 +45,7 @@ func dataSourceServiceDiscoveryDnsNamespace() *schema.Resource {
 	}
 }
 
-func dataSourceServiceDiscoveryDnsNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	name := d.Get("name").(string)
