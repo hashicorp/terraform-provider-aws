@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIdentityStoreGroup() *schema.Resource {
+func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIdentityStoreGroupRead,
+		Read: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {
@@ -60,7 +60,7 @@ func dataSourceAwsIdentityStoreGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
 
 	input := &identitystore.ListGroupsInput{

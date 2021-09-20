@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIdentityStoreUser() *schema.Resource {
+func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIdentityStoreUserRead,
+		Read: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
@@ -60,7 +60,7 @@ func dataSourceAwsIdentityStoreUser() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
 
 	input := &identitystore.ListUsersInput{
