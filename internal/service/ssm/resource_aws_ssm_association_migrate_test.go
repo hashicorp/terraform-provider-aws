@@ -1,4 +1,4 @@
-package aws
+package ssm_test
 
 import (
 	"testing"

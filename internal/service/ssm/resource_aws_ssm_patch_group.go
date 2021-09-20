@@ -1,4 +1,4 @@
-package aws
+package ssm
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssm/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +73,7 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
 	}
 
-	group, err := finder.FindPatchGroup(conn, patchGroup, baselineId)
+	group, err := FindPatchGroup(conn, patchGroup, baselineId)
 
 	if err != nil {
 		return fmt.Errorf("error reading SSM Patch Group (%s): %w", d.Id(), err)
