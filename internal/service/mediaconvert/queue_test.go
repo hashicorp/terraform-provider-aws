@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfmediaconvert "github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 )
 
 func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
@@ -227,7 +228,7 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 		if rs.Type != "aws_media_convert_queue" {
 			continue
 		}
-		conn, err := getAwsMediaConvertAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfmediaconvert.GetAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
 		if err != nil {
 			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
@@ -248,7 +249,7 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 
 func testAccCheckAwsMediaConvertQueueDisappears(queue *mediaconvert.Queue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn, err := getAwsMediaConvertAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfmediaconvert.GetAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
 		if err != nil {
 			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
@@ -274,7 +275,7 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 			return fmt.Errorf("No Queue id is set")
 		}
 
-		conn, err := getAwsMediaConvertAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfmediaconvert.GetAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
 		if err != nil {
 			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
@@ -292,7 +293,7 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 }
 
 func testAccPreCheckAWSMediaConvert(t *testing.T) {
-	_, err := getAwsMediaConvertAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
+	_, err := tfmediaconvert.GetAccountClient(acctest.Provider.Meta().(*conns.AWSClient))
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -97,7 +97,7 @@ func ResourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
@@ -131,7 +131,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
@@ -184,7 +184,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
@@ -227,7 +227,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
@@ -247,7 +247,7 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getAwsMediaConvertAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
+func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
 	const mutexKey = `mediaconvertaccountconn`
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
