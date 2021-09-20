@@ -168,7 +168,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionDestroy(s *terraform.State) err
 
 		s, err := finder.MonitoringSubscriptionByDistributionId(conn, rs.Primary.ID)
 
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 			continue
 		}
 		if err != nil {

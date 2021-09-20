@@ -816,7 +816,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -828,7 +828,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	})
 
 	// Propagate AWS Go SDK retried error, if any
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreateDistributionWithTags(params)
 	}
 
@@ -920,7 +920,7 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -932,7 +932,7 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 	})
 
 	// Propagate AWS Go SDK retried error, if any
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.UpdateDistribution(params)
 	}
 
@@ -1008,12 +1008,12 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting CloudFront Distribution: %s", d.Id())
 	_, err := conn.DeleteDistribution(deleteDistributionInput)
 
-	if err == nil || isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+	if err == nil || tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 		return nil
 	}
 
 	// Refresh our ETag if it is out of date and attempt deletion again.
-	if isAWSErr(err, cloudfront.ErrCodeInvalidIfMatchVersion, "") {
+	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidIfMatchVersion, "") {
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: aws.String(d.Id()),
 		}
@@ -1038,7 +1038,7 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	// Disable distribution if it is not yet disabled and attempt deletion again.
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
-	if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: aws.String(d.Id()),
 		}
@@ -1082,19 +1082,19 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 		// CloudFront has eventual consistency issues even for "deployed" state.
 		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
 		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
-		if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") || isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") || tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
 			err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteDistribution(deleteDistributionInput)
 
-				if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 					return nil
 				}
 
-				if isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
 					return resource.RetryableError(err)
 				}
 
@@ -1106,13 +1106,13 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 			})
 
 			// Propagate AWS Go SDK retried error, if any
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.DeleteDistribution(deleteDistributionInput)
 			}
 		}
 	}
 
-	if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 		return nil
 	}
 
