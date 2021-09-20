@@ -66,7 +66,7 @@ func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		request.Tags = tags.IgnoreAws().RamTags()
+		request.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Println("[DEBUG] Create RAM resource share request:", request)
@@ -123,7 +123,7 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resourceShare.Name)
 	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
 
-	tags := tftags.RamKeyValueTags(resourceShare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resourceShare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -162,7 +162,7 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RamUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating RAM resource share (%s) tags: %s", d.Id(), err)
 		}
 	}
