@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepTimestreamWriteDatabases(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -71,7 +71,7 @@ func testSweepTimestreamWriteDatabases(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Timestream Database sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -90,7 +90,7 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,14 +119,14 @@ func TestAccAWSTimestreamWriteDatabase_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsTimestreamWriteDatabase(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTimestreamWriteDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -142,7 +142,7 @@ func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,7 +170,7 @@ func TestAccAWSTimestreamWriteDatabase_updateKmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,7 +210,7 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -255,7 +255,7 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSTimestreamWriteDatabaseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).timestreamwriteconn
+	conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_timestreamwrite_database" {
@@ -293,7 +293,7 @@ func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFu
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).timestreamwriteconn
+		conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
 
 		output, err := conn.DescribeDatabase(&timestreamwrite.DescribeDatabaseInput{
 			DatabaseName: aws.String(rs.Primary.ID),
@@ -312,7 +312,7 @@ func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFu
 }
 
 func testAccPreCheckAWSTimestreamWrite(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).timestreamwriteconn
+	conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
 
 	input := &timestreamwrite.ListDatabasesInput{}
 
