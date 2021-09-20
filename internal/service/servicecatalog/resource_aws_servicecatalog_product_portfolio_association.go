@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -10,13 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceProductPortfolioAssociation() *schema.Resource {
@@ -33,8 +31,8 @@ func ResourceProductPortfolioAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfservicecatalog.AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				Default:      AcceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"portfolio_id": {
 				Type:     schema.TypeString,
@@ -72,7 +70,7 @@ func resourceProductPortfolioAssociationCreate(d *schema.ResourceData, meta inte
 	}
 
 	var output *servicecatalog.AssociateProductWithPortfolioOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateProductWithPortfolio(input)
@@ -100,7 +98,7 @@ func resourceProductPortfolioAssociationCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error creating Service Catalog Product Portfolio Association: empty response")
 	}
 
-	d.SetId(tfservicecatalog.ProductPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(ProductPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return resourceProductPortfolioAssociationRead(d, meta)
 }
@@ -108,13 +106,13 @@ func resourceProductPortfolioAssociationCreate(d *schema.ResourceData, meta inte
 func resourceProductPortfolioAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	acceptLanguage, portfolioID, productID, err := tfservicecatalog.ProductPortfolioAssociationParseID(d.Id())
+	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
+	output, err := WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Product Portfolio Association (%s) not found, removing from state", d.Id())
@@ -141,7 +139,7 @@ func resourceProductPortfolioAssociationRead(d *schema.ResourceData, meta interf
 func resourceProductPortfolioAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	acceptLanguage, portfolioID, productID, err := tfservicecatalog.ProductPortfolioAssociationParseID(d.Id())
+	acceptLanguage, portfolioID, productID, err := ProductPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
@@ -166,7 +164,7 @@ func resourceProductPortfolioAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error disassociating Service Catalog Product from Portfolio (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
+	err = WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Product Portfolio Disassociation (%s): %w", d.Id(), err)

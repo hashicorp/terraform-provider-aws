@@ -1,4 +1,4 @@
-package aws
+package servicecatalog_test
 
 import (
 	"fmt"
@@ -11,14 +11,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
 // add sweeper to delete known test servicecat tag option resource associations
@@ -160,7 +160,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy(s *terrafo
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = waiter.WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
+		err = tfservicecatalog.WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -190,7 +190,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceNam
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = waiter.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
+		_, err = tfservicecatalog.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Tag Option Resource Association existence (%s): %w", rs.Primary.ID, err)

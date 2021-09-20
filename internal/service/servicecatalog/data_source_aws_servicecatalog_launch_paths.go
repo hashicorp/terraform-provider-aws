@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,7 +22,7 @@ func DataSourceLaunchPaths() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "en",
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"product_id": {
 				Type:     schema.TypeString,
@@ -71,7 +69,7 @@ func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	summaries, err := waiter.WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string))
+	summaries, err := WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Launch Paths: %w", err)

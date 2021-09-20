@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -10,13 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceServiceAction() *schema.Resource {
@@ -33,8 +31,8 @@ func ResourceServiceAction() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      tfservicecatalog.AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				Default:      AcceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"definition": {
 				Type:     schema.TypeList,
@@ -102,7 +100,7 @@ func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var output *servicecatalog.CreateServiceActionOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateServiceAction(input)
@@ -138,7 +136,7 @@ func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error
 func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.WaitServiceActionReady(conn, d.Get("accept_language").(string), d.Id())
+	output, err := WaitServiceActionReady(conn, d.Get("accept_language").(string), d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Service Action (%s) not found, removing from state", d.Id())
@@ -191,7 +189,7 @@ func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error
 		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateServiceAction(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -223,7 +221,7 @@ func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error
 		Id: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.ServiceActionDeleteTimeout, func() *resource.RetryError {
+	err := resource.Retry(ServiceActionDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteServiceAction(input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceInUseException) {
@@ -250,7 +248,7 @@ func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting Service Catalog Service Action (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.WaitServiceActionDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
+	if err := WaitServiceActionDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Service Action (%s) to be deleted: %w", d.Id(), err)
 	}
 

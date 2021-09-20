@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -11,13 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceProvisioningArtifact() *schema.Resource {
@@ -34,8 +32,8 @@ func ResourceProvisioningArtifact() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      tfservicecatalog.AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				Default:      AcceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"active": {
 				Type:     schema.TypeBool,
@@ -122,7 +120,7 @@ func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	var output *servicecatalog.CreateProvisioningArtifactOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateProvisioningArtifact(input)
@@ -150,7 +148,7 @@ func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating Service Catalog Provisioning Artifact: empty response")
 	}
 
-	d.SetId(tfservicecatalog.ProvisioningArtifactID(aws.StringValue(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
+	d.SetId(ProvisioningArtifactID(aws.StringValue(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
 
 	// Active and Guidance are not fields of CreateProvisioningArtifact but are fields of UpdateProvisioningArtifact.
 	// In order to set these to non-default values, you must create and then update.
@@ -161,13 +159,13 @@ func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}
 func resourceProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
+	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.WaitProvisioningArtifactReady(conn, artifactID, productID)
+	output, err := WaitProvisioningArtifactReady(conn, artifactID, productID)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioning Artifact (%s) not found, removing from state", d.Id())
@@ -210,7 +208,7 @@ func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
-		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
+		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
@@ -238,7 +236,7 @@ func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}
 			input.Name = aws.String(v.(string))
 		}
 
-		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateProvisioningArtifact(input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -267,7 +265,7 @@ func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}
 func resourceProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
+	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
@@ -292,7 +290,7 @@ func resourceProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error deleting Service Catalog Provisioning Artifact (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.WaitProvisioningArtifactDeleted(conn, artifactID, productID); err != nil {
+	if err := WaitProvisioningArtifactDeleted(conn, artifactID, productID); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Provisioning Artifact (%s) to be deleted: %w", d.Id(), err)
 	}
 

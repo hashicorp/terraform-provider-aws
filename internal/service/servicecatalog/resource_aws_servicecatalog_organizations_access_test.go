@@ -1,4 +1,4 @@
-package aws
+package servicecatalog_test
 
 import (
 	"fmt"
@@ -7,12 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
 func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
@@ -47,7 +47,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State)
 			continue
 		}
 
-		output, err := waiter.WaitOrganizationsAccessStable(conn)
+		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", rs.Primary.ID, err)
@@ -73,7 +73,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		output, err := waiter.WaitOrganizationsAccessStable(conn)
+		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", rs.Primary.ID, err)

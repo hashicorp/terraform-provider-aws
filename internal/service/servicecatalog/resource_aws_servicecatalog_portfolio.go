@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +71,7 @@ func resourcePortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := servicecatalog.CreatePortfolioInput{
-		AcceptLanguage:   aws.String(tfservicecatalog.AcceptLanguageEnglish),
+		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(d.Get("name").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Tags:             tags.IgnoreAws().ServicecatalogTags(),
@@ -102,7 +101,7 @@ func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := servicecatalog.DescribePortfolioInput{
-		AcceptLanguage: aws.String(tfservicecatalog.AcceptLanguageEnglish),
+		AcceptLanguage: aws.String(AcceptLanguageEnglish),
 	}
 	input.Id = aws.String(d.Id())
 
@@ -142,7 +141,7 @@ func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	input := servicecatalog.UpdatePortfolioInput{
-		AcceptLanguage: aws.String(tfservicecatalog.AcceptLanguageEnglish),
+		AcceptLanguage: aws.String(AcceptLanguageEnglish),
 		Id:             aws.String(d.Id()),
 	}
 

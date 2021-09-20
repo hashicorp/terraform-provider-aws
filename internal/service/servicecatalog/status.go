@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -97,7 +95,7 @@ func StatusPortfolioShareWithToken(conn *servicecatalog.ServiceCatalog, token st
 
 func StatusPortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindPortfolioShare(conn, portfolioID, shareType, principalID)
+		output, err := FindPortfolioShare(conn, portfolioID, shareType, principalID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, err
@@ -178,11 +176,11 @@ func StatusConstraint(conn *servicecatalog.ServiceCatalog, acceptLanguage, id st
 
 func StatusProductPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindProductPortfolioAssociation(conn, acceptLanguage, portfolioID, productID)
+		output, err := FindProductPortfolioAssociation(conn, acceptLanguage, portfolioID, productID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("product portfolio association not found (%s): %s", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
+				Message: fmt.Sprintf("product portfolio association not found (%s): %s", ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
 			}
 		}
 
@@ -192,7 +190,7 @@ func StatusProductPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acce
 
 		if output == nil {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
+				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
 			}
 		}
 
@@ -230,11 +228,11 @@ func StatusServiceAction(conn *servicecatalog.ServiceCatalog, acceptLanguage, id
 
 func StatusBudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindBudgetResourceAssociation(conn, budgetName, resourceID)
+		output, err := FindBudgetResourceAssociation(conn, budgetName, resourceID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("tag option resource association not found (%s): %s", tfservicecatalog.BudgetResourceAssociationID(budgetName, resourceID), err),
+				Message: fmt.Sprintf("tag option resource association not found (%s): %s", BudgetResourceAssociationID(budgetName, resourceID), err),
 			}
 		}
 
@@ -244,7 +242,7 @@ func StatusBudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budget
 
 		if output == nil {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", tfservicecatalog.BudgetResourceAssociationID(budgetName, resourceID)),
+				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", BudgetResourceAssociationID(budgetName, resourceID)),
 			}
 		}
 
@@ -254,11 +252,11 @@ func StatusBudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budget
 
 func StatusTagOptionResourceAssociation(conn *servicecatalog.ServiceCatalog, tagOptionID, resourceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindTagOptionResourceAssociation(conn, tagOptionID, resourceID)
+		output, err := FindTagOptionResourceAssociation(conn, tagOptionID, resourceID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("tag option resource association not found (%s): %s", tfservicecatalog.TagOptionResourceAssociationID(tagOptionID, resourceID), err),
+				Message: fmt.Sprintf("tag option resource association not found (%s): %s", TagOptionResourceAssociationID(tagOptionID, resourceID), err),
 			}
 		}
 
@@ -268,7 +266,7 @@ func StatusTagOptionResourceAssociation(conn *servicecatalog.ServiceCatalog, tag
 
 		if output == nil {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", tfservicecatalog.TagOptionResourceAssociationID(tagOptionID, resourceID)),
+				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", TagOptionResourceAssociationID(tagOptionID, resourceID)),
 			}
 		}
 
@@ -303,7 +301,7 @@ func StatusProvisioningArtifact(conn *servicecatalog.ServiceCatalog, id, product
 
 func StatusPrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindPrincipalPortfolioAssociation(conn, acceptLanguage, principalARN, portfolioID)
+		output, err := FindPrincipalPortfolioAssociation(conn, acceptLanguage, principalARN, portfolioID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, err

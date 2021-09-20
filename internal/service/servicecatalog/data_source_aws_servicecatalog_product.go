@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,7 +26,7 @@ func DataSourceProduct() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "en",
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -86,7 +84,7 @@ func DataSourceProduct() *schema.Resource {
 func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.WaitProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
+	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Product: %w", err)

@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -11,14 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceProvisionedProduct() *schema.Resource {
@@ -32,9 +30,9 @@ func ResourceProvisionedProduct() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ProvisionedProductReadyTimeout),
-			Update: schema.DefaultTimeout(waiter.ProvisionedProductUpdateTimeout),
-			Delete: schema.DefaultTimeout(waiter.ProvisionedProductDeleteTimeout),
+			Create: schema.DefaultTimeout(ProvisionedProductReadyTimeout),
+			Update: schema.DefaultTimeout(ProvisionedProductUpdateTimeout),
+			Delete: schema.DefaultTimeout(ProvisionedProductDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,7 +40,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "en",
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -291,7 +289,7 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 
 	var output *servicecatalog.ProvisionProductOutput
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.ProvisionProduct(input)
@@ -338,19 +336,19 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// There are two API operations for getting information about provisioned products:
-	// 1. DescribeProvisionedProduct (used in waiter.WaitProvisionedProductReady) and
-	// 2. DescribeRecord (used in waiter.WaitRecordReady)
+	// 1. DescribeProvisionedProduct (used in WaitProvisionedProductReady) and
+	// 2. DescribeRecord (used in WaitRecordReady)
 
 	// They provide some overlapping information. Most of the unique information available from
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
 
-	acceptLanguage := tfservicecatalog.AcceptLanguageEnglish
+	acceptLanguage := AcceptLanguageEnglish
 
 	if v, ok := d.GetOk("accept_language"); ok {
 		acceptLanguage = v.(string)
 	}
 
-	output, err := waiter.WaitProvisionedProductReady(conn, acceptLanguage, d.Id(), "")
+	output, err := WaitProvisionedProductReady(conn, acceptLanguage, d.Id(), "")
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
@@ -390,7 +388,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 
 	// tags are only available from the record tied to the provisioned product
 
-	recordOutput, err := waiter.WaitRecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId))
+	recordOutput, err := WaitRecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
@@ -470,7 +468,7 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateProvisionedProduct(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -525,7 +523,7 @@ func resourceProvisionedProductDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error terminating Service Catalog Provisioned Product (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.WaitProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "")
+	err = WaitProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "")
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil

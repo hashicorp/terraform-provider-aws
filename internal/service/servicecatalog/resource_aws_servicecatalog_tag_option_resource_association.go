@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -10,13 +10,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceTagOptionResourceAssociation() *schema.Resource {
@@ -68,7 +66,7 @@ func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta int
 	}
 
 	var output *servicecatalog.AssociateTagOptionWithResourceOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateTagOptionWithResource(input)
@@ -96,7 +94,7 @@ func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error creating Service Catalog Tag Option Resource Association: empty response")
 	}
 
-	d.SetId(tfservicecatalog.TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get("resource_id").(string)))
+	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get("resource_id").(string)))
 
 	return resourceTagOptionResourceAssociationRead(d, meta)
 }
@@ -104,13 +102,13 @@ func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta int
 func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(d.Id())
+	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
+	output, err := WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option Resource Association (%s) not found, removing from state", d.Id())
@@ -142,7 +140,7 @@ func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta inter
 func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(d.Id())
+	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
@@ -163,7 +161,7 @@ func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error disassociating Service Catalog Tag Option from Resource (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
+	err = WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Tag Option Resource Disassociation (%s): %w", d.Id(), err)

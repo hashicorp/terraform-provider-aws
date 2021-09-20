@@ -1,4 +1,4 @@
-package aws
+package servicecatalog_test
 
 import (
 	"testing"

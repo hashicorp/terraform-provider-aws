@@ -1,4 +1,4 @@
-package aws
+package servicecatalog
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,8 +20,8 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      tfservicecatalog.AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
+				Default:      AcceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
 			"details": {
 				Type:     schema.TypeList,
@@ -72,7 +70,7 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.WaitPortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string))
+	output, err := WaitPortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Portfolio Constraints: %w", err)
@@ -85,7 +83,7 @@ func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
+		acceptLanguage = AcceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)
@@ -96,7 +94,7 @@ func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting details: %w", err)
 	}
 
-	d.SetId(tfservicecatalog.PortfolioConstraintsID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
+	d.SetId(PortfolioConstraintsID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
 	return nil
 }

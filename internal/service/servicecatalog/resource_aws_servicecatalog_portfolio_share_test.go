@@ -1,4 +1,4 @@
-package aws
+package servicecatalog_test
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
 func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
@@ -108,7 +108,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) erro
 			continue
 		}
 
-		output, err := finder.FindPortfolioShare(
+		output, err := tfservicecatalog.FindPortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["type"],
@@ -141,7 +141,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err := finder.FindPortfolioShare(
+		_, err := tfservicecatalog.FindPortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["type"],
