@@ -324,7 +324,7 @@ func testAccCheckAWSRedshiftEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if isAWSErr(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 

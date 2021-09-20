@@ -908,7 +908,7 @@ func resourceAwsRedshiftClusterStateRefreshFunc(id string, conn *redshift.Redshi
 		})
 
 		if err != nil {
-			if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 				return 42, "destroyed", nil
 			}
 			log.Printf("[WARN] Error on retrieving Redshift Cluster (%s) when waiting: %s", id, err)
