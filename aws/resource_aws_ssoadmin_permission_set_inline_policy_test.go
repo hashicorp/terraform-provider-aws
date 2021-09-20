@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears_permissionSet(t *tes
 }
 
 func testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_permission_set_inline_policy" {
@@ -181,7 +182,7 @@ func testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName string)
 			return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 		input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
 			InstanceArn:      aws.String(instanceArn),

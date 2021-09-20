@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
 }
 
 func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
 	managedPolicyArn := d.Get("managed_policy_arn").(string)
@@ -80,7 +81,7 @@ func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsSsoAdminManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -114,7 +115,7 @@ func resourceAwsSsoAdminManagedPolicyAttachmentRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsSsoAdminManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
 	if err != nil {

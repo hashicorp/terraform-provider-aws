@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsoAdminAccountAssignment() *schema.Resource {
@@ -75,7 +76,7 @@ func resourceAwsSsoAdminAccountAssignment() *schema.Resource {
 }
 
 func resourceAwsSsoAdminAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -127,7 +128,7 @@ func resourceAwsSsoAdminAccountAssignmentCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsSsoAdminAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := parseSsoAdminAccountAssignmentID(d.Id())
 	if err != nil {
@@ -174,7 +175,7 @@ func resourceAwsSsoAdminAccountAssignmentRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSsoAdminAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := parseSsoAdminAccountAssignmentID(d.Id())
 	if err != nil {
