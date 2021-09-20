@@ -2,7 +2,6 @@ package create
 
 import (
 	"hash/crc32"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // StringHashcode hashes a string to a unique hashcode.

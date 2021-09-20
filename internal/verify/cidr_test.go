@@ -2,7 +2,6 @@ package verify
 
 import (
 	"testing"
-
 )
 
 func TestCIDRBlocksEqual(t *testing.T) {

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // map[string]*string handling

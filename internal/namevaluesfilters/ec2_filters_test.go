@@ -2,7 +2,6 @@ package namevaluesfilters
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestNameValuesFiltersEc2Tags(t *testing.T) {

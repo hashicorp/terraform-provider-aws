@@ -178,7 +178,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/version"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type Config struct {

@@ -1,12 +1,7 @@
 package tags
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TagsSchema returns the schema to use for tags.
@@ -36,5 +31,3 @@ func TagsSchemaForceNew() *schema.Schema {
 		Elem:     &schema.Schema{Type: schema.TypeString},
 	}
 }
-
-

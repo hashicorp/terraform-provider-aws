@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/packages"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

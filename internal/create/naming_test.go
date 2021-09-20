@@ -3,7 +3,6 @@ package create
 import (
 	"regexp"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func strPtr(str string) *string {

@@ -2,7 +2,6 @@ package create
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestStringHashcode(t *testing.T) {

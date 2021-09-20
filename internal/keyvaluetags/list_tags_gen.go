@@ -117,7 +117,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AccessanalyzerListTags lists accessanalyzer service tags.

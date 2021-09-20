@@ -2,7 +2,6 @@ package verify
 
 import (
 	"net"
-
 )
 
 // CIDRBlocksEqual returns whether or not two CIDR blocks are equal:

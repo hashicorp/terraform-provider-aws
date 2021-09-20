@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Decodes/Unmarshals the given io.Reader pointing to a JSON, into a desired object

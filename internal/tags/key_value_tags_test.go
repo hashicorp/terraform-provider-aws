@@ -2,7 +2,6 @@ package tags
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {

@@ -6,8 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) {
