@@ -1,4 +1,4 @@
-package aws
+package s3control
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfs3control "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -190,7 +189,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		Name:      aws.String(name),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3control.errCodeNoSuchAccessPoint) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
