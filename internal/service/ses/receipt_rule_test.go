@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
 func TestAccAWSSESReceiptRule_basic(t *testing.T) {
@@ -341,7 +342,7 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccAWSSESReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceReceiptRuleSet(), ruleSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -349,7 +350,7 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccAWSSESReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceReceiptRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
@@ -103,7 +104,7 @@ func testAccCheckAwsSESIdentityPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		identityARN, policyName, err := resourceAwsSesIdentityPolicyParseID(rs.Primary.ID)
+		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -140,7 +141,7 @@ func testAccCheckAwsSESIdentityPolicyExists(resourceName string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
-		identityARN, policyName, err := resourceAwsSesIdentityPolicyParseID(rs.Primary.ID)
+		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

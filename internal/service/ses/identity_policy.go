@@ -74,7 +74,7 @@ func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
-	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
+	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
-	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
+	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
-	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
+	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsSesIdentityPolicyParseID(id string) (string, string, error) {
+func IdentityPolicyParseID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "|", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("unexpected format of ID (%s), expected IDENTITY|NAME", id)

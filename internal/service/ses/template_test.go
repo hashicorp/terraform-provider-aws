@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
 func TestAccAWSSesTemplate_basic(t *testing.T) {
@@ -112,7 +113,7 @@ func TestAccAWSSesTemplate_disappears(t *testing.T) {
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTemplate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
