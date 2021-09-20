@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func EbsSnapshotImportCompleted(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {

@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
