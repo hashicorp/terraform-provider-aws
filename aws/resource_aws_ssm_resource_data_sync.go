@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsmResourceDataSync() *schema.Resource {
@@ -66,7 +67,7 @@ func resourceAwsSsmResourceDataSync() *schema.Resource {
 }
 
 func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 	input := &ssm.CreateResourceDataSyncInput{
 		S3Destination: expandSsmResourceDataSyncS3Destination(d),
 		SyncName:      aws.String(d.Get("name").(string)),
@@ -95,7 +96,7 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	syncItem, err := findResourceDataSyncItem(conn, d.Id())
 	if err != nil {
@@ -111,7 +112,7 @@ func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSsmResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	input := &ssm.DeleteResourceDataSyncInput{
 		SyncName: aws.String(d.Get("name").(string)),

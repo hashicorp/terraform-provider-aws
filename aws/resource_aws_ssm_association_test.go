@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSMAssociation_basic(t *testing.T) {
@@ -520,7 +521,7 @@ func testAccCheckAWSSSMAssociationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SSM Assosciation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		_, err := conn.DescribeAssociation(&ssm.DescribeAssociationInput{
 			AssociationId: aws.String(rs.Primary.Attributes["association_id"]),
@@ -538,7 +539,7 @@ func testAccCheckAWSSSMAssociationExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSSSMAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_association" {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSMParameter_basic(t *testing.T) {
@@ -660,7 +661,7 @@ func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.
 			return fmt.Errorf("No SSM Parameter ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		paramInput := &ssm.GetParametersInput{
 			Names: []*string{
@@ -685,7 +686,7 @@ func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.
 }
 
 func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_parameter" {

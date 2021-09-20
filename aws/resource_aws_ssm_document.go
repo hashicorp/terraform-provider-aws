@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssm/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -188,8 +189,8 @@ func resourceAwsSsmDocument() *schema.Resource {
 }
 
 func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Validates permissions keys, if set, to be type and account_ids
@@ -249,9 +250,9 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
@@ -259,7 +260,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	}
 
-	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
+	describeDocumentOutput, err := conn.DescribeDocument(describeDocumentInput)
 
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
 		log.Printf("[WARN] SSM Document not found so removing from state")
@@ -281,7 +282,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Name:            describeDocumentOutput.Document.Name,
 	}
 
-	getDocumentOutput, err := ssmconn.GetDocument(getDocumentInput)
+	getDocumentOutput, err := conn.GetDocument(getDocumentInput)
 
 	if err != nil {
 		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
@@ -309,10 +310,10 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("owner", doc.Owner)
 	d.Set("platform_types", flattenStringList(doc.PlatformTypes))
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ssm",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("document/%s", *doc.Name),
 	}.String()
 	if err := d.Set("arn", arn); err != nil {
@@ -373,7 +374,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	// Validates permissions keys, if set, to be type and account_ids
 	// since ValidateFunc validates only the value not the key.
@@ -421,7 +422,7 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {
 		return err
@@ -475,7 +476,7 @@ func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
 
@@ -525,7 +526,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
 
@@ -567,7 +568,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 }
 
 func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
@@ -676,7 +677,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 
 	newDefaultVersion := d.Get("default_version").(string)
 
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 	updated, err := conn.UpdateDocument(updateDocInput)
 
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDuplicateDocumentContent, "") {

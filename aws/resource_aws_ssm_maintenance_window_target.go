@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
@@ -92,7 +93,7 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 }
 
 func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
 
@@ -114,7 +115,7 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 		params.OwnerInformation = aws.String(v.(string))
 	}
 
-	resp, err := ssmconn.RegisterTargetWithMaintenanceWindow(params)
+	resp, err := conn.RegisterTargetWithMaintenanceWindow(params)
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	windowID := d.Get("window_id").(string)
 	params := &ssm.DescribeMaintenanceWindowTargetsInput{
@@ -138,7 +139,7 @@ func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta inte
 		},
 	}
 
-	resp, err := ssmconn.DescribeMaintenanceWindowTargets(params)
+	resp, err := conn.DescribeMaintenanceWindowTargets(params)
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 		log.Printf("[WARN] Maintenance Window (%s) Target (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
@@ -175,7 +176,7 @@ func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
@@ -197,7 +198,7 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 		params.OwnerInformation = aws.String(d.Get("owner_information").(string))
 	}
 
-	_, err := ssmconn.UpdateMaintenanceWindowTarget(params)
+	_, err := conn.UpdateMaintenanceWindowTarget(params)
 	if err != nil {
 		return fmt.Errorf("error updating SSM Maintenance Window Target (%s): %w", d.Id(), err)
 	}
@@ -206,7 +207,7 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSsmMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())
 
@@ -215,7 +216,7 @@ func resourceAwsSsmMaintenanceWindowTargetDelete(d *schema.ResourceData, meta in
 		WindowTargetId: aws.String(d.Id()),
 	}
 
-	_, err := ssmconn.DeregisterTargetFromMaintenanceWindow(params)
+	_, err := conn.DeregisterTargetFromMaintenanceWindow(params)
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 		return nil
 	}

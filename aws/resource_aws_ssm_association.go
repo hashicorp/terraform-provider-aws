@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsmAssociation() *schema.Resource {
@@ -130,7 +131,7 @@ func resourceAwsSsmAssociation() *schema.Resource {
 }
 
 func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
@@ -186,7 +187,7 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		associationInput.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
-	resp, err := ssmconn.CreateAssociation(associationInput)
+	resp, err := conn.CreateAssociation(associationInput)
 	if err != nil {
 		return fmt.Errorf("Error creating SSM association: %s", err)
 	}
@@ -202,7 +203,7 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Reading SSM Association: %s", d.Id())
 
@@ -210,7 +211,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 		AssociationId: aws.String(d.Id()),
 	}
 
-	resp, err := ssmconn.DescribeAssociation(params)
+	resp, err := conn.DescribeAssociation(params)
 
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, ssm.ErrCodeAssociationDoesNotExist, "") {
@@ -252,7 +253,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
 
@@ -305,7 +306,7 @@ func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 		associationInput.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
-	_, err := ssmconn.UpdateAssociation(associationInput)
+	_, err := conn.UpdateAssociation(associationInput)
 	if err != nil {
 		return fmt.Errorf("Error updating SSM association: %s", err)
 	}
@@ -314,7 +315,7 @@ func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSsmAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Deleting SSM Association: %s", d.Id())
 
@@ -322,7 +323,7 @@ func resourceAwsSsmAssociationDelete(d *schema.ResourceData, meta interface{}) e
 		AssociationId: aws.String(d.Get("association_id").(string)),
 	}
 
-	_, err := ssmconn.DeleteAssociation(params)
+	_, err := conn.DeleteAssociation(params)
 
 	if err != nil {
 		return fmt.Errorf("Error deleting SSM association: %s", err)

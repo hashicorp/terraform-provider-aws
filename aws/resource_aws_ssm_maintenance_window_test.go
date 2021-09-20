@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepSsmMaintenanceWindows(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ssmconn
+	conn := client.(*conns.AWSClient).SSMConn
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -563,7 +564,7 @@ func testAccCheckAWSSSMMaintenanceWindowExists(n string, res *ssm.MaintenanceWin
 			return fmt.Errorf("No SSM Maintenance Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		resp, err := conn.DescribeMaintenanceWindows(&ssm.DescribeMaintenanceWindowsInput{
 			Filters: []*ssm.MaintenanceWindowFilter{
@@ -590,7 +591,7 @@ func testAccCheckAWSSSMMaintenanceWindowExists(n string, res *ssm.MaintenanceWin
 
 func testAccCheckAWSSSMMaintenanceWindowDisappears(maintenanceWindowIdentity *ssm.MaintenanceWindowIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		id := aws.StringValue(maintenanceWindowIdentity.WindowId)
 		_, err := conn.DeleteMaintenanceWindow(&ssm.DeleteMaintenanceWindowInput{
@@ -604,7 +605,7 @@ func testAccCheckAWSSSMMaintenanceWindowDisappears(maintenanceWindowIdentity *ss
 }
 
 func testAccCheckAWSSSMMaintenanceWindowDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_maintenance_window" {

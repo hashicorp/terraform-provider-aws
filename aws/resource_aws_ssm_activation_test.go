@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSMActivation_basic(t *testing.T) {
@@ -172,7 +173,7 @@ func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation)
 			return fmt.Errorf("No SSM Activation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		resp, err := conn.DescribeActivations(&ssm.DescribeActivationsInput{
 			Filters: []*ssm.DescribeActivationsFilter{
@@ -198,7 +199,7 @@ func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation)
 
 func testAccCheckAWSSSMActivationDisappears(a *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		input := &ssm.DeleteActivationInput{ActivationId: a.ActivationId}
 		_, err := conn.DeleteActivation(input)
@@ -210,7 +211,7 @@ func testAccCheckAWSSSMActivationDisappears(a *ssm.Activation) resource.TestChec
 }
 
 func testAccCheckAWSSSMActivationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_activation" {
