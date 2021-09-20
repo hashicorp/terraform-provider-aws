@@ -16,7 +16,7 @@ import (
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
-func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
+func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
 	if domain == "" {
 		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
@@ -54,7 +54,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
+func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
 	if domain == "" {
 		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")

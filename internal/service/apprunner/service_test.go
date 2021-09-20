@@ -80,7 +80,7 @@ func testSweepAppRunnerServices(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
@@ -131,7 +131,7 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerService_ImageRepository_AutoScalingConfiguration(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_autoScaling(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 	autoScalingResourceName := "aws_apprunner_auto_scaling_configuration_version.test"
@@ -164,7 +164,7 @@ func TestAccAwsAppRunnerService_ImageRepository_AutoScalingConfiguration(t *test
 	})
 }
 
-func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_encryption(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 	kmsResourceName := "aws_kms_key.test"
@@ -200,7 +200,7 @@ func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testi
 	})
 }
 
-func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
@@ -249,7 +249,7 @@ func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *test
 	})
 }
 
-func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_instance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 	roleResourceName := "aws_iam_role.test"
@@ -304,7 +304,7 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19469
-func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_runtimeEnvironmentVars(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
@@ -334,7 +334,7 @@ func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testin
 	})
 }
 
-func TestAccAwsAppRunnerService_disappears(t *testing.T) {
+func TestAccAppRunnerService_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
@@ -356,7 +356,7 @@ func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppRunnerService_tags(t *testing.T) {
+func TestAccAppRunnerService_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
 
