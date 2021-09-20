@@ -192,7 +192,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(tags) > 0 {
-			params.Tags = tags.IgnoreAws().WafregionalTags()
+			params.Tags = Tags(tags.IgnoreAws())
 		}
 
 		return conn.CreateWebACL(params)
@@ -296,7 +296,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting rule: %s", err)
 	}
 
-	tags, err := tftags.WafregionalListTags(conn, webACLARN)
+	tags, err := ListTags(conn, webACLARN)
 	if err != nil {
 		return fmt.Errorf("error listing tags for WAF Regional ACL (%s): %s", webACLARN, err)
 	}
@@ -385,7 +385,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.WafregionalUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

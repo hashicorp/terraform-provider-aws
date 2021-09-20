@@ -86,7 +86,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(tags) > 0 {
-			params.Tags = tags.IgnoreAws().WafregionalTags()
+			params.Tags = Tags(tags.IgnoreAws())
 		}
 
 		return conn.CreateRule(params)
@@ -137,7 +137,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 
-	tags, err := tftags.WafregionalListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for WAF Regional Rule (%s): %s", arn, err)
@@ -177,7 +177,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.WafregionalUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
