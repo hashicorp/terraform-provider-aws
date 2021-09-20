@@ -39,7 +39,7 @@ func testSweepServiceDiscoveryServices(region string) error {
 		}
 
 		for _, service := range page.Services {
-			r := ResourceService()
+			r := tfservicediscovery.ResourceService()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(service.Id))
 			d.Set("force_destroy", true)
@@ -224,7 +224,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
