@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func SubscriptionPendingConfirmation(conn *sns.SNS, id string) resource.StateRefreshFunc {
+func statusSubscriptionPendingConfirmation(conn *sns.SNS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.SubscriptionByARN(conn, id)
+		output, err := finder.FindSubscriptionByARN(conn, id)
 		if err != nil {
 			return nil, "", err
 		}

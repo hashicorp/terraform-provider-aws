@@ -190,7 +190,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoTopic := d.Get("fifo_topic").(bool)
 
 	if fifoTopic {
-		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
+		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsns.FIFOTopicNameSuffix)
 	} else {
 		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
@@ -604,7 +604,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 	name := arn.Resource
 	d.Set("name", name)
 	if fifoTopic {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsns.FifoTopicNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsns.FIFOTopicNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -657,7 +657,7 @@ func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		var name string
 
 		if fifoTopic {
-			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
+			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsns.FIFOTopicNameSuffix)
 		} else {
 			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}

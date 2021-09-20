@@ -1,5 +1,5 @@
 package sns
 
 const (
-	FifoTopicNameSuffix = ".fifo"
+	FIFOTopicNameSuffix = ".fifo"
 )

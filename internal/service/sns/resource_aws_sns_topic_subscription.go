@@ -157,13 +157,13 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		waitForConfirmation = false
 	}
 
-	timeout := waiter.SubscriptionPendingConfirmationTimeout
+	timeout := waiter.subscriptionPendingConfirmationTimeout
 	if strings.Contains(d.Get("protocol").(string), "http") {
 		timeout = time.Duration(d.Get("confirmation_timeout_in_minutes").(int)) * time.Minute
 	}
 
 	if waitForConfirmation {
-		if _, err := waiter.SubscriptionConfirmed(conn, d.Id(), "false", timeout); err != nil {
+		if _, err := waiter.waitSubscriptionConfirmed(conn, d.Id(), "false", timeout); err != nil {
 			return fmt.Errorf("waiting for SNS topic subscription (%s) confirmation: %w", d.Id(), err)
 		}
 	}
@@ -176,10 +176,10 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	var output *sns.GetSubscriptionAttributesOutput
 
-	err := resource.Retry(waiter.SubscriptionCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.subscriptionCreateTimeout, func() *resource.RetryError {
 		var err error
 
-		output, err = finder.SubscriptionByARN(conn, d.Id())
+		output, err = finder.FindSubscriptionByARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -195,7 +195,7 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = finder.SubscriptionByARN(conn, d.Id())
+		output, err = finder.FindSubscriptionByARN(conn, d.Id())
 	}
 
 	if err != nil {
@@ -308,7 +308,7 @@ func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	if _, err := waiter.SubscriptionDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitSubscriptionDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 			return nil
 		}
