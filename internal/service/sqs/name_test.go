@@ -1,8 +1,9 @@
 package sqs_test
 
 import (
-	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"testing"
+
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
 func TestQueueNameFromURL(t *testing.T) {
