@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceFirewallRuleGroup() *schema.Resource {
@@ -51,18 +52,18 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceFirewallRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateFirewallRuleGroupInput{
 		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-firewall-rule-group-")),
@@ -113,7 +114,7 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("owner_id", ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
 
-	tags, err := keyvaluetags.Route53resolverListTags(conn, arn)
+	tags, err := tftags.Route53resolverListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall rule group (%s): %w", arn, err)
 	}
@@ -137,7 +138,7 @@ func resourceFirewallRuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver DNS Firewall rule group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
