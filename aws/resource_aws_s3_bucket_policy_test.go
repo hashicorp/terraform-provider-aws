@@ -6,15 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
-	partition := testAccGetPartition()
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	partition := acctest.Partition()
 
 	expectedPolicyText := fmt.Sprintf(`{
   "Version": "2012-10-17",
@@ -35,8 +36,8 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 }`, partition, name, partition, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -57,8 +58,8 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
-	partition := testAccGetPartition()
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	partition := acctest.Partition()
 
 	expectedPolicyText1 := fmt.Sprintf(`{
   "Version": "2012-10-17",
@@ -101,8 +102,8 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 }`, partition, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{

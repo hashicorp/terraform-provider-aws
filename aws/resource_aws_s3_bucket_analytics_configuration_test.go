@@ -10,19 +10,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -47,12 +48,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 
 func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -74,15 +75,15 @@ func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 
 func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	originalACName := acctest.RandomWithPrefix("tf-acc-test")
-	originalBucketName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedACName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedBucketName := acctest.RandomWithPrefix("tf-acc-test")
+	originalACName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	originalBucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	updatedACName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	updatedBucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -128,11 +129,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 }
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -146,7 +147,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -154,8 +155,8 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -188,7 +189,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -196,8 +197,8 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -232,7 +233,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -242,8 +243,8 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -280,7 +281,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -292,8 +293,8 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -330,15 +331,15 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 	var ac s3.AnalyticsConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -365,11 +366,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 }
 
 func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -385,11 +386,11 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Default(t
 	var ac s3.AnalyticsConfiguration
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -419,13 +420,13 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *t
 	var ac s3.AnalyticsConfiguration
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
