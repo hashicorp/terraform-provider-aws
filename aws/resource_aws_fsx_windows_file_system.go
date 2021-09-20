@@ -276,7 +276,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		ClientRequestToken: aws.String(resource.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
-		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -286,7 +286,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
-		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -300,8 +300,8 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
-		input.WindowsConfiguration.Aliases = expandStringSet(v.(*schema.Set))
-		backupInput.WindowsConfiguration.Aliases = expandStringSet(v.(*schema.Set))
+		input.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
+		backupInput.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("deployment_type"); ok {
@@ -325,8 +325,8 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
-		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
@@ -576,7 +576,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 
 			input := &fsx.AssociateFileSystemAliasesInput{
 				FileSystemId: aws.String(identifier),
-				Aliases:      expandStringSet(newAliases),
+				Aliases:      flex.ExpandStringSet(newAliases),
 			}
 
 			_, err := conn.AssociateFileSystemAliases(input)
@@ -595,7 +595,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 		if oldAliases := oldSet.Difference(newSet); oldAliases.Len() > 0 {
 			input := &fsx.DisassociateFileSystemAliasesInput{
 				FileSystemId: aws.String(identifier),
-				Aliases:      expandStringSet(oldAliases),
+				Aliases:      flex.ExpandStringSet(oldAliases),
 			}
 
 			_, err := conn.DisassociateFileSystemAliases(input)
@@ -621,7 +621,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fs
 	data := l[0].(map[string]interface{})
 	req := &fsx.SelfManagedActiveDirectoryConfiguration{
 		DomainName: aws.String(data["domain_name"].(string)),
-		DnsIps:     expandStringSet(data["dns_ips"].(*schema.Set)),
+		DnsIps:     flex.ExpandStringSet(data["dns_ips"].(*schema.Set)),
 		Password:   aws.String(data["password"].(string)),
 		UserName:   aws.String(data["username"].(string)),
 	}
@@ -646,7 +646,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fs
 	req := &fsx.SelfManagedActiveDirectoryConfigurationUpdates{}
 
 	if v, ok := data["dns_ips"].(*schema.Set); ok && v.Len() > 0 {
-		req.DnsIps = expandStringSet(v)
+		req.DnsIps = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := data["password"].(string); ok && v != "" {
