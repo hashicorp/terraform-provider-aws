@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -71,7 +70,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(output.LocalGatewayRouteTableVpcAssociation.LocalGatewayRouteTableVpcAssociationId))
 
-	if _, err := waiter.WaitLocalGatewayRouteTableVPCAssociationAssociated(conn, d.Id()); err != nil {
+	if _, err := WaitLocalGatewayRouteTableVPCAssociationAssociated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Local Gateway Route Table VPC Association (%s) to associate: %w", d.Id(), err)
 	}
 
@@ -151,7 +150,7 @@ func resourceLocalGatewayRouteTableVPCAssociationDelete(d *schema.ResourceData, 
 		return fmt.Errorf("error deleting EC2 Local Gateway Route Table VPC Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.WaitLocalGatewayRouteTableVPCAssociationDisassociated(conn, d.Id()); err != nil {
+	if _, err := WaitLocalGatewayRouteTableVPCAssociationDisassociated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Local Gateway Route Table VPC Association (%s) to disassociate: %w", d.Id(), err)
 	}
 

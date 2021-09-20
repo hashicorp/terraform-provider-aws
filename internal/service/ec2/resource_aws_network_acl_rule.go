@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"
@@ -13,9 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -213,10 +211,10 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 
 	var resp *ec2.NetworkAclEntry
 
-	err := resource.Retry(waiter.NetworkACLEntryPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(NetworkACLEntryPropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = finder.FindNetworkACLEntry(conn, networkAclID, egress, ruleNumber)
+		resp, err = FindNetworkACLEntry(conn, networkAclID, egress, ruleNumber)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {
 			return resource.RetryableError(err)
@@ -236,7 +234,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = finder.FindNetworkACLEntry(conn, networkAclID, egress, ruleNumber)
+		resp, err = FindNetworkACLEntry(conn, networkAclID, egress, ruleNumber)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {

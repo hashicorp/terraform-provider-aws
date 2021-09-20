@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,9 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -82,7 +79,7 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 		input.Description = aws.String(v.(string))
 	}
 
-	id := tfec2.ClientVPNAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID)
+	id := ClientVPNAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID)
 
 	log.Printf("[DEBUG] Creating Client VPN authorization rule: %#v", input)
 	_, err := conn.AuthorizeClientVpnIngress(input)
@@ -90,7 +87,7 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error creating Client VPN authorization rule %q: %w", id, err)
 	}
 
-	_, err = waiter.WaitClientVPNAuthorizationRuleAuthorized(conn, id)
+	_, err = WaitClientVPNAuthorizationRuleAuthorized(conn, id)
 	if err != nil {
 		return fmt.Errorf("error waiting for Client VPN authorization rule %q to be active: %w", id, err)
 	}
@@ -103,13 +100,13 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	result, err := finder.FindClientVPNAuthorizationRule(conn,
+	result, err := FindClientVPNAuthorizationRule(conn,
 		d.Get("client_vpn_endpoint_id").(string),
 		d.Get("target_network_cidr").(string),
 		d.Get("access_group_id").(string),
 	)
 
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAuthorizationRuleNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAuthorizationRuleNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN authorization rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -156,7 +153,7 @@ func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsEc2ClientVpnAuthorizationRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVPNAuthorizationRuleParseID(d.Id())
+	endpointID, targetNetworkCidr, accessGroupID, err := ClientVPNAuthorizationRuleParseID(d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -168,20 +165,20 @@ func resourceAwsEc2ClientVpnAuthorizationRuleImport(d *schema.ResourceData, meta
 }
 
 func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnIngressInput) error {
-	id := tfec2.ClientVPNAuthorizationRuleCreateID(
+	id := ClientVPNAuthorizationRuleCreateID(
 		aws.StringValue(input.ClientVpnEndpointId),
 		aws.StringValue(input.TargetNetworkCidr),
 		aws.StringValue(input.AccessGroupId))
 
 	_, err := conn.RevokeClientVpnIngress(input)
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAuthorizationRuleNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAuthorizationRuleNotFound, "") {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = waiter.WaitClientVPNAuthorizationRuleRevoked(conn, id)
+	_, err = WaitClientVPNAuthorizationRuleRevoked(conn, id)
 
 	return err
 }

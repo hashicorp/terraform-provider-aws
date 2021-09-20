@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -10,10 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -150,7 +147,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
-	routeTable, err := finder.FindRouteTableByID(conn, routeTableID)
+	routeTable, err := FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Default Route Table (%s): %w", routeTableID, err)
@@ -187,26 +184,26 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		var destination string
-		var routeFinder finder.RouteFinder
+		var routeFinder RouteFinder
 
 		if v.DestinationCidrBlock != nil {
 			input.DestinationCidrBlock = v.DestinationCidrBlock
 			destination = aws.StringValue(v.DestinationCidrBlock)
-			routeFinder = finder.FindRouteByIPv4Destination
+			routeFinder = FindRouteByIPv4Destination
 		} else if v.DestinationIpv6CidrBlock != nil {
 			input.DestinationIpv6CidrBlock = v.DestinationIpv6CidrBlock
 			destination = aws.StringValue(v.DestinationIpv6CidrBlock)
-			routeFinder = finder.FindRouteByIPv6Destination
+			routeFinder = FindRouteByIPv6Destination
 		} else if v.DestinationPrefixListId != nil {
 			input.DestinationPrefixListId = v.DestinationPrefixListId
 			destination = aws.StringValue(v.DestinationPrefixListId)
-			routeFinder = finder.FindRouteByPrefixListIDDestination
+			routeFinder = FindRouteByPrefixListIDDestination
 		}
 
 		log.Printf("[DEBUG] Deleting Route: %s", input)
 		_, err := conn.DeleteRoute(input)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
 			continue
 		}
 
@@ -214,7 +211,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
 		}
 
-		_, err = waiter.WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
+		_, err = WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
 
 		if err != nil {
 			return fmt.Errorf("error waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
@@ -268,7 +265,7 @@ func resourceDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) e
 func resourceAwsDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	routeTable, err := finder.FindMainRouteTableByVPCID(conn, d.Id())
+	routeTable, err := FindMainRouteTableByVPCID(conn, d.Id())
 
 	if err != nil {
 		return nil, err

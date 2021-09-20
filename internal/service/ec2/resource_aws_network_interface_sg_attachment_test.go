@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
@@ -166,7 +166,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName string) reso
 		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
 		securityGroupID := rs.Primary.Attributes["security_group_id"]
 
-		groupIdentifier, err := finder.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
+		groupIdentifier, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 Network Interface Security Group Attachment (%s): %s", rs.Primary.ID, err)
@@ -191,7 +191,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentDestroy(s *terraform.State) erro
 		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
 		securityGroupID := rs.Primary.Attributes["security_group_id"]
 
-		groupIdentifier, err := finder.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
+		groupIdentifier, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
 
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
 			continue

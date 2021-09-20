@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"
@@ -18,12 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -280,7 +276,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Security Group ID: %s", d.Id())
 
 	// Wait for the security group to truly exist
-	group, err := waiter.WaitSecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	group, err := WaitSecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for Security Group (%s) to become available: %w",
@@ -333,7 +329,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
-			if !tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "remote-ipv6-range") {
+			if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "remote-ipv6-range") {
 				return fmt.Errorf("Error revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
 			}
 		}
@@ -348,7 +344,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sg, err := finder.FindSecurityGroupByID(conn, d.Id())
+	sg, err := FindSecurityGroupByID(conn, d.Id())
 	var nfe *resource.NotFoundError
 	if !d.IsNewResource() && errors.As(err, &nfe) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
@@ -410,7 +406,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	group, err := finder.FindSecurityGroupByID(conn, d.Id())
+	group, err := FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 	}
@@ -494,7 +490,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 // Revoke all ingress/egress rules that a Security Group has
 func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error {
-	group, err := finder.FindSecurityGroupByID(conn, d.Id())
+	group, err := FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -1358,7 +1354,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 	}
 
 	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+		Filters: BuildAttributeFilterList(map[string]string{
 			filterName:    resourceId,
 			"description": "AWS Lambda VPC ENI*",
 		}),

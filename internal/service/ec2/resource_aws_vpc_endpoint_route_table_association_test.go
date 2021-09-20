@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
@@ -73,7 +73,7 @@ func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) err
 			continue
 		}
 
-		err := finder.FindVPCEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
+		err := tfec2.FindVPCEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -102,7 +102,7 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		return finder.FindVPCEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
+		return tfec2.FindVPCEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 	}
 }
 

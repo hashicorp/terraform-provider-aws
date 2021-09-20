@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -144,7 +142,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		isDefaultStr = "true"
 	}
 
-	req.Filters = tfec2.BuildAttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"cidr":            d.Get("cidr_block").(string),
 			"dhcp-options-id": d.Get("dhcp_options_id").(string),
@@ -221,7 +219,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ipv6_cidr_block", vpc.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock)
 	}
 
-	enableDnsHostnames, err := finder.FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
+	enableDnsHostnames, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames, err)
@@ -229,7 +227,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("enable_dns_hostnames", enableDnsHostnames)
 
-	enableDnsSupport, err := finder.FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
+	enableDnsSupport, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport, err)

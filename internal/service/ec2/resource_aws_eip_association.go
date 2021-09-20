@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,7 +96,7 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] EIP association configuration: %#v", request)
 
 	var resp *ec2.AssociateAddressOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.AssociateAddress(request)
 
@@ -161,7 +160,7 @@ func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var response *ec2.DescribeAddressesOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		response, err = conn.DescribeAddresses(request)
 

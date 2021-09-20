@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 // add sweeper to delete known test sgs
@@ -2161,7 +2161,7 @@ func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -2183,7 +2183,7 @@ func testAccCheckAWSSecurityGroupEc2ClassicDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -2210,7 +2210,7 @@ func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
+		sg, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("Security Group (%s) not found: %w", rs.Primary.ID, err)
 		}
@@ -2237,7 +2237,7 @@ func testAccCheckAWSSecurityGroupEc2ClassicExists(n string, group *ec2.SecurityG
 
 		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
+		sg, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("Security Group (%s) not found: %w", rs.Primary.ID, err)
 		}
@@ -2500,7 +2500,7 @@ func testAccCheckAWSSecurityGroupExistsWithoutDefault(n string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		group, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
+		group, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("Security Group (%s) not found: %w", rs.Primary.ID, err)
 		}
@@ -2624,7 +2624,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 
 					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-					match, err := finder.FindSecurityGroupByID(conn, id)
+					match, err := tfec2.FindSecurityGroupByID(conn, id)
 					if tfresource.NotFound(err) {
 						t.Fatalf("PreConfig check failed: Security Group (%s) not found: %s", id, err)
 					}
@@ -2779,7 +2779,7 @@ func testAccCheckAWSSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIng
 func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressCount int) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	group, err := finder.FindSecurityGroupByID(conn, id)
+	group, err := tfec2.FindSecurityGroupByID(conn, id)
 	if tfresource.NotFound(err) {
 		return fmt.Errorf("Security Group (%s) not found: %w", id, err)
 	}

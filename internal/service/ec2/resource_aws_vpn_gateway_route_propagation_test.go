@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"errors"
@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
@@ -37,7 +37,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 					rtID = rs.Primary.Attributes["route_table_id"]
 					gwID = rs.Primary.Attributes["vpn_gateway_id"]
 
-					rt, err := waiter.WaitRouteTableReady(conn, rtID)
+					rt, err := tfec2.WaitRouteTableReady(conn, rtID)
 
 					if err != nil {
 						return fmt.Errorf("error getting route table (%s) while checking VPN gateway route propagation: %w", rtID, err)
@@ -64,7 +64,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 		CheckDestroy: func(state *terraform.State) error {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-			rt, err := waiter.WaitRouteTableDeleted(conn, rtID)
+			rt, err := tfec2.WaitRouteTableDeleted(conn, rtID)
 
 			if err != nil {
 				return fmt.Errorf("error getting route table (%s) status while checking destroy: %w", rtID, err)

@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
@@ -156,7 +156,7 @@ func testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy(s *terraform.Sta
 			continue
 		}
 
-		transitGatewayPrefixListReference, err := finder.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
+		transitGatewayPrefixListReference, err := tfec2.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
 			continue
@@ -188,7 +188,7 @@ func testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		transitGatewayPrefixListReference, err := finder.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
+		transitGatewayPrefixListReference, err := tfec2.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 Transit Gateway Prefix List Reference (%s): %w", rs.Primary.ID, err)

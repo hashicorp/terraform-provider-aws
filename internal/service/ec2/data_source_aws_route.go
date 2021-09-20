@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -101,7 +99,7 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	routeTableID := d.Get("route_table_id").(string)
 
-	routeTable, err := finder.FindRouteTableByID(conn, routeTableID)
+	routeTable, err := FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
 		return fmt.Errorf("error reading Route Table (%s): %w", routeTableID, err)
@@ -182,11 +180,11 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	route := routes[0]
 
 	if destination := aws.StringValue(route.DestinationCidrBlock); destination != "" {
-		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
+		d.SetId(RouteCreateID(routeTableID, destination))
 	} else if destination := aws.StringValue(route.DestinationIpv6CidrBlock); destination != "" {
-		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
+		d.SetId(RouteCreateID(routeTableID, destination))
 	} else if destination := aws.StringValue(route.DestinationPrefixListId); destination != "" {
-		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
+		d.SetId(RouteCreateID(routeTableID, destination))
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)

@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"errors"
@@ -12,8 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -364,7 +363,7 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 
 	output, err := conn.DeleteVpcEndpointServiceConfigurations(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCEndpointServiceIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointServiceIdNotFound) {
 		return nil
 	}
 
@@ -373,7 +372,7 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if output != nil && len(output.Unsuccessful) > 0 {
-		err := tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+		err := UnsuccessfulItemsError(output.Unsuccessful)
 
 		if err != nil {
 			return fmt.Errorf("error deleting EC2 VPC Endpoint Service (%s): %w", d.Id(), err)

@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
@@ -94,7 +94,7 @@ func testAccCheckVpcEndpointSubnetAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := finder.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err := tfec2.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -123,13 +123,13 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		out, err := finder.FindVPCEndpointByID(conn, rs.Primary.Attributes["vpc_endpoint_id"])
+		out, err := tfec2.FindVPCEndpointByID(conn, rs.Primary.Attributes["vpc_endpoint_id"])
 
 		if err != nil {
 			return err
 		}
 
-		err = finder.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err = tfec2.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
 
 		if err != nil {
 			return err

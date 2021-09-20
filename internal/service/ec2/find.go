@@ -7,9 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfnet "github.com/hashicorp/terraform-provider-aws/internal/net"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -42,7 +41,7 @@ func FindClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCidr
 
 	input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		Filters:             tfec2.BuildAttributeFilterList(filters),
+		Filters:             BuildAttributeFilterList(filters),
 	}
 
 	return conn.DescribeClientVpnAuthorizationRules(input)
@@ -50,7 +49,7 @@ func FindClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCidr
 }
 
 func FindClientVPNAuthorizationRuleByID(conn *ec2.EC2, authorizationRuleID string) (*ec2.DescribeClientVpnAuthorizationRulesOutput, error) {
-	endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVPNAuthorizationRuleParseID(authorizationRuleID)
+	endpointID, targetNetworkCidr, accessGroupID, err := ClientVPNAuthorizationRuleParseID(authorizationRuleID)
 	if err != nil {
 		return nil, err
 	}
@@ -66,14 +65,14 @@ func FindClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCi
 
 	input := &ec2.DescribeClientVpnRoutesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		Filters:             tfec2.BuildAttributeFilterList(filters),
+		Filters:             BuildAttributeFilterList(filters),
 	}
 
 	return conn.DescribeClientVpnRoutes(input)
 }
 
 func FindClientVPNRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRoutesOutput, error) {
-	endpointID, targetSubnetID, destinationCidr, err := tfec2.ClientVPNRouteParseID(routeID)
+	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseID(routeID)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +280,7 @@ func FindMainRouteTableAssociationByVPCID(conn *ec2.EC2, vpcID string) (*ec2.Rou
 // Returns NotFoundError if no route table association is found.
 func FindRouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.RouteTableAssociation, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+		Filters: BuildAttributeFilterList(map[string]string{
 			"association.route-table-association-id": associationID,
 		}),
 	}
@@ -309,7 +308,7 @@ func FindRouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.Ro
 // Returns NotFoundError if no route table is found.
 func FindMainRouteTableByVPCID(conn *ec2.EC2, vpcID string) (*ec2.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+		Filters: BuildAttributeFilterList(map[string]string{
 			"association.main": "true",
 			"vpc-id":           vpcID,
 		}),
@@ -331,7 +330,7 @@ func FindRouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, er
 func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
 	output, err := conn.DescribeRouteTables(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -420,7 +419,7 @@ func FindSecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error)
 // FindSecurityGroupByNameAndVPCID looks up a security group by name and VPC ID. Returns a resource.NotFoundError if not found.
 func FindSecurityGroupByNameAndVPCID(conn *ec2.EC2, name, vpcID string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: tfec2.BuildAttributeFilterList(
+		Filters: BuildAttributeFilterList(
 			map[string]string{
 				"group-name": name,
 				"vpc-id":     vpcID,
@@ -433,8 +432,8 @@ func FindSecurityGroupByNameAndVPCID(conn *ec2.EC2, name, vpcID string) (*ec2.Se
 // FindSecurityGroup looks up a security group using an ec2.DescribeSecurityGroupsInput. Returns a resource.NotFoundError if not found.
 func FindSecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*ec2.SecurityGroup, error) {
 	result, err := conn.DescribeSecurityGroups(input)
-	if tfawserr.ErrCodeEquals(err, tfec2.InvalidSecurityGroupIDNotFound) ||
-		tfawserr.ErrCodeEquals(err, tfec2.InvalidGroupNotFound) {
+	if tfawserr.ErrCodeEquals(err, InvalidSecurityGroupIDNotFound) ||
+		tfawserr.ErrCodeEquals(err, InvalidGroupNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -512,7 +511,7 @@ func FindTransitGatewayPrefixListReference(conn *ec2.EC2, transitGatewayRouteTab
 
 	input := &ec2.GetTransitGatewayPrefixListReferencesInput{
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-		Filters:                    tfec2.BuildAttributeFilterList(filters),
+		Filters:                    BuildAttributeFilterList(filters),
 	}
 
 	var result *ec2.TransitGatewayPrefixListReference
@@ -540,7 +539,7 @@ func FindTransitGatewayPrefixListReference(conn *ec2.EC2, transitGatewayRouteTab
 }
 
 func FindTransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*ec2.TransitGatewayPrefixListReference, error) {
-	transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(resourceID)
+	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseID(resourceID)
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing EC2 Transit Gateway Prefix List Reference (%s) identifier: %w", resourceID, err)
@@ -671,7 +670,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 		return nil, err
 	}
 
-	if state := aws.StringValue(vpcEndpoint.State); state == tfec2.VPCEndpointStateDeleted {
+	if state := aws.StringValue(vpcEndpoint.State); state == VPCEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
@@ -691,7 +690,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 func FindVPCEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
 	output, err := conn.DescribeVpcEndpoints(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

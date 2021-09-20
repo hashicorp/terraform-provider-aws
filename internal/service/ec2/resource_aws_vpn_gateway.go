@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -11,9 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -252,7 +250,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayIDNotFound, "") {
+			if tfawserr.ErrMessageContains(err, InvalidVPNGatewayIDNotFound, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -269,7 +267,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 
 	// Wait for it to be fully attached before continuing
 	log.Printf("[DEBUG] Waiting for VPN gateway (%s) to attach", d.Id())
-	_, err = waiter.WaitVPNGatewayVPCAttachmentAttached(conn, d.Id(), vpcId)
+	_, err = WaitVPNGatewayVPCAttachmentAttached(conn, d.Id(), vpcId)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become attached: %w", d.Id(), vpcId, err)
@@ -302,7 +300,7 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 		VpcId:        aws.String(vpcId),
 	})
 
-	if tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, InvalidVPNGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, InvalidVPNGatewayIDNotFound, "") {
 		return nil
 	}
 
@@ -311,7 +309,7 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Wait for it to be fully detached before continuing
-	_, err = waiter.WaitVPNGatewayVPCAttachmentDetached(conn, d.Id(), vpcId)
+	_, err = WaitVPNGatewayVPCAttachmentDetached(conn, d.Id(), vpcId)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become detached: %w", d.Id(), vpcId, err)

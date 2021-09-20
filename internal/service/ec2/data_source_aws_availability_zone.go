@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,7 +89,7 @@ func dataSourceAvailabilityZoneRead(d *schema.ResourceData, meta interface{}) er
 	if v := d.Get("zone_id").(string); v != "" {
 		req.ZoneIds = []*string{aws.String(v)}
 	}
-	req.Filters = tfec2.BuildAttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},

@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,10 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -92,12 +89,12 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 
 	var vpc *ec2.Vpc
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		vpc, err = finder.FindVPCByID(conn, d.Get("vpc_id").(string))
+		vpc, err = FindVPCByID(conn, d.Get("vpc_id").(string))
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCIDNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -115,10 +112,10 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if tfresource.TimedOut(err) {
-		vpc, err = finder.FindVPCByID(conn, d.Get("vpc_id").(string))
+		vpc, err = FindVPCByID(conn, d.Get("vpc_id").(string))
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCIDNotFound) {
 		log.Printf("[WARN] EC2 VPC DHCP Options Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -162,7 +159,7 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 		VpcId:         aws.String(d.Get("vpc_id").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCIDNotFound) {
 		return nil
 	}
 

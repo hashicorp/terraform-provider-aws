@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -12,10 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -192,18 +189,18 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -239,21 +236,21 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
 		},
-		tfec2.ErrCodeInvalidParameterException,
-		tfec2.ErrCodeInvalidTransitGatewayIDNotFound,
+		ErrCodeInvalidParameterException,
+		ErrCodeInvalidTransitGatewayIDNotFound,
 	)
 
 	if err != nil {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.WaitRouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
 
-	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
+	d.SetId(RouteCreateID(routeTableID, destination))
 
 	return resourceRouteRead(d, meta)
 }
@@ -267,15 +264,15 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Route: %w", err)
 	}
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destinationAttributeKey {
 	case "destination_cidr_block":
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -340,18 +337,18 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -388,7 +385,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.WaitRouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -411,18 +408,18 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -435,16 +432,16 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
 			return nil
 		}
 
 		// Local routes (which may have been imported) cannot be deleted. Remove from state.
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
+		if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "cannot remove local route") {
 			return nil
 		}
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameterException) {
 			return resource.RetryableError(err)
 		}
 
@@ -455,7 +452,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteRoute(input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
 		return nil
 	}
 
@@ -463,7 +460,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
+	_, err = WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)
@@ -489,7 +486,7 @@ func resourceAwsRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema
 		d.Set("destination_prefix_list_id", destination)
 	}
 
-	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
+	d.SetId(RouteCreateID(routeTableID, destination))
 
 	return []*schema.ResourceData{d}, nil
 }

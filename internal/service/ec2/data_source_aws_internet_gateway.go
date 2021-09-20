@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -67,7 +66,7 @@ func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("One of internet_gateway_id or filter or tags must be assigned")
 	}
 
-	req.Filters = tfec2.BuildAttributeFilterList(map[string]string{
+	req.Filters = BuildAttributeFilterList(map[string]string{
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	req.Filters = append(req.Filters, buildEC2TagFilterList(

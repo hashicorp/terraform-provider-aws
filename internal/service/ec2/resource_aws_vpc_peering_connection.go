@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"errors"
@@ -10,8 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -303,7 +302,7 @@ func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error
 // Returns nil if no VPC peering connection is found or the connection has reached a terminal state
 // according to https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle.
 func vpcPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) (*ec2.VpcPeeringConnection, error) {
-	outputRaw, _, err := waiter.StatusVPCPeeringConnection(conn, vpcPeeringConnectionID)()
+	outputRaw, _, err := StatusVPCPeeringConnection(conn, vpcPeeringConnectionID)()
 
 	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
 		return output, err

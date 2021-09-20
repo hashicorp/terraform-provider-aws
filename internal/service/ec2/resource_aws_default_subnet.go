@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -63,7 +62,7 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeSubnetsInput{}
-	req.Filters = tfec2.BuildAttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"availabilityZone": d.Get("availability_zone").(string),
 			"defaultForAz":     "true",

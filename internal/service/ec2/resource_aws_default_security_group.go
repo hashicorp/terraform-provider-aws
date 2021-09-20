@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"
@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -270,7 +269,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	group, err := finder.FindSecurityGroupByID(conn, d.Id())
+	group, err := FindSecurityGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -330,7 +329,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	group, err := finder.FindSecurityGroupByID(conn, d.Id())
+	group, err := FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}

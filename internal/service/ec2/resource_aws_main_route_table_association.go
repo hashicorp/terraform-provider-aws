@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,7 +48,7 @@ func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interf
 
 	vpcID := d.Get("vpc_id").(string)
 
-	association, err := finder.FindMainRouteTableAssociationByVPCID(conn, vpcID)
+	association, err := FindMainRouteTableAssociationByVPCID(conn, vpcID)
 
 	if err != nil {
 		return fmt.Errorf("error reading Main Route Table Association (%s): %w", vpcID, err)
@@ -72,7 +70,7 @@ func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) creation", d.Id())
-	if _, err := waiter.WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Main Route Table Association (%s) create: %w", d.Id(), err)
 	}
 
@@ -84,7 +82,7 @@ func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interf
 func resourceMainRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	_, err := finder.FindMainRouteTableAssociationByID(conn, d.Id())
+	_, err := FindMainRouteTableAssociationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Main Route Table Association (%s) not found, removing from state", d.Id())
@@ -120,7 +118,7 @@ func resourceMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) update", d.Id())
-	if _, err := waiter.WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Main Route Table Association (%s) update: %w", d.Id(), err)
 	}
 
@@ -143,7 +141,7 @@ func resourceMainRouteTableAssociationDelete(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) deletion", d.Id())
-	if _, err := waiter.WaitRouteTableAssociationUpdated(conn, aws.StringValue(output.NewAssociationId)); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(conn, aws.StringValue(output.NewAssociationId)); err != nil {
 		return fmt.Errorf("error waiting for Main Route Table Association (%s) delete: %w", d.Id(), err)
 	}
 

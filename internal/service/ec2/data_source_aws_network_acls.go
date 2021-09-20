@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"errors"
@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,7 +43,7 @@ func dataSourceNetworkACLsRead(d *schema.ResourceData, meta interface{}) error {
 	req := &ec2.DescribeNetworkAclsInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		req.Filters = tfec2.BuildAttributeFilterList(
+		req.Filters = BuildAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},

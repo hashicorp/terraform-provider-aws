@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"
@@ -22,16 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -770,7 +767,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Run configuration: %s", runOpts)
 
 	var runResp *ec2.Reservation
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		runResp, err = conn.RunInstances(runOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1263,7 +1260,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							return err
 						}
 					} else {
-						err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+						err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1293,7 +1290,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if _, err := waiter.WaitInstanceIAMInstanceProfileUpdated(conn, d.Id(), d.Get("iam_instance_profile").(string)); err != nil {
+		if _, err := WaitInstanceIAMInstanceProfileUpdated(conn, d.Id(), d.Get("iam_instance_profile").(string)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Instance (%s) IAM Instance Profile update: %w", d.Id(), err)
 		}
 	}
@@ -1448,10 +1445,10 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
-		err = resource.Retry(waiter.InstanceAttributePropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
 			_, err := conn.StartInstances(input)
 
-			if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
+			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
 				return resource.RetryableError(err)
 			}
 
@@ -1931,7 +1928,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -2825,7 +2822,7 @@ func getAwsInstanceVolumeIds(conn *ec2.EC2, instanceId string) ([]string, error)
 	volumeIds := []string{}
 
 	resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+		Filters: BuildAttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})

@@ -9,10 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 const (
@@ -23,8 +21,8 @@ const (
 // StatusCarrierGatewayState fetches the CarrierGateway and its State
 func StatusCarrierGatewayState(conn *ec2.EC2, carrierGatewayID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		carrierGateway, err := finder.FindCarrierGatewayByID(conn, carrierGatewayID)
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
+		carrierGateway, err := FindCarrierGatewayByID(conn, carrierGatewayID)
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCarrierGatewayIDNotFound) {
 			return nil, carrierGatewayStateNotFound, nil
 		}
 		if err != nil {
@@ -91,7 +89,7 @@ func StatusClientVPNEndpoint(conn *ec2.EC2, endpointID string) resource.StateRef
 		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
 		})
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVPNEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNEndpointIdNotFound) {
 			return nil, ClientVPNEndpointStatusNotFound, nil
 		}
 		if err != nil {
@@ -120,8 +118,8 @@ const (
 // StatusClientVPNAuthorizationRule fetches the Client VPN authorization rule and its Status
 func StatusClientVPNAuthorizationRule(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := finder.FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVPNAuthorizationRuleNotFound) {
+		result, err := FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNAuthorizationRuleNotFound) {
 			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
 		}
 		if err != nil {
@@ -158,7 +156,7 @@ func StatusClientVPNNetworkAssociation(conn *ec2.EC2, cvnaID string, cvepID stri
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVPNAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVPNEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeClientVPNEndpointIdNotFound) {
 			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
 		}
 		if err != nil {
@@ -187,8 +185,8 @@ const (
 // StatusClientVPNRoute fetches the Client VPN route and its Status
 func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := finder.FindClientVPNRouteByID(conn, routeID)
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVPNRouteNotFound) {
+		result, err := FindClientVPNRouteByID(conn, routeID)
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNRouteNotFound) {
 			return nil, ClientVPNRouteStatusNotFound, nil
 		}
 		if err != nil {
@@ -218,9 +216,9 @@ func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFu
 // back to the name to prevent unexpected differences.
 func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		instance, err := finder.FindInstanceByID(conn, id)
+		instance, err := FindInstanceByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidInstanceIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
 			return nil, "", nil
 		}
 
@@ -250,7 +248,7 @@ const (
 	RouteStatusReady = "ready"
 )
 
-func StatusRoute(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) resource.StateRefreshFunc {
+func StatusRoute(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := routeFinder(conn, routeTableID, destination)
 
@@ -272,7 +270,7 @@ const (
 
 func StatusRouteTable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindRouteTableByID(conn, id)
+		output, err := FindRouteTableByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -288,7 +286,7 @@ func StatusRouteTable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 
 func StatusRouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindRouteTableAssociationByID(conn, id)
+		output, err := FindRouteTableAssociationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -313,7 +311,7 @@ const (
 // StatusSecurityGroup fetches the security group and its status
 func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		group, err := finder.FindSecurityGroupByID(conn, id)
+		group, err := FindSecurityGroupByID(conn, id)
 		if tfresource.NotFound(err) {
 			return nil, SecurityGroupStatusNotFound, nil
 		}
@@ -328,9 +326,9 @@ func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 // StatusSubnetMapCustomerOwnedIPOnLaunch fetches the Subnet and its MapCustomerOwnedIpOnLaunch
 func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		subnet, err := finder.FindSubnetByID(conn, id)
+		subnet, err := FindSubnetByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
 			return nil, "false", nil
 		}
 
@@ -349,9 +347,9 @@ func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.S
 // StatusSubnetMapPublicIPOnLaunch fetches the Subnet and its MapPublicIpOnLaunch
 func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		subnet, err := finder.FindSubnetByID(conn, id)
+		subnet, err := FindSubnetByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
 			return nil, "false", nil
 		}
 
@@ -369,7 +367,7 @@ func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRef
 
 func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayPrefixListReference, err := finder.FindTransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
+		transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
 
 		if err != nil {
 			return nil, "", err
@@ -385,7 +383,7 @@ func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayR
 
 func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayRouteTablePropagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		transitGatewayRouteTablePropagation, err := FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return nil, "", err
@@ -402,9 +400,9 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 // StatusVPCAttribute fetches the Vpc and its attribute value
 func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributeValue, err := finder.FindVPCAttribute(conn, id, attribute)
+		attributeValue, err := FindVPCAttribute(conn, id, attribute)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCIDNotFound) {
 			return nil, "", nil
 		}
 
@@ -428,8 +426,8 @@ const (
 // StatusVPCPeeringConnection fetches the VPC peering connection and its status
 func StatusVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcPeeringConnection, err := finder.FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCPeeringConnectionIDNotFound) {
+		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCPeeringConnectionIDNotFound) {
 			return nil, vpcPeeringConnectionStatusNotFound, nil
 		}
 		if err != nil {
@@ -465,8 +463,8 @@ const (
 // StatusVPNGatewayVPCAttachmentState fetches the attachment between the specified VPN gateway and VPC and its state
 func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcAttachment, err := finder.FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
-		if tfawserr.ErrCodeEquals(err, tfec2.InvalidVPNGatewayIDNotFound) {
+		vpcAttachment, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
+		if tfawserr.ErrCodeEquals(err, InvalidVPNGatewayIDNotFound) {
 			return nil, attachmentStateNotFound, nil
 		}
 		if err != nil {
@@ -488,7 +486,7 @@ const (
 
 func StatusManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		managedPrefixList, err := finder.FindManagedPrefixListByID(conn, prefixListId)
+		managedPrefixList, err := FindManagedPrefixListByID(conn, prefixListId)
 		if err != nil {
 			return nil, managedPrefixListStateUnknown, err
 		}
@@ -502,7 +500,7 @@ func StatusManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.S
 
 func StatusVPCEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcEndpoint, err := finder.FindVPCEndpointByID(conn, id)
+		vpcEndpoint, err := FindVPCEndpointByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -522,7 +520,7 @@ const (
 
 func StatusVPCEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID, routeTableID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		err := finder.FindVPCEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
+		err := FindVPCEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -557,7 +555,7 @@ func StatusEBSSnapshotImport(conn *ec2.EC2, importTaskId string) resource.StateR
 
 		if task := resp.ImportSnapshotTasks[0]; task != nil {
 			detail := task.SnapshotTaskDetail
-			if detail.Status != nil && aws.StringValue(detail.Status) == tfec2.EBSSnapshotImportStateDeleting {
+			if detail.Status != nil && aws.StringValue(detail.Status) == EBSSnapshotImportStateDeleting {
 				err = fmt.Errorf("Snapshot import task is deleting")
 			}
 			return detail, aws.StringValue(detail.Status), err

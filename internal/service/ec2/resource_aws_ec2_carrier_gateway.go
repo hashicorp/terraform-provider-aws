@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,10 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +69,7 @@ func resourceCarrierGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(output.CarrierGateway.CarrierGatewayId))
 
-	_, err = waiter.WaitCarrierGatewayAvailable(conn, d.Id())
+	_, err = WaitCarrierGatewayAvailable(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EC2 Carrier Gateway (%s) to become available: %w", d.Id(), err)
@@ -86,9 +83,9 @@ func resourceCarrierGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	carrierGateway, err := finder.FindCarrierGatewayByID(conn, d.Id())
+	carrierGateway, err := FindCarrierGatewayByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCarrierGatewayIDNotFound) {
 		log.Printf("[WARN] EC2 Carrier Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -151,7 +148,7 @@ func resourceCarrierGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		CarrierGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCarrierGatewayIDNotFound) {
 		return nil
 	}
 
@@ -159,7 +156,7 @@ func resourceCarrierGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting EC2 Carrier Gateway (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.WaitCarrierGatewayDeleted(conn, d.Id())
+	_, err = WaitCarrierGatewayDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EC2 Carrier Gateway (%s) to be deleted: %w", d.Id(), err)

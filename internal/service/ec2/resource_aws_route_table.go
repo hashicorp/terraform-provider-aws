@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"
@@ -13,12 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfnet "github.com/hashicorp/terraform-provider-aws/internal/net"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -184,7 +181,7 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.RouteTable.RouteTableId))
 
-	if _, err := waiter.WaitRouteTableReady(conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableReady(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route Table (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -216,7 +213,7 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	routeTable, err := finder.FindRouteTableByID(conn, d.Id())
+	routeTable, err := FindRouteTableByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
@@ -368,7 +365,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	routeTable, err := finder.FindRouteTableByID(conn, d.Id())
+	routeTable, err := FindRouteTableByID(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Route Table (%s): %w", d.Id(), err)
@@ -388,7 +385,7 @@ func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		return nil
 	}
 
@@ -398,7 +395,7 @@ func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// Wait for the route table to really destroy
 	log.Printf("[DEBUG] Waiting for route table (%s) deletion", d.Id())
-	if _, err := waiter.WaitRouteTableDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -482,15 +479,15 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destinationAttributeKey {
 	case "cidr_block":
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "ipv6_cidr_block":
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -505,19 +502,19 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.PropagationTimeout,
+		PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
 		},
-		tfec2.ErrCodeInvalidParameterException,
-		tfec2.ErrCodeInvalidTransitGatewayIDNotFound,
+		ErrCodeInvalidParameterException,
+		ErrCodeInvalidTransitGatewayIDNotFound,
 	)
 
 	if err != nil {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.WaitRouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -534,18 +531,18 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -553,7 +550,7 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 	log.Printf("[DEBUG] Deleting Route: %s", input)
 	_, err := conn.DeleteRoute(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteNotFound) {
 		return nil
 	}
 
@@ -561,7 +558,7 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
+	_, err = WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)
@@ -581,15 +578,15 @@ func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
 
-	var routeFinder finder.RouteFinder
+	var routeFinder RouteFinder
 
 	switch destinationAttributeKey {
 	case "cidr_block":
-		routeFinder = finder.FindRouteByIPv4Destination
+		routeFinder = FindRouteByIPv4Destination
 	case "ipv6_cidr_block":
-		routeFinder = finder.FindRouteByIPv6Destination
+		routeFinder = FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
-		routeFinder = finder.FindRouteByPrefixListIDDestination
+		routeFinder = FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -609,7 +606,7 @@ func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.WaitRouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -647,11 +644,11 @@ func ec2RouteTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gateway
 
 	log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.PropagationTimeout,
+		PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.EnableVgwRoutePropagation(input)
 		},
-		tfec2.ErrCodeGatewayNotAttached,
+		ErrCodeGatewayNotAttached,
 	)
 
 	if err != nil {

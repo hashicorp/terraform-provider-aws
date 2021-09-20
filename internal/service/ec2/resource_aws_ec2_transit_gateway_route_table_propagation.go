@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,9 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -69,7 +66,7 @@ func resourceTransitGatewayRouteTablePropagationCreate(d *schema.ResourceData, m
 
 	d.SetId(fmt.Sprintf("%s_%s", transitGatewayRouteTableID, transitGatewayAttachmentID))
 
-	if _, err := waiter.WaitTransitGatewayRouteTablePropagationStateEnabled(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if _, err := WaitTransitGatewayRouteTablePropagationStateEnabled(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) propagation (%s) to enable: %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
@@ -84,9 +81,9 @@ func resourceTransitGatewayRouteTablePropagationRead(d *schema.ResourceData, met
 		return err
 	}
 
-	transitGatewayPropagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayPropagation, err := FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
 		d.SetId("")
 		return nil
@@ -138,7 +135,7 @@ func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, m
 		return fmt.Errorf("error disabling EC2 Transit Gateway Route Table (%s) Propagation (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
-	if _, err := waiter.WaitTransitGatewayRouteTablePropagationStateDisabled(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if _, err := WaitTransitGatewayRouteTablePropagationStateDisabled(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) propagation (%s) to disable: %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 

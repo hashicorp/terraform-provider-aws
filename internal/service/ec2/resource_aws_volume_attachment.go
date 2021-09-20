@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"

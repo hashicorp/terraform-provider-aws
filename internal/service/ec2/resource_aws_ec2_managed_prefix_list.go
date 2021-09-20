@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"context"
@@ -11,10 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -128,7 +125,7 @@ func resourceManagedPrefixListCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(output.PrefixList.PrefixListId))
 
-	if _, err := waiter.WaitManagedPrefixListCreated(conn, d.Id()); err != nil {
+	if _, err := WaitManagedPrefixListCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) creation: %w", d.Id(), err)
 	}
 
@@ -140,9 +137,9 @@ func resourceManagedPrefixListRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	pl, err := finder.FindManagedPrefixListByID(conn, d.Id())
+	pl, err := FindManagedPrefixListByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidPrefixListIDNotFound) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -275,7 +272,7 @@ func resourceManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) e
 					return fmt.Errorf("error updating EC2 Managed Prefix List (%s): %w", d.Id(), err)
 				}
 
-				managedPrefixList, err := waiter.WaitManagedPrefixListModified(conn, d.Id())
+				managedPrefixList, err := WaitManagedPrefixListModified(conn, d.Id())
 
 				if err != nil {
 					return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) update: %w", d.Id(), err)
@@ -309,7 +306,7 @@ func resourceManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if wait {
-			if _, err := waiter.WaitManagedPrefixListModified(conn, d.Id()); err != nil {
+			if _, err := WaitManagedPrefixListModified(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) update: %w", d.Id(), err)
 			}
 		}
@@ -334,7 +331,7 @@ func resourceManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DeleteManagedPrefixList(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidPrefixListIDNotFound) {
 		return nil
 	}
 
@@ -342,7 +339,7 @@ func resourceManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.WaitManagedPrefixListDeleted(conn, d.Id()); err != nil {
+	if err := WaitManagedPrefixListDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) deletion: %w", d.Id(), err)
 	}
 

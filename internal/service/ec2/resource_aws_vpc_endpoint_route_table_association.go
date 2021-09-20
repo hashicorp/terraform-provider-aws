@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,10 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,9 +59,9 @@ func resourceVPCEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("error creating VPC Endpoint Route Table Association (%s): %w", id, err)
 	}
 
-	d.SetId(tfec2.VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 
-	err = waiter.WaitVPCEndpointRouteTableAssociationReady(conn, endpointID, routeTableID)
+	err = WaitVPCEndpointRouteTableAssociationReady(conn, endpointID, routeTableID)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint Route Table Association (%s) to become available: %w", id, err)
@@ -81,7 +78,7 @@ func resourceVPCEndpointRouteTableAssociationRead(d *schema.ResourceData, meta i
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
-	err := finder.FindVPCEndpointRouteTableAssociationExists(conn, endpointID, routeTableID)
+	err := FindVPCEndpointRouteTableAssociationExists(conn, endpointID, routeTableID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Route Table Association (%s) not found, removing from state", id)
@@ -112,7 +109,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting VPC Endpoint Route Table Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
 		return nil
 	}
 
@@ -120,7 +117,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta
 		return fmt.Errorf("error deleting VPC Endpoint Route Table Association (%s): %w", id, err)
 	}
 
-	err = waiter.WaitVPCEndpointRouteTableAssociationDeleted(conn, endpointID, routeTableID)
+	err = WaitVPCEndpointRouteTableAssociationDeleted(conn, endpointID, routeTableID)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint Route Table Association (%s) to delete: %w", id, err)
@@ -139,7 +136,7 @@ func resourceAwsVpcEndpointRouteTableAssociationImport(d *schema.ResourceData, m
 	routeTableID := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) Association", endpointID, routeTableID)
 
-	d.SetId(tfec2.VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 	d.Set("vpc_endpoint_id", endpointID)
 	d.Set("route_table_id", routeTableID)
 

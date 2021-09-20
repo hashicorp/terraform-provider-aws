@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,10 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -69,11 +66,11 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Creating Route Table Association: %s", input)
 	output, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.RouteTableAssociationPropagationTimeout,
+		RouteTableAssociationPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateRouteTable(input)
 		},
-		tfec2.ErrCodeInvalidRouteTableIDNotFound,
+		ErrCodeInvalidRouteTableIDNotFound,
 	)
 
 	if err != nil {
@@ -83,7 +80,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(output.(*ec2.AssociateRouteTableOutput).AssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) creation", d.Id())
-	if _, err := waiter.WaitRouteTableAssociationCreated(conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route Table Association (%s) create: %w", d.Id(), err)
 	}
 
@@ -93,7 +90,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	association, err := finder.FindRouteTableAssociationByID(conn, d.Id())
+	association, err := FindRouteTableAssociationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
@@ -126,7 +123,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	// This whole thing with the resource ID being changed on update seems unsustainable.
 	// Keeping it here for backwards compatibility...
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
 		// Not found, so just create a new one
 		return resourceRouteTableAssociationCreate(d, meta)
 	}
@@ -141,7 +138,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) update", d.Id())
-	if _, err := waiter.WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route Table Association (%s) update: %w", d.Id(), err)
 	}
 
@@ -167,7 +164,7 @@ func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	routeTable, err := finder.FindRouteTableByID(conn, routeTableID)
+	routeTable, err := FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -208,7 +205,7 @@ func ec2RouteTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 		AssociationId: aws.String(associationID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
 		return nil
 	}
 
@@ -217,7 +214,7 @@ func ec2RouteTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
-	if _, err := waiter.WaitRouteTableAssociationDeleted(conn, associationID); err != nil {
+	if _, err := WaitRouteTableAssociationDeleted(conn, associationID); err != nil {
 		return fmt.Errorf("error waiting for Route Table Association (%s) delete: %w", associationID, err)
 	}
 

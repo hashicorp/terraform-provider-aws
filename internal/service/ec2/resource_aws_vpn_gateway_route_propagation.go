@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,7 +78,7 @@ func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interfa
 	rtID := d.Get("route_table_id").(string)
 
 	log.Printf("[INFO] Reading route table %s to check for VPN gateway %s", rtID, gwID)
-	rt, err := waiter.WaitRouteTableReady(conn, rtID)
+	rt, err := WaitRouteTableReady(conn, rtID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route table (%s) not found, removing VPN gateway route propagation (%s) from state", rtID, d.Id())

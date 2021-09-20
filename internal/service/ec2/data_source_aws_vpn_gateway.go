@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,8 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -66,21 +65,21 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		req.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filters = tfec2.BuildAttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"state":             d.Get("state").(string),
 			"availability-zone": d.Get("availability_zone").(string),
 		},
 	)
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		req.Filters = append(req.Filters, tfec2.BuildAttributeFilterList(
+		req.Filters = append(req.Filters, BuildAttributeFilterList(
 			map[string]string{
 				"amazon-side-asn": asn.(string),
 			},
 		)...)
 	}
 	if id, ok := d.GetOk("attached_vpc_id"); ok {
-		req.Filters = append(req.Filters, tfec2.BuildAttributeFilterList(
+		req.Filters = append(req.Filters, BuildAttributeFilterList(
 			map[string]string{
 				"attachment.state":  "attached",
 				"attachment.vpc-id": id.(string),

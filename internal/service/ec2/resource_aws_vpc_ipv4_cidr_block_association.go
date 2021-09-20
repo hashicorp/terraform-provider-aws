@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -86,7 +85,7 @@ func resourceVPCIPv4CIDRBlockAssociationRead(d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: tfec2.BuildAttributeFilterList(
+		Filters: BuildAttributeFilterList(
 			map[string]string{
 				"cidr-block-association.association-id": d.Id(),
 			},

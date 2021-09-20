@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -76,7 +75,7 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if vpc_id, ok := d.GetOk("vpc_id"); ok {
-		req.Filter = append(req.Filter, tfec2.BuildAttributeFilterList(
+		req.Filter = append(req.Filter, BuildAttributeFilterList(
 			map[string]string{
 				"vpc-id": vpc_id.(string),
 			},
@@ -84,7 +83,7 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if state, ok := d.GetOk("state"); ok {
-		req.Filter = append(req.Filter, tfec2.BuildAttributeFilterList(
+		req.Filter = append(req.Filter, BuildAttributeFilterList(
 			map[string]string{
 				"state": state.(string),
 			},
@@ -92,7 +91,7 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if subnet_id, ok := d.GetOk("subnet_id"); ok {
-		req.Filter = append(req.Filter, tfec2.BuildAttributeFilterList(
+		req.Filter = append(req.Filter, BuildAttributeFilterList(
 			map[string]string{
 				"subnet-id": subnet_id.(string),
 			},

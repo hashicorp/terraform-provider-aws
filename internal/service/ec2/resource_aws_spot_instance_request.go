@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"context"
@@ -15,15 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceSpotInstanceRequest() *schema.Resource {
@@ -231,7 +228,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
 
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -295,12 +292,12 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	var request *ec2.SpotInstanceRequest
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		request, err = finder.FindSpotInstanceRequestByID(conn, d.Id())
+		request, err = FindSpotInstanceRequestByID(conn, d.Id())
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotInstanceRequestIDNotFound) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotInstanceRequestIDNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -318,10 +315,10 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		request, err = finder.FindSpotInstanceRequestByID(conn, d.Id())
+		request, err = FindSpotInstanceRequestByID(conn, d.Id())
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotInstanceRequestIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotInstanceRequestIDNotFound) {
 		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

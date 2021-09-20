@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"errors"
@@ -13,12 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -198,13 +194,13 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	vpce := resp.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == tfec2.VPCEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == VPCEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
 
-	_, err = waiter.WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
@@ -218,7 +214,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vpce, err := finder.FindVPCEndpointByID(conn, d.Id())
+	vpce, err := FindVPCEndpointByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
@@ -245,7 +241,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", vpce.VpcId)
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
-		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+		Filters: BuildAttributeFilterList(map[string]string{
 			"prefix-list-name": serviceName,
 		}),
 	})
@@ -318,7 +314,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == tfec2.VPCEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == VPCEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
 		}
@@ -355,7 +351,7 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating VPC Endpoint: %s", err)
 		}
 
-		_, err := waiter.WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err := WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
@@ -382,10 +378,10 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.DeleteVpcEndpoints(input)
 
 	if err == nil && output != nil {
-		err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCEndpointNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointNotFound) {
 		return nil
 	}
 
@@ -393,7 +389,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.WaitVPCEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = WaitVPCEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EC2 VPC Endpoint (%s) to delete: %w", d.Id(), err)
@@ -404,7 +400,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 
 func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Duration) error {
 	describeSvcReq := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
-	describeSvcReq.Filters = tfec2.BuildAttributeFilterList(
+	describeSvcReq.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"service-name": svcName,
 		},
@@ -429,7 +425,7 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Durat
 		return fmt.Errorf("error accepting VPC Endpoint (%s) connection: %s", vpceId, err)
 	}
 
-	_, err = waiter.WaitVPCEndpointAccepted(conn, vpceId, timeout)
+	_, err = WaitVPCEndpointAccepted(conn, vpceId, timeout)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to be accepted: %w", vpceId, err)

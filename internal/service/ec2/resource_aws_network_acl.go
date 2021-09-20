@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"bytes"
@@ -16,11 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -277,10 +274,10 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	var networkAcl *ec2.NetworkAcl
 
-	err := resource.Retry(waiter.NetworkACLPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(NetworkACLPropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		networkAcl, err = finder.FindNetworkACLByID(conn, d.Id())
+		networkAcl, err = FindNetworkACLByID(conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {
 			return resource.RetryableError(err)
@@ -300,7 +297,7 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		networkAcl, err = finder.FindNetworkACLByID(conn, d.Id())
+		networkAcl, err = FindNetworkACLByID(conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {
@@ -746,7 +743,7 @@ func getDefaultNetworkAcl(vpcId string, conn *ec2.EC2) (defaultAcl *ec2.NetworkA
 
 func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssociation *ec2.NetworkAclAssociation, err error) {
 	req := &ec2.DescribeNetworkAclsInput{}
-	req.Filters = tfec2.BuildAttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"association.subnet-id": subnetId,
 		},

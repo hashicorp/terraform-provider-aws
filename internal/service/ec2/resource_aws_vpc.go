@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"context"
@@ -15,10 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -202,7 +200,7 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error enabling EC2 VPC (%s) DNS Hostnames: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, d.Get("enable_dns_hostnames").(bool)); err != nil {
+		if _, err := WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, d.Get("enable_dns_hostnames").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 VPC (%s) DNS Hostnames to enable: %w", d.Id(), err)
 		}
 	}
@@ -222,7 +220,7 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error disabling EC2 VPC (%s) DNS Support: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport, d.Get("enable_dns_support").(bool)); err != nil {
+		if _, err := WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport, d.Get("enable_dns_support").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 VPC (%s) DNS Support to disable: %w", d.Id(), err)
 		}
 	}
@@ -257,10 +255,10 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	var vpc *ec2.Vpc
 
-	err := resource.Retry(waiter.VPCPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(VPCPropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		vpc, err = finder.FindVPCByID(conn, d.Id())
+		vpc, err = FindVPCByID(conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
 			return resource.RetryableError(err)
@@ -280,7 +278,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		vpc, err = finder.FindVPCByID(conn, d.Id())
+		vpc, err = FindVPCByID(conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
@@ -344,7 +342,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	enableDnsHostnames, err := finder.FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
+	enableDnsHostnames, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames, err)
@@ -352,7 +350,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("enable_dns_hostnames", enableDnsHostnames)
 
-	enableDnsSupport, err := finder.FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
+	enableDnsSupport, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport, err)
@@ -447,7 +445,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating EC2 VPC (%s) DNS Hostnames: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, d.Get("enable_dns_hostnames").(bool)); err != nil {
+		if _, err := WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, d.Get("enable_dns_hostnames").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 VPC (%s) DNS Hostnames update: %w", d.Id(), err)
 		}
 	}
@@ -466,7 +464,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating EC2 VPC (%s) DNS Support: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport, d.Get("enable_dns_support").(bool)); err != nil {
+		if _, err := WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport, d.Get("enable_dns_support").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 VPC (%s) DNS Support update: %w", d.Id(), err)
 		}
 	}

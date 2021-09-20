@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -222,7 +220,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeClientVPNEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -450,14 +448,14 @@ func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
 	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 	})
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = waiter.WaitClientVPNEndpointDeleted(conn, endpointID)
+	_, err = WaitClientVPNEndpointDeleted(conn, endpointID)
 
 	return err
 }

@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -7,9 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -75,7 +72,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 		req.Description = aws.String(v.(string))
 	}
 
-	id := tfec2.ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr)
+	id := ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr)
 
 	_, err := conn.CreateClientVpnRoute(req)
 
@@ -91,13 +88,13 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	resp, err := finder.FindClientVPNRoute(conn,
+	resp, err := FindClientVPNRoute(conn,
 		d.Get("client_vpn_endpoint_id").(string),
 		d.Get("target_vpc_subnet_id").(string),
 		d.Get("destination_cidr_block").(string),
 	)
 
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNRouteNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -144,27 +141,27 @@ func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) error {
-	id := tfec2.ClientVPNRouteCreateID(
+	id := ClientVPNRouteCreateID(
 		aws.StringValue(input.ClientVpnEndpointId),
 		aws.StringValue(input.TargetVpcSubnetId),
 		aws.StringValue(input.DestinationCidrBlock),
 	)
 
 	_, err := conn.DeleteClientVpnRoute(input)
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNRouteNotFound, "") {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = waiter.WaitClientVPNRouteDeleted(conn, id)
+	_, err = WaitClientVPNRouteDeleted(conn, id)
 
 	return err
 }
 
 func resourceAwsEc2ClientVpnRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, targetSubnetID, destinationCidr, err := tfec2.ClientVPNRouteParseID(d.Id())
+	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseID(d.Id())
 	if err != nil {
 		return nil, err
 	}

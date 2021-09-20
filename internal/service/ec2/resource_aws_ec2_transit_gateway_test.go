@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"errors"
@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func init() {
@@ -629,7 +629,7 @@ func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableVpcAttachmentNo
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := tfec2.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err
@@ -649,7 +649,7 @@ func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableVpcAttachmentPr
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := tfec2.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err

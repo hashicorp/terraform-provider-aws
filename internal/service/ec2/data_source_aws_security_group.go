@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"errors"
@@ -8,10 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,7 +63,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		req.GroupIds = []*string{aws.String(id.(string))}
 	}
 
-	req.Filters = tfec2.BuildAttributeFilterList(
+	req.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"group-name": d.Get("name").(string),
 			"vpc-id":     d.Get("vpc_id").(string),
@@ -82,7 +80,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		req.Filters = nil
 	}
 
-	sg, err := finder.FindSecurityGroup(conn, req)
+	sg, err := FindSecurityGroup(conn, req)
 	if errors.Is(err, tfresource.ErrEmptyResult) {
 		return fmt.Errorf("no matching SecurityGroup found")
 	}

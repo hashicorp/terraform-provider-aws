@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -10,10 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,7 +46,7 @@ func resourceNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	iface, err := finder.FindNetworkInterfaceByID(conn, interfaceID)
+	iface, err := FindNetworkInterfaceByID(conn, interfaceID)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Network Interface (%s): %w", interfaceID, err)
@@ -95,12 +92,12 @@ func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta inter
 
 	var groupIdentifier *ec2.GroupIdentifier
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		groupIdentifier, err = finder.FindNetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
+		groupIdentifier, err = FindNetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -118,10 +115,10 @@ func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta inter
 	})
 
 	if tfresource.TimedOut(err) {
-		groupIdentifier, err = finder.FindNetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
+		groupIdentifier, err = FindNetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
 		log.Printf("[WARN] EC2 Network Interface Security Group Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -159,7 +156,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	iface, err := finder.FindNetworkInterfaceByID(conn, interfaceID)
+	iface, err := FindNetworkInterfaceByID(conn, interfaceID)
 
 	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
