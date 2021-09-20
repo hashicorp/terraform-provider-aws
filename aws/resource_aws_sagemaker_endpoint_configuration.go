@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceEndpointConfiguration() *schema.Resource {
@@ -171,8 +172,8 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"data_capture_config": {
 				Type:     schema.TypeList,
@@ -271,14 +272,14 @@ func ResourceEndpointConfiguration() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceEndpointConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -351,7 +352,7 @@ func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting async_inference_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
-	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
+	tags, err := tftags.SagemakerListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Sagemaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
@@ -376,7 +377,7 @@ func resourceEndpointConfigurationUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Sagemaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
 		}
 	}

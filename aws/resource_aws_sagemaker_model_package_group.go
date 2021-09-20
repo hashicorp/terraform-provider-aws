@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceModelPackageGroup() *schema.Resource {
@@ -46,18 +47,18 @@ func ResourceModelPackageGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("model_package_group_name").(string)
 	input := &sagemaker.CreateModelPackageGroupInput{
@@ -107,7 +108,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", arn)
 	d.Set("model_package_group_description", mpg.ModelPackageGroupDescription)
 
-	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
+	tags, err := tftags.SagemakerListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
@@ -133,7 +134,7 @@ func resourceModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Model Package Group (%s) tags: %s", d.Id(), err)
 		}
 	}

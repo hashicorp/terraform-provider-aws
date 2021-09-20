@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceImage() *schema.Resource {
@@ -57,18 +58,18 @@ func ResourceImage() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 512),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageInput{
@@ -127,7 +128,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("display_name", image.DisplayName)
 	d.Set("description", image.Description)
 
-	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
+	tags, err := tftags.SagemakerListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker Image (%s): %w", d.Id(), err)
@@ -192,7 +193,7 @@ func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Image (%s) tags: %s", d.Id(), err)
 		}
 	}
