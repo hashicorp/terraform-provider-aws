@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
@@ -216,7 +217,7 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 				Config: awsElasticTranscoderPipelineConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticTranscoderPipeline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

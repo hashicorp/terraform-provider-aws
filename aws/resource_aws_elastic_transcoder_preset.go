@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticTranscoderPreset() *schema.Resource {
+func ResourcePreset() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticTranscoderPresetCreate,
-		Read:   resourceAwsElasticTranscoderPresetRead,
-		Delete: resourceAwsElasticTranscoderPresetDelete,
+		Create: resourcePresetCreate,
+		Read:   resourcePresetRead,
+		Delete: resourcePresetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -320,7 +320,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticTranscoderPresetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.CreatePresetInput{
@@ -565,7 +565,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 	return watermarks
 }
 
-func resourceAwsElasticTranscoderPresetRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	resp, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
@@ -724,7 +724,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 	return watermarkSet
 }
 
-func resourceAwsElasticTranscoderPresetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePresetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())

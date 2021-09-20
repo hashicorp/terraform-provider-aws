@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticTranscoderPipeline() *schema.Resource {
+func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticTranscoderPipelineCreate,
-		Read:   resourceAwsElasticTranscoderPipelineRead,
-		Update: resourceAwsElasticTranscoderPipelineUpdate,
-		Delete: resourceAwsElasticTranscoderPipelineDelete,
+		Create: resourcePipelineCreate,
+		Read:   resourcePipelineRead,
+		Update: resourcePipelineUpdate,
+		Delete: resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -224,7 +224,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.CreatePipelineInput{
@@ -265,7 +265,7 @@ func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta int
 		log.Printf("[WARN] Elastic Transcoder Pipeline %v: %v", *w.Code, *w.Message)
 	}
 
-	return resourceAwsElasticTranscoderPipelineRead(d, meta)
+	return resourcePipelineRead(d, meta)
 }
 
 func expandETNotifications(d *schema.ResourceData) *elastictranscoder.Notifications {
@@ -400,7 +400,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 	return set
 }
 
-func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.UpdatePipelineInput{
@@ -446,10 +446,10 @@ func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta int
 			aws.StringValue(w.Message))
 	}
 
-	return resourceAwsElasticTranscoderPipelineRead(d, meta)
+	return resourcePipelineRead(d, meta)
 }
 
-func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
@@ -522,7 +522,7 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsElasticTranscoderPipelineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
