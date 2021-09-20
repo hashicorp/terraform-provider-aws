@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -471,7 +472,7 @@ func TestAccAWSDBProxy_disappears(t *testing.T) {
 				Config: testAccAWSDBProxyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDbProxy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProxy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

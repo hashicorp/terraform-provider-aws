@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppCookieStickinessPolicy() *schema.Resource {
+func ResourceAppCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		// There is no concept of "updating" an App Stickiness policy in
 		// the AWS API.
-		Create: resourceAwsAppCookieStickinessPolicyCreate,
-		Read:   resourceAwsAppCookieStickinessPolicyRead,
-		Delete: resourceAwsAppCookieStickinessPolicyDelete,
+		Create: resourceAppCookieStickinessPolicyCreate,
+		Read:   resourceAppCookieStickinessPolicyRead,
+		Delete: resourceAppCookieStickinessPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsAppCookieStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsAppCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	// Provision the AppStickinessPolicy
@@ -92,7 +92,7 @@ func resourceAwsAppCookieStickinessPolicyCreate(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, lbPort, policyName := resourceAwsAppCookieStickinessPolicyParseId(d.Id())
@@ -184,7 +184,7 @@ func resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort string, co
 	return assigned, nil
 }
 
-func resourceAwsAppCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, _, policyName := resourceAwsAppCookieStickinessPolicyParseId(d.Id())

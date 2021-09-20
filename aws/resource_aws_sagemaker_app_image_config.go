@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerAppImageConfig() *schema.Resource {
+func ResourceAppImageConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerAppImageConfigCreate,
-		Read:   resourceAwsSagemakerAppImageConfigRead,
-		Update: resourceAwsSagemakerAppImageConfigUpdate,
-		Delete: resourceAwsSagemakerAppImageConfigDelete,
+		Create: resourceAppImageConfigCreate,
+		Read:   resourceAppImageConfigRead,
+		Update: resourceAppImageConfigUpdate,
+		Delete: resourceAppImageConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -99,7 +99,7 @@ func resourceAwsSagemakerAppImageConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerAppImageConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("app_image_config_name").(string)
@@ -118,10 +118,10 @@ func resourceAwsSagemakerAppImageConfigCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerAppImageConfigRead(d, meta)
+	return resourceAppImageConfigRead(d, meta)
 }
 
-func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	image, err := finder.AppImageConfigByName(conn, d.Id())
@@ -146,7 +146,7 @@ func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("kernel_gateway_image_config") {
@@ -167,10 +167,10 @@ func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta inter
 
 	}
 
-	return resourceAwsSagemakerAppImageConfigRead(d, meta)
+	return resourceAppImageConfigRead(d, meta)
 }
 
-func resourceAwsSagemakerAppImageConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppImageConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteAppImageConfigInput{

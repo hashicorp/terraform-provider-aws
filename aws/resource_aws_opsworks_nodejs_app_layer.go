@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksNodejsAppLayer() *schema.Resource {
+func ResourceNodejsAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeNodejsApp,
 		DefaultLayerName: "Node.js App Server",

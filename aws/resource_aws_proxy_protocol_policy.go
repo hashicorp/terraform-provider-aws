@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsProxyProtocolPolicy() *schema.Resource {
+func ResourceProxyProtocolPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsProxyProtocolPolicyCreate,
-		Read:   resourceAwsProxyProtocolPolicyRead,
-		Update: resourceAwsProxyProtocolPolicyUpdate,
-		Delete: resourceAwsProxyProtocolPolicyDelete,
+		Create: resourceProxyProtocolPolicyCreate,
+		Read:   resourceProxyProtocolPolicyRead,
+		Update: resourceProxyProtocolPolicyUpdate,
+		Delete: resourceProxyProtocolPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer": {
@@ -35,7 +35,7 @@ func resourceAwsProxyProtocolPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := aws.String(d.Get("load_balancer").(string))
 
@@ -63,10 +63,10 @@ func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface
 	d.SetId(fmt.Sprintf("%s:%s", *elbname, *input.PolicyName))
 	log.Printf("[INFO] ELB PolicyName: %s", *input.PolicyName)
 
-	return resourceAwsProxyProtocolPolicyUpdate(d, meta)
+	return resourceProxyProtocolPolicyUpdate(d, meta)
 }
 
-func resourceAwsProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := d.Get("load_balancer").(string)
 
@@ -96,7 +96,7 @@ func resourceAwsProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := aws.String(d.Get("load_balancer").(string))
 
@@ -146,10 +146,10 @@ func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsProxyProtocolPolicyRead(d, meta)
+	return resourceProxyProtocolPolicyRead(d, meta)
 }
 
-func resourceAwsProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := aws.String(d.Get("load_balancer").(string))
 

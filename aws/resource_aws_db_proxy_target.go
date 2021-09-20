@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbProxyTarget() *schema.Resource {
+func ResourceProxyTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyTargetCreate,
-		Read:   resourceAwsDbProxyTargetRead,
-		Delete: resourceAwsDbProxyTargetDelete,
+		Create: resourceProxyTargetCreate,
+		Read:   resourceProxyTargetRead,
+		Delete: resourceProxyTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsDbProxyTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsDbProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbProxyName := d.Get("db_proxy_name").(string)
@@ -112,7 +112,7 @@ func resourceAwsDbProxyTargetCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, aws.StringValue(dbProxyTarget.Type), aws.StringValue(dbProxyTarget.RdsResourceId)}, "/"))
 
-	return resourceAwsDbProxyTargetRead(d, meta)
+	return resourceProxyTargetRead(d, meta)
 }
 
 func resourceAwsDbProxyTargetParseID(id string) (string, string, string, string, error) {
@@ -123,7 +123,7 @@ func resourceAwsDbProxyTargetParseID(id string) (string, string, string, string,
 	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
 
-func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(d.Id())
@@ -173,7 +173,7 @@ func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsDbProxyTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.DeregisterDBProxyTargetsInput{

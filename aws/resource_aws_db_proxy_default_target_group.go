@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
+func ResourceProxyDefaultTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyDefaultTargetGroupCreate,
-		Read:   resourceAwsDbProxyDefaultTargetGroupRead,
-		Update: resourceAwsDbProxyDefaultTargetGroupUpdate,
+		Create: resourceProxyDefaultTargetGroupCreate,
+		Read:   resourceProxyDefaultTargetGroupRead,
+		Update: resourceProxyDefaultTargetGroupUpdate,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -91,7 +91,7 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, d.Id())
@@ -121,12 +121,12 @@ func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDbProxyDefaultTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyDefaultTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("db_proxy_name").(string))
 	return resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutCreate)
 }
 
-func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutUpdate)
 }
 
@@ -160,7 +160,7 @@ func resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, me
 		return fmt.Errorf("Error waiting for DB Proxy default target group update: %s", err)
 	}
 
-	return resourceAwsDbProxyDefaultTargetGroupRead(d, meta)
+	return resourceProxyDefaultTargetGroupRead(d, meta)
 }
 
 func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoolConfiguration {

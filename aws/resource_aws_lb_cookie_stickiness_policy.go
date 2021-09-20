@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLBCookieStickinessPolicy() *schema.Resource {
+func ResourceCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		// There is no concept of "updating" an LB Stickiness policy in
 		// the AWS API.
-		Create: resourceAwsLBCookieStickinessPolicyCreate,
-		Read:   resourceAwsLBCookieStickinessPolicyRead,
-		Delete: resourceAwsLBCookieStickinessPolicyDelete,
+		Create: resourceCookieStickinessPolicyCreate,
+		Read:   resourceCookieStickinessPolicyRead,
+		Delete: resourceCookieStickinessPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -51,7 +51,7 @@ func resourceAwsLBCookieStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsLBCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	// Provision the LBStickinessPolicy
@@ -87,7 +87,7 @@ func resourceAwsLBCookieStickinessPolicyCreate(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, lbPort, policyName := resourceAwsLBCookieStickinessPolicyParseId(d.Id())
@@ -148,7 +148,7 @@ func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsLBCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, _, policyName := resourceAwsLBCookieStickinessPolicyParseId(d.Id())

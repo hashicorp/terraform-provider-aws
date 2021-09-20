@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
@@ -93,7 +94,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDbProxyTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
