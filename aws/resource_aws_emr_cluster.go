@@ -925,17 +925,17 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		resp, err = conn.RunJobFlow(params)
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "Invalid InstanceProfile:") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid InstanceProfile:") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "AccessDeniedException", "Failed to authorize instance profile") {
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Failed to authorize instance profile") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.RunJobFlow(params)
 	}
 	if err != nil {
@@ -1006,7 +1006,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		// handling should be updated for deeper inspection of the special error type
 		// which includes an accurate error code:
 		//   ErrorCode: "NoSuchCluster",
-		if isAWSErr(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
 			log.Printf("[DEBUG] EMR Cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -1239,7 +1239,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				return nil
 			})
 
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				var autoscalingPolicy *emr.AutoScalingPolicyDescription
 
 				autoscalingPolicy, err = getEmrCoreInstanceGroupAutoscalingPolicy(conn, d.Id())
@@ -1390,7 +1390,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.ListInstances(input)
 
 		if err == nil {
