@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
@@ -86,8 +87,8 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 4096),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,14 +99,14 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
 
 	input := &datasync.CreateLocationFsxWindowsInput{
@@ -177,7 +178,7 @@ func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting creation_time: %w", err)
 	}
 
-	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+	tags, err := tftags.DatasyncListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %w", d.Id(), err)
@@ -203,7 +204,7 @@ func resourceLocationFSxWindowsFileSystemUpdate(d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Location Fsx Windows File System (%s) tags: %w", d.Id(), err)
 		}
 	}

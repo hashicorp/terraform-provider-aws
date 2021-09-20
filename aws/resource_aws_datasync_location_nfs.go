@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceLocationNFS() *schema.Resource {
@@ -85,22 +86,22 @@ func ResourceLocationNFS() *schema.Resource {
 					return false
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationNfsInput{
 		OnPremConfig:   expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
@@ -165,7 +166,7 @@ func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
 
-	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+	tags, err := tftags.DatasyncListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Location NFS (%s): %w", d.Id(), err)
@@ -208,7 +209,7 @@ func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Location NFS (%s) tags: %w", d.Id(), err)
 		}
 	}
