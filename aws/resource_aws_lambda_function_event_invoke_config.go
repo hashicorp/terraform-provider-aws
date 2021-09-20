@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
+func ResourceFunctionEventInvokeConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaFunctionEventInvokeConfigCreate,
-		Read:   resourceAwsLambdaFunctionEventInvokeConfigRead,
-		Update: resourceAwsLambdaFunctionEventInvokeConfigUpdate,
-		Delete: resourceAwsLambdaFunctionEventInvokeConfigDelete,
+		Create: resourceFunctionEventInvokeConfigCreate,
+		Read:   resourceFunctionEventInvokeConfigRead,
+		Update: resourceFunctionEventInvokeConfigUpdate,
+		Delete: resourceFunctionEventInvokeConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -90,7 +90,7 @@ func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -146,10 +146,10 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 
 	d.SetId(id)
 
-	return resourceAwsLambdaFunctionEventInvokeConfigRead(d, meta)
+	return resourceFunctionEventInvokeConfigRead(d, meta)
 }
 
-func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
@@ -190,7 +190,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
@@ -242,10 +242,10 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsLambdaFunctionEventInvokeConfigRead(d, meta)
+	return resourceFunctionEventInvokeConfigRead(d, meta)
 }
 
-func resourceAwsLambdaFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())

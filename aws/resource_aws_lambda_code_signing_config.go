@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
+func ResourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaCodeSigningConfigCreate,
-		Read:   resourceAwsLambdaCodeSigningConfigRead,
-		Update: resourceAwsLambdaCodeSigningConfigUpdate,
-		Delete: resourceAwsLambdaCodeSigningConfigDelete,
+		Create: resourceCodeSigningConfigCreate,
+		Read:   resourceCodeSigningConfigRead,
+		Update: resourceCodeSigningConfigUpdate,
+		Delete: resourceCodeSigningConfigDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -82,7 +82,7 @@ func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Creating Lambda code signing config")
@@ -110,10 +110,10 @@ func resourceAwsLambdaCodeSigningConfigCreate(d *schema.ResourceData, meta inter
 	}
 	d.SetId(aws.StringValue(configOutput.CodeSigningConfig.CodeSigningConfigArn))
 
-	return resourceAwsLambdaCodeSigningConfigRead(d, meta)
+	return resourceCodeSigningConfigRead(d, meta)
 }
 
-func resourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	configOutput, err := conn.GetCodeSigningConfig(&lambda.GetCodeSigningConfigInput{
@@ -162,7 +162,7 @@ func resourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsLambdaCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	configInput := &lambda.UpdateCodeSigningConfigInput{
@@ -196,10 +196,10 @@ func resourceAwsLambdaCodeSigningConfigUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsLambdaCodeSigningConfigRead(d, meta)
+	return resourceCodeSigningConfigRead(d, meta)
 }
 
-func resourceAwsLambdaCodeSigningConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeSigningConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	_, err := conn.DeleteCodeSigningConfig(&lambda.DeleteCodeSigningConfigInput{

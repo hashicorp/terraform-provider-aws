@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLambdaEventSourceMapping() *schema.Resource {
+func ResourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaEventSourceMappingCreate,
-		Read:   resourceAwsLambdaEventSourceMappingRead,
-		Update: resourceAwsLambdaEventSourceMappingUpdate,
-		Delete: resourceAwsLambdaEventSourceMappingDelete,
+		Create: resourceEventSourceMappingCreate,
+		Read:   resourceEventSourceMappingRead,
+		Update: resourceEventSourceMappingUpdate,
+		Delete: resourceEventSourceMappingDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -285,7 +285,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
@@ -414,10 +414,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsLambdaEventSourceMappingRead(d, meta)
+	return resourceEventSourceMappingRead(d, meta)
 }
 
-func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, d.Id())
@@ -491,7 +491,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Updating Lambda Event Source Mapping: %s", d.Id())
@@ -578,10 +578,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
 	}
 
-	return resourceAwsLambdaEventSourceMappingRead(d, meta)
+	return resourceEventSourceMappingRead(d, meta)
 }
 
-func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())

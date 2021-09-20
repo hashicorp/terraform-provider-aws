@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLambdaAlias() *schema.Resource {
+func DataSourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaAliasRead,
+		Read: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -47,7 +47,7 @@ func dataSourceAwsLambdaAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)

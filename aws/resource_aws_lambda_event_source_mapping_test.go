@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
@@ -264,7 +265,7 @@ func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 				Config: testAccAWSLambdaEventSourceMappingConfigSqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLambdaEventSourceMapping(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

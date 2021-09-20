@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
+func DataSourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaCodeSigningConfigRead,
+		Read: dataSourceCodeSigningConfigRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -63,7 +63,7 @@ func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	arn := d.Get("arn").(string)

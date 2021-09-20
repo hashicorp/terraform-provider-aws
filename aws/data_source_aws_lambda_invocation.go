@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLambdaInvocation() *schema.Resource {
+func DataSourceInvocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaInvocationRead,
+		Read: dataSourceInvocationRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -41,7 +41,7 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
