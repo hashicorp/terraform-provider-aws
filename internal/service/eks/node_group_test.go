@@ -94,7 +94,7 @@ func testSweepEksNodeGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEksNodeGroup_basic(t *testing.T) {
+func TestAccEKSNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	eksClusterResourceName := "aws_eks_cluster.test"
@@ -146,7 +146,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_Name_Generated(t *testing.T) {
+func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -174,7 +174,7 @@ func TestAccAWSEksNodeGroup_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
+func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -202,7 +202,7 @@ func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
+func TestAccEKSNodeGroup_disappears(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -225,7 +225,7 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
+func TestAccEKSNodeGroup_amiType(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -259,7 +259,7 @@ func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_CapacityType_Spot(t *testing.T) {
+func TestAccEKSNodeGroup_CapacityType_spot(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -286,7 +286,7 @@ func TestAccAWSEksNodeGroup_CapacityType_Spot(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_DiskSize(t *testing.T) {
+func TestAccEKSNodeGroup_diskSize(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -313,7 +313,7 @@ func TestAccAWSEksNodeGroup_DiskSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
+func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -348,7 +348,7 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_InstanceTypes_Multiple(t *testing.T) {
+func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ec2InstanceTypeOfferingsDataSourceName := "data.aws_ec2_instance_type_offerings.available"
@@ -376,7 +376,7 @@ func TestAccAWSEksNodeGroup_InstanceTypes_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_InstanceTypes_Single(t *testing.T) {
+func TestAccEKSNodeGroup_InstanceTypes_single(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -403,7 +403,7 @@ func TestAccAWSEksNodeGroup_InstanceTypes_Single(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_Labels(t *testing.T) {
+func TestAccEKSNodeGroup_labels(t *testing.T) {
 	var nodeGroup1, nodeGroup2, nodeGroup3 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -448,7 +448,7 @@ func TestAccAWSEksNodeGroup_Labels(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_LaunchTemplate_Id(t *testing.T) {
+func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	launchTemplateResourceName1 := "aws_launch_template.test1"
@@ -487,7 +487,7 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Id(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_LaunchTemplate_Name(t *testing.T) {
+func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	launchTemplateResourceName1 := "aws_launch_template.test1"
@@ -526,7 +526,7 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_LaunchTemplate_Version(t *testing.T) {
+func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -564,7 +564,7 @@ func TestAccAWSEksNodeGroup_LaunchTemplate_Version(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
+func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ssmParameterDataSourceName := "data.aws_ssm_parameter.test"
@@ -600,7 +600,7 @@ func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
+func TestAccEKSNodeGroup_RemoteAccess_ec2SSHKey(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -633,7 +633,7 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
+func TestAccEKSNodeGroup_RemoteAccess_sourceSecurityGroupIDs(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -666,7 +666,7 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_ScalingConfig_DesiredSize(t *testing.T) {
+func TestAccEKSNodeGroup_Scaling_desiredSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -707,7 +707,7 @@ func TestAccAWSEksNodeGroup_ScalingConfig_DesiredSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_ScalingConfig_MaxSize(t *testing.T) {
+func TestAccEKSNodeGroup_Scaling_maxSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -748,7 +748,7 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MaxSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
+func TestAccEKSNodeGroup_Scaling_minSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -789,7 +789,7 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T) {
+func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -840,7 +840,7 @@ func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T)
 	})
 }
 
-func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
+func TestAccEKSNodeGroup_tags(t *testing.T) {
 	var nodeGroup1, nodeGroup2, nodeGroup3 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -887,7 +887,7 @@ func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
+func TestAccEKSNodeGroup_taints(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -950,7 +950,7 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
+func TestAccEKSNodeGroup_update(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
@@ -988,7 +988,7 @@ func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_Version(t *testing.T) {
+func TestAccEKSNodeGroup_version(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"

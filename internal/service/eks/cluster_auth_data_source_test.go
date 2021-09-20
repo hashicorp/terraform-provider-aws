@@ -11,7 +11,7 @@ import (
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
-func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
+func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_cluster_auth.test"
 
 	resource.ParallelTest(t, resource.TestCase{

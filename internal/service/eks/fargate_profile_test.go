@@ -92,7 +92,7 @@ func testSweepEksFargateProfiles(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEksFargateProfile_basic(t *testing.T) {
+func TestAccEKSFargateProfile_basic(t *testing.T) {
 	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	eksClusterResourceName := "aws_eks_cluster.test"
@@ -128,7 +128,7 @@ func TestAccAWSEksFargateProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
+func TestAccEKSFargateProfile_disappears(t *testing.T) {
 	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_fargate_profile.test"
@@ -151,7 +151,7 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
+func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName1 := "aws_eks_fargate_profile.test.0"
@@ -174,7 +174,7 @@ func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
+func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 	var fargateProfile1 eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_fargate_profile.test"
@@ -200,7 +200,7 @@ func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksFargateProfile_Tags(t *testing.T) {
+func TestAccEKSFargateProfile_tags(t *testing.T) {
 	var fargateProfile1, fargateProfile2, fargateProfile3 eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_fargate_profile.test"

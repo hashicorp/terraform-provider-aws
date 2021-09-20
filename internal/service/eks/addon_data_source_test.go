@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEksAddonDataSource_basic(t *testing.T) {
+func TestAccEKSAddonDataSource_basic(t *testing.T) {
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_eks_addon.test"

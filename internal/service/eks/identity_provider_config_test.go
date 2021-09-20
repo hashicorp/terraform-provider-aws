@@ -93,7 +93,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
+func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	eksClusterResourceName := "aws_eks_cluster.test"
@@ -137,7 +137,7 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
+func TestAccEKSIdentityProviderConfig_disappears(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
@@ -161,7 +161,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_AllOidcOptions(t *testing.T) {
+func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
@@ -199,7 +199,7 @@ func TestAccAWSEksIdentityProviderConfig_AllOidcOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
+func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"

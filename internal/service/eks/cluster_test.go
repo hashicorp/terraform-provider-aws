@@ -74,7 +74,7 @@ func testSweepEksClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSEksCluster_basic(t *testing.T) {
+func TestAccEKSCluster_basic(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -121,7 +121,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_disappears(t *testing.T) {
+func TestAccEKSCluster_disappears(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -144,7 +144,7 @@ func TestAccAWSEksCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_EncryptionConfig_Create(t *testing.T) {
+func TestAccEKSCluster_Encryption_create(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -175,7 +175,7 @@ func TestAccAWSEksCluster_EncryptionConfig_Create(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
+func TestAccEKSCluster_Encryption_update(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -215,7 +215,7 @@ func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/19968.
-func TestAccAWSEksCluster_EncryptionConfig_VersionUpdate(t *testing.T) {
+func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -259,7 +259,7 @@ func TestAccAWSEksCluster_EncryptionConfig_VersionUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_Version(t *testing.T) {
+func TestAccEKSCluster_version(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -294,7 +294,7 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_Logging(t *testing.T) {
+func TestAccEKSCluster_logging(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -341,7 +341,7 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_Tags(t *testing.T) {
+func TestAccEKSCluster_tags(t *testing.T) {
 	var cluster1, cluster2, cluster3 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -386,7 +386,7 @@ func TestAccAWSEksCluster_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
+func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -414,7 +414,7 @@ func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
+func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 	var cluster1, cluster2, cluster3 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -460,7 +460,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
+func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 	var cluster1, cluster2, cluster3 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -506,7 +506,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
+func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
@@ -542,7 +542,7 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_NetworkConfig_ServiceIpv4Cidr(t *testing.T) {
+func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
