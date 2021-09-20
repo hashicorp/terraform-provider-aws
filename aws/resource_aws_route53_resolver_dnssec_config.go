@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53ResolverDnssecConfig() *schema.Resource {
+func ResourceDNSSECConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverDnssecConfigCreate,
-		Read:   resourceAwsRoute53ResolverDnssecConfigRead,
-		Delete: resourceAwsRoute53ResolverDnssecConfigDelete,
+		Create: resourceDNSSECConfigCreate,
+		Read:   resourceDNSSECConfigRead,
+		Delete: resourceDNSSECConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,7 +53,7 @@ func resourceAwsRoute53ResolverDnssecConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverDnssecConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDNSSECConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	req := &route53resolver.UpdateResolverDnssecConfigInput{
@@ -74,10 +74,10 @@ func resourceAwsRoute53ResolverDnssecConfigCreate(d *schema.ResourceData, meta i
 		return err
 	}
 
-	return resourceAwsRoute53ResolverDnssecConfigRead(d, meta)
+	return resourceDNSSECConfigRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	config, err := finder.ResolverDnssecConfigByID(conn, d.Id())
@@ -109,7 +109,7 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsRoute53ResolverDnssecConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDNSSECConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	// To delete a Route 53 ResolverDnssecConfig, it must be:

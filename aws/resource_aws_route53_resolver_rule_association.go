@@ -17,11 +17,11 @@ const (
 	route53ResolverRuleAssociationStatusDeleted = "DELETED"
 )
 
-func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
+func ResourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverRuleAssociationCreate,
-		Read:   resourceAwsRoute53ResolverRuleAssociationRead,
-		Delete: resourceAwsRoute53ResolverRuleAssociationDelete,
+		Create: resourceRuleAssociationCreate,
+		Read:   resourceRuleAssociationRead,
+		Delete: resourceRuleAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	req := &route53resolver.AssociateResolverRuleInput{
@@ -82,10 +82,10 @@ func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsRoute53ResolverRuleAssociationRead(d, meta)
+	return resourceRuleAssociationRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	assocRaw, state, err := route53ResolverRuleAssociationRefresh(conn, d.Id())()
@@ -107,7 +107,7 @@ func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsRoute53ResolverRuleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver rule association: %s", d.Id())

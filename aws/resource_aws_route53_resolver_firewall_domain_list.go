@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
+func ResourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverFirewallDomainListCreate,
-		Read:   resourceAwsRoute53ResolverFirewallDomainListRead,
-		Update: resourceAwsRoute53ResolverFirewallDomainListUpdate,
-		Delete: resourceAwsRoute53ResolverFirewallDomainListDelete,
+		Create: resourceFirewallDomainListCreate,
+		Read:   resourceFirewallDomainListRead,
+		Update: resourceFirewallDomainListUpdate,
+		Delete: resourceFirewallDomainListDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -54,7 +54,7 @@ func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverFirewallDomainListCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallDomainListCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -77,10 +77,10 @@ func resourceAwsRoute53ResolverFirewallDomainListCreate(d *schema.ResourceData, 
 	d.SetId(aws.StringValue(output.FirewallDomainList.Id))
 	d.Set("arn", output.FirewallDomainList.Arn)
 
-	return resourceAwsRoute53ResolverFirewallDomainListUpdate(d, meta)
+	return resourceFirewallDomainListUpdate(d, meta)
 }
 
-func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -143,7 +143,7 @@ func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallDomainListUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChange("domains") {
@@ -189,10 +189,10 @@ func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, 
 		}
 	}
 
-	return resourceAwsRoute53ResolverFirewallDomainListRead(d, meta)
+	return resourceFirewallDomainListRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverFirewallDomainListDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallDomainListDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	_, err := conn.DeleteFirewallDomainList(&route53resolver.DeleteFirewallDomainListInput{

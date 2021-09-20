@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepRoute53ResolverFirewallRuleGroupAssociations(region string) error 
 			id := aws.StringValue(firewallRuleGroupAssociation.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule group association: %s", id)
-			r := resourceAwsRoute53ResolverFirewallRuleGroupAssociation()
+			r := ResourceFirewallRuleGroupAssociation()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -215,7 +216,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_disappears(t *testing
 				Config: testAccRoute53ResolverFirewallRuleGroupAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupAssociationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ResolverFirewallRuleGroupAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewallRuleGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

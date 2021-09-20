@@ -24,12 +24,12 @@ const (
 	route53ResolverRuleStatusDeleted = "DELETED"
 )
 
-func resourceAwsRoute53ResolverRule() *schema.Resource {
+func ResourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverRuleCreate,
-		Read:   resourceAwsRoute53ResolverRuleRead,
-		Update: resourceAwsRoute53ResolverRuleUpdate,
-		Delete: resourceAwsRoute53ResolverRuleDelete,
+		Create: resourceRuleCreate,
+		Read:   resourceRuleRead,
+		Update: resourceRuleUpdate,
+		Delete: resourceRuleDelete,
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsRoute53ResolverRuleCustomizeDiff,
 			SetTagsDiff,
@@ -117,7 +117,7 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -155,10 +155,10 @@ func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	return resourceAwsRoute53ResolverRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -207,7 +207,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
@@ -246,10 +246,10 @@ func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsRoute53ResolverRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver rule: %s", d.Id())

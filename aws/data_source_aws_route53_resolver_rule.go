@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRoute53ResolverRule() *schema.Resource {
+func DataSourceRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ResolverRuleRead,
+		Read: dataSourceRuleRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -79,7 +79,7 @@ func dataSourceAwsRoute53ResolverRule() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
