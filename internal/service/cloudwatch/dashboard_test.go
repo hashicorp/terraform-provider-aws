@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
@@ -150,7 +151,7 @@ func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
 		}
-		if !isCloudWatchDashboardNotFoundErr(err) {
+		if !tfcloudwatch.IsDashboardNotFoundErr(err) {
 			return err
 		}
 	}
@@ -172,7 +173,7 @@ func testAccCheckAWSCloudWatchDashboardDestroyPrevious(dashboardName string) res
 			return fmt.Errorf("Dashboard still exists: %s", dashboardName)
 		}
 
-		if !isCloudWatchDashboardNotFoundErr(err) {
+		if !tfcloudwatch.IsDashboardNotFoundErr(err) {
 			return err
 		}
 

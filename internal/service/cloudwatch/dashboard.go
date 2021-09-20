@@ -65,7 +65,7 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDashboard(&params)
 	if err != nil {
-		if isCloudWatchDashboardNotFoundErr(err) {
+		if IsDashboardNotFoundErr(err) {
 			log.Printf("[WARN] CloudWatch Dashboard %q not found, removing", dashboardName)
 			d.SetId("")
 			return nil
@@ -106,7 +106,7 @@ func resourceDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteDashboards(&params); err != nil {
-		if isCloudWatchDashboardNotFoundErr(err) {
+		if IsDashboardNotFoundErr(err) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CloudWatch Dashboard: %s", err)
@@ -116,7 +116,7 @@ func resourceDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func isCloudWatchDashboardNotFoundErr(err error) bool {
+func IsDashboardNotFoundErr(err error) bool {
 	return tfawserr.ErrMessageContains(
 		err,
 		"ResourceNotFound",

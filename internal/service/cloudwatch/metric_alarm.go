@@ -24,7 +24,7 @@ func ResourceMetricAlarm() *schema.Resource {
 		Update:        resourceMetricAlarmUpdate,
 		Delete:        resourceMetricAlarmDelete,
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsCloudWatchMetricAlarmMigrateState,
+		MigrateState:  MetricAlarmMigrateState,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
