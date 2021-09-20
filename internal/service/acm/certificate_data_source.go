@@ -178,7 +178,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
 
-	tags, err := tftags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
+	tags, err := ListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)

@@ -245,7 +245,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AcmTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.ImportCertificate(input)
@@ -271,7 +271,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().AcmTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if caARN, ok := d.GetOk("certificate_authority_arn"); ok {
@@ -363,7 +363,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("status", resp.Certificate.Status)
 
-		tags, err := tftags.AcmListTags(conn, d.Id())
+		tags, err := ListTags(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err))
@@ -427,7 +427,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AcmUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
