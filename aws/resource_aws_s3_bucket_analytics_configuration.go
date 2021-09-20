@@ -238,7 +238,7 @@ func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Deleting S3 bucket analytics configuration: %s", input)
 	_, err = conn.DeleteBucketAnalyticsConfiguration(input)
 	if err != nil {
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting S3 analytics configuration: %w", err)

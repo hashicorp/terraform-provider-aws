@@ -108,11 +108,11 @@ func testSweepS3Buckets(region string) error {
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 				return nil
 			}
 
-			if isAWSErr(err, "BucketNotEmpty", "") {
+			if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
 				return resource.RetryableError(err)
 			}
 
@@ -153,7 +153,7 @@ func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 
 	output, err := conn.GetObjectLockConfiguration(input)
 
-	if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
+	if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
 		return false, nil
 	}
 
@@ -1126,7 +1126,7 @@ func TestAccAWSS3Bucket_Security_corsUpdate(t *testing.T) {
 					},
 				},
 			})
-			if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+			if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
 				return err
 			}
 			return nil
@@ -1202,7 +1202,7 @@ func TestAccAWSS3Bucket_Security_corsDelete(t *testing.T) {
 			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 			})
-			if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+			if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
 				return err
 			}
 			return nil
@@ -2762,7 +2762,7 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.HeadBucket(input)
 
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NotFound", "") {
+			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NotFound", "") {
 				return nil
 			}
 
@@ -2773,7 +2773,7 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 			return resource.RetryableError(fmt.Errorf("AWS S3 Bucket still exists: %s", rs.Primary.ID))
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.HeadBucket(input)
 		}
 
@@ -2807,7 +2807,7 @@ func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schem
 		})
 
 		if err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 				return fmt.Errorf("S3 bucket not found")
 			}
 			return err
@@ -3229,7 +3229,7 @@ func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRu
 			Bucket: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 				return fmt.Errorf("S3 bucket not found")
 			}
 			if rules == nil {

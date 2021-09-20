@@ -55,7 +55,7 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := s3conn.PutBucketPolicy(params)
-		if isAWSErr(err, "MalformedPolicy", "") {
+		if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -63,7 +63,7 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = s3conn.PutBucketPolicy(params)
 	}
 	if err != nil {
