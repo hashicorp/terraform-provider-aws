@@ -22,7 +22,7 @@ const (
 	LexSlotTypeCreateTimeout = 1 * time.Minute
 	LexSlotTypeUpdateTimeout = 1 * time.Minute
 	LexSlotTypeDeleteTimeout = 5 * time.Minute
-	LexSlotTypeVersionLatest = "$LATEST"
+	SlotTypeVersionLatest    = "$LATEST"
 )
 
 func ResourceSlotType() *schema.Resource {
@@ -181,7 +181,7 @@ func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
 		Name:    aws.String(d.Id()),
-		Version: aws.String(LexSlotTypeVersionLatest),
+		Version: aws.String(SlotTypeVersionLatest),
 	})
 	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		d.SetId("")
@@ -214,7 +214,7 @@ func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetSlotTypeVersionsInput) (string, error) {
-	version := LexSlotTypeVersionLatest
+	version := SlotTypeVersionLatest
 
 	for {
 		page, err := conn.GetSlotTypeVersions(input)
@@ -228,7 +228,7 @@ func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingS
 		}
 
 		for _, slotType := range page.SlotTypes {
-			if *slotType.Version == LexSlotTypeVersionLatest {
+			if *slotType.Version == SlotTypeVersionLatest {
 				continue
 			}
 			if *slotType.Version > version {

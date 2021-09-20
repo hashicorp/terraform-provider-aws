@@ -76,7 +76,7 @@ func DataSourceBot() *schema.Resource {
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      LexBotVersionLatest,
+				Default:      BotVersionLatest,
 				ValidateFunc: validateLexBotVersion,
 			},
 			"voice_id": {

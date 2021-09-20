@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepLexBots(region string) error {
 		}
 
 		for _, bot := range page.Bots {
-			r := ResourceBot()
+			r := tflexmodelbuilding.ResourceBot()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(bot.Name))
@@ -112,7 +113,7 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, "status", "NOT_BUILT"),
-					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.BotVersionLatest),
 					resource.TestCheckNoResourceAttr(rName, "voice_id"),
 				),
 			},
@@ -164,7 +165,7 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v1),
 					testAccCheckAwsLexBotNotExists(testBotID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.BotVersionLatest),
 					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
@@ -763,7 +764,7 @@ func TestAccAwsLexBot_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBot(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -801,7 +802,7 @@ func testAccCheckAwsLexBotExistsWithVersion(rName, botVersion string, output *le
 }
 
 func testAccCheckAwsLexBotExists(rName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexBotExistsWithVersion(rName, LexBotVersionLatest, output)
+	return testAccCheckAwsLexBotExistsWithVersion(rName, tflexmodelbuilding.BotVersionLatest, output)
 }
 
 func testAccCheckAwsLexBotNotExists(botName, botVersion string) resource.TestCheckFunc {

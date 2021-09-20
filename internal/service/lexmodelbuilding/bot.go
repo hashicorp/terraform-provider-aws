@@ -23,7 +23,7 @@ const (
 	LexBotCreateTimeout = 1 * time.Minute
 	LexBotUpdateTimeout = 1 * time.Minute
 	LexBotDeleteTimeout = 5 * time.Minute
-	LexBotVersionLatest = "$LATEST"
+	BotVersionLatest    = "$LATEST"
 )
 
 func ResourceBot() *schema.Resource {
@@ -287,7 +287,7 @@ func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(d.Id()),
-		VersionOrAlias: aws.String(LexBotVersionLatest),
+		VersionOrAlias: aws.String(BotVersionLatest),
 	})
 	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
@@ -441,7 +441,7 @@ func resourceBotDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetBotVersionsInput) (string, error) {
-	version := LexBotVersionLatest
+	version := BotVersionLatest
 
 	for {
 		page, err := conn.GetBotVersions(input)
@@ -455,7 +455,7 @@ func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingServic
 		}
 
 		for _, bot := range page.Bots {
-			if *bot.Version == LexBotVersionLatest {
+			if *bot.Version == BotVersionLatest {
 				continue
 			}
 			if *bot.Version > version {

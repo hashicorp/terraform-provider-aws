@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepLexIntents(region string) error {
 		}
 
 		for _, intent := range page.Intents {
-			r := ResourceIntent()
+			r := tflexmodelbuilding.ResourceIntent()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(intent.Name))
@@ -108,7 +109,7 @@ func TestAccAwsLexIntent_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(rName, "rejection_statement"),
 					resource.TestCheckNoResourceAttr(rName, "sample_utterances"),
 					resource.TestCheckNoResourceAttr(rName, "slot"),
-					resource.TestCheckResourceAttr(rName, "version", LexIntentVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.IntentVersionLatest),
 				),
 			},
 			{
@@ -600,7 +601,7 @@ func TestAccAwsLexIntent_disappears(t *testing.T) {
 				Config: testAccAwsLexIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexIntentExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIntent(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -663,7 +664,7 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 				Config: testAccAwsLexIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, ResourceIntent(), rName),
+					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -759,7 +760,7 @@ func testAccCheckAwsLexIntentExistsWithVersion(rName, intentVersion string, outp
 }
 
 func testAccCheckAwsLexIntentExists(rName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexIntentExistsWithVersion(rName, LexIntentVersionLatest, output)
+	return testAccCheckAwsLexIntentExistsWithVersion(rName, tflexmodelbuilding.IntentVersionLatest, output)
 }
 
 func testAccCheckAwsLexIntentNotExists(intentName, intentVersion string) resource.TestCheckFunc {

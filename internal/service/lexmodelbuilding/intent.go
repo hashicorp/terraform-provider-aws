@@ -24,7 +24,7 @@ const (
 	LexIntentCreateTimeout = 1 * time.Minute
 	LexIntentUpdateTimeout = 1 * time.Minute
 	LexIntentDeleteTimeout = 5 * time.Minute
-	LexIntentVersionLatest = "$LATEST"
+	IntentVersionLatest    = "$LATEST"
 )
 
 func ResourceIntent() *schema.Resource {
@@ -360,7 +360,7 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
-		Version: aws.String(LexIntentVersionLatest),
+		Version: aws.String(IntentVersionLatest),
 	})
 	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
@@ -611,7 +611,7 @@ var lexStatementResource = &schema.Resource{
 }
 
 func getLatestLexIntentVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetIntentVersionsInput) (string, error) {
-	version := LexIntentVersionLatest
+	version := IntentVersionLatest
 
 	for {
 		page, err := conn.GetIntentVersions(input)
@@ -625,7 +625,7 @@ func getLatestLexIntentVersion(conn *lexmodelbuildingservice.LexModelBuildingSer
 		}
 
 		for _, intent := range page.Intents {
-			if *intent.Version == LexIntentVersionLatest {
+			if *intent.Version == IntentVersionLatest {
 				continue
 			}
 			if *intent.Version > version {
