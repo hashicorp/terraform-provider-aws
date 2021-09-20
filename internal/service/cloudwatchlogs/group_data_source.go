@@ -57,7 +57,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 
-	tags, err := tftags.CloudwatchlogsListTags(conn, name)
+	tags, err := ListTags(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %w", name, err)
