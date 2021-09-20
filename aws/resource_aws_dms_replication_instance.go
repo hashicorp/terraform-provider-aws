@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDmsReplicationInstance() *schema.Resource {
+func ResourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsReplicationInstanceCreate,
-		Read:   resourceAwsDmsReplicationInstanceRead,
-		Update: resourceAwsDmsReplicationInstanceUpdate,
-		Delete: resourceAwsDmsReplicationInstanceDelete,
+		Create: resourceReplicationInstanceCreate,
+		Read:   resourceReplicationInstanceRead,
+		Update: resourceReplicationInstanceUpdate,
+		Delete: resourceReplicationInstanceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -133,7 +133,7 @@ func resourceAwsDmsReplicationInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -197,10 +197,10 @@ func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for DMS Replication Instance (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAwsDmsReplicationInstanceRead(d, meta)
+	return resourceReplicationInstanceRead(d, meta)
 }
 
-func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -283,7 +283,7 @@ func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.ModifyReplicationInstanceInput{
@@ -372,10 +372,10 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsDmsReplicationInstanceRead(d, meta)
+	return resourceReplicationInstanceRead(d, meta)
 }
 
-func resourceAwsDmsReplicationInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationInstanceInput{

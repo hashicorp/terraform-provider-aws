@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDmsReplicationTask() *schema.Resource {
+func ResourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsReplicationTaskCreate,
-		Read:   resourceAwsDmsReplicationTaskRead,
-		Update: resourceAwsDmsReplicationTaskUpdate,
-		Delete: resourceAwsDmsReplicationTaskDelete,
+		Create: resourceReplicationTaskCreate,
+		Read:   resourceReplicationTaskRead,
+		Update: resourceReplicationTaskUpdate,
+		Delete: resourceReplicationTaskDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -91,7 +91,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 	}
 }
 
-func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -143,10 +143,10 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceAwsDmsReplicationTaskRead(d, meta)
+	return resourceReplicationTaskRead(d, meta)
 }
 
-func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -193,7 +193,7 @@ func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.ModifyReplicationTaskInput{
@@ -257,13 +257,13 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 			return err
 		}
 
-		return resourceAwsDmsReplicationTaskRead(d, meta)
+		return resourceReplicationTaskRead(d, meta)
 	}
 
 	return nil
 }
 
-func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationTaskInput{
