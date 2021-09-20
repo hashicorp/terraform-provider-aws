@@ -229,7 +229,7 @@ func testAccCheckAwsRoute53KeySigningKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		keySigningKey, err := finder.KeySigningKeyByResourceID(conn, rs.Primary.ID)
+		keySigningKey, err := finder.FindKeySigningKeyByResourceID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			continue
@@ -265,7 +265,7 @@ func testAccAwsRoute53KeySigningKeyExists(resourceName string) resource.TestChec
 
 		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
-		keySigningKey, err := finder.KeySigningKeyByResourceID(conn, rs.Primary.ID)
+		keySigningKey, err := finder.FindKeySigningKeyByResourceID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)

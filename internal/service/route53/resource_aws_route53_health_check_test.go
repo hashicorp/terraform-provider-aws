@@ -468,7 +468,7 @@ func testAccCheckRoute53HealthCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.HealthCheckByID(conn, rs.Primary.ID)
+		_, err := finder.FindHealthCheckByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -497,7 +497,7 @@ func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
-		output, err := finder.HealthCheckByID(conn, rs.Primary.ID)
+		output, err := finder.FindHealthCheckByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

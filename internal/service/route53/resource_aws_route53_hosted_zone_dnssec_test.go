@@ -123,7 +123,7 @@ func testAccCheckAwsRoute53HostedZoneDnssecDestroy(s *terraform.State) error {
 			continue
 		}
 
-		hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, rs.Primary.ID)
+		hostedZoneDnssec, err := finder.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, route53.ErrCodeDNSSECNotFound) {
 			continue
@@ -159,7 +159,7 @@ func testAccAwsRoute53HostedZoneDnssecExists(resourceName string) resource.TestC
 
 		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
-		hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, rs.Primary.ID)
+		hostedZoneDnssec, err := finder.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)

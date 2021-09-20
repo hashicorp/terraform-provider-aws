@@ -130,12 +130,12 @@ func resourceKeySigningKeyCreate(d *schema.ResourceData, meta interface{}) error
 	d.SetId(tfroute53.KeySigningKeyCreateResourceID(hostedZoneID, name))
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waiter.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) creation: %w", d.Id(), err)
 		}
 	}
 
-	if _, err := waiter.KeySigningKeyStatusUpdated(conn, hostedZoneID, name, status); err != nil {
+	if _, err := waiter.waitKeySigningKeyStatusUpdated(conn, hostedZoneID, name, status); err != nil {
 		return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) status (%s): %w", d.Id(), status, err)
 	}
 
@@ -151,7 +151,7 @@ func resourceKeySigningKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing Route 53 Key Signing Key (%s) identifier: %w", d.Id(), err)
 	}
 
-	keySigningKey, err := finder.KeySigningKey(conn, hostedZoneID, name)
+	keySigningKey, err := finder.FindKeySigningKey(conn, hostedZoneID, name)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 		log.Printf("[WARN] Route 53 Key Signing Key (%s) not found, removing from state", d.Id())
@@ -219,7 +219,7 @@ func resourceKeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if output != nil && output.ChangeInfo != nil {
-				if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+				if _, err := waiter.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 					return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) status (%s) update: %w", d.Id(), status, err)
 				}
 			}
@@ -236,13 +236,13 @@ func resourceKeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if output != nil && output.ChangeInfo != nil {
-				if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+				if _, err := waiter.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 					return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) status (%s) update: %w", d.Id(), status, err)
 				}
 			}
 		}
 
-		if _, err := waiter.KeySigningKeyStatusUpdated(conn, d.Get("hosted_zone_id").(string), d.Get("name").(string), status); err != nil {
+		if _, err := waiter.waitKeySigningKeyStatusUpdated(conn, d.Get("hosted_zone_id").(string), d.Get("name").(string), status); err != nil {
 			return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) status (%s): %w", d.Id(), status, err)
 		}
 	}
@@ -268,7 +268,7 @@ func resourceKeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if output != nil && output.ChangeInfo != nil {
-			if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+			if _, err := waiter.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 				return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) status (%s) update: %w", d.Id(), status, err)
 			}
 		}
@@ -294,7 +294,7 @@ func resourceKeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waiter.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("error waiting for Route 53 Key Signing Key (%s) deletion: %w", d.Id(), err)
 		}
 	}

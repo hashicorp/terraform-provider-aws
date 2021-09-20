@@ -521,7 +521,7 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waiter.waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", hostedZoneId, err)
 		}
 	}

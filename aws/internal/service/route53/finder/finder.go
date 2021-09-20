@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func HealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, error) {
+func FindHealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, error) {
 	input := &route53.GetHealthCheckInput{
 		HealthCheckId: aws.String(id),
 	}
@@ -33,7 +33,7 @@ func HealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, er
 	return output.HealthCheck, nil
 }
 
-func HostedZoneDnssec(conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
+func FindHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -47,7 +47,7 @@ func HostedZoneDnssec(conn *route53.Route53, hostedZoneID string) (*route53.GetD
 	return output, nil
 }
 
-func KeySigningKey(conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
+func FindKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -78,12 +78,12 @@ func KeySigningKey(conn *route53.Route53, hostedZoneID string, name string) (*ro
 	return result, err
 }
 
-func KeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*route53.KeySigningKey, error) {
+func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*route53.KeySigningKey, error) {
 	hostedZoneID, name, err := tfroute53.KeySigningKeyParseResourceID(resourceID)
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
 	}
 
-	return KeySigningKey(conn, hostedZoneID, name)
+	return FindKeySigningKey(conn, hostedZoneID, name)
 }

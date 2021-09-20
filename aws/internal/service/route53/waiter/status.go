@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ChangeInfoStatus(conn *route53.Route53, changeID string) resource.StateRefreshFunc {
+func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &route53.GetChangeInput{
 			Id: aws.String(changeID),
@@ -28,9 +28,9 @@ func ChangeInfoStatus(conn *route53.Route53, changeID string) resource.StateRefr
 	}
 }
 
-func HostedZoneDnssecStatus(conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
+func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, hostedZoneID)
+		hostedZoneDnssec, err := finder.FindHostedZoneDNSSEC(conn, hostedZoneID)
 
 		if err != nil {
 			return nil, "", err
@@ -44,9 +44,9 @@ func HostedZoneDnssecStatus(conn *route53.Route53, hostedZoneID string) resource
 	}
 }
 
-func KeySigningKeyStatus(conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
+func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		keySigningKey, err := finder.KeySigningKey(conn, hostedZoneID, name)
+		keySigningKey, err := finder.FindKeySigningKey(conn, hostedZoneID, name)
 
 		if err != nil {
 			return nil, "", err
