@@ -8,11 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWebACL() *schema.Resource {
@@ -62,7 +64,7 @@ func ResourceWebACL() *schema.Resource {
 						"log_destination": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"redacted_fields": {
 							Type:     schema.TypeList,
@@ -518,6 +520,7 @@ func flattenWAFRegionalRedactedFields(fieldToMatches []*waf.FieldToMatch) []inte
 
 	return []interface{}{m}
 }
+
 func diffWebACLRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
 	updates := make([]*waf.WebACLUpdate, 0)
 
@@ -537,4 +540,3 @@ func diffWebACLRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
 	}
 	return updates
 }
-
