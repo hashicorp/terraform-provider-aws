@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogProductPortfolioAssociation() *schema.Resource {
+func ResourceProductPortfolioAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProductPortfolioAssociationCreate,
-		Read:   resourceAwsServiceCatalogProductPortfolioAssociationRead,
-		Delete: resourceAwsServiceCatalogProductPortfolioAssociationDelete,
+		Create: resourceProductPortfolioAssociationCreate,
+		Read:   resourceProductPortfolioAssociationRead,
+		Delete: resourceProductPortfolioAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,7 +53,7 @@ func resourceAwsServiceCatalogProductPortfolioAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogProductPortfolioAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProductPortfolioAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.AssociateProductWithPortfolioInput{
@@ -100,10 +100,10 @@ func resourceAwsServiceCatalogProductPortfolioAssociationCreate(d *schema.Resour
 
 	d.SetId(tfservicecatalog.ProductPortfolioAssociationCreateID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
-	return resourceAwsServiceCatalogProductPortfolioAssociationRead(d, meta)
+	return resourceProductPortfolioAssociationRead(d, meta)
 }
 
-func resourceAwsServiceCatalogProductPortfolioAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProductPortfolioAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	acceptLanguage, portfolioID, productID, err := tfservicecatalog.ProductPortfolioAssociationParseID(d.Id())
@@ -136,7 +136,7 @@ func resourceAwsServiceCatalogProductPortfolioAssociationRead(d *schema.Resource
 	return nil
 }
 
-func resourceAwsServiceCatalogProductPortfolioAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProductPortfolioAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	acceptLanguage, portfolioID, productID, err := tfservicecatalog.ProductPortfolioAssociationParseID(d.Id())

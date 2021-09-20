@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat tag option resource associations
@@ -64,7 +65,7 @@ func testSweepServiceCatalogTagOptionResourceAssociations(region string) error {
 						continue
 					}
 
-					r := resourceAwsServiceCatalogTagOptionResourceAssociation()
+					r := ResourceTagOptionResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(resource.Id))
 
@@ -135,7 +136,7 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.
 				Config: testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogTagOptionResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTagOptionResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

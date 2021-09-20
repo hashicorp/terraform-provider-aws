@@ -15,6 +15,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat service actions
@@ -51,7 +52,7 @@ func testSweepServiceCatalogServiceActions(region string) error {
 
 			id := aws.StringValue(sas.Id)
 
-			r := resourceAwsServiceCatalogServiceAction()
+			r := ResourceServiceAction()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -124,7 +125,7 @@ func TestAccAWSServiceCatalogServiceAction_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogServiceActionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogServiceAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceServiceAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogTagOptionResourceAssociation() *schema.Resource {
+func ResourceTagOptionResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogTagOptionResourceAssociationCreate,
-		Read:   resourceAwsServiceCatalogTagOptionResourceAssociationRead,
-		Delete: resourceAwsServiceCatalogTagOptionResourceAssociationDelete,
+		Create: resourceTagOptionResourceAssociationCreate,
+		Read:   resourceTagOptionResourceAssociationRead,
+		Delete: resourceTagOptionResourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsServiceCatalogTagOptionResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogTagOptionResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
@@ -96,10 +96,10 @@ func resourceAwsServiceCatalogTagOptionResourceAssociationCreate(d *schema.Resou
 
 	d.SetId(tfservicecatalog.TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get("resource_id").(string)))
 
-	return resourceAwsServiceCatalogTagOptionResourceAssociationRead(d, meta)
+	return resourceTagOptionResourceAssociationRead(d, meta)
 }
 
-func resourceAwsServiceCatalogTagOptionResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(d.Id())
@@ -137,7 +137,7 @@ func resourceAwsServiceCatalogTagOptionResourceAssociationRead(d *schema.Resourc
 	return nil
 }
 
-func resourceAwsServiceCatalogTagOptionResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(d.Id())

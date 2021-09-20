@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
+func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogPortfolioRead,
+		Read: dataSourcePortfolioRead,
 
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
@@ -54,7 +54,7 @@ func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DescribePortfolioInput{

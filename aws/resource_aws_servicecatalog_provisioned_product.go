@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
+func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProvisionedProductCreate,
-		Read:   resourceAwsServiceCatalogProvisionedProductRead,
-		Update: resourceAwsServiceCatalogProvisionedProductUpdate,
-		Delete: resourceAwsServiceCatalogProvisionedProductDelete,
+		Create: resourceProvisionedProductCreate,
+		Read:   resourceProvisionedProductRead,
+		Update: resourceProvisionedProductUpdate,
+		Delete: resourceProvisionedProductDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -232,7 +232,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -327,10 +327,10 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.RecordDetail.ProvisionedProductId))
 
-	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
+	return resourceProvisionedProductRead(d, meta)
 }
 
-func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -419,7 +419,7 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
@@ -490,10 +490,10 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 		return fmt.Errorf("error updating Service Catalog Provisioned Product (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
+	return resourceProvisionedProductRead(d, meta)
 }
 
-func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisionedProductDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.TerminateProvisionedProductInput{

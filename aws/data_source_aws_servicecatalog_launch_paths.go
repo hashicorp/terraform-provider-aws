@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceCatalogLaunchPaths() *schema.Resource {
+func DataSourceLaunchPaths() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogLaunchPathsRead,
+		Read: dataSourceLaunchPathsRead,
 
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
@@ -65,7 +65,7 @@ func dataSourceAwsServiceCatalogLaunchPaths() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceCatalogLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

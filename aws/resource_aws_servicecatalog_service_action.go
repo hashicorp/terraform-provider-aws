@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogServiceAction() *schema.Resource {
+func ResourceServiceAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogServiceActionCreate,
-		Read:   resourceAwsServiceCatalogServiceActionRead,
-		Update: resourceAwsServiceCatalogServiceActionUpdate,
-		Delete: resourceAwsServiceCatalogServiceActionDelete,
+		Create: resourceServiceActionCreate,
+		Read:   resourceServiceActionRead,
+		Update: resourceServiceActionUpdate,
+		Delete: resourceServiceActionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsServiceCatalogServiceAction() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogServiceActionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreateServiceActionInput{
@@ -130,10 +130,10 @@ func resourceAwsServiceCatalogServiceActionCreate(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(output.ServiceActionDetail.ServiceActionSummary.Id))
 
-	return resourceAwsServiceCatalogServiceActionRead(d, meta)
+	return resourceServiceActionRead(d, meta)
 }
 
-func resourceAwsServiceCatalogServiceActionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ServiceActionReady(conn, d.Get("accept_language").(string), d.Id())
@@ -166,7 +166,7 @@ func resourceAwsServiceCatalogServiceActionRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsServiceCatalogServiceActionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateServiceActionInput{
@@ -211,10 +211,10 @@ func resourceAwsServiceCatalogServiceActionUpdate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error updating Service Catalog Service Action (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsServiceCatalogServiceActionRead(d, meta)
+	return resourceServiceActionRead(d, meta)
 }
 
-func resourceAwsServiceCatalogServiceActionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteServiceActionInput{

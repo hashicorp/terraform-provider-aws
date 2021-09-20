@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogPortfolio() *schema.Resource {
+func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogPortfolioCreate,
-		Read:   resourceAwsServiceCatalogPortfolioRead,
-		Update: resourceAwsServiceCatalogPortfolioUpdate,
-		Delete: resourceAwsServiceCatalogPortfolioDelete,
+		Create: resourcePortfolioCreate,
+		Read:   resourcePortfolioRead,
+		Update: resourcePortfolioUpdate,
+		Delete: resourcePortfolioDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -65,7 +65,7 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 		CustomizeDiff: SetTagsDiff,
 	}
 }
-func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -91,10 +91,10 @@ func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta inter
 	}
 	d.SetId(aws.StringValue(resp.PortfolioDetail.Id))
 
-	return resourceAwsServiceCatalogPortfolioRead(d, meta)
+	return resourcePortfolioRead(d, meta)
 }
 
-func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -137,7 +137,7 @@ func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	input := servicecatalog.UpdatePortfolioInput{
 		AcceptLanguage: aws.String(tfservicecatalog.AcceptLanguageEnglish),
@@ -176,10 +176,10 @@ func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta inter
 	if err != nil {
 		return fmt.Errorf("Updating Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
 	}
-	return resourceAwsServiceCatalogPortfolioRead(d, meta)
+	return resourcePortfolioRead(d, meta)
 }
 
-func resourceAwsServiceCatalogPortfolioDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	input := servicecatalog.DeletePortfolioInput{}
 	input.Id = aws.String(d.Id())

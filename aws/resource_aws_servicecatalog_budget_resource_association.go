@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogBudgetResourceAssociation() *schema.Resource {
+func ResourceBudgetResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogBudgetResourceAssociationCreate,
-		Read:   resourceAwsServiceCatalogBudgetResourceAssociationRead,
-		Delete: resourceAwsServiceCatalogBudgetResourceAssociationDelete,
+		Create: resourceBudgetResourceAssociationCreate,
+		Read:   resourceBudgetResourceAssociationRead,
+		Delete: resourceBudgetResourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,7 +40,7 @@ func resourceAwsServiceCatalogBudgetResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogBudgetResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
@@ -79,10 +79,10 @@ func resourceAwsServiceCatalogBudgetResourceAssociationCreate(d *schema.Resource
 
 	d.SetId(tfservicecatalog.BudgetResourceAssociationID(d.Get("budget_name").(string), d.Get("resource_id").(string)))
 
-	return resourceAwsServiceCatalogBudgetResourceAssociationRead(d, meta)
+	return resourceBudgetResourceAssociationRead(d, meta)
 }
 
-func resourceAwsServiceCatalogBudgetResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	budgetName, resourceID, err := tfservicecatalog.BudgetResourceAssociationParseID(d.Id())
@@ -113,7 +113,7 @@ func resourceAwsServiceCatalogBudgetResourceAssociationRead(d *schema.ResourceDa
 	return nil
 }
 
-func resourceAwsServiceCatalogBudgetResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	budgetName, resourceID, err := tfservicecatalog.BudgetResourceAssociationParseID(d.Id())

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat budget resource associations
@@ -64,7 +65,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 						continue
 					}
 
-					r := resourceAwsServiceCatalogBudgetResourceAssociation()
+					r := ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(port.Id)))
 
@@ -108,7 +109,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 						continue
 					}
 
-					r := resourceAwsServiceCatalogBudgetResourceAssociation()
+					r := ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(pvd.ProductViewSummary.ProductId)))
 
@@ -179,7 +180,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 				Config: testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

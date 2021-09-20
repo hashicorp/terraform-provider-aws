@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat principal portfolio associations
@@ -65,7 +66,7 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 						continue
 					}
 
-					r := resourceAwsServiceCatalogPrincipalPortfolioAssociation()
+					r := ResourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
 
@@ -141,7 +142,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 				Config: testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

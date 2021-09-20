@@ -15,6 +15,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat provisioning artifacts
@@ -67,7 +68,7 @@ func testSweepServiceCatalogProvisioningArtifacts(region string) error {
 				}
 
 				for _, pad := range output.ProvisioningArtifactDetails {
-					r := resourceAwsServiceCatalogProvisioningArtifact()
+					r := ResourceProvisioningArtifact()
 					d := r.Data(nil)
 
 					d.SetId(aws.StringValue(pad.Id))
@@ -165,7 +166,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogProvisioningArtifact(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProvisioningArtifact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

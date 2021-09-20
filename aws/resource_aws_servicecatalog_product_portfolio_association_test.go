@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat product portfolio associations
@@ -86,7 +87,7 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 						continue
 					}
 
-					r := resourceAwsServiceCatalogProductPortfolioAssociation()
+					r := ResourceProductPortfolioAssociation()
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.ProductPortfolioAssociationCreateID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(detail.Id), productID))
 
@@ -166,7 +167,7 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogProductPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

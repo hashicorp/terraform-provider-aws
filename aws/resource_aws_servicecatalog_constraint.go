@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogConstraint() *schema.Resource {
+func ResourceConstraint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogConstraintCreate,
-		Read:   resourceAwsServiceCatalogConstraintRead,
-		Update: resourceAwsServiceCatalogConstraintUpdate,
-		Delete: resourceAwsServiceCatalogConstraintDelete,
+		Create: resourceConstraintCreate,
+		Read:   resourceConstraintRead,
+		Update: resourceConstraintUpdate,
+		Delete: resourceConstraintDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsServiceCatalogConstraint() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogConstraintCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConstraintCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreateConstraintInput{
@@ -127,10 +127,10 @@ func resourceAwsServiceCatalogConstraintCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.ConstraintDetail.ConstraintId))
 
-	return resourceAwsServiceCatalogConstraintRead(d, meta)
+	return resourceConstraintRead(d, meta)
 }
 
-func resourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ConstraintReady(conn, d.Get("accept_language").(string), d.Id())
@@ -171,7 +171,7 @@ func resourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsServiceCatalogConstraintUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConstraintUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateConstraintInput{
@@ -212,10 +212,10 @@ func resourceAwsServiceCatalogConstraintUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error updating Service Catalog Constraint (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsServiceCatalogConstraintRead(d, meta)
+	return resourceConstraintRead(d, meta)
 }
 
-func resourceAwsServiceCatalogConstraintDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConstraintDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteConstraintInput{
