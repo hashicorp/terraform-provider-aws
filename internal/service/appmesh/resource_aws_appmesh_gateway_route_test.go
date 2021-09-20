@@ -1,4 +1,4 @@
-package aws
+package appmesh_test
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func init() {
@@ -463,7 +463,7 @@ func testAccCheckAppmeshGatewayRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindGatewayRoute(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
+		_, err := tfappmesh.FindGatewayRoute(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
 		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
@@ -489,7 +489,7 @@ func testAccCheckAppmeshGatewayRouteExists(name string, v *appmesh.GatewayRouteD
 			return fmt.Errorf("No App Mesh gateway route ID is set")
 		}
 
-		out, err := finder.FindGatewayRoute(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
+		out, err := tfappmesh.FindGatewayRoute(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
 		if err != nil {
 			return err
 		}
