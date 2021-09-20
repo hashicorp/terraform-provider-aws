@@ -121,7 +121,7 @@ func testSweepWafRegionalRules(region string) error {
 	return nil
 }
 
-func TestAccAWSWafRegionalRule_basic(t *testing.T) {
+func TestAccWAFRegionalRule_basic(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
@@ -151,7 +151,7 @@ func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRule_tags(t *testing.T) {
+func TestAccWAFRegionalRule_tags(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
@@ -196,7 +196,7 @@ func TestAccAWSWafRegionalRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
@@ -235,7 +235,7 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
+func TestAccWAFRegionalRule_disappears(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
@@ -258,7 +258,7 @@ func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
+func TestAccWAFRegionalRule_noPredicates(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
@@ -286,7 +286,7 @@ func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
+func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 	var ipset waf.IPSet
 	var xssMatchSet waf.XssMatchSet
 

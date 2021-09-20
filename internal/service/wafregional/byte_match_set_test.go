@@ -16,7 +16,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalByteMatchSet_basic(t *testing.T) {
+func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
@@ -62,7 +62,7 @@ func TestAccAWSWafRegionalByteMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
@@ -135,7 +135,7 @@ func TestAccAWSWafRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
+func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"
@@ -205,7 +205,7 @@ func TestAccAWSWafRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
+func TestAccWAFRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 	var byteMatchSet waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_byte_match_set.byte_match_set"
@@ -233,7 +233,7 @@ func TestAccAWSWafRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalByteMatchSet_disappears(t *testing.T) {
+func TestAccWAFRegionalByteMatchSet_disappears(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_byte_match_set.byte_set"

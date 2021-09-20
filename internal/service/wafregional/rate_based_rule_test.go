@@ -121,7 +121,7 @@ func testSweepWafRegionalRateBasedRules(region string) error {
 	return nil
 }
 
-func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
@@ -150,7 +150,7 @@ func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRateBasedRule_tags(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 	var v waf.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
@@ -194,7 +194,7 @@ func TestAccAWSWafRegionalRateBasedRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
@@ -234,7 +234,7 @@ func TestAccAWSWafRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_disappears(t *testing.T) {
 	var v waf.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
@@ -256,7 +256,7 @@ func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 	var ipset waf.IPSet
 	var byteMatchSet waf.ByteMatchSet
 
@@ -305,7 +305,7 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRateBasedRule_changeRateLimit(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	var before, after waf.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
@@ -343,7 +343,7 @@ func TestAccAWSWafRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRateBasedRule_noPredicates(t *testing.T) {
+func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 	var rule waf.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))

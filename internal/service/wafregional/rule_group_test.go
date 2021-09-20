@@ -65,7 +65,7 @@ func testSweepWafRegionalRuleGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
+func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 	var rule waf.Rule
 	var group waf.RuleGroup
 	var idx int
@@ -106,7 +106,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRuleGroup_tags(t *testing.T) {
+func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 	var rule waf.Rule
 	var group waf.RuleGroup
 
@@ -157,7 +157,7 @@ func TestAccAWSWafRegionalRuleGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRuleGroup_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after waf.RuleGroup
 
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -198,7 +198,7 @@ func TestAccAWSWafRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRuleGroup_disappears(t *testing.T) {
+func TestAccWAFRegionalRuleGroup_disappears(t *testing.T) {
 	var group waf.RuleGroup
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -222,7 +222,7 @@ func TestAccAWSWafRegionalRuleGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
+func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	var rule0, rule1, rule2, rule3 waf.Rule
 	var groupBefore, groupAfter waf.RuleGroup
 	var idx0, idx1, idx2, idx3 int
@@ -295,7 +295,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalRuleGroup_noActivatedRules(t *testing.T) {
+func TestAccWAFRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"

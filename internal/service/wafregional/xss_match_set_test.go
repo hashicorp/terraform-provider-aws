@@ -16,7 +16,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
+func TestAccWAFRegionalXSSMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafregional_xss_match_set.test"
@@ -56,7 +56,7 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalXSSMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.XssMatchSet
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -93,7 +93,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
+func TestAccWAFRegionalXSSMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafregional_xss_match_set.test"
@@ -116,7 +116,7 @@ func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
+func TestAccWAFRegionalXSSMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafregional_xss_match_set.test"
@@ -176,7 +176,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalXssMatchSet_noTuples(t *testing.T) {
+func TestAccWAFRegionalXSSMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafregional_xss_match_set.test"

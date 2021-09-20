@@ -15,7 +15,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
+func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,7 +39,7 @@ func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAclAssociation_disappears(t *testing.T) {
+func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
@@ -58,7 +58,7 @@ func TestAccAWSWafRegionalWebAclAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
+func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +83,7 @@ func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalWebAclAssociation_ResourceArn_ApiGatewayStage(t *testing.T) {
+func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

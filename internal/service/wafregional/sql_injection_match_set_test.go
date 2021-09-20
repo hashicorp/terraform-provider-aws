@@ -16,7 +16,7 @@ import (
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
-func TestAccAWSWafRegionalSqlInjectionMatchSet_basic(t *testing.T) {
+func TestAccWAFRegionalSQLInjectionMatchSet_basic(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
 	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
@@ -50,7 +50,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFRegionalSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
 	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
@@ -91,7 +91,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_changeNameForceNew(t *testing.T) 
 	})
 }
 
-func TestAccAWSWafRegionalSqlInjectionMatchSet_disappears(t *testing.T) {
+func TestAccWAFRegionalSQLInjectionMatchSet_disappears(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
 	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
@@ -114,7 +114,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSqlInjectionMatchSet_changeTuples(t *testing.T) {
+func TestAccWAFRegionalSQLInjectionMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
 	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
@@ -166,7 +166,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_changeTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRegionalSqlInjectionMatchSet_noTuples(t *testing.T) {
+func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 	var ipset waf.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
 	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
