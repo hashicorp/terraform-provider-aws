@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSnsTopicPolicy() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsSnsTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) e
 	// Retry the update in the event of an eventually consistent style of
 	// error, where say an IAM resource is successfully created but not
 	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 	_, err := retryOnAwsCode("InvalidParameter", func() (interface{}, error) {
 		return conn.SetTopicAttributes(&req)
 	})
@@ -67,7 +68,7 @@ func resourceAwsSnsTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
 		TopicArn: aws.String(d.Id()),
@@ -117,7 +118,7 @@ func resourceAwsSnsTopicPolicyDelete(d *schema.ResourceData, meta interface{}) e
 	// error, where say an IAM resource is successfully created but not
 	// actually available. See https://github.com/hashicorp/terraform/issues/3660
 	log.Printf("[DEBUG] Resetting SNS Topic Policy to default: %s", req)
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 	_, err := retryOnAwsCode("InvalidParameter", func() (interface{}, error) {
 		return conn.SetTopicAttributes(&req)
 	})

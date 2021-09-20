@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
@@ -128,7 +129,7 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).snsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic_policy" {

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
@@ -92,7 +93,7 @@ var smsAttributeDefaultValues = map[string]string{
 }
 
 func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS Set SMS preferences")
 
@@ -115,7 +116,7 @@ func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) e
 		},
 	}
 
-	if _, err := snsconn.SetSMSAttributes(params); err != nil {
+	if _, err := conn.SetSMSAttributes(params); err != nil {
 		return fmt.Errorf("Error setting SMS preferences: %s", err)
 	}
 
@@ -124,10 +125,10 @@ func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSnsSmsPreferencesGet(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	// Fetch ALL attributes
-	attrs, err := snsconn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
+	attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
 	if err != nil {
 		return err
 	}
@@ -149,7 +150,7 @@ func resourceAwsSnsSmsPreferencesGet(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSnsSmsPreferencesDelete(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	// Reset the attributes to their default value
 	attrs := map[string]*string{}
@@ -160,7 +161,7 @@ func resourceAwsSnsSmsPreferencesDelete(d *schema.ResourceData, meta interface{}
 	params := &sns.SetSMSAttributesInput{
 		Attributes: attrs,
 	}
-	if _, err := snsconn.SetSMSAttributes(params); err != nil {
+	if _, err := conn.SetSMSAttributes(params); err != nil {
 		return fmt.Errorf("Error resetting SMS preferences: %w", err)
 	}
 

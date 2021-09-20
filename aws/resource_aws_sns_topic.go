@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSnsTopic() *schema.Resource {
@@ -179,8 +180,8 @@ func resourceAwsSnsTopic() *schema.Resource {
 }
 
 func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SNSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -209,7 +210,7 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Attributes = attributes
 	}
 
-	output, err := snsconn.CreateTopic(req)
+	output, err := conn.CreateTopic(req)
 	if err != nil {
 		return fmt.Errorf("error creating SNS Topic (%s): %w", name, err)
 	}
@@ -219,127 +220,127 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	// update mutable attributes
 	if d.HasChange("application_failure_feedback_role_arn") {
 		_, v := d.GetChange("application_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("application_success_feedback_role_arn") {
 		_, v := d.GetChange("application_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("arn") {
 		_, v := d.GetChange("arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "TopicArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "TopicArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("delivery_policy") {
 		_, v := d.GetChange("delivery_policy")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "DeliveryPolicy", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "DeliveryPolicy", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("display_name") {
 		_, v := d.GetChange("display_name")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "DisplayName", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "DisplayName", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("http_failure_feedback_role_arn") {
 		_, v := d.GetChange("http_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("http_success_feedback_role_arn") {
 		_, v := d.GetChange("http_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("kms_master_key_id") {
 		_, v := d.GetChange("kms_master_key_id")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "KmsMasterKeyId", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "KmsMasterKeyId", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("content_based_deduplication") {
 		_, v := d.GetChange("content_based_deduplication")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ContentBasedDeduplication", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ContentBasedDeduplication", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("lambda_failure_feedback_role_arn") {
 		_, v := d.GetChange("lambda_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("lambda_success_feedback_role_arn") {
 		_, v := d.GetChange("lambda_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("policy") {
 		_, v := d.GetChange("policy")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "Policy", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "Policy", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("sqs_failure_feedback_role_arn") {
 		_, v := d.GetChange("sqs_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("sqs_success_feedback_role_arn") {
 		_, v := d.GetChange("sqs_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("application_success_feedback_sample_rate") {
 		_, v := d.GetChange("application_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("http_success_feedback_sample_rate") {
 		_, v := d.GetChange("http_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("lambda_success_feedback_sample_rate") {
 		_, v := d.GetChange("lambda_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("sqs_success_feedback_sample_rate") {
 		_, v := d.GetChange("sqs_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("firehose_failure_feedback_role_arn") {
 		_, v := d.GetChange("firehose_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("firehose_success_feedback_role_arn") {
 		_, v := d.GetChange("firehose_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("firehose_success_feedback_sample_rate") {
 		_, v := d.GetChange("firehose_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
@@ -348,139 +349,139 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	// update mutable attributes
 	if d.HasChange("application_failure_feedback_role_arn") {
 		_, v := d.GetChange("application_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("application_success_feedback_role_arn") {
 		_, v := d.GetChange("application_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("arn") {
 		_, v := d.GetChange("arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "TopicArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "TopicArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("delivery_policy") {
 		_, v := d.GetChange("delivery_policy")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "DeliveryPolicy", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "DeliveryPolicy", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("display_name") {
 		_, v := d.GetChange("display_name")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "DisplayName", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "DisplayName", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("http_failure_feedback_role_arn") {
 		_, v := d.GetChange("http_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("http_success_feedback_role_arn") {
 		_, v := d.GetChange("http_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("kms_master_key_id") {
 		_, v := d.GetChange("kms_master_key_id")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "KmsMasterKeyId", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "KmsMasterKeyId", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("content_based_deduplication") {
 		_, v := d.GetChange("content_based_deduplication")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ContentBasedDeduplication", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ContentBasedDeduplication", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("lambda_failure_feedback_role_arn") {
 		_, v := d.GetChange("lambda_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("lambda_success_feedback_role_arn") {
 		_, v := d.GetChange("lambda_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("policy") {
 		_, v := d.GetChange("policy")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "Policy", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "Policy", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("sqs_failure_feedback_role_arn") {
 		_, v := d.GetChange("sqs_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("sqs_success_feedback_role_arn") {
 		_, v := d.GetChange("sqs_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("application_success_feedback_sample_rate") {
 		_, v := d.GetChange("application_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("http_success_feedback_sample_rate") {
 		_, v := d.GetChange("http_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("lambda_success_feedback_sample_rate") {
 		_, v := d.GetChange("lambda_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("sqs_success_feedback_sample_rate") {
 		_, v := d.GetChange("sqs_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("firehose_failure_feedback_role_arn") {
 		_, v := d.GetChange("firehose_failure_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("firehose_success_feedback_role_arn") {
 		_, v := d.GetChange("firehose_success_feedback_role_arn")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, conn); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("firehose_success_feedback_sample_rate") {
 		_, v := d.GetChange("firehose_success_feedback_sample_rate")
-		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, snsconn); err != nil {
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, conn); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.SnsUpdateTags(snsconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.SnsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -489,12 +490,12 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SNSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SNS Topic Attributes for %s", d.Id())
-	attributeOutput, err := snsconn.GetTopicAttributes(&sns.GetTopicAttributesInput{
+	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
 		TopicArn: aws.String(d.Id()),
 	})
 
@@ -606,7 +607,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name_prefix", naming.NamePrefixFromName(name))
 	}
 
-	tags, err := keyvaluetags.SnsListTags(snsconn, d.Id())
+	tags, err := keyvaluetags.SnsListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
@@ -627,10 +628,10 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS Delete Topic: %s", d.Id())
-	_, err := snsconn.DeleteTopic(&sns.DeleteTopicInput{
+	_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
 		TopicArn: aws.String(d.Id()),
 	})
 

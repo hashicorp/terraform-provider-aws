@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // The preferences are account-wide, so the tests must be serialized
@@ -125,7 +126,7 @@ func testAccCheckAWSSNSSMSPrefsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 		attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
 		if err != nil {
 			return fmt.Errorf("error getting SMS attributes: %s", err)
