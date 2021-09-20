@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -188,9 +188,9 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoTopic := d.Get("fifo_topic").(bool)
 
 	if fifoTopic {
-		name = naming.GenerateWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
+		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
 	} else {
-		name = naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
 
 	attributes := make(map[string]*string)
@@ -602,9 +602,9 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	name := arn.Resource
 	d.Set("name", name)
 	if fifoTopic {
-		d.Set("name_prefix", naming.NamePrefixFromNameWithSuffix(name, tfsns.FifoTopicNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsns.FifoTopicNameSuffix))
 	} else {
-		d.Set("name_prefix", naming.NamePrefixFromName(name))
+		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
 	tags, err := keyvaluetags.SnsListTags(conn, d.Id())
@@ -655,9 +655,9 @@ func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		var name string
 
 		if fifoTopic {
-			name = naming.GenerateWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
+			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
 		} else {
-			name = naming.Generate(diff.Get("name").(string), diff.Get("name_prefix").(string))
+			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}
 
 		var re *regexp.Regexp
