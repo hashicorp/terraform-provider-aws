@@ -11,10 +11,11 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func init() {
@@ -969,7 +970,7 @@ func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourc
 
 func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := keyvaluetags.KafkaKeyValueTags(td.Tags).IgnoreAws().Map()
+		m := tftags.KafkaKeyValueTags(td.Tags).IgnoreAws().Map()
 		v, ok := m[key]
 		if value != "" && !ok {
 			return fmt.Errorf("Missing tag: %s - (found tags %v)", key, m)
