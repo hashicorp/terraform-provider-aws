@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmMaintenanceWindow() *schema.Resource {
+func ResourceMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmMaintenanceWindowCreate,
-		Read:   resourceAwsSsmMaintenanceWindowRead,
-		Update: resourceAwsSsmMaintenanceWindowUpdate,
-		Delete: resourceAwsSsmMaintenanceWindowDelete,
+		Create: resourceMaintenanceWindowCreate,
+		Read:   resourceMaintenanceWindowRead,
+		Update: resourceMaintenanceWindowUpdate,
+		Delete: resourceMaintenanceWindowDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -144,10 +144,10 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSsmMaintenanceWindowRead(d, meta)
+	return resourceMaintenanceWindowRead(d, meta)
 }
 
-func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	// Replace must be set otherwise its not possible to remove optional attributes, e.g.
@@ -201,10 +201,10 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSsmMaintenanceWindowRead(d, meta)
+	return resourceMaintenanceWindowRead(d, meta)
 }
 
-func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -255,7 +255,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSsmMaintenanceWindowDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deleting SSM Maintenance Window: %s", d.Id())

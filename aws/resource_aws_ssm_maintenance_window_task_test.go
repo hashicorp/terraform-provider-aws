@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
@@ -374,7 +375,7 @@ func TestAccAWSSSMMaintenanceWindowTask_disappears(t *testing.T) {
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsmMaintenanceWindowTask(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceMaintenanceWindowTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

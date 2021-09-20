@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmResourceDataSync() *schema.Resource {
+func ResourceResourceDataSync() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmResourceDataSyncCreate,
-		Read:   resourceAwsSsmResourceDataSyncRead,
-		Delete: resourceAwsSsmResourceDataSyncDelete,
+		Create: resourceResourceDataSyncCreate,
+		Read:   resourceResourceDataSyncRead,
+		Delete: resourceResourceDataSyncDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -66,7 +66,7 @@ func resourceAwsSsmResourceDataSync() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	input := &ssm.CreateResourceDataSyncInput{
 		S3Destination: expandSsmResourceDataSyncS3Destination(d),
@@ -92,10 +92,10 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(d.Get("name").(string))
-	return resourceAwsSsmResourceDataSyncRead(d, meta)
+	return resourceResourceDataSyncRead(d, meta)
 }
 
-func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	syncItem, err := findResourceDataSyncItem(conn, d.Id())
@@ -111,7 +111,7 @@ func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsSsmResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	input := &ssm.DeleteResourceDataSyncInput{

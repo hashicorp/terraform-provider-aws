@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
+func ResourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmMaintenanceWindowTaskCreate,
-		Read:   resourceAwsSsmMaintenanceWindowTaskRead,
-		Update: resourceAwsSsmMaintenanceWindowTaskUpdate,
-		Delete: resourceAwsSsmMaintenanceWindowTaskDelete,
+		Create: resourceMaintenanceWindowTaskCreate,
+		Read:   resourceMaintenanceWindowTaskRead,
+		Update: resourceMaintenanceWindowTaskUpdate,
+		Delete: resourceMaintenanceWindowTaskDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSsmMaintenanceWindowTaskImport,
 		},
@@ -647,7 +647,7 @@ func flattenAwsSsmTaskInvocationCommonParameters(parameters map[string][]*string
 	return attributes
 }
 
-func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Task")
@@ -691,10 +691,10 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(resp.WindowTaskId))
 
-	return resourceAwsSsmMaintenanceWindowTaskRead(d, meta)
+	return resourceMaintenanceWindowTaskRead(d, meta)
 }
 
-func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	windowID := d.Get("window_id").(string)
 
@@ -735,7 +735,7 @@ func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	windowID := d.Get("window_id").(string)
 
@@ -777,10 +777,10 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error updating Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
 	}
 
-	return resourceAwsSsmMaintenanceWindowTaskRead(d, meta)
+	return resourceMaintenanceWindowTaskRead(d, meta)
 }
 
-func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Task: %s", d.Id())

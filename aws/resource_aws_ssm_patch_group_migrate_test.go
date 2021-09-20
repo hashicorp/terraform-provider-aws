@@ -7,6 +7,7 @@ import (
 	"testing"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testResourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {

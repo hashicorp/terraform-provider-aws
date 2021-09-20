@@ -21,12 +21,12 @@ const (
 	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
 )
 
-func resourceAwsSsmDocument() *schema.Resource {
+func ResourceDocument() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmDocumentCreate,
-		Read:   resourceAwsSsmDocumentRead,
-		Update: resourceAwsSsmDocumentUpdate,
-		Delete: resourceAwsSsmDocumentDelete,
+		Create: resourceDocumentCreate,
+		Read:   resourceDocumentRead,
+		Update: resourceDocumentUpdate,
+		Delete: resourceDocumentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -188,7 +188,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -246,10 +246,10 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error waiting for SSM Document (%s) to be Active: %w", d.Id(), err)
 	}
 
-	return resourceAwsSsmDocumentRead(d, meta)
+	return resourceDocumentRead(d, meta)
 }
 
-func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -373,7 +373,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	// Validates permissions keys, if set, to be type and account_ids
@@ -418,10 +418,10 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsSsmDocumentRead(d, meta)
+	return resourceDocumentRead(d, meta)
 }
 
-func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {

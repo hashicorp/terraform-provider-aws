@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmPatchBaseline() *schema.Resource {
+func ResourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmPatchBaselineCreate,
-		Read:   resourceAwsSsmPatchBaselineRead,
-		Update: resourceAwsSsmPatchBaselineUpdate,
-		Delete: resourceAwsSsmPatchBaselineDelete,
+		Create: resourcePatchBaselineCreate,
+		Read:   resourcePatchBaselineRead,
+		Update: resourcePatchBaselineUpdate,
+		Delete: resourcePatchBaselineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -215,7 +215,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -269,10 +269,10 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(aws.StringValue(resp.BaselineId))
-	return resourceAwsSsmPatchBaselineRead(d, meta)
+	return resourcePatchBaselineRead(d, meta)
 }
 
-func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	params := &ssm.UpdatePatchBaselineInput{
@@ -334,9 +334,9 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsSsmPatchBaselineRead(d, meta)
+	return resourcePatchBaselineRead(d, meta)
 }
-func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -405,7 +405,7 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSsmPatchBaselineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchBaselineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())

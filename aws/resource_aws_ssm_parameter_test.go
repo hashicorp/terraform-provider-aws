@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSSMParameter_basic(t *testing.T) {
@@ -201,7 +202,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsmParameter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -854,7 +855,7 @@ resource "aws_kms_alias" "test_alias" {
 }
 
 func TestAWSSSMParameterShouldUpdate(t *testing.T) {
-	data := resourceAwsSsmParameter().TestResourceData()
+	data := ResourceParameter().TestResourceData()
 	failure := false
 
 	if !shouldUpdateSsmParameter(data) {
@@ -868,7 +869,7 @@ func TestAWSSSMParameterShouldUpdate(t *testing.T) {
 		failure = true
 	}
 
-	data = resourceAwsSsmParameter().TestResourceData()
+	data = ResourceParameter().TestResourceData()
 	data.Set("overwrite", true)
 	if !shouldUpdateSsmParameter(data) {
 		t.Logf("Resources should always be overwritten if the user requests it")

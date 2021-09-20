@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
@@ -562,7 +563,7 @@ func TestAccAWSSSMDocument_disappears(t *testing.T) {
 				Config: testAccAWSSSMDocumentBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsmDocument(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDocument(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

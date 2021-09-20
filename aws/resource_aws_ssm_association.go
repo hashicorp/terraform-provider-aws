@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmAssociation() *schema.Resource {
+func ResourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSsmAssociationCreate,
-		Read:   resourceAwsSsmAssociationRead,
-		Update: resourceAwsSsmAssociationUpdate,
-		Delete: resourceAwsSsmAssociationDelete,
+		Create: resourceAssociationCreate,
+		Read:   resourceAssociationRead,
+		Update: resourceAssociationUpdate,
+		Delete: resourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -130,7 +130,7 @@ func resourceAwsSsmAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
@@ -199,10 +199,10 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(aws.StringValue(resp.AssociationDescription.AssociationId))
 	d.Set("association_id", resp.AssociationDescription.AssociationId)
 
-	return resourceAwsSsmAssociationRead(d, meta)
+	return resourceAssociationRead(d, meta)
 }
 
-func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Reading SSM Association: %s", d.Id())
@@ -252,7 +252,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
@@ -311,10 +311,10 @@ func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error updating SSM association: %s", err)
 	}
 
-	return resourceAwsSsmAssociationRead(d, meta)
+	return resourceAssociationRead(d, meta)
 }
 
-func resourceAwsSsmAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Deleting SSM Association: %s", d.Id())

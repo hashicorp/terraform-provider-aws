@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmActivation() *schema.Resource {
+func ResourceActivation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmActivationCreate,
-		Read:   resourceAwsSsmActivationRead,
-		Delete: resourceAwsSsmActivationDelete,
+		Create: resourceActivationCreate,
+		Read:   resourceActivationRead,
+		Delete: resourceActivationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -72,7 +72,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -139,10 +139,10 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(resp.ActivationId))
 	d.Set("activation_code", resp.ActivationCode)
 
-	return resourceAwsSsmActivationRead(d, meta)
+	return resourceActivationRead(d, meta)
 }
 
-func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -194,7 +194,7 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsSsmActivationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceActivationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())

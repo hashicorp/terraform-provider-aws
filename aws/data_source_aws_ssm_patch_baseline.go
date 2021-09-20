@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSsmPatchBaseline() *schema.Resource {
+func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		Read: dataAwsSsmPatchBaselineRead,
 		Schema: map[string]*schema.Schema{

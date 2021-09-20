@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepSsmResourceDataSyncs(region string) error {
 		}
 
 		for _, resourceDataSync := range page.ResourceDataSyncItems {
-			r := resourceAwsSsmResourceDataSync()
+			r := ResourceResourceDataSync()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(resourceDataSync.SyncName))
