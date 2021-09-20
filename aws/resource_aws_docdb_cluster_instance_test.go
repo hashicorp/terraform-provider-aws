@@ -24,7 +24,7 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +73,7 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,7 +174,7 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -207,7 +207,7 @@ func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,7 +240,7 @@ func testAccCheckAWSDocDBClusterInstanceAttributes(v *docdb.DBInstance) resource
 
 func testAccAWSDocDBClusterInstanceDisappears(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 		opts := &docdb.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
@@ -277,7 +277,7 @@ func testAccCheckAWSDocDBClusterInstanceExists(n string, v *docdb.DBInstance) re
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 		resp, err := conn.DescribeDBInstances(&docdb.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})
