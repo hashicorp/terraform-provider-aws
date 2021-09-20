@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
@@ -92,8 +93,8 @@ func resourceAwsNeptuneClusterParameterGroup() *schema.Resource {
 }
 
 func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var groupName string
@@ -130,9 +131,9 @@ func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -201,7 +202,7 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -237,7 +238,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsNeptuneClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := neptune.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).neptuneconn
+	conn := client.(*conns.AWSClient).NeptuneConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -238,7 +239,7 @@ func testAccCheckAWSNeptuneEventSubscriptionExists(n string, v *neptune.EventSub
 			return fmt.Errorf("No Neptune Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 		opts := neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -261,7 +262,7 @@ func testAccCheckAWSNeptuneEventSubscriptionExists(n string, v *neptune.EventSub
 }
 
 func testAccCheckAWSNeptuneEventSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_event_subscription" {

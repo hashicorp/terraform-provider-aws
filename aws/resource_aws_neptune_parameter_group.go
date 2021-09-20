@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // We can only modify 20 parameters at a time, so walk them until
@@ -85,8 +86,8 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 }
 
 func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := neptune.CreateDBParameterGroupInput{
@@ -110,9 +111,9 @@ func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -184,7 +185,7 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -269,7 +270,7 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	deleteOpts := neptune.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
