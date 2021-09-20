@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -24,7 +23,7 @@ const (
 // StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
 func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		invitation, err := finder.FindResourceShareInvitationByARN(conn, arn)
+		invitation, err := FindResourceShareInvitationByARN(conn, arn)
 
 		if err != nil {
 			return nil, ResourceShareInvitationStatusUnknown, err
@@ -41,7 +40,7 @@ func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefr
 // StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
 func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		share, err := finder.FindResourceShareOwnerSelfByARN(conn, arn)
+		share, err := FindResourceShareOwnerSelfByARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, ResourceShareStatusNotFound, nil
@@ -61,7 +60,7 @@ func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefre
 
 func StatusResourceSharePrincipalAssociation(conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		association, err := finder.FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
+		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, PrincipalAssociationStatusNotFound, err

@@ -1,4 +1,4 @@
-package aws
+package ram
 
 import (
 	"fmt"
@@ -12,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -75,7 +73,7 @@ func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}
 		return resourcePrincipalAssociationRead(d, meta)
 	}
 
-	if _, err := waiter.WaitResourceSharePrincipalAssociated(conn, resourceShareArn, principal); err != nil {
+	if _, err := WaitResourceSharePrincipalAssociated(conn, resourceShareArn, principal); err != nil {
 		return fmt.Errorf("error waiting for RAM principal association (%s) to become ready: %w", d.Id(), err)
 	}
 
@@ -94,9 +92,9 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 
 	if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
 		// AWS Account ID Principals need to be accepted to become ASSOCIATED
-		association, err = finder.FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
+		association, err = FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
 	} else {
-		association, err = waiter.WaitResourceSharePrincipalAssociated(conn, resourceShareArn, principal)
+		association, err = WaitResourceSharePrincipalAssociated(conn, resourceShareArn, principal)
 	}
 
 	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException) || tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException)) {
@@ -149,7 +147,7 @@ func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error disassociating RAM Resource Share (%s) Principal Association (%s): %s", resourceShareArn, principal, err)
 	}
 
-	if _, err := waiter.WaitResourceSharePrincipalDisassociated(conn, resourceShareArn, principal); err != nil {
+	if _, err := WaitResourceSharePrincipalDisassociated(conn, resourceShareArn, principal); err != nil {
 		return fmt.Errorf("error waiting for RAM Resource Share (%s) Principal Association (%s) disassociation: %s", resourceShareArn, principal, err)
 	}
 

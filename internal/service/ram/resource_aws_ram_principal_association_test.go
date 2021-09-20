@@ -1,4 +1,4 @@
-package aws
+package ram_test
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 )
 
 func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
@@ -91,9 +91,9 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 
 		if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
 			// AWS Account ID Principals need to be accepted to become ASSOCIATED
-			association, err = finder.FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareARN, principal)
+			association, err = tfram.FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareARN, principal)
 		} else {
-			association, err = waiter.WaitResourceSharePrincipalAssociated(conn, resourceShareARN, principal)
+			association, err = tfram.WaitResourceSharePrincipalAssociated(conn, resourceShareARN, principal)
 		}
 
 		if err != nil {
@@ -128,7 +128,7 @@ func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		association, err := waiter.WaitResourceSharePrincipalDisassociated(conn, resourceShareARN, principal)
+		association, err := tfram.WaitResourceSharePrincipalDisassociated(conn, resourceShareARN, principal)
 
 		if err != nil {
 			return err
