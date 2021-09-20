@@ -32,7 +32,6 @@ func ListTags(conn *wafregional.WAFRegional, identifier string) (tftags.KeyValue
 	return KeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns wafregional service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*waf.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates wafregional service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

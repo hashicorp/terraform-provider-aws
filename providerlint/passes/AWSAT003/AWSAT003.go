@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for hardcoded regions

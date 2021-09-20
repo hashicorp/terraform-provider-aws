@@ -32,7 +32,6 @@ func ListTags(conn *sfn.SFN, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns sfn service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*sfn.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates sfn service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

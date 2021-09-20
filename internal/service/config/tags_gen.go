@@ -32,7 +32,6 @@ func ListTags(conn *configservice.ConfigService, identifier string) (tftags.KeyV
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns config service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*configservice.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates config service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

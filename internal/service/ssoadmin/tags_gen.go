@@ -33,7 +33,6 @@ func ListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string) (
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns ssoadmin service tags.
@@ -62,7 +61,6 @@ func KeyValueTags(tags []*ssoadmin.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

@@ -32,7 +32,6 @@ func ListTags(conn *sqs.SQS, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns sqs service tags.

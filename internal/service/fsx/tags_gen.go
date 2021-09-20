@@ -32,7 +32,6 @@ func ListTags(conn *fsx.FSx, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns fsx service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*fsx.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates fsx service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

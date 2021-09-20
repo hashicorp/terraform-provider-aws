@@ -43,4 +43,3 @@ func KeyValueTags(tags []*s3control.S3Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

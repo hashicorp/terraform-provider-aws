@@ -32,7 +32,6 @@ func ListTags(conn *timestreamwrite.TimestreamWrite, identifier string) (tftags.
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns timestreamwrite service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*timestreamwrite.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates timestreamwrite service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

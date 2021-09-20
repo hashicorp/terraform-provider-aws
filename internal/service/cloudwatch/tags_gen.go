@@ -32,7 +32,6 @@ func ListTags(conn *cloudwatch.CloudWatch, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns cloudwatch service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*cloudwatch.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates cloudwatch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

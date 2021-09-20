@@ -32,7 +32,6 @@ func ListTags(conn *elb.ELB, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.TagDescriptions[0].Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // TagKeys returns elb service tag keys.
@@ -76,7 +75,6 @@ func KeyValueTags(tags []*elb.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

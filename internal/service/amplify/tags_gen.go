@@ -32,7 +32,6 @@ func ListTags(conn *amplify.Amplify, identifier string) (tftags.KeyValueTags, er
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns amplify service tags.

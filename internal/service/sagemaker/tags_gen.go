@@ -32,7 +32,6 @@ func ListTags(conn *sagemaker.SageMaker, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns sagemaker service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*sagemaker.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

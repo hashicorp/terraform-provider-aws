@@ -32,7 +32,6 @@ func ListTags(conn *eks.EKS, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns eks service tags.

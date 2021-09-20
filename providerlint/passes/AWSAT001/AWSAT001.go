@@ -7,8 +7,8 @@ import (
 	"github.com/bflad/tfproviderlint/helper/astutils"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/resource/testmatchresourceattrcallexpr"
-	"golang.org/x/tools/go/analysis"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/tools/go/analysis"
 )
 
 const Doc = `check for resource.TestMatchResourceAttr() calls against ARN attributes

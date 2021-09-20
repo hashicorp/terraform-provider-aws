@@ -32,7 +32,6 @@ func ListTags(conn *mediaconvert.MediaConvert, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.ResourceTags.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns mediaconvert service tags.

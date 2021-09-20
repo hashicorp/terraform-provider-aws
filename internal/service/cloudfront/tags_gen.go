@@ -32,7 +32,6 @@ func ListTags(conn *cloudfront.CloudFront, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags.Items), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns cloudfront service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*cloudfront.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates cloudfront service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

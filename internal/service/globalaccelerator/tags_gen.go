@@ -32,7 +32,6 @@ func ListTags(conn *globalaccelerator.GlobalAccelerator, identifier string) (tft
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns globalaccelerator service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*globalaccelerator.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

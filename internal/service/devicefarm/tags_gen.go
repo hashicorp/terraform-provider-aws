@@ -32,7 +32,6 @@ func ListTags(conn *devicefarm.DeviceFarm, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns devicefarm service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*devicefarm.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates devicefarm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

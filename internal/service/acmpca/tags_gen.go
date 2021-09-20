@@ -32,7 +32,6 @@ func ListTags(conn *acmpca.ACMPCA, identifier string) (tftags.KeyValueTags, erro
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns acmpca service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*acmpca.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates acmpca service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

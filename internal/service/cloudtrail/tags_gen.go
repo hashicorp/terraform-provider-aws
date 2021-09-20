@@ -32,7 +32,6 @@ func ListTags(conn *cloudtrail.CloudTrail, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.ResourceTagList[0].TagsList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns cloudtrail service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*cloudtrail.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates cloudtrail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

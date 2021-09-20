@@ -43,4 +43,3 @@ func KeyValueTags(tags []*iam.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

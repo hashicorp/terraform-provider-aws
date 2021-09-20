@@ -43,4 +43,3 @@ func KeyValueTags(tags []*servicecatalog.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

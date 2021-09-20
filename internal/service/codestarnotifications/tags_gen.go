@@ -32,7 +32,6 @@ func ListTags(conn *codestarnotifications.CodeStarNotifications, identifier stri
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns codestarnotifications service tags.

@@ -32,7 +32,6 @@ func ListTags(conn *appmesh.AppMesh, identifier string) (tftags.KeyValueTags, er
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns appmesh service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*appmesh.TagRef) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

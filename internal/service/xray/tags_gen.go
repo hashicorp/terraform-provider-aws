@@ -32,7 +32,6 @@ func ListTags(conn *xray.XRay, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns xray service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*xray.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates xray service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

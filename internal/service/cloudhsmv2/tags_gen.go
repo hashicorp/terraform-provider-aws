@@ -32,7 +32,6 @@ func ListTags(conn *cloudhsmv2.CloudHSMV2, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns cloudhsmv2 service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*cloudhsmv2.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates cloudhsmv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

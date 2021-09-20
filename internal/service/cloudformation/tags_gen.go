@@ -43,4 +43,3 @@ func KeyValueTags(tags []*cloudformation.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

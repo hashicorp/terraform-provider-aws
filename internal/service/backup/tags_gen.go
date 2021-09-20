@@ -32,7 +32,6 @@ func ListTags(conn *backup.Backup, identifier string) (tftags.KeyValueTags, erro
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns backup service tags.

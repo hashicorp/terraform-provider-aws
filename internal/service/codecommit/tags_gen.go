@@ -32,7 +32,6 @@ func ListTags(conn *codecommit.CodeCommit, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns codecommit service tags.

@@ -43,4 +43,3 @@ func KeyValueTags(tags []*resourcegroupstaggingapi.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

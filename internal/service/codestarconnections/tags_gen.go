@@ -32,7 +32,6 @@ func ListTags(conn *codestarconnections.CodeStarConnections, identifier string) 
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns codestarconnections service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*codestarconnections.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates codestarconnections service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

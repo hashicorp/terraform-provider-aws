@@ -3,8 +3,8 @@ package AWSR002
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/tools/go/analysis"
 )
 
 // analysistest testing with the actual keyvaluetags internal package requires

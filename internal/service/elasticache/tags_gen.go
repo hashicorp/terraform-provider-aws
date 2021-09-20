@@ -32,7 +32,6 @@ func ListTags(conn *elasticache.ElastiCache, identifier string) (tftags.KeyValue
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns elasticache service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*elasticache.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates elasticache service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

@@ -32,7 +32,6 @@ func ListTags(conn *wafv2.WAFV2, identifier string) (tftags.KeyValueTags, error)
 	return KeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns wafv2 service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*wafv2.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

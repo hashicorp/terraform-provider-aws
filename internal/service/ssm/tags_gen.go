@@ -33,7 +33,6 @@ func ListTags(conn *ssm.SSM, identifier string, resourceType string) (tftags.Key
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns ssm service tags.
@@ -62,7 +61,6 @@ func KeyValueTags(tags []*ssm.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

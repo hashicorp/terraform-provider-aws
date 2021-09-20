@@ -32,7 +32,6 @@ func ListTags(conn *elbv2.ELBV2, identifier string) (tftags.KeyValueTags, error)
 	return KeyValueTags(output.TagDescriptions[0].Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns elbv2 service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*elbv2.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

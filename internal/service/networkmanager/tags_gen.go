@@ -32,7 +32,6 @@ func ListTags(conn *networkmanager.NetworkManager, identifier string) (tftags.Ke
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns networkmanager service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*networkmanager.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates networkmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

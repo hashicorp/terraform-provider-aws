@@ -32,7 +32,6 @@ func ListTags(conn *codeartifact.CodeArtifact, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns codeartifact service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*codeartifact.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates codeartifact service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

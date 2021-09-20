@@ -34,7 +34,6 @@ func GetTag(conn *ecs.ECS, identifier string, key string) (*tftags.TagData, erro
 	return listTags.KeyTagData(key), nil
 }
 
-
 // ListTags lists ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -51,7 +50,6 @@ func ListTags(conn *ecs.ECS, identifier string) (tftags.KeyValueTags, error) {
 
 	return KeyValueTags(output.Tags), nil
 }
-
 
 // []*SERVICE.Tag handling
 
@@ -81,7 +79,6 @@ func KeyValueTags(tags []*ecs.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

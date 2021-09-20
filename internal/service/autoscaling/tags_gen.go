@@ -49,7 +49,6 @@ func GetTag(conn *autoscaling.AutoScaling, identifier string, resourceType strin
 	return listTags.KeyTagData(key), nil
 }
 
-
 // ListTags lists autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -71,7 +70,6 @@ func ListTags(conn *autoscaling.AutoScaling, identifier string, resourceType str
 
 	return KeyValueTags(output.Tags, identifier, resourceType), nil
 }
-
 
 // []*SERVICE.Tag handling
 
@@ -230,7 +228,6 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 		return tftags.New(nil)
 	}
 }
-
 
 // UpdateTags updates autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

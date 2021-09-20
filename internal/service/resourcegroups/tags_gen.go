@@ -32,7 +32,6 @@ func ListTags(conn *resourcegroups.ResourceGroups, identifier string) (tftags.Ke
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns resourcegroups service tags.

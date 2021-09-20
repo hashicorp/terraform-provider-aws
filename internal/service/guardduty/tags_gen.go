@@ -32,7 +32,6 @@ func ListTags(conn *guardduty.GuardDuty, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns guardduty service tags.

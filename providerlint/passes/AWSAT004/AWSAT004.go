@@ -9,8 +9,8 @@ import (
 	"github.com/bflad/tfproviderlint/helper/astutils"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/resource/testcheckresourceattrcallexpr"
-	"golang.org/x/tools/go/analysis"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/tools/go/analysis"
 )
 
 const Doc = `check for TestCheckResourceAttr() calls with hardcoded TypeSet state hashes

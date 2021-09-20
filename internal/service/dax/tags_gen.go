@@ -32,7 +32,6 @@ func ListTags(conn *dax.DAX, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns dax service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*dax.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates dax service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

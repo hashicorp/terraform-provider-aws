@@ -32,7 +32,6 @@ func ListTags(conn *ecr.ECR, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns ecr service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*ecr.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates ecr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

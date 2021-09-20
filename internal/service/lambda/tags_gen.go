@@ -32,7 +32,6 @@ func ListTags(conn *lambda.Lambda, identifier string) (tftags.KeyValueTags, erro
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns lambda service tags.

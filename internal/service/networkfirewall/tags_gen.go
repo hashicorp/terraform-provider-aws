@@ -32,7 +32,6 @@ func ListTags(conn *networkfirewall.NetworkFirewall, identifier string) (tftags.
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns networkfirewall service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*networkfirewall.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates networkfirewall service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

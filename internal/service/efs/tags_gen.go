@@ -32,7 +32,6 @@ func ListTags(conn *efs.EFS, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns efs service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*efs.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates efs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

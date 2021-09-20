@@ -32,7 +32,6 @@ func ListTags(conn *databasemigrationservice.DatabaseMigrationService, identifie
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns dms service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*databasemigrationservice.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates dms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

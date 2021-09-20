@@ -32,7 +32,6 @@ func ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns apigatewayv2 service tags.

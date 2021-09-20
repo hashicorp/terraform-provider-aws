@@ -32,7 +32,6 @@ func ListTags(conn *mediaconnect.MediaConnect, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns mediaconnect service tags.

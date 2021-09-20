@@ -34,7 +34,6 @@ func GetTag(conn *route53resolver.Route53Resolver, identifier string, key string
 	return listTags.KeyTagData(key), nil
 }
 
-
 // ListTags lists route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -51,7 +50,6 @@ func ListTags(conn *route53resolver.Route53Resolver, identifier string) (tftags.
 
 	return KeyValueTags(output.Tags), nil
 }
-
 
 // []*SERVICE.Tag handling
 
@@ -81,7 +79,6 @@ func KeyValueTags(tags []*route53resolver.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

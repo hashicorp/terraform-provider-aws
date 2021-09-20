@@ -32,7 +32,6 @@ func ListTags(conn *pinpoint.Pinpoint, identifier string) (tftags.KeyValueTags, 
 	return KeyValueTags(output.TagsModel.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns pinpoint service tags.

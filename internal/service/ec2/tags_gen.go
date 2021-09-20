@@ -49,7 +49,6 @@ func GetTag(conn *ec2.EC2, identifier string, key string) (*tftags.TagData, erro
 	return listTags.KeyTagData(key), nil
 }
 
-
 // ListTags lists ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -71,7 +70,6 @@ func ListTags(conn *ec2.EC2, identifier string) (tftags.KeyValueTags, error) {
 
 	return KeyValueTags(output.Tags), nil
 }
-
 
 // []*SERVICE.Tag handling
 
@@ -118,7 +116,6 @@ func KeyValueTags(tags interface{}) tftags.KeyValueTags {
 		return tftags.New(nil)
 	}
 }
-
 
 // UpdateTags updates ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

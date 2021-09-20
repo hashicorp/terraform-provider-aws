@@ -32,7 +32,6 @@ func ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, identifier string) (t
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns kinesisanalyticsv2 service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*kinesisanalyticsv2.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates kinesisanalyticsv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

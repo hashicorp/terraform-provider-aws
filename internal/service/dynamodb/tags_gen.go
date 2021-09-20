@@ -34,7 +34,6 @@ func GetTag(conn *dynamodb.DynamoDB, identifier string, key string) (*tftags.Tag
 	return listTags.KeyTagData(key), nil
 }
 
-
 // ListTags lists dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -51,7 +50,6 @@ func ListTags(conn *dynamodb.DynamoDB, identifier string) (tftags.KeyValueTags, 
 
 	return KeyValueTags(output.Tags), nil
 }
-
 
 // []*SERVICE.Tag handling
 
@@ -81,7 +79,6 @@ func KeyValueTags(tags []*dynamodb.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

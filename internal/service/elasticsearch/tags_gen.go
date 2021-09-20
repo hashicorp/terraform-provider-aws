@@ -32,7 +32,6 @@ func ListTags(conn *elasticsearchservice.ElasticsearchService, identifier string
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns elasticsearch service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*elasticsearchservice.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates elasticsearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

@@ -34,7 +34,6 @@ func GetTag(conn *batch.Batch, identifier string, key string) (*tftags.TagData, 
 	return listTags.KeyTagData(key), nil
 }
 
-
 // ListTags lists batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -51,7 +50,6 @@ func ListTags(conn *batch.Batch, identifier string) (tftags.KeyValueTags, error)
 
 	return KeyValueTags(output.Tags), nil
 }
-
 
 // map[string]*string handling
 

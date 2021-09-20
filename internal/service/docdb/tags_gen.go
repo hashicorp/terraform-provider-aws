@@ -32,7 +32,6 @@ func ListTags(conn *docdb.DocDB, identifier string) (tftags.KeyValueTags, error)
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns docdb service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*docdb.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates docdb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

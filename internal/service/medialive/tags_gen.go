@@ -32,7 +32,6 @@ func ListTags(conn *medialive.MediaLive, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns medialive service tags.

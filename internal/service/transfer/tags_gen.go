@@ -32,7 +32,6 @@ func ListTags(conn *transfer.Transfer, identifier string) (tftags.KeyValueTags, 
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns transfer service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*transfer.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

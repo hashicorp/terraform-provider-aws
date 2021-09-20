@@ -32,7 +32,6 @@ func ListTags(conn *mediastore.MediaStore, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns mediastore service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*mediastore.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates mediastore service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

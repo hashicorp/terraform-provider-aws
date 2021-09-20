@@ -33,7 +33,6 @@ func ListTags(conn *route53.Route53, identifier string, resourceType string) (tf
 	return KeyValueTags(output.ResourceTagSet.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns route53 service tags.
@@ -62,7 +61,6 @@ func KeyValueTags(tags []*route53.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

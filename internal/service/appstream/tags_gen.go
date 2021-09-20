@@ -32,7 +32,6 @@ func ListTags(conn *appstream.AppStream, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns appstream service tags.

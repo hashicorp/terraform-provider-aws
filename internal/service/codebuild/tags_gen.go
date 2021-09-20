@@ -43,4 +43,3 @@ func KeyValueTags(tags []*codebuild.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

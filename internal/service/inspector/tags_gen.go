@@ -32,7 +32,6 @@ func ListTags(conn *inspector.Inspector, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns inspector service tags.
@@ -61,4 +60,3 @@ func KeyValueTags(tags []*inspector.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

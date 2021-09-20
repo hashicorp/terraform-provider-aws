@@ -32,7 +32,6 @@ func ListTags(conn *cognitoidentityprovider.CognitoIdentityProvider, identifier 
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns cognitoidp service tags.

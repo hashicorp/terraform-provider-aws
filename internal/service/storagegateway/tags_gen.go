@@ -32,7 +32,6 @@ func ListTags(conn *storagegateway.StorageGateway, identifier string) (tftags.Ke
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns storagegateway service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*storagegateway.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates storagegateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

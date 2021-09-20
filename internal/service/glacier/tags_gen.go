@@ -32,7 +32,6 @@ func ListTags(conn *glacier.Glacier, identifier string) (tftags.KeyValueTags, er
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns glacier service tags.

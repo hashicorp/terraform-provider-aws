@@ -32,7 +32,6 @@ func ListTags(conn *worklink.WorkLink, identifier string) (tftags.KeyValueTags, 
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns worklink service tags.

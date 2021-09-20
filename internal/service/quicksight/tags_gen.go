@@ -32,7 +32,6 @@ func ListTags(conn *quicksight.QuickSight, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns quicksight service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*quicksight.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates quicksight service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

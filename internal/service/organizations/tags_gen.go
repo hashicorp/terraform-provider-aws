@@ -32,7 +32,6 @@ func ListTags(conn *organizations.Organizations, identifier string) (tftags.KeyV
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns organizations service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*organizations.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates organizations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

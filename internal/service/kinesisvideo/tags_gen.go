@@ -32,7 +32,6 @@ func ListTags(conn *kinesisvideo.KinesisVideo, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns kinesisvideo service tags.

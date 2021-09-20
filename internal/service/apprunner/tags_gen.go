@@ -32,7 +32,6 @@ func ListTags(conn *apprunner.AppRunner, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns apprunner service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*apprunner.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates apprunner service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

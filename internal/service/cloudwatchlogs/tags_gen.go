@@ -32,7 +32,6 @@ func ListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string) (tftags.Ke
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns cloudwatchlogs service tags.

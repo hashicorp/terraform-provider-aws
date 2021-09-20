@@ -1,8 +1,8 @@
 package keyvaluetags
 
 import (
-	"go/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"go/types"
 )
 
 const (

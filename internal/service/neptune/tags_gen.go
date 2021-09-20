@@ -32,7 +32,6 @@ func ListTags(conn *neptune.Neptune, identifier string) (tftags.KeyValueTags, er
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns neptune service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*neptune.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates neptune service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

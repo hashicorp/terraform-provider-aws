@@ -32,7 +32,6 @@ func ListTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifie
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns route53recoveryreadiness service tags.

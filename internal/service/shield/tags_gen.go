@@ -32,7 +32,6 @@ func ListTags(conn *shield.Shield, identifier string) (tftags.KeyValueTags, erro
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns shield service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*shield.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates shield service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

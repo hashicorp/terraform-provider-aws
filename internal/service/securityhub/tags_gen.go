@@ -32,7 +32,6 @@ func ListTags(conn *securityhub.SecurityHub, identifier string) (tftags.KeyValue
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns securityhub service tags.

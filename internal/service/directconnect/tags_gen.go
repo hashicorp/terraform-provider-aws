@@ -32,7 +32,6 @@ func ListTags(conn *directconnect.DirectConnect, identifier string) (tftags.KeyV
 	return KeyValueTags(output.ResourceTags[0].Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns directconnect service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*directconnect.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates directconnect service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

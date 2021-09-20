@@ -43,4 +43,3 @@ func KeyValueTags(tags []*fms.ResourceTag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-

@@ -32,7 +32,6 @@ func ListTags(conn *workspaces.WorkSpaces, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.TagList), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns workspaces service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*workspaces.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

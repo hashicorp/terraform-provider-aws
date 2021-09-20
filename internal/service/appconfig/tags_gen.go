@@ -32,7 +32,6 @@ func ListTags(conn *appconfig.AppConfig, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns appconfig service tags.

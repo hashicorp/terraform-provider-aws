@@ -32,7 +32,6 @@ func ListTags(conn *greengrass.Greengrass, identifier string) (tftags.KeyValueTa
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns greengrass service tags.

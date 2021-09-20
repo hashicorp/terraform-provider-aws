@@ -32,7 +32,6 @@ func ListTags(conn *imagebuilder.Imagebuilder, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns imagebuilder service tags.

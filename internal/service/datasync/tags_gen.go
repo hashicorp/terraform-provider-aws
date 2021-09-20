@@ -32,7 +32,6 @@ func ListTags(conn *datasync.DataSync, identifier string) (tftags.KeyValueTags, 
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns datasync service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*datasync.TagListEntry) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates datasync service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

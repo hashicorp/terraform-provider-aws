@@ -32,7 +32,6 @@ func ListTags(conn *acm.ACM, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns acm service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*acm.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

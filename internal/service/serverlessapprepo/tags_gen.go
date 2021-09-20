@@ -43,4 +43,3 @@ func KeyValueTags(tags []*serverlessapplicationrepository.Tag) tftags.KeyValueTa
 
 	return tftags.New(m)
 }
-

@@ -32,7 +32,6 @@ func ListTags(conn *licensemanager.LicenseManager, identifier string) (tftags.Ke
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns licensemanager service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*licensemanager.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates licensemanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

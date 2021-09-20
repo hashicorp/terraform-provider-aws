@@ -3,8 +3,8 @@ package passes
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/tools/go/analysis"
 )
 
 func TestValidateAllChecks(t *testing.T) {

@@ -3,9 +3,9 @@ package AWSAT005_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/providerlint/passes/AWSAT005"
 	"golang.org/x/tools/go/analysis/analysistest"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAWSAT005(t *testing.T) {

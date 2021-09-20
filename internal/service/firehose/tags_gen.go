@@ -32,7 +32,6 @@ func ListTags(conn *firehose.Firehose, identifier string) (tftags.KeyValueTags, 
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns firehose service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*firehose.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates firehose service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

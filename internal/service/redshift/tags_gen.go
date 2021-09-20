@@ -44,7 +44,6 @@ func KeyValueTags(tags []*redshift.Tag) tftags.KeyValueTags {
 	return tftags.New(m)
 }
 
-
 // UpdateTags updates redshift service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

@@ -32,7 +32,6 @@ func ListTags(conn *swf.SWF, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns swf service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*swf.ResourceTag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates swf service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

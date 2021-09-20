@@ -32,7 +32,6 @@ func ListTags(conn *dataexchange.DataExchange, identifier string) (tftags.KeyVal
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // map[string]*string handling
 
 // Tags returns dataexchange service tags.

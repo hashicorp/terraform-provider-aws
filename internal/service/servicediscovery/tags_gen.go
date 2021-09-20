@@ -32,7 +32,6 @@ func ListTags(conn *servicediscovery.ServiceDiscovery, identifier string) (tftag
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns servicediscovery service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*servicediscovery.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates servicediscovery service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

@@ -32,7 +32,6 @@ func ListTags(conn *iotevents.IoTEvents, identifier string) (tftags.KeyValueTags
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns iotevents service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*iotevents.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates iotevents service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

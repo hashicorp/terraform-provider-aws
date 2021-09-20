@@ -32,7 +32,6 @@ func ListTags(conn *sns.SNS, identifier string) (tftags.KeyValueTags, error) {
 	return KeyValueTags(output.Tags), nil
 }
 
-
 // []*SERVICE.Tag handling
 
 // Tags returns sns service tags.
@@ -61,7 +60,6 @@ func KeyValueTags(tags []*sns.Tag) tftags.KeyValueTags {
 
 	return tftags.New(m)
 }
-
 
 // UpdateTags updates sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
