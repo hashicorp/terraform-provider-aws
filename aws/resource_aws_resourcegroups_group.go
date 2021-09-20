@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsResourceGroupsGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsResourceGroupsGroupCreate,
-		Read:   resourceAwsResourceGroupsGroupRead,
-		Update: resourceAwsResourceGroupsGroupUpdate,
-		Delete: resourceAwsResourceGroupsGroupDelete,
+		Create: resourceGroupCreate,
+		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
+		Delete: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -80,7 +80,7 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 	}
 }
 
-func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -99,10 +99,10 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(res.Group.Name))
 
-	return resourceAwsResourceGroupsGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -159,7 +159,7 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 
 	if d.HasChange("description") {
@@ -193,10 +193,10 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsResourceGroupsGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsResourceGroupsGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 
 	input := resourcegroups.DeleteGroupInput{
