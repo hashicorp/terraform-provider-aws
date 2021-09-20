@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 )
 
 func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 				Config: testAccShieldProtectionGroupConfig_basic_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceProtectionGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
