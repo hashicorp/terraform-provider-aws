@@ -65,7 +65,7 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 	d.Set("semantic_version", output.Version.SemanticVersion)
 	d.Set("source_code_url", output.Version.SourceCodeUrl)
 	d.Set("template_url", output.Version.TemplateUrl)
-	if err = d.Set("required_capabilities", flattenStringSet(output.Version.RequiredCapabilities)); err != nil {
+	if err = d.Set("required_capabilities", flex.FlattenStringSet(output.Version.RequiredCapabilities)); err != nil {
 		return fmt.Errorf("failed to set required_capabilities: %w", err)
 	}
 
