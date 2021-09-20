@@ -23,7 +23,7 @@ func testAccAWSFmsPolicy_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func testAccAWSFmsPolicy_cloudfrontDistribution(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +88,7 @@ func testAccAWSFmsPolicy_includeMap(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func testAccAWSFmsPolicy_update(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +152,7 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 }
 
 func testAccCheckAwsFmsPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).fmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).fmsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_policy" {
