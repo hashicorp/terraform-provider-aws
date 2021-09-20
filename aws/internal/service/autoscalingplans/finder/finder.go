@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ScalingPlan returns the scaling plan corresponding to the specified name and version.
+// FindScalingPlan returns the scaling plan corresponding to the specified name and version.
 // Returns nil and potentially an API error if no scaling plan is found.
-func ScalingPlan(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+func FindScalingPlan(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	input := &autoscalingplans.DescribeScalingPlansInput{
 		ScalingPlanNames:   aws.StringSlice([]string{scalingPlanName}),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),

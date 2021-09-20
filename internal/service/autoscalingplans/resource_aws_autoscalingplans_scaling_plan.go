@@ -340,7 +340,7 @@ func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(autoScalingPlansScalingPlanId(scalingPlanName, scalingPlanVersion))
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
-	_, err = waiter.ScalingPlanCreated(conn, scalingPlanName, scalingPlanVersion)
+	_, err = waiter.waitScalingPlanCreated(conn, scalingPlanName, scalingPlanVersion)
 	if err != nil {
 		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be created: %w", d.Id(), err)
 	}
@@ -351,7 +351,7 @@ func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
-	scalingPlan, err := finder.ScalingPlan(conn, d.Get("name").(string), d.Get("scaling_plan_version").(int))
+	scalingPlan, err := finder.FindScalingPlan(conn, d.Get("name").(string), d.Get("scaling_plan_version").(int))
 	if err != nil {
 		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
@@ -394,7 +394,7 @@ func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ScalingPlanUpdated(conn, scalingPlanName, scalingPlanVersion)
+	_, err = waiter.waitScalingPlanUpdated(conn, scalingPlanName, scalingPlanVersion)
 	if err != nil {
 		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be updated: %w", d.Id(), err)
 	}
@@ -420,7 +420,7 @@ func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
+	_, err = waiter.waitScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
 	if err != nil {
 		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be deleted: %w", d.Id(), err)
 	}

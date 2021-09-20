@@ -10,22 +10,22 @@ import (
 
 const (
 	// Maximum amount of time to wait for a ScalingPlan to return Created
-	ScalingPlanCreatedTimeout = 5 * time.Minute
+	scalingPlanCreatedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a ScalingPlan to return Deleted
-	ScalingPlanDeletedTimeout = 5 * time.Minute
+	scalingPlanDeletedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a ScalingPlan to return Updated
-	ScalingPlanUpdatedTimeout = 5 * time.Minute
+	scalingPlanUpdatedTimeout = 5 * time.Minute
 )
 
-// ScalingPlanCreated waits for a ScalingPlan to return Created
-func ScalingPlanCreated(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+// waitScalingPlanCreated waits for a ScalingPlan to return Created
+func waitScalingPlanCreated(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{autoscalingplans.ScalingPlanStatusCodeCreationInProgress},
 		Target:  []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
-		Refresh: ScalingPlanStatus(conn, scalingPlanName, scalingPlanVersion),
-		Timeout: ScalingPlanCreatedTimeout,
+		Refresh: statusScalingPlan(conn, scalingPlanName, scalingPlanVersion),
+		Timeout: scalingPlanCreatedTimeout,
 		Delay:   10 * time.Second,
 	}
 
@@ -38,13 +38,13 @@ func ScalingPlanCreated(conn *autoscalingplans.AutoScalingPlans, scalingPlanName
 	return nil, err
 }
 
-// ScalingPlanDeleted waits for a ScalingPlan to return Deleted
-func ScalingPlanDeleted(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+// waitScalingPlanDeleted waits for a ScalingPlan to return Deleted
+func waitScalingPlanDeleted(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{autoscalingplans.ScalingPlanStatusCodeDeletionInProgress},
 		Target:  []string{},
-		Refresh: ScalingPlanStatus(conn, scalingPlanName, scalingPlanVersion),
-		Timeout: ScalingPlanDeletedTimeout,
+		Refresh: statusScalingPlan(conn, scalingPlanName, scalingPlanVersion),
+		Timeout: scalingPlanDeletedTimeout,
 		Delay:   10 * time.Second,
 	}
 
@@ -57,13 +57,13 @@ func ScalingPlanDeleted(conn *autoscalingplans.AutoScalingPlans, scalingPlanName
 	return nil, err
 }
 
-// ScalingPlanUpdated waits for a ScalingPlan to return Updated
-func ScalingPlanUpdated(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+// waitScalingPlanUpdated waits for a ScalingPlan to return Updated
+func waitScalingPlanUpdated(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{autoscalingplans.ScalingPlanStatusCodeUpdateInProgress},
 		Target:  []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
-		Refresh: ScalingPlanStatus(conn, scalingPlanName, scalingPlanVersion),
-		Timeout: ScalingPlanUpdatedTimeout,
+		Refresh: statusScalingPlan(conn, scalingPlanName, scalingPlanVersion),
+		Timeout: scalingPlanUpdatedTimeout,
 		Delay:   10 * time.Second,
 	}
 

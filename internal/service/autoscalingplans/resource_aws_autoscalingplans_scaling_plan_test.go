@@ -298,7 +298,7 @@ func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
 			return err
 		}
 
-		scalingPlan, err := finder.ScalingPlan(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := finder.FindScalingPlan(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
 		if err != nil {
 			return err
 		}
@@ -328,7 +328,7 @@ func testAccCheckAutoScalingPlansScalingPlanExists(name string, v *autoscalingpl
 			return err
 		}
 
-		scalingPlan, err := finder.ScalingPlan(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := finder.FindScalingPlan(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
 		if err != nil {
 			return err
 		}

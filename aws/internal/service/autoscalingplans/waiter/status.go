@@ -16,10 +16,10 @@ const (
 	scalingPlanStatusUnknown  = "Unknown"
 )
 
-// ScalingPlanStatus fetches the ScalingPlan and its Status
-func ScalingPlanStatus(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
+// statusScalingPlan fetches the ScalingPlan and its Status
+func statusScalingPlan(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		scalingPlan, err := finder.ScalingPlan(conn, scalingPlanName, scalingPlanVersion)
+		scalingPlan, err := finder.FindScalingPlan(conn, scalingPlanName, scalingPlanVersion)
 
 		if tfawserr.ErrCodeEquals(err, autoscalingplans.ErrCodeObjectNotFoundException) {
 			return nil, scalingPlanStatusNotFound, nil
