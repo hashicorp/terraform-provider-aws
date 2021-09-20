@@ -149,7 +149,7 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringSet(v.(*schema.Set))
+		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -161,7 +161,7 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("permission_model"); ok {
@@ -275,7 +275,7 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringSet(v.(*schema.Set))
+		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -287,7 +287,7 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("permission_model"); ok {

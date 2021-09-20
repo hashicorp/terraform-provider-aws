@@ -306,7 +306,7 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
-		Capabilities:  expandStringSet(d.Get("capabilities").(*schema.Set)),
+		Capabilities:  flex.ExpandStringSet(d.Get("capabilities").(*schema.Set)),
 		Tags:          tags.IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
 	}
 	if v, ok := d.GetOk("semantic_version"); ok {
@@ -339,7 +339,7 @@ func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[stri
 func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, applicationRequiredCapabilities []*string) *schema.Set {
 	// We need to preserve "CAPABILITY_RESOURCE_POLICY" if it has been set. It is not
 	// returned by the CloudFormation APIs.
-	capabilities := flattenStringSet(stackCapabilities)
+	capabilities := flex.FlattenStringSet(stackCapabilities)
 	for _, capability := range applicationRequiredCapabilities {
 		if aws.StringValue(capability) == serverlessrepository.CapabilityCapabilityResourcePolicy {
 			capabilities.Add(serverlessrepository.CapabilityCapabilityResourcePolicy)
@@ -348,3 +348,11 @@ func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, a
 	}
 	return capabilities
 }
+func flattenCloudFormationOutputs(cfOutputs []*cloudformation.Output) map[string]string {
+	outputs := make(map[string]string, len(cfOutputs))
+	for _, o := range cfOutputs {
+		outputs[*o.OutputKey] = *o.OutputValue
+	}
+	return outputs
+}
+

@@ -93,7 +93,7 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("parameter_overrides"); ok {
-		input.ParameterOverrides = expandCloudFormationParameters(v.(map[string]interface{}))
+		input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
@@ -244,7 +244,7 @@ func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, met
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
-			input.ParameterOverrides = expandCloudFormationParameters(v.(map[string]interface{}))
+			input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)

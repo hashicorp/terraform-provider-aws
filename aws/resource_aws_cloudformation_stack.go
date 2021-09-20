@@ -142,19 +142,19 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 		input.TemplateURL = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringSet(v.(*schema.Set))
+		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("disable_rollback"); ok {
 		input.DisableRollback = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("notification_arns"); ok {
-		input.NotificationARNs = expandStringSet(v.(*schema.Set))
+		input.NotificationARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("on_failure"); ok {
 		input.OnFailure = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("parameters"); ok {
-		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("policy_body"); ok {
 		policy, err := structure.NormalizeJsonString(v)
@@ -270,14 +270,14 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	if len(stack.NotificationARNs) > 0 {
-		err = d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
+		err = d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
 		if err != nil {
 			return err
 		}
 	}
 
 	originalParams := d.Get("parameters").(map[string]interface{})
-	err = d.Set("parameters", flattenCloudFormationParameters(stack.Parameters, originalParams))
+	err = d.Set("parameters", flattenParameters(stack.Parameters, originalParams))
 	if err != nil {
 		return err
 	}
@@ -293,13 +293,13 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
+	err = d.Set("outputs", flattenOutputs(stack.Outputs))
 	if err != nil {
 		return err
 	}
 
 	if len(stack.Capabilities) > 0 {
-		err = d.Set("capabilities", flattenStringSet(stack.Capabilities))
+		err = d.Set("capabilities", flex.FlattenStringSet(stack.Capabilities))
 		if err != nil {
 			return err
 		}
@@ -333,16 +333,16 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	// Capabilities must be present whether they are changed or not
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringSet(v.(*schema.Set))
+		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if d.HasChange("notification_arns") {
-		input.NotificationARNs = expandStringSet(d.Get("notification_arns").(*schema.Set))
+		input.NotificationARNs = flex.ExpandStringSet(d.Get("notification_arns").(*schema.Set))
 	}
 
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk("parameters"); ok {
-		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
