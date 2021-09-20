@@ -26,7 +26,7 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryCon
 			return fmt.Errorf("No S3 bucket inventory configuration ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 		bucket, name, err := resourceAwsS3BucketInventoryParseID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -156,7 +156,7 @@ func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryCon
 }
 
 func testAccCheckAWSS3BucketInventoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_inventory" {

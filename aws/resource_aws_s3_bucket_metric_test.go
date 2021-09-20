@@ -273,7 +273,7 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -307,7 +307,7 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -334,7 +334,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -381,7 +381,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndMultipleTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -430,7 +430,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndSingleTag(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -477,7 +477,7 @@ func TestAccAWSS3BucketMetric_WithFilterMultipleTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -524,7 +524,7 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -557,7 +557,7 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 }
 
 func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3conn
+	conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_metric" {
@@ -607,7 +607,7 @@ func testAccCheckAWSS3BucketMetricsConfigExists(n string, res *s3.MetricsConfigu
 			return fmt.Errorf("No S3 bucket metrics configuration ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 		bucket, name, err := resourceAwsS3BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err

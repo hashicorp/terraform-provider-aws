@@ -17,7 +17,7 @@ func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccDataSourceAWSS3BucketObjects_basicViaAccessPoint(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +69,7 @@ func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -130,7 +130,7 @@ func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +182,7 @@ func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -207,7 +207,7 @@ func TestAccDataSourceAWSS3BucketObjects_fetchOwner(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:                 testAccProviders,
+		Providers:                 acctest.Providers,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{

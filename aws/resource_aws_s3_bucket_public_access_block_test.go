@@ -23,7 +23,7 @@ func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,7 +143,7 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +184,7 @@ func TestAccAWSS3BucketPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func TestAccAWSS3BucketPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -269,7 +269,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockExists(n string, config *s3.PublicA
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		input := &s3.GetPublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -316,7 +316,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockDisappears(n string) resource.TestC
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		deleteInput := &s3.DeletePublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),

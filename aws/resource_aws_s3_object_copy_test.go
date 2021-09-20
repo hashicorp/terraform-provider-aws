@@ -23,7 +23,7 @@ func TestAccAWSS3ObjectCopy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Bucket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +68,7 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Object(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3ObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Object(t *testing.T) {
 }
 
 func testAccCheckAWSS3ObjectCopyDestroy(s *terraform.State) error {
-	s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+	s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_object_copy" {
@@ -114,7 +114,7 @@ func testAccCheckAWSS3ObjectCopyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Bucket Object ID is set")
 		}
 
-		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+		s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
 		_, err := s3conn.GetObject(
 			&s3.GetObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),

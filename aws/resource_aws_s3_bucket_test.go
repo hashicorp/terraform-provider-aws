@@ -42,7 +42,7 @@ func init() {
 }
 
 func testSweepS3Buckets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -52,7 +52,7 @@ func testSweepS3Buckets(region string) error {
 
 	output, err := conn.ListBuckets(input)
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Buckets sweep for %s: %s", region, err)
 		return nil
 	}
@@ -174,7 +174,7 @@ func TestAccAWSS3Bucket_Basic_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +208,7 @@ func TestAccAWSS3Bucket_Basic_emptyString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccAWSS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -296,12 +296,12 @@ func TestAccAWSS3Bucket_Tags_withSystemTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckAWSS3BucketDestroy,
 			func(s *terraform.State) error {
 				// Tear down CF stack.
-				conn := testAccProvider.Meta().(*AWSClient).cfconn
+				conn := acctest.Provider.Meta().(*AWSClient).cfconn
 
 				requestToken := resource.UniqueId()
 				req := &cloudformation.DeleteStackInput{
@@ -379,7 +379,7 @@ func TestAccAWSS3Bucket_Tags_ignoreTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -424,7 +424,7 @@ func TestAccAWSS3Bucket_Tags_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -446,7 +446,7 @@ func TestAccAWSS3Bucket_Basic_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -472,7 +472,7 @@ func TestAccAWSS3Bucket_Basic_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -501,7 +501,7 @@ func TestAccAWSS3Bucket_Basic_acceleration(t *testing.T) {
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -535,7 +535,7 @@ func TestAccAWSS3Bucket_Basic_requestPayer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -572,7 +572,7 @@ func TestAccAWSS3Bucket_Security_policy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -623,7 +623,7 @@ func TestAccAWSS3Bucket_Security_updateACL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -657,7 +657,7 @@ func TestAccAWSS3Bucket_Security_updateGrant(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -715,7 +715,7 @@ func TestAccAWSS3Bucket_Security_ACLToGrant(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -745,7 +745,7 @@ func TestAccAWSS3Bucket_Security_GrantToACL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -776,7 +776,7 @@ func TestAccAWSS3Bucket_Web_simple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -821,7 +821,7 @@ func TestAccAWSS3Bucket_Web_redirect(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -866,7 +866,7 @@ func TestAccAWSS3Bucket_Web_routingRules(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -917,7 +917,7 @@ func TestAccAWSS3Bucket_Security_enableDefaultEncryptionWhenTypical(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -948,7 +948,7 @@ func TestAccAWSS3Bucket_Security_enableDefaultEncryptionWhenAES256IsUsed(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -979,7 +979,7 @@ func TestAccAWSS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIs
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1012,7 +1012,7 @@ func TestAccAWSS3Bucket_Basic_keyEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1047,7 +1047,7 @@ func TestAccAWSS3Bucket_Basic_shouldFailNotFound(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1069,7 +1069,7 @@ func TestAccAWSS3Bucket_Manage_versioning(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1114,7 +1114,7 @@ func TestAccAWSS3Bucket_Security_corsUpdate(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := testAccProvider.Meta().(*AWSClient).s3conn
+			conn := acctest.Provider.Meta().(*AWSClient).s3conn
 			_, err := conn.PutBucketCors(&s3.PutBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 				CORSConfiguration: &s3.CORSConfiguration{
@@ -1137,7 +1137,7 @@ func TestAccAWSS3Bucket_Security_corsUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1199,7 +1199,7 @@ func TestAccAWSS3Bucket_Security_corsDelete(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := testAccProvider.Meta().(*AWSClient).s3conn
+			conn := acctest.Provider.Meta().(*AWSClient).s3conn
 			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -1213,7 +1213,7 @@ func TestAccAWSS3Bucket_Security_corsDelete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1235,7 +1235,7 @@ func TestAccAWSS3Bucket_Security_corsEmptyOrigin(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1273,7 +1273,7 @@ func TestAccAWSS3Bucket_Security_logging(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1300,7 +1300,7 @@ func TestAccAWSS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1417,7 +1417,7 @@ func TestAccAWSS3Bucket_Manage_lifecycleExpireMarkerOnly(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1455,7 +1455,7 @@ func TestAccAWSS3Bucket_Manage_lifecycleRuleExpirationEmptyConfigurationBlock(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1476,7 +1476,7 @@ func TestAccAWSS3Bucket_Manage_lifecycleRuleAbortIncompleteMultipartUploadDaysNo
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2306,7 +2306,7 @@ func TestAccAWSS3Bucket_Replication_schemaV2SameRegion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2358,7 +2358,7 @@ func TestAccAWSS3Bucket_Manage_objectLock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2398,7 +2398,7 @@ func TestAccAWSS3Bucket_Basic_forceDestroy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2424,7 +2424,7 @@ func TestAccAWSS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2445,7 +2445,7 @@ func TestAccAWSS3Bucket_Basic_forceDestroyWithObjectLockEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2744,7 +2744,7 @@ func testAccErrorCheckSkipS3(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
-	return testAccCheckAWSS3BucketDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSS3BucketDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -2786,7 +2786,7 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 }
 
 func testAccCheckAWSS3BucketExists(n string) resource.TestCheckFunc {
-	return testAccCheckAWSS3BucketExistsWithProvider(n, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSS3BucketExistsWithProvider(n, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSS3BucketExistsWithProvider(n string, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -2829,7 +2829,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -2844,7 +2844,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 func testAccCheckAWSS3BucketAddObjects(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3connUriCleaningDisabled
+		conn := acctest.Provider.Meta().(*AWSClient).s3connUriCleaningDisabled
 
 		for _, key := range keys {
 			_, err := conn.PutObject(&s3.PutObjectInput{
@@ -2864,7 +2864,7 @@ func testAccCheckAWSS3BucketAddObjects(n string, keys ...string) resource.TestCh
 func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		for _, key := range keys {
 			_, err := conn.PutObject(&s3.PutObjectInput{
@@ -2885,7 +2885,7 @@ func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) re
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*AWSClient).cfconn
 		stackName := sdkacctest.RandomWithPrefix("tf-acc-test-s3tags")
 		templateBody := fmt.Sprintf(`{
   "Resources": {
@@ -2928,7 +2928,7 @@ func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) r
 func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
@@ -2955,7 +2955,7 @@ func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheck
 func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3002,7 +3002,7 @@ func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFu
 func testAccCheckAWSS3BucketWebsite(n string, indexDoc string, errorDoc string, redirectProtocol string, redirectTo string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3058,7 +3058,7 @@ func testAccCheckAWSS3BucketWebsite(n string, indexDoc string, errorDoc string, 
 func testAccCheckAWSS3BucketWebsiteRoutingRules(n string, routingRules []*s3.RoutingRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3082,7 +3082,7 @@ func testAccCheckAWSS3BucketWebsiteRoutingRules(n string, routingRules []*s3.Rou
 func testAccCheckAWSS3BucketVersioning(n string, versioningStatus string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3109,7 +3109,7 @@ func testAccCheckAWSS3BucketVersioning(n string, versioningStatus string) resour
 func testAccCheckAWSS3BucketCors(n string, corsRules []*s3.CORSRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketCors(&s3.GetBucketCorsInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3132,7 +3132,7 @@ func testAccCheckAWSS3BucketCors(n string, corsRules []*s3.CORSRule) resource.Te
 func testAccCheckAWSS3RequestPayer(n, expectedPayer string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3154,7 +3154,7 @@ func testAccCheckAWSS3RequestPayer(n, expectedPayer string) resource.TestCheckFu
 func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketLogging(&s3.GetBucketLoggingInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -3225,7 +3225,7 @@ func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRu
 			}
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 		out, err := conn.GetBucketReplication(&s3.GetBucketReplicationInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -3259,7 +3259,7 @@ func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRu
 
 func testAccCheckS3BucketDomainName(resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedValue := testAccProvider.Meta().(*AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
+		expectedValue := acctest.Provider.Meta().(*AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
 	}
@@ -3275,7 +3275,7 @@ func testAccBucketRegionalDomainName(bucket, region string) string {
 
 func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		website := WebsiteEndpoint(testAccProvider.Meta().(*AWSClient), bucketName, region)
+		website := WebsiteEndpoint(acctest.Provider.Meta().(*AWSClient), bucketName, region)
 		expectedValue := website.Endpoint
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
@@ -3285,7 +3285,7 @@ func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName stri
 func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		return keyvaluetags.S3BucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
 	}
@@ -3294,7 +3294,7 @@ func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]str
 func testAccCheckAWSS3BucketCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*AWSClient).s3conn
 
 		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
