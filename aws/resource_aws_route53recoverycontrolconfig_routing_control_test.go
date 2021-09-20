@@ -19,7 +19,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,14 +49,14 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_disappears(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InDefaultControlPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigRoutingControl(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryControlConfigRoutingControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_nonDefaultControlPanel
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(name string
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
 		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(rs.Primary.ID),
@@ -106,7 +106,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(name string
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_routing_control" {

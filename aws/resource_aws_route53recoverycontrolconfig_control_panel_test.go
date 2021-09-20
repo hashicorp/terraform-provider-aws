@@ -19,7 +19,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,14 +48,14 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigControlPanel(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryControlConfigControlPanel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +64,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_control_panel" {
@@ -109,7 +109,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(name string) 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
 		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(rs.Primary.ID),

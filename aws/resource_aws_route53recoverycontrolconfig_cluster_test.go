@@ -19,7 +19,7 @@ func testAccAWSRoute53RecoveryControlConfigCluster_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,14 +48,14 @@ func testAccAWSRoute53RecoveryControlConfigCluster_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53RecoveryControlConfigClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigClusterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryControlConfigCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +64,7 @@ func testAccAWSRoute53RecoveryControlConfigCluster_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_cluster" {
@@ -100,7 +100,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigClusterExists(name string) resou
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
 		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
