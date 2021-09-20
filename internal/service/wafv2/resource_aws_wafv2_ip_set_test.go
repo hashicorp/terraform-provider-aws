@@ -1,4 +1,4 @@
-package aws
+package wafv2_test
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 )
 
 func init() {
@@ -44,7 +44,7 @@ func testSweepWafv2IpSets(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = lister.ListIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
+	err = tfwafv2.ListIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
