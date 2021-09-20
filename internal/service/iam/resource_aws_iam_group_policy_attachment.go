@@ -71,7 +71,7 @@ func resourceGroupPolicyAttachmentRead(d *schema.ResourceData, meta interface{})
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		attachedPolicy, err = finder.GroupAttachedPolicy(conn, group, arn)
+		attachedPolicy, err = finder.FindGroupAttachedPolicy(conn, group, arn)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -91,7 +91,7 @@ func resourceGroupPolicyAttachmentRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if tfresource.TimedOut(err) {
-		attachedPolicy, err = finder.GroupAttachedPolicy(conn, group, arn)
+		attachedPolicy, err = finder.FindGroupAttachedPolicy(conn, group, arn)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {

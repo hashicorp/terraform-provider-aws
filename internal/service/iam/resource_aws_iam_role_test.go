@@ -939,7 +939,7 @@ func testAccCheckAWSRoleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.RoleByName(conn, rs.Primary.ID)
+		_, err := finder.FindRoleByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -968,7 +968,7 @@ func testAccCheckAWSRoleExists(n string, v *iam.Role) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		output, err := finder.RoleByName(conn, rs.Primary.ID)
+		output, err := finder.FindRoleByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

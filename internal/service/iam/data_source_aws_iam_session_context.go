@@ -72,7 +72,7 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		role, err = finder.RoleByName(conn, roleName)
+		role, err = finder.FindRoleByName(conn, roleName)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			return resource.RetryableError(err)
@@ -86,7 +86,7 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = finder.RoleByName(conn, roleName)
+		role, err = finder.FindRoleByName(conn, roleName)
 	}
 
 	if err != nil {

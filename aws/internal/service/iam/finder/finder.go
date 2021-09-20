@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// GroupAttachedPolicy returns the AttachedPolicy corresponding to the specified group and policy ARN.
-func GroupAttachedPolicy(conn *iam.IAM, groupName string, policyARN string) (*iam.AttachedPolicy, error) {
+// FindGroupAttachedPolicy returns the AttachedPolicy corresponding to the specified group and policy ARN.
+func FindGroupAttachedPolicy(conn *iam.IAM, groupName string, policyARN string) (*iam.AttachedPolicy, error) {
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
@@ -43,8 +43,8 @@ func GroupAttachedPolicy(conn *iam.IAM, groupName string, policyARN string) (*ia
 	return result, nil
 }
 
-// UserAttachedPolicy returns the AttachedPolicy corresponding to the specified user and policy ARN.
-func UserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*iam.AttachedPolicy, error) {
+// FindUserAttachedPolicy returns the AttachedPolicy corresponding to the specified user and policy ARN.
+func FindUserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*iam.AttachedPolicy, error) {
 	input := &iam.ListAttachedUserPoliciesInput{
 		UserName: aws.String(userName),
 	}
@@ -77,8 +77,8 @@ func UserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*iam.
 	return result, nil
 }
 
-// Policies returns the Policies corresponding to the specified ARN, name, and/or path-prefix.
-func Policies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error) {
+// FindPolicies returns the FindPolicies corresponding to the specified ARN, name, and/or path-prefix.
+func FindPolicies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error) {
 	input := &iam.ListPoliciesInput{}
 
 	if pathPrefix != "" {
@@ -114,7 +114,7 @@ func Policies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error
 	return results, err
 }
 
-func RoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
+func FindRoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(name),
 	}

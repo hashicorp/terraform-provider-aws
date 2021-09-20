@@ -73,7 +73,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	// Handle IAM eventual consistency
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
-		results, err = finder.Policies(conn, arn, name, pathPrefix)
+		results, err = finder.FindPolicies(conn, arn, name, pathPrefix)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -87,7 +87,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		results, err = finder.Policies(conn, arn, name, pathPrefix)
+		results, err = finder.FindPolicies(conn, arn, name, pathPrefix)
 	}
 
 	if err != nil {
