@@ -1,4 +1,4 @@
-package aws
+package lakeformation
 
 import (
 	"fmt"
@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -201,20 +199,20 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
-		tableType = tflakeformation.TableTypeTable
+		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
 		input.Resource.Table = expandLakeFormationTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
-		tableType = tflakeformation.TableTypeTableWithColumns
+		tableType = TableTypeTableWithColumns
 	}
 
 	columnNames := make([]*string, 0)
 	excludedColumnNames := make([]*string, 0)
 	columnWildcard := false
 
-	if tableType == tflakeformation.TableTypeTableWithColumns {
+	if tableType == TableTypeTableWithColumns {
 		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
 			columnWildcard = v.(bool)
 		}
@@ -234,7 +232,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 
-	allPermissions, err := waiter.waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
@@ -243,7 +241,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	if len(cleanPermissions) != len(allPermissions) {
 		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())

@@ -1,4 +1,4 @@
-package aws
+package lakeformation
 
 import (
 	"fmt"
