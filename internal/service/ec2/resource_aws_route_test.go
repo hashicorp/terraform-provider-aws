@@ -1999,11 +1999,11 @@ func testAccCheckAWSRouteExists(n string, v *ec2.Route) resource.TestCheckFunc {
 		var route *ec2.Route
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			route, err = finder.RouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = finder.FindRouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			route, err = finder.RouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = finder.FindRouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-			route, err = finder.RouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = finder.FindRouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if err != nil {
@@ -2026,11 +2026,11 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			_, err = finder.RouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			_, err = finder.FindRouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			_, err = finder.RouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			_, err = finder.FindRouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-			_, err = finder.RouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
+			_, err = finder.FindRouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if tfresource.NotFound(err) {

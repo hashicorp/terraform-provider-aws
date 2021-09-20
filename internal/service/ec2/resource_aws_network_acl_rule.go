@@ -213,10 +213,10 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 
 	var resp *ec2.NetworkAclEntry
 
-	err := resource.Retry(waiter.NetworkAclEntryPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.NetworkACLEntryPropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = finder.NetworkAclEntry(conn, networkAclID, egress, ruleNumber)
+		resp, err = finder.FindNetworkACLEntry(conn, networkAclID, egress, ruleNumber)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {
 			return resource.RetryableError(err)
@@ -236,7 +236,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = finder.NetworkAclEntry(conn, networkAclID, egress, ruleNumber)
+		resp, err = finder.FindNetworkACLEntry(conn, networkAclID, egress, ruleNumber)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {

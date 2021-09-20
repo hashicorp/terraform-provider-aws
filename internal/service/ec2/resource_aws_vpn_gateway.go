@@ -252,7 +252,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+			if tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayIDNotFound, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -269,7 +269,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 
 	// Wait for it to be fully attached before continuing
 	log.Printf("[DEBUG] Waiting for VPN gateway (%s) to attach", d.Id())
-	_, err = waiter.VpnGatewayVpcAttachmentAttached(conn, d.Id(), vpcId)
+	_, err = waiter.WaitVPNGatewayVPCAttachmentAttached(conn, d.Id(), vpcId)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become attached: %w", d.Id(), vpcId, err)
@@ -302,7 +302,7 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 		VpcId:        aws.String(vpcId),
 	})
 
-	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayIDNotFound, "") {
 		return nil
 	}
 
@@ -311,7 +311,7 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Wait for it to be fully detached before continuing
-	_, err = waiter.VpnGatewayVpcAttachmentDetached(conn, d.Id(), vpcId)
+	_, err = waiter.WaitVPNGatewayVPCAttachmentDetached(conn, d.Id(), vpcId)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become detached: %w", d.Id(), vpcId, err)

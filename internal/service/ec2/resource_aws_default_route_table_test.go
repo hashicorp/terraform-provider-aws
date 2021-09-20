@@ -519,7 +519,7 @@ func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.RouteTableByID(conn, rs.Primary.ID)
+		_, err := finder.FindRouteTableByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

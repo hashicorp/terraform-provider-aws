@@ -190,7 +190,7 @@ func testAccCheckAWSDefaultSecurityGroupExists(n string, group *ec2.SecurityGrou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
+		sg, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.Se
 
 		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
+		sg, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

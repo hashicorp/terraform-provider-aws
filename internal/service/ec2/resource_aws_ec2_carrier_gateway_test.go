@@ -179,7 +179,7 @@ func testAccCheckEc2CarrierGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := finder.CarrierGatewayByID(conn, rs.Primary.ID)
+		out, err := finder.FindCarrierGatewayByID(conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
 			continue
 		}
@@ -211,7 +211,7 @@ func testAccCheckEc2CarrierGatewayExists(n string, v *ec2.CarrierGateway) resour
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := finder.CarrierGatewayByID(conn, rs.Primary.ID)
+		out, err := finder.FindCarrierGatewayByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

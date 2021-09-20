@@ -156,7 +156,7 @@ func testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy(s *terraform.Sta
 			continue
 		}
 
-		transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
+		transitGatewayPrefixListReference, err := finder.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
 			continue
@@ -188,7 +188,7 @@ func testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
+		transitGatewayPrefixListReference, err := finder.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 Transit Gateway Prefix List Reference (%s): %w", rs.Primary.ID, err)

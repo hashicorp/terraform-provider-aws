@@ -71,7 +71,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(output.LocalGatewayRouteTableVpcAssociation.LocalGatewayRouteTableVpcAssociationId))
 
-	if _, err := waiter.LocalGatewayRouteTableVpcAssociationAssociated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitLocalGatewayRouteTableVPCAssociationAssociated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Local Gateway Route Table VPC Association (%s) to associate: %w", d.Id(), err)
 	}
 
@@ -151,7 +151,7 @@ func resourceLocalGatewayRouteTableVPCAssociationDelete(d *schema.ResourceData, 
 		return fmt.Errorf("error deleting EC2 Local Gateway Route Table VPC Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.LocalGatewayRouteTableVpcAssociationDisassociated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitLocalGatewayRouteTableVPCAssociationDisassociated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Local Gateway Route Table VPC Association (%s) to disassociate: %w", d.Id(), err)
 	}
 

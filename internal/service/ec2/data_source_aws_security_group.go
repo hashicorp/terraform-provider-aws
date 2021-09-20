@@ -82,7 +82,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		req.Filters = nil
 	}
 
-	sg, err := finder.SecurityGroup(conn, req)
+	sg, err := finder.FindSecurityGroup(conn, req)
 	if errors.Is(err, tfresource.ErrEmptyResult) {
 		return fmt.Errorf("no matching SecurityGroup found")
 	}

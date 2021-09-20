@@ -209,11 +209,11 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 			continue
 		}
 
-		_, err := finder.ClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
+		_, err := finder.FindClientVPNAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Client VPN authorization rule (%s) still exists", rs.Primary.ID)
 		}
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAuthorizationRuleNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNEndpointIdNotFound, "") {
 			continue
 		}
 		return err
@@ -235,7 +235,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		result, err := finder.ClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
+		result, err := finder.FindClientVPNAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Client VPN authorization rule (%s): %w", rs.Primary.ID, err)
 		}

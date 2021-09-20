@@ -37,7 +37,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 					rtID = rs.Primary.Attributes["route_table_id"]
 					gwID = rs.Primary.Attributes["vpn_gateway_id"]
 
-					rt, err := waiter.RouteTableReady(conn, rtID)
+					rt, err := waiter.WaitRouteTableReady(conn, rtID)
 
 					if err != nil {
 						return fmt.Errorf("error getting route table (%s) while checking VPN gateway route propagation: %w", rtID, err)
@@ -64,7 +64,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 		CheckDestroy: func(state *terraform.State) error {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-			rt, err := waiter.RouteTableDeleted(conn, rtID)
+			rt, err := waiter.WaitRouteTableDeleted(conn, rtID)
 
 			if err != nil {
 				return fmt.Errorf("error getting route table (%s) status while checking destroy: %w", rtID, err)

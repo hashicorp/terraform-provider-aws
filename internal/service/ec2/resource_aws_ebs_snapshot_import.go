@@ -224,7 +224,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 
 		importTaskId := aws.StringValue(resp.ImportTaskId)
 
-		res, err := waiter.EBSSnapshotImportComplete(conn, importTaskId)
+		res, err := waiter.WaitEBSSnapshotImportComplete(conn, importTaskId)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error waiting for snapshot (%s) to be imported: %s", d.Id(), err))
 		}

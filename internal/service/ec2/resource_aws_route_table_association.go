@@ -83,7 +83,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(output.(*ec2.AssociateRouteTableOutput).AssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) creation", d.Id())
-	if _, err := waiter.RouteTableAssociationCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitRouteTableAssociationCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route Table Association (%s) create: %w", d.Id(), err)
 	}
 
@@ -93,7 +93,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	association, err := finder.RouteTableAssociationByID(conn, d.Id())
+	association, err := finder.FindRouteTableAssociationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
@@ -141,7 +141,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) update", d.Id())
-	if _, err := waiter.RouteTableAssociationUpdated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitRouteTableAssociationUpdated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route Table Association (%s) update: %w", d.Id(), err)
 	}
 
@@ -167,7 +167,7 @@ func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	routeTable, err := finder.RouteTableByID(conn, routeTableID)
+	routeTable, err := finder.FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func ec2RouteTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
-	if _, err := waiter.RouteTableAssociationDeleted(conn, associationID); err != nil {
+	if _, err := waiter.WaitRouteTableAssociationDeleted(conn, associationID); err != nil {
 		return fmt.Errorf("error waiting for Route Table Association (%s) delete: %w", associationID, err)
 	}
 

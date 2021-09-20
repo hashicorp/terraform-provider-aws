@@ -560,7 +560,7 @@ func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.VpcEndpointByID(conn, rs.Primary.ID)
+		_, err := finder.FindVPCEndpointByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -587,7 +587,7 @@ func testAccCheckVpcEndpointExists(n string, endpoint *ec2.VpcEndpoint) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		out, err := finder.VpcEndpointByID(conn, rs.Primary.ID)
+		out, err := finder.FindVPCEndpointByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

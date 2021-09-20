@@ -280,7 +280,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Security Group ID: %s", d.Id())
 
 	// Wait for the security group to truly exist
-	group, err := waiter.SecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	group, err := waiter.WaitSecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for Security Group (%s) to become available: %w",
@@ -348,7 +348,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sg, err := finder.SecurityGroupByID(conn, d.Id())
+	sg, err := finder.FindSecurityGroupByID(conn, d.Id())
 	var nfe *resource.NotFoundError
 	if !d.IsNewResource() && errors.As(err, &nfe) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
@@ -410,7 +410,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	group, err := finder.SecurityGroupByID(conn, d.Id())
+	group, err := finder.FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 	}
@@ -494,7 +494,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 // Revoke all ingress/egress rules that a Security Group has
 func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error {
-	group, err := finder.SecurityGroupByID(conn, d.Id())
+	group, err := finder.FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return err
 	}

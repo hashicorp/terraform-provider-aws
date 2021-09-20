@@ -100,7 +100,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-	alias, err := kmsfinder.AliasByName(conn, "alias/aws/ebs")
+	alias, err := kmsfinder.FindAliasByName(conn, "alias/aws/ebs")
 	if err != nil {
 		return nil, err
 	}

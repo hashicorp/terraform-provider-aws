@@ -318,7 +318,7 @@ func testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceName stri
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return tfec2.ClientVpnNetworkAssociationCreateID(rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.ID), nil
+		return tfec2.ClientVPNNetworkAssociationCreateID(rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.ID), nil
 	}
 }
 

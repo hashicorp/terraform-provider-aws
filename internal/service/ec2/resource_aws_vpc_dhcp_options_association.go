@@ -95,9 +95,9 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		vpc, err = finder.VpcByID(conn, d.Get("vpc_id").(string))
+		vpc, err = finder.FindVPCByID(conn, d.Get("vpc_id").(string))
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcIDNotFound) {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -115,10 +115,10 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if tfresource.TimedOut(err) {
-		vpc, err = finder.VpcByID(conn, d.Get("vpc_id").(string))
+		vpc, err = finder.FindVPCByID(conn, d.Get("vpc_id").(string))
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
 		log.Printf("[WARN] EC2 VPC DHCP Options Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -162,7 +162,7 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 		VpcId:         aws.String(d.Get("vpc_id").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCIDNotFound) {
 		return nil
 	}
 

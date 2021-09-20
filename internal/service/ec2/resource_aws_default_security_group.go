@@ -270,7 +270,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	group, err := finder.SecurityGroupByID(conn, d.Id())
+	group, err := finder.FindSecurityGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -330,7 +330,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	group, err := finder.SecurityGroupByID(conn, d.Id())
+	group, err := finder.FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}

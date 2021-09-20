@@ -116,11 +116,11 @@ func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ClientVpnRouteByID(conn, rs.Primary.ID)
+		_, err := finder.FindClientVPNRouteByID(conn, rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Client VPN route (%s) still exists", rs.Primary.ID)
 		}
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
+		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNRouteNotFound, "") {
 			continue
 		}
 	}
@@ -140,7 +140,7 @@ func testAccCheckAwsEc2ClientVpnRouteExists(name string, route *ec2.ClientVpnRou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := finder.ClientVpnRouteByID(conn, rs.Primary.ID)
+		resp, err := finder.FindClientVPNRouteByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Error reading Client VPN route (%s): %w", rs.Primary.ID, err)
 		}

@@ -49,7 +49,7 @@ func resourceNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
+	iface, err := finder.FindNetworkInterfaceByID(conn, interfaceID)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Network Interface (%s): %w", interfaceID, err)
@@ -98,7 +98,7 @@ func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta inter
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		groupIdentifier, err = finder.NetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
+		groupIdentifier, err = finder.FindNetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
 			return resource.RetryableError(err)
@@ -118,7 +118,7 @@ func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta inter
 	})
 
 	if tfresource.TimedOut(err) {
-		groupIdentifier, err = finder.NetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
+		groupIdentifier, err = finder.FindNetworkInterfaceSecurityGroup(conn, interfaceID, sgID)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
@@ -159,7 +159,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
+	iface, err := finder.FindNetworkInterfaceByID(conn, interfaceID)
 
 	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil

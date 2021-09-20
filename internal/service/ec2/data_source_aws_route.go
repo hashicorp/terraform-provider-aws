@@ -101,7 +101,7 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	routeTableID := d.Get("route_table_id").(string)
 
-	routeTable, err := finder.RouteTableByID(conn, routeTableID)
+	routeTable, err := finder.FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
 		return fmt.Errorf("error reading Route Table (%s): %w", routeTableID, err)

@@ -161,7 +161,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 	conns.GlobalMutexKV.Lock(sg_id)
 	defer conns.GlobalMutexKV.Unlock(sg_id)
 
-	sg, err := finder.SecurityGroupByID(conn, sg_id)
+	sg, err := finder.FindSecurityGroupByID(conn, sg_id)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 	log.Printf("[DEBUG] Computed group rule ID %s", id)
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		sg, err := finder.SecurityGroupByID(conn, sg_id)
+		sg, err := finder.FindSecurityGroupByID(conn, sg_id)
 
 		if err != nil {
 			log.Printf("[DEBUG] Error finding Security Group (%s) for Rule (%s): %s", sg_id, id, err)
@@ -256,7 +256,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		sg, err := finder.SecurityGroupByID(conn, sg_id)
+		sg, err := finder.FindSecurityGroupByID(conn, sg_id)
 		if err != nil {
 			return fmt.Errorf("Error finding security group: %w", err)
 		}
@@ -284,7 +284,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
-	sg, err := finder.SecurityGroupByID(conn, sg_id)
+	sg, err := finder.FindSecurityGroupByID(conn, sg_id)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing Rule (%s) from state", sg_id, d.Id())
 		d.SetId("")
@@ -362,7 +362,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 	conns.GlobalMutexKV.Lock(sg_id)
 	defer conns.GlobalMutexKV.Unlock(sg_id)
 
-	sg, err := finder.SecurityGroupByID(conn, sg_id)
+	sg, err := finder.FindSecurityGroupByID(conn, sg_id)
 	if err != nil {
 		return err
 	}
@@ -862,7 +862,7 @@ func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.Resourc
 	conns.GlobalMutexKV.Lock(sg_id)
 	defer conns.GlobalMutexKV.Unlock(sg_id)
 
-	sg, err := finder.SecurityGroupByID(conn, sg_id)
+	sg, err := finder.FindSecurityGroupByID(conn, sg_id)
 	if err != nil {
 		return err
 	}

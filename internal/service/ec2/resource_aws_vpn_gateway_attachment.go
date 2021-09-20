@@ -55,9 +55,9 @@ func resourceVPNGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating VPN Gateway (%s) Attachment (%s): %w", vgwId, vpcId, err)
 	}
 
-	d.SetId(tfec2.VpnGatewayVpcAttachmentCreateID(vgwId, vpcId))
+	d.SetId(tfec2.VPNGatewayVPCAttachmentCreateID(vgwId, vpcId))
 
-	_, err = waiter.VpnGatewayVpcAttachmentAttached(conn, vgwId, vpcId)
+	_, err = waiter.WaitVPNGatewayVPCAttachmentAttached(conn, vgwId, vpcId)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become attached: %w", vgwId, vpcId, err)
@@ -72,9 +72,9 @@ func resourceVPNGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
 
-	vpcAttachment, err := finder.VpnGatewayVpcAttachment(conn, vgwId, vpcId)
+	vpcAttachment, err := finder.FindVPNGatewayVPCAttachment(conn, vgwId, vpcId)
 
-	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayIDNotFound, "") {
 		log.Printf("[WARN] VPN Gateway (%s) Attachment (%s) not found, removing from state", vgwId, vpcId)
 		d.SetId("")
 		return nil
@@ -105,7 +105,7 @@ func resourceVPNGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}
 		VpnGatewayId: aws.String(vgwId),
 	})
 
-	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVPNGatewayIDNotFound, "") {
 		return nil
 	}
 
@@ -113,7 +113,7 @@ func resourceVPNGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error deleting VPN Gateway (%s) Attachment (%s): %w", vgwId, vpcId, err)
 	}
 
-	_, err = waiter.VpnGatewayVpcAttachmentDetached(conn, vgwId, vpcId)
+	_, err = waiter.WaitVPNGatewayVPCAttachmentDetached(conn, vgwId, vpcId)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become detached: %w", vgwId, vpcId, err)

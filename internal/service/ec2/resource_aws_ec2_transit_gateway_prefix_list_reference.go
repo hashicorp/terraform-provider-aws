@@ -90,7 +90,7 @@ func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, met
 
 	d.SetId(tfec2.TransitGatewayPrefixListReferenceCreateID(aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)))
 
-	if _, err := waiter.TransitGatewayPrefixListReferenceStateCreated(conn, aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
+	if _, err := waiter.WaitTransitGatewayPrefixListReferenceStateCreated(conn, aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) creation: %w", d.Id(), err)
 	}
 
@@ -100,7 +100,7 @@ func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, met
 func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, d.Id())
+	transitGatewayPrefixListReference, err := finder.FindTransitGatewayPrefixListReferenceByID(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
 		log.Printf("[WARN] EC2 Transit Gateway Prefix List Reference (%s) not found, removing from state", d.Id())
@@ -170,7 +170,7 @@ func resourceTransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, met
 		return fmt.Errorf("error updating EC2 Transit Gateway Prefix List Reference (%s): empty response", d.Id())
 	}
 
-	if _, err := waiter.TransitGatewayPrefixListReferenceStateUpdated(conn, aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
+	if _, err := waiter.WaitTransitGatewayPrefixListReferenceStateUpdated(conn, aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) update: %w", d.Id(), err)
 	}
 
@@ -201,7 +201,7 @@ func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, met
 		return fmt.Errorf("error deleting EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.TransitGatewayPrefixListReferenceStateDeleted(conn, transitGatewayRouteTableID, prefixListID); err != nil {
+	if _, err := waiter.WaitTransitGatewayPrefixListReferenceStateDeleted(conn, transitGatewayRouteTableID, prefixListID); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) deletion: %w", d.Id(), err)
 	}
 

@@ -94,7 +94,7 @@ func testAccCheckVpcEndpointSubnetAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := finder.VpcEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err := finder.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -123,13 +123,13 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		out, err := finder.VpcEndpointByID(conn, rs.Primary.Attributes["vpc_endpoint_id"])
+		out, err := finder.FindVPCEndpointByID(conn, rs.Primary.Attributes["vpc_endpoint_id"])
 
 		if err != nil {
 			return err
 		}
 
-		err = finder.VpcEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err = finder.FindVPCEndpointSubnetAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
 
 		if err != nil {
 			return err

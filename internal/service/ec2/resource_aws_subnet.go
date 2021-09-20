@@ -208,7 +208,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting EC2 Subnet (%s) customer owned IPv4 pool and map customer owned IP on launch: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.SubnetMapCustomerOwnedIpOnLaunchUpdated(conn, d.Id(), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
+		if _, err := waiter.WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(conn, d.Id(), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) map customer owned IP on launch update: %w", d.Id(), err)
 		}
 	}
@@ -225,7 +225,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error enabling EC2 Subnet (%s) map public IP on launch: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.SubnetMapPublicIpOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
+		if _, err := waiter.WaitSubnetMapPublicIPOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) map public IP on launch update: %w", d.Id(), err)
 		}
 	}
@@ -243,7 +243,7 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(waiter.SubnetPropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		subnet, err = finder.SubnetByID(conn, d.Id())
+		subnet, err = finder.FindSubnetByID(conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidSubnetID.NotFound") {
 			return resource.RetryableError(err)
@@ -263,7 +263,7 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		subnet, err = finder.SubnetByID(conn, d.Id())
+		subnet, err = finder.FindSubnetByID(conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidSubnetID.NotFound") {
@@ -357,7 +357,7 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating EC2 Subnet (%s) customer owned IPv4 pool and map customer owned IP on launch: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.SubnetMapCustomerOwnedIpOnLaunchUpdated(conn, d.Id(), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
+		if _, err := waiter.WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(conn, d.Id(), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) map customer owned IP on launch update: %w", d.Id(), err)
 		}
 	}
@@ -376,7 +376,7 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating EC2 Subnet (%s) map public IP on launch: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.SubnetMapPublicIpOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
+		if _, err := waiter.WaitSubnetMapPublicIPOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) map public IP on launch update: %w", d.Id(), err)
 		}
 	}

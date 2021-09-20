@@ -1188,7 +1188,7 @@ func testAccCheckAWSSecurityGroupRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
+		_, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -1215,7 +1215,7 @@ func testAccCheckAWSSecurityGroupRuleExists(n string, group *ec2.SecurityGroup) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
+		sg, err := finder.FindSecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

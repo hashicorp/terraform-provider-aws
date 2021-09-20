@@ -197,13 +197,13 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.RouteByIPv4Destination
+		routeFinder = finder.FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.RouteByIPv6Destination
+		routeFinder = finder.FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.RouteByPrefixListIDDestination
+		routeFinder = finder.FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -247,7 +247,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.WaitRouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -271,11 +271,11 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch destinationAttributeKey {
 	case "destination_cidr_block":
-		routeFinder = finder.RouteByIPv4Destination
+		routeFinder = finder.FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
-		routeFinder = finder.RouteByIPv6Destination
+		routeFinder = finder.FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
-		routeFinder = finder.RouteByPrefixListIDDestination
+		routeFinder = finder.FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -345,13 +345,13 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.RouteByIPv4Destination
+		routeFinder = finder.FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.RouteByIPv6Destination
+		routeFinder = finder.FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.RouteByPrefixListIDDestination
+		routeFinder = finder.FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -388,7 +388,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.WaitRouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -416,13 +416,13 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.RouteByIPv4Destination
+		routeFinder = finder.FindRouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.RouteByIPv6Destination
+		routeFinder = finder.FindRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = finder.RouteByPrefixListIDDestination
+		routeFinder = finder.FindRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -463,7 +463,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)

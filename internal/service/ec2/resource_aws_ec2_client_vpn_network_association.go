@@ -77,7 +77,7 @@ func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(resp.AssociationId))
 
 	log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", d.Id())
-	targetNetwork, err := waiter.ClientVpnNetworkAssociationAssociated(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
+	targetNetwork, err := waiter.WaitClientVPNNetworkAssociationAssociated(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
 	if err != nil {
 		return fmt.Errorf("error waiting for Client VPN endpoint to associate with target network: %w", err)
 	}
@@ -125,7 +125,7 @@ func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interf
 		AssociationIds:      []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -178,20 +178,20 @@ func deleteClientVpnNetworkAssociation(conn *ec2.EC2, networkAssociationID, clie
 		AssociationId:       aws.String(networkAssociationID),
 	})
 
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = waiter.ClientVpnNetworkAssociationDisassociated(conn, networkAssociationID, clientVpnEndpointID)
+	_, err = waiter.WaitClientVPNNetworkAssociationDisassociated(conn, networkAssociationID, clientVpnEndpointID)
 
 	return err
 }
 
 func resourceAwsEc2ClientVpnNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, associationID, err := tfec2.ClientVpnNetworkAssociationParseID(d.Id())
+	endpointID, associationID, err := tfec2.ClientVPNNetworkAssociationParseID(d.Id())
 	if err != nil {
 		return nil, err
 	}

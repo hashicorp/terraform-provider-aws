@@ -198,13 +198,13 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	vpce := resp.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == tfec2.VpcEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == tfec2.VPCEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
 
-	_, err = waiter.VpcEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
@@ -218,7 +218,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vpce, err := finder.VpcEndpointByID(conn, d.Id())
+	vpce, err := finder.FindVPCEndpointByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
@@ -318,7 +318,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == tfec2.VpcEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == tfec2.VPCEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
 		}
@@ -355,7 +355,7 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating VPC Endpoint: %s", err)
 		}
 
-		_, err := waiter.VpcEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err := waiter.WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
@@ -385,7 +385,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointNotFound) {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCEndpointNotFound) {
 		return nil
 	}
 
@@ -393,7 +393,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.VpcEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.WaitVPCEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EC2 VPC Endpoint (%s) to delete: %w", d.Id(), err)
@@ -429,7 +429,7 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Durat
 		return fmt.Errorf("error accepting VPC Endpoint (%s) connection: %s", vpceId, err)
 	}
 
-	_, err = waiter.VpcEndpointAccepted(conn, vpceId, timeout)
+	_, err = waiter.WaitVPCEndpointAccepted(conn, vpceId, timeout)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to be accepted: %w", vpceId, err)

@@ -85,9 +85,9 @@ func resourceVPCEndpointSubnetAssociationCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error creating VPC Endpoint Subnet Association (%s): %w", id, err)
 	}
 
-	d.SetId(tfec2.VpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.SetId(tfec2.VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
 
-	_, err = waiter.VpcEndpointAvailable(conn, endpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.WaitVPCEndpointAvailable(conn, endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointID, err)
@@ -104,7 +104,7 @@ func resourceVPCEndpointSubnetAssociationRead(d *schema.ResourceData, meta inter
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
-	err := finder.VpcEndpointSubnetAssociationExists(conn, endpointID, subnetID)
+	err := finder.FindVPCEndpointSubnetAssociationExists(conn, endpointID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Subnet Association (%s) not found, removing from state", id)
@@ -135,7 +135,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameter) {
 		return nil
 	}
 
@@ -143,7 +143,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error deleting VPC Endpoint Subnet Association (%s): %w", id, err)
 	}
 
-	_, err = waiter.VpcEndpointAvailable(conn, endpointID, d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.WaitVPCEndpointAvailable(conn, endpointID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointID, err)

@@ -166,7 +166,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName string) reso
 		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
 		securityGroupID := rs.Primary.Attributes["security_group_id"]
 
-		groupIdentifier, err := finder.NetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
+		groupIdentifier, err := finder.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 Network Interface Security Group Attachment (%s): %s", rs.Primary.ID, err)
@@ -191,7 +191,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentDestroy(s *terraform.State) erro
 		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
 		securityGroupID := rs.Primary.Attributes["security_group_id"]
 
-		groupIdentifier, err := finder.NetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
+		groupIdentifier, err := finder.FindNetworkInterfaceSecurityGroup(conn, networkInterfaceID, securityGroupID)
 
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInterfaceIDNotFound) {
 			continue

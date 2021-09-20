@@ -66,7 +66,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTablePropagationExists(resourceName st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		propagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return err
@@ -100,7 +100,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTablePropagationDestroy(s *terraform.S
 			return err
 		}
 
-		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		propagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue

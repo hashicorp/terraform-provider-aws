@@ -218,7 +218,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"cpu_credits": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(tfec2.CpuCredits_Values(), false),
+							ValidateFunc: validation.StringInSlice(tfec2.CPUCredits_Values(), false),
 						},
 					},
 				},

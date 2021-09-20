@@ -629,7 +629,7 @@ func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableVpcAttachmentNo
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err
@@ -649,7 +649,7 @@ func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableVpcAttachmentPr
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := finder.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err

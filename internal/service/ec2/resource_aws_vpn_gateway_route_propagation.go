@@ -79,7 +79,7 @@ func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interfa
 	rtID := d.Get("route_table_id").(string)
 
 	log.Printf("[INFO] Reading route table %s to check for VPN gateway %s", rtID, gwID)
-	rt, err := waiter.RouteTableReady(conn, rtID)
+	rt, err := waiter.WaitRouteTableReady(conn, rtID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route table (%s) not found, removing VPN gateway route propagation (%s) from state", rtID, d.Id())

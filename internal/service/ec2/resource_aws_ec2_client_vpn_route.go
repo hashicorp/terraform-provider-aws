@@ -75,7 +75,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 		req.Description = aws.String(v.(string))
 	}
 
-	id := tfec2.ClientVpnRouteCreateID(endpointID, targetSubnetID, destinationCidr)
+	id := tfec2.ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr)
 
 	_, err := conn.CreateClientVpnRoute(req)
 
@@ -91,13 +91,13 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	resp, err := finder.ClientVpnRoute(conn,
+	resp, err := finder.FindClientVPNRoute(conn,
 		d.Get("client_vpn_endpoint_id").(string),
 		d.Get("target_vpc_subnet_id").(string),
 		d.Get("destination_cidr_block").(string),
 	)
 
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNRouteNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -144,27 +144,27 @@ func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) error {
-	id := tfec2.ClientVpnRouteCreateID(
+	id := tfec2.ClientVPNRouteCreateID(
 		aws.StringValue(input.ClientVpnEndpointId),
 		aws.StringValue(input.TargetVpcSubnetId),
 		aws.StringValue(input.DestinationCidrBlock),
 	)
 
 	_, err := conn.DeleteClientVpnRoute(input)
-	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNRouteNotFound, "") {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = waiter.ClientVpnRouteDeleted(conn, id)
+	_, err = waiter.WaitClientVPNRouteDeleted(conn, id)
 
 	return err
 }
 
 func resourceAwsEc2ClientVpnRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, targetSubnetID, destinationCidr, err := tfec2.ClientVpnRouteParseID(d.Id())
+	endpointID, targetSubnetID, destinationCidr, err := tfec2.ClientVPNRouteParseID(d.Id())
 	if err != nil {
 		return nil, err
 	}

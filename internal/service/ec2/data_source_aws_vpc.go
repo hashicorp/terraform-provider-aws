@@ -221,7 +221,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ipv6_cidr_block", vpc.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock)
 	}
 
-	enableDnsHostnames, err := finder.VpcAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
+	enableDnsHostnames, err := finder.FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames, err)
@@ -229,7 +229,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("enable_dns_hostnames", enableDnsHostnames)
 
-	enableDnsSupport, err := finder.VpcAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
+	enableDnsSupport, err := finder.FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport, err)

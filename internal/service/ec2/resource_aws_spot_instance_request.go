@@ -298,7 +298,7 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		request, err = finder.SpotInstanceRequestByID(conn, d.Id())
+		request, err = finder.FindSpotInstanceRequestByID(conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotInstanceRequestIDNotFound) {
 			return resource.RetryableError(err)
@@ -318,7 +318,7 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		request, err = finder.SpotInstanceRequestByID(conn, d.Id())
+		request, err = finder.FindSpotInstanceRequestByID(conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotInstanceRequestIDNotFound) {

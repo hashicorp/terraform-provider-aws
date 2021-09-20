@@ -52,7 +52,7 @@ func testAccCheckMainRouteTableAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.MainRouteTableAssociationByID(conn, rs.Primary.ID)
+		_, err := finder.FindMainRouteTableAssociationByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -81,7 +81,7 @@ func testAccCheckMainRouteTableAssociationExists(n string, v *ec2.RouteTableAsso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		association, err := finder.MainRouteTableAssociationByID(conn, rs.Primary.ID)
+		association, err := finder.FindMainRouteTableAssociationByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

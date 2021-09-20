@@ -1171,7 +1171,7 @@ func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		routeTable, err := finder.RouteTableByID(conn, rs.Primary.ID)
+		routeTable, err := finder.FindRouteTableByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1191,7 +1191,7 @@ func testAccCheckRouteTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.RouteTableByID(conn, rs.Primary.ID)
+		_, err := finder.FindRouteTableByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

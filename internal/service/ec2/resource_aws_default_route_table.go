@@ -150,7 +150,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
-	routeTable, err := finder.RouteTableByID(conn, routeTableID)
+	routeTable, err := finder.FindRouteTableByID(conn, routeTableID)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Default Route Table (%s): %w", routeTableID, err)
@@ -192,15 +192,15 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		if v.DestinationCidrBlock != nil {
 			input.DestinationCidrBlock = v.DestinationCidrBlock
 			destination = aws.StringValue(v.DestinationCidrBlock)
-			routeFinder = finder.RouteByIPv4Destination
+			routeFinder = finder.FindRouteByIPv4Destination
 		} else if v.DestinationIpv6CidrBlock != nil {
 			input.DestinationIpv6CidrBlock = v.DestinationIpv6CidrBlock
 			destination = aws.StringValue(v.DestinationIpv6CidrBlock)
-			routeFinder = finder.RouteByIPv6Destination
+			routeFinder = finder.FindRouteByIPv6Destination
 		} else if v.DestinationPrefixListId != nil {
 			input.DestinationPrefixListId = v.DestinationPrefixListId
 			destination = aws.StringValue(v.DestinationPrefixListId)
-			routeFinder = finder.RouteByPrefixListIDDestination
+			routeFinder = finder.FindRouteByPrefixListIDDestination
 		}
 
 		log.Printf("[DEBUG] Deleting Route: %s", input)
@@ -214,7 +214,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
 		}
 
-		_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+		_, err = waiter.WaitRouteDeleted(conn, routeFinder, routeTableID, destination)
 
 		if err != nil {
 			return fmt.Errorf("error waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
@@ -268,7 +268,7 @@ func resourceDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) e
 func resourceAwsDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	routeTable, err := finder.MainRouteTableByVpcID(conn, d.Id())
+	routeTable, err := finder.FindMainRouteTableByVPCID(conn, d.Id())
 
 	if err != nil {
 		return nil, err
