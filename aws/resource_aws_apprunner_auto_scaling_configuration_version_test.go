@@ -27,14 +27,14 @@ func init() {
 }
 
 func testSweepAppRunnerAutoScalingConfigurationVersions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).apprunnerconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
 
@@ -64,7 +64,7 @@ func testSweepAppRunnerAutoScalingConfigurationVersions(region string) error {
 			d := r.Data(nil)
 			d.SetId(arn)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -74,11 +74,11 @@ func testSweepAppRunnerAutoScalingConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner AutoScaling Configuration Versions: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner AutoScaling Configuration Version for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping App Runner AutoScaling Configuration Versions sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -93,7 +93,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +126,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +195,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_MultipleVersions(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -253,7 +253,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_UpdateMultipleVersions(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -307,14 +307,14 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerAutoScalingConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppRunnerAutoScalingConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppRunnerAutoScalingConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -329,7 +329,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -372,7 +372,7 @@ func testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy(s *terraform
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
@@ -407,7 +407,7 @@ func testAccCheckAwsAppRunnerAutoScalingConfigurationVersionExists(n string) res
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
