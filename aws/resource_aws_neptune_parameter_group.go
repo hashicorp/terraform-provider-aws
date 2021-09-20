@@ -160,7 +160,7 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	if err := d.Set("parameter", flattenNeptuneParameters(parameters)); err != nil {
+	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return fmt.Errorf("error setting parameter: %s", err)
 	}
 
@@ -199,11 +199,11 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		toRemove := expandNeptuneParameters(os.Difference(ns).List())
+		toRemove := expandParameters(os.Difference(ns).List())
 
 		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
 
-		toAdd := expandNeptuneParameters(ns.Difference(os).List())
+		toAdd := expandParameters(ns.Difference(os).List())
 
 		log.Printf("[DEBUG] Parameters to add: %#v", toAdd)
 

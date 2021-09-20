@@ -121,7 +121,7 @@ func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta 
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), expandNeptuneParameters(v.(*schema.Set).List()))
+		err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 		if err != nil {
 			return fmt.Errorf("error modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 		}
@@ -177,7 +177,7 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 		return err
 	}
 
-	if err := d.Set("parameter", flattenNeptuneParameters(describeParametersResp.Parameters)); err != nil {
+	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
 		return fmt.Errorf("error setting neptune parameter: %w", err)
 	}
 
@@ -216,7 +216,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters := expandNeptuneParameters(ns.Difference(os).List())
+		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), parameters)
