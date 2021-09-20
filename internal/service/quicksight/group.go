@@ -94,7 +94,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
+	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
+	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
+	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsQuickSightGroupParseID(id string) (string, string, string, error) {
+func GroupParseID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, "/", 3)
 	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/NAMESPACE/GROUP_NAME", id)

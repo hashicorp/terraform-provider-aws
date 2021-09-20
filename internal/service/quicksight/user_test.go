@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func TestAccAWSQuickSightUser_basic(t *testing.T) {
@@ -108,7 +109,7 @@ func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(rs.Primary.ID)
+		awsAccountID, namespace, userName, err := tfquicksight.UserParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -144,7 +145,7 @@ func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(rs.Primary.ID)
+		awsAccountID, namespace, userName, err := tfquicksight.UserParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

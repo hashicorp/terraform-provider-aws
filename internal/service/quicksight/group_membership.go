@@ -95,7 +95,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
+	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
 		return diag.Errorf("%s", err)
 	}
@@ -128,7 +128,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
+	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
 		return diag.Errorf("%s", err)
 	}
@@ -150,7 +150,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsQuickSightGroupMembershipParseID(id string) (string, string, string, string, error) {
+func GroupMembershipParseID(id string) (string, string, string, string, error) {
 	parts := strings.SplitN(id, "/", 4)
 	if len(parts) < 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
 		return "", "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/NAMESPACE/GROUP_NAME/USER_NAME", id)
