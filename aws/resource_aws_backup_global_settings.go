@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupGlobalSettings() *schema.Resource {
+func ResourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupGlobalSettingsUpdate,
-		Update: resourceAwsBackupGlobalSettingsUpdate,
-		Read:   resourceAwsBackupGlobalSettingsRead,
+		Create: resourceGlobalSettingsUpdate,
+		Update: resourceGlobalSettingsUpdate,
+		Read:   resourceGlobalSettingsRead,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -29,7 +29,7 @@ func resourceAwsBackupGlobalSettings() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupGlobalSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.UpdateGlobalSettingsInput{
@@ -43,10 +43,10 @@ func resourceAwsBackupGlobalSettingsUpdate(d *schema.ResourceData, meta interfac
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAwsBackupGlobalSettingsRead(d, meta)
+	return resourceGlobalSettingsRead(d, meta)
 }
 
-func resourceAwsBackupGlobalSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})

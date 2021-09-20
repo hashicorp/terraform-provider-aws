@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupRegionSettings() *schema.Resource {
+func ResourceRegionSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupRegionSettingsUpdate,
-		Update: resourceAwsBackupRegionSettingsUpdate,
-		Read:   resourceAwsBackupRegionSettingsRead,
+		Create: resourceRegionSettingsUpdate,
+		Update: resourceRegionSettingsUpdate,
+		Read:   resourceRegionSettingsRead,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -29,7 +29,7 @@ func resourceAwsBackupRegionSettings() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	prefrences := d.Get("resource_type_opt_in_preference").(map[string]interface{})
@@ -49,10 +49,10 @@ func resourceAwsBackupRegionSettingsUpdate(d *schema.ResourceData, meta interfac
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return resourceAwsBackupRegionSettingsRead(d, meta)
+	return resourceRegionSettingsRead(d, meta)
 }
 
-func resourceAwsBackupRegionSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegionSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})

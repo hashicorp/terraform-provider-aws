@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepFSXBackups(region string) error {
 		}
 
 		for _, fs := range page.Backups {
-			r := resourceAwsFsxBackup()
+			r := ResourceBackup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.BackupId))
 
@@ -110,7 +111,7 @@ func TestAccAWSFsxBackup_disappears(t *testing.T) {
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxBackup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBackup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +133,7 @@ func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

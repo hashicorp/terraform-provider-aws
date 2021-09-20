@@ -18,11 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupSelection() *schema.Resource {
+func ResourceSelection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupSelectionCreate,
-		Read:   resourceAwsBackupSelectionRead,
-		Delete: resourceAwsBackupSelectionDelete,
+		Create: resourceSelectionCreate,
+		Read:   resourceSelectionRead,
+		Delete: resourceSelectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsBackupSelectionImportState,
 		},
@@ -85,7 +85,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	selection := &backup.Selection{
@@ -137,10 +137,10 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.SelectionId))
 
-	return resourceAwsBackupSelectionRead(d, meta)
+	return resourceSelectionRead(d, meta)
 }
 
-func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.GetBackupSelectionInput{
@@ -224,7 +224,7 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSelectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupSelectionInput{

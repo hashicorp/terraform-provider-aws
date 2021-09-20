@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEfsBackupPolicy() *schema.Resource {
+func ResourceBackupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsBackupPolicyCreate,
-		Read:   resourceAwsEfsBackupPolicyRead,
-		Update: resourceAwsEfsBackupPolicyUpdate,
-		Delete: resourceAwsEfsBackupPolicyDelete,
+		Create: resourceBackupPolicyCreate,
+		Read:   resourceBackupPolicyRead,
+		Update: resourceBackupPolicyUpdate,
+		Delete: resourceBackupPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,7 +53,7 @@ func resourceAwsEfsBackupPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEfsBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	fsID := d.Get("file_system_id").(string)
@@ -64,10 +64,10 @@ func resourceAwsEfsBackupPolicyCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fsID)
 
-	return resourceAwsEfsBackupPolicyRead(d, meta)
+	return resourceBackupPolicyRead(d, meta)
 }
 
-func resourceAwsEfsBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	output, err := finder.BackupPolicyByID(conn, d.Id())
@@ -91,17 +91,17 @@ func resourceAwsEfsBackupPolicyRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsEfsBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	if err := efsBackupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return err
 	}
 
-	return resourceAwsEfsBackupPolicyRead(d, meta)
+	return resourceBackupPolicyRead(d, meta)
 }
 
-func resourceAwsEfsBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	err := efsBackupPolicyPut(conn, d.Id(), map[string]interface{}{

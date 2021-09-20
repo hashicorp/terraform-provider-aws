@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepBackupVaultNotifications(region string) error {
 				continue
 			}
 
-			r := resourceAwsBackupVaultNotifications()
+			r := ResourceVaultNotifications()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vault.BackupVaultName))
 
@@ -113,7 +114,7 @@ func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 				Config: testAccBackupVaultNotificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultNotificationExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVaultNotifications(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVaultNotifications(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepBackupVaultPolicies(region string) error {
 		}
 
 		for _, vault := range page.BackupVaultList {
-			r := resourceAwsBackupVaultPolicy()
+			r := ResourceVaultPolicy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vault.BackupVaultName))
 
@@ -116,7 +117,7 @@ func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVaultPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVaultPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,7 +141,7 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVault(), vaultResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVault(), vaultResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

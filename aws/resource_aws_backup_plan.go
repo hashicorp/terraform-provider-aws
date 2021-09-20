@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupPlan() *schema.Resource {
+func ResourcePlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupPlanCreate,
-		Read:   resourceAwsBackupPlanRead,
-		Update: resourceAwsBackupPlanUpdate,
-		Delete: resourceAwsBackupPlanDelete,
+		Create: resourcePlanCreate,
+		Read:   resourcePlanRead,
+		Update: resourcePlanUpdate,
+		Delete: resourcePlanDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -161,7 +161,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -183,10 +183,10 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))
 
-	return resourceAwsBackupPlanRead(d, meta)
+	return resourcePlanRead(d, meta)
 }
 
-func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -235,7 +235,7 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	if d.HasChanges("rule", "advanced_backup_setting") {
@@ -262,10 +262,10 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsBackupPlanRead(d, meta)
+	return resourcePlanRead(d, meta)
 }
 
-func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePlanDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupPlanInput{

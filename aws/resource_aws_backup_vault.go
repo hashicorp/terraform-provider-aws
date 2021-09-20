@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBackupVault() *schema.Resource {
+func ResourceVault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupVaultCreate,
-		Read:   resourceAwsBackupVaultRead,
-		Update: resourceAwsBackupVaultUpdate,
-		Delete: resourceAwsBackupVaultDelete,
+		Create: resourceVaultCreate,
+		Read:   resourceVaultRead,
+		Update: resourceVaultUpdate,
+		Delete: resourceVaultDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,7 +53,7 @@ func resourceAwsBackupVault() *schema.Resource {
 	}
 }
 
-func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -74,10 +74,10 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(d.Get("name").(string))
 
-	return resourceAwsBackupVaultRead(d, meta)
+	return resourceVaultRead(d, meta)
 }
 
-func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -124,7 +124,7 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	if d.HasChange("tags_all") {
@@ -134,10 +134,10 @@ func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsBackupVaultRead(d, meta)
+	return resourceVaultRead(d, meta)
 }
 
-func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
