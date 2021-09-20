@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
@@ -98,7 +99,7 @@ func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 }
 
 func testAccCheckAWSS3ControlBucketPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket_policy" {
@@ -151,7 +152,7 @@ func testAccCheckAWSS3ControlBucketPolicyExists(resourceName string) resource.Te
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

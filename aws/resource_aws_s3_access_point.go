@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3AccessPoint() *schema.Resource {
@@ -122,9 +123,9 @@ func resourceAwsS3AccessPoint() *schema.Resource {
 }
 
 func resourceAwsS3AccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId := meta.(*AWSClient).accountid
+	accountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountId = v.(string)
 	}
@@ -175,7 +176,7 @@ func resourceAwsS3AccessPointCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := s3AccessPointParseId(d.Id())
 	if err != nil {
@@ -226,8 +227,8 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		accessPointARN := arn.ARN{
 			AccountID: accountId,
-			Partition: meta.(*AWSClient).partition,
-			Region:    meta.(*AWSClient).region,
+			Partition: meta.(*conns.AWSClient).Partition,
+			Region:    meta.(*conns.AWSClient).Region,
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
 			Service:   "s3",
 		}
@@ -237,7 +238,7 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("account_id", accountId)
-	d.Set("domain_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
+	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if err := d.Set("public_access_block_configuration", flattenS3AccessPointPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)); err != nil {
@@ -288,7 +289,7 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsS3AccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := s3AccessPointParseId(d.Id())
 	if err != nil {
@@ -324,7 +325,7 @@ func resourceAwsS3AccessPointUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsS3AccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := s3AccessPointParseId(d.Id())
 	if err != nil {

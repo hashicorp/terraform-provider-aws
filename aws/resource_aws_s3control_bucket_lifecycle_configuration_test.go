@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
@@ -416,7 +417,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
 }
 
 func testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket_lifecycle_configuration" {
@@ -469,7 +470,7 @@ func testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName str
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

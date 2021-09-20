@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,8 +32,8 @@ func testSweepS3AccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	accountId := client.(*AWSClient).accountid
-	conn := client.(*AWSClient).s3controlconn
+	accountId := client.(*conns.AWSClient).AccountID
+	conn := client.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.ListAccessPointsInput{
 		AccountId: aws.String(accountId),
@@ -402,7 +403,7 @@ func testAccCheckAWSS3AccessPointDisappears(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 		_, err = conn.DeleteAccessPoint(&s3control.DeleteAccessPointInput{
 			AccountId: aws.String(accountId),
@@ -417,7 +418,7 @@ func testAccCheckAWSS3AccessPointDisappears(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSS3AccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_access_point" {
@@ -456,7 +457,7 @@ func testAccCheckAWSS3AccessPointExists(n string, output *s3control.GetAccessPoi
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 		resp, err := conn.GetAccessPoint(&s3control.GetAccessPointInput{
 			AccountId: aws.String(accountId),
@@ -488,7 +489,7 @@ func testAccCheckAWSS3AccessPointHasPolicy(n string, fn func() string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3controlconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 		resp, err := conn.GetAccessPointPolicy(&s3control.GetAccessPointPolicyInput{
 			AccountId: aws.String(accountId),
@@ -724,7 +725,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
