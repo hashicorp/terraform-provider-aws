@@ -138,7 +138,7 @@ func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface
 		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set))
 	}
 	if len(tags) > 0 {
-		req.NewPublicVirtualInterface.Tags = tags.IgnoreAws().DirectconnectTags()
+		req.NewPublicVirtualInterface.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %s", req)
@@ -193,7 +193,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 	}
 	d.Set("vlan", vif.Vlan)
 
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect public virtual interface (%s): %s", arn, err)
