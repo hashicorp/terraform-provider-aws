@@ -44,7 +44,7 @@ func testSweepEfsFileSystems(region string) error {
 
 			log.Printf("[INFO] Deleting EFS File System: %s", id)
 
-			r := ResourceFileSystem()
+			r := tfefs.ResourceFileSystem()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -406,8 +406,8 @@ func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystem(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
