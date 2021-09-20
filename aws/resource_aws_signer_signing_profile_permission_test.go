@@ -9,7 +9,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -35,7 +35,7 @@ func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "statement_id"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "statement_id"),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
 				Config: testAccAWSSignerSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "statement_id", statementNamePrefix),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "statement_id", statementNamePrefix),
 				),
 			},
 			{
