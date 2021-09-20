@@ -30,7 +30,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,14 +65,14 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53RecoveryReadinessReadinessCheckConfig(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessReadinessCheck(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryReadinessReadinessCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +167,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_readiness_check" {
@@ -194,7 +194,7 @@ func testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(name string) re
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 		input := &route53recoveryreadiness.GetReadinessCheckInput{
 			ReadinessCheckName: aws.String(rs.Primary.ID),

@@ -20,7 +20,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,14 +49,14 @@ func TestAccAwsRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53RecoveryReadinessCellConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessCell(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryReadinessCell(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,7 +73,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +166,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +189,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryReadinessCellDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_cell" {
@@ -217,7 +217,7 @@ func testAccCheckAwsRoute53RecoveryReadinessCellExists(name string) resource.Tes
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 		input := &route53recoveryreadiness.GetCellInput{
 			CellName: aws.String(rs.Primary.ID),
@@ -230,7 +230,7 @@ func testAccCheckAwsRoute53RecoveryReadinessCellExists(name string) resource.Tes
 }
 
 func testAccPreCheckAwsRoute53RecoveryReadiness(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 	input := &route53recoveryreadiness.ListCellsInput{}
 
