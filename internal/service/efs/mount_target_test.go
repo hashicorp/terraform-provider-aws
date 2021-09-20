@@ -92,7 +92,7 @@ func testSweepEfsMountTargets(region string) error {
 	return errors
 }
 
-func TestAccAWSEFSMountTarget_basic(t *testing.T) {
+func TestAccEFSMountTarget_basic(t *testing.T) {
 	var mount efs.MountTargetDescription
 	ct := fmt.Sprintf("createtoken-%d", sdkacctest.RandInt())
 	resourceName := "aws_efs_mount_target.test"
@@ -136,7 +136,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
+func TestAccEFSMountTarget_disappears(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
 	ct := fmt.Sprintf("createtoken-%d", sdkacctest.RandInt())
@@ -159,7 +159,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
+func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
 
@@ -186,7 +186,7 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13845
-func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
+func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
 

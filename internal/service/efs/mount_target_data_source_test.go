@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
+func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
@@ -40,7 +40,7 @@ func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEfsMountTarget_byAccessPointID(t *testing.T) {
+func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
@@ -70,7 +70,7 @@ func TestAccDataSourceAwsEfsMountTarget_byAccessPointID(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEfsMountTarget_byFileSystemID(t *testing.T) {
+func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"

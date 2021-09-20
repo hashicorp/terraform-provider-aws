@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
+func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEfsFileSystem_tags(t *testing.T) {
+func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
@@ -71,7 +71,7 @@ func TestAccDataSourceAwsEfsFileSystem_tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
+func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
@@ -101,7 +101,7 @@ func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEfsFileSystem_availabilityZone(t *testing.T) {
+func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
@@ -122,7 +122,7 @@ func TestAccDataSourceAwsEfsFileSystem_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEfsFileSystem_NonExistent(t *testing.T) {
+func TestAccEFSFileSystemDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

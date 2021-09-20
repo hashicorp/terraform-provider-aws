@@ -86,7 +86,7 @@ func testSweepEfsAccessPoints(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
+func TestAccEFSAccessPoint_basic(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_efs_access_point.test"
@@ -121,7 +121,7 @@ func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSAccessPoint_root_directory(t *testing.T) {
+func TestAccEFSAccessPoint_Root_directory(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_efs_access_point.test"
@@ -150,7 +150,7 @@ func TestAccAWSEFSAccessPoint_root_directory(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSAccessPoint_root_directory_creation_info(t *testing.T) {
+func TestAccEFSAccessPoint_RootDirectoryCreation_info(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_efs_access_point.test"
@@ -182,7 +182,7 @@ func TestAccAWSEFSAccessPoint_root_directory_creation_info(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSAccessPoint_posix_user(t *testing.T) {
+func TestAccEFSAccessPoint_POSIX_user(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_efs_access_point.test"
@@ -212,7 +212,7 @@ func TestAccAWSEFSAccessPoint_posix_user(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSAccessPoint_posix_user_secondary_gids(t *testing.T) {
+func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_efs_access_point.test"
@@ -241,7 +241,7 @@ func TestAccAWSEFSAccessPoint_posix_user_secondary_gids(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSAccessPoint_tags(t *testing.T) {
+func TestAccEFSAccessPoint_tags(t *testing.T) {
 	var ap efs.AccessPointDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_efs_access_point.test"
@@ -286,7 +286,7 @@ func TestAccAWSEFSAccessPoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
+func TestAccEFSAccessPoint_disappears(t *testing.T) {
 	var ap efs.AccessPointDescription
 	resourceName := "aws_efs_access_point.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

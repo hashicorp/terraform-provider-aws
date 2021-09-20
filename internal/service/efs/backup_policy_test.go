@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
+func TestAccEFSBackupPolicy_basic(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -43,7 +43,7 @@ func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
+func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	fsResourceName := "aws_efs_file_system.test"
@@ -67,7 +67,7 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSBackupPolicy_update(t *testing.T) {
+func TestAccEFSBackupPolicy_update(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

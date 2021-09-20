@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
+func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -49,7 +49,7 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
+func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -72,7 +72,7 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
+func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSEFSAccessPoint_basic(t *testing.T) {
+func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_efs_access_point.test"
 	resourceName := "aws_efs_access_point.test"
