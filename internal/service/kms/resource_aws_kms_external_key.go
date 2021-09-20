@@ -1,4 +1,4 @@
-package aws
+package kms
 
 import (
 	"crypto/rand"
@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -142,7 +141,7 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	log.Printf("[DEBUG] Creating KMS External Key: %s", input)
 
-	outputRaw, err := waiter.WaitIAMPropagation(func() (interface{}, error) {
+	outputRaw, err := WaitIAMPropagation(func() (interface{}, error) {
 		return conn.CreateKey(input)
 	})
 
@@ -159,11 +158,11 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitKeyMaterialImported(conn, d.Id()); err != nil {
+		if _, err := WaitKeyMaterialImported(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
 		}
 
-		if err := waiter.WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
+		if err := WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
 			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 
@@ -252,11 +251,11 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitKeyMaterialImported(conn, d.Id()); err != nil {
+		if _, err := WaitKeyMaterialImported(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
 		}
 
-		if err := waiter.WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
+		if err := WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
 			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 	}
@@ -275,7 +274,7 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating KMS External Key (%s) tags: %w", d.Id(), err)
 		}
 
-		if err := waiter.WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
+		if err := WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
 			return fmt.Errorf("error waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
@@ -309,7 +308,7 @@ func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting KMS External Key (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.WaitKeyDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitKeyDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for KMS External Key (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -318,7 +317,7 @@ func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
 		return conn.GetParametersForImport(&kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
 			WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
@@ -369,7 +368,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
 		return conn.ImportKeyMaterial(input)
 	}, kms.ErrCodeNotFoundException)
 

@@ -1,4 +1,4 @@
-package aws
+package kms_test
 
 import (
 	"fmt"
@@ -12,15 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -459,7 +459,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-		output, err := finder.FindKeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
+		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
 		if err != nil {
 			return err
@@ -488,7 +488,7 @@ func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindKeyByID(conn, rs.Primary.ID)
+		_, err := tfkms.FindKeyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -517,8 +517,8 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-			return finder.FindKeyByID(conn, rs.Primary.ID)
+		outputRaw, err := tfresource.RetryWhenNotFound(tfkms.PropagationTimeout, func() (interface{}, error) {
+			return tfkms.FindKeyByID(conn, rs.Primary.ID)
 		})
 
 		if err != nil {

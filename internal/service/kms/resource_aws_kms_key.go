@@ -1,4 +1,4 @@
-package aws
+package kms
 
 import (
 	"fmt"
@@ -11,11 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -135,7 +132,7 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	log.Printf("[DEBUG] Creating KMS Key: %s", input)
 
-	outputRaw, err := waiter.WaitIAMPropagation(func() (interface{}, error) {
+	outputRaw, err := WaitIAMPropagation(func() (interface{}, error) {
 		return conn.CreateKey(input)
 	})
 
@@ -160,13 +157,13 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Wait for propagation since KMS is eventually consistent.
 	if v, ok := d.GetOk("policy"); ok {
-		if err := waiter.WaitKeyPolicyPropagated(conn, d.Id(), v.(string)); err != nil {
+		if err := WaitKeyPolicyPropagated(conn, d.Id(), v.(string)); err != nil {
 			return fmt.Errorf("error waiting for KMS Key (%s) policy propagation: %w", d.Id(), err)
 		}
 	}
 
 	if len(tags) > 0 {
-		if err := waiter.WaitTagsPropagated(conn, d.Id(), tags); err != nil {
+		if err := WaitTagsPropagated(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error waiting for KMS Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
@@ -256,7 +253,7 @@ func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating KMS Key (%s) tags: %w", d.Id(), err)
 		}
 
-		if err := waiter.WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
+		if err := WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
 			return fmt.Errorf("error waiting for KMS Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
@@ -290,7 +287,7 @@ func resourceKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting KMS Key (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.WaitKeyDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitKeyDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -306,17 +303,17 @@ type kmsKey struct {
 
 func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		var err error
 		var key kmsKey
 
-		key.metadata, err = finder.FindKeyByID(conn, keyID)
+		key.metadata, err = FindKeyByID(conn, keyID)
 
 		if err != nil {
 			return nil, fmt.Errorf("error reading KMS Key (%s): %w", keyID, err)
 		}
 
-		policy, err := finder.FindKeyPolicyByKeyIDAndPolicyName(conn, keyID, tfkms.PolicyNameDefault)
+		policy, err := FindKeyPolicyByKeyIDAndPolicyName(conn, keyID, PolicyNameDefault)
 
 		if err != nil {
 			return nil, fmt.Errorf("error reading KMS Key (%s) policy: %w", keyID, err)
@@ -329,7 +326,7 @@ func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error
 		}
 
 		if aws.StringValue(key.metadata.Origin) == kms.OriginTypeAwsKms {
-			key.rotation, err = finder.FindKeyRotationEnabledByKeyID(conn, keyID)
+			key.rotation, err = FindKeyRotationEnabledByKeyID(conn, keyID)
 
 			if err != nil {
 				return nil, fmt.Errorf("error reading KMS Key (%s) rotation enabled: %w", keyID, err)
@@ -370,7 +367,7 @@ func updateKmsKeyDescription(conn *kms.KMS, keyID string, description string) er
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	err = waiter.WaitKeyDescriptionPropagated(conn, keyID, description)
+	err = WaitKeyDescriptionPropagated(conn, keyID, description)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) description propagation: %w", keyID, err)
@@ -397,14 +394,14 @@ func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	err = waiter.WaitKeyStatePropagated(conn, keyID, enabled)
+	err = WaitKeyStatePropagated(conn, keyID, enabled)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) key state propagation: %w", keyID, err)
@@ -427,7 +424,7 @@ func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicy
 			BypassPolicyLockoutSafetyCheck: aws.Bool(bypassPolicyLockoutSafetyCheck),
 			KeyId:                          aws.String(keyID),
 			Policy:                         aws.String(policy),
-			PolicyName:                     aws.String(tfkms.PolicyNameDefault),
+			PolicyName:                     aws.String(PolicyNameDefault),
 		}
 
 		log.Printf("[DEBUG] Updating KMS Key policy: %s", input)
@@ -436,14 +433,14 @@ func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicy
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err = tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	err = waiter.WaitKeyPolicyPropagated(conn, keyID, policy)
+	err = WaitKeyPolicyPropagated(conn, keyID, policy)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) policy propagation: %w", keyID, err)
@@ -470,14 +467,14 @@ func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) erro
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key rotation enabled (%t): %w", keyID, enabled, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	err = waiter.WaitKeyRotationEnabledPropagated(conn, keyID, enabled)
+	err = WaitKeyRotationEnabledPropagated(conn, keyID, enabled)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) key rotation propagation: %w", keyID, err)

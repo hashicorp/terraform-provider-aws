@@ -1,11 +1,11 @@
-package kms
+package kms_test
 
 import (
 	"regexp"
 	"testing"
 
-	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {

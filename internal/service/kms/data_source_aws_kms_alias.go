@@ -1,11 +1,10 @@
-package aws
+package kms
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,7 +40,7 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 
 	target := d.Get("name").(string)
 
-	alias, err := finder.FindAliasByName(conn, target)
+	alias, err := FindAliasByName(conn, target)
 
 	if err != nil {
 		return fmt.Errorf("error reading KMS Alias (%s): %w", target, err)
@@ -61,7 +60,7 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	//
 	// https://docs.aws.amazon.com/kms/latest/APIReference/API_ListAliases.html
 
-	keyMetadata, err := finder.FindKeyByID(conn, target)
+	keyMetadata, err := FindKeyByID(conn, target)
 
 	if err != nil {
 		return fmt.Errorf("error reading KMS Key (%s): %w", target, err)
