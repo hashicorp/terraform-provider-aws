@@ -1,4 +1,4 @@
-package aws
+package cloudwatch
 
 import (
 	"context"
@@ -13,9 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,8 +32,8 @@ func ResourceMetricStream() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.MetricStreamReadyTimeout),
-			Delete: schema.DefaultTimeout(waiter.MetricStreamDeleteTimeout),
+			Create: schema.DefaultTimeout(MetricStreamReadyTimeout),
+			Delete: schema.DefaultTimeout(MetricStreamDeleteTimeout),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -160,7 +159,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := waiter.WaitMetricStreamReady(ctx, conn, d.Id())
+	output, err := WaitMetricStreamReady(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
@@ -229,7 +228,7 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error deleting CloudWatch MetricStream: %s", err))
 	}
 
-	if _, err := waiter.WaitMetricStreamDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitMetricStreamDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error while waiting for CloudWatch Metric Stream (%s) to become deleted: %w", d.Id(), err))
 	}
 

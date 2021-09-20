@@ -1,4 +1,4 @@
-package aws
+package cloudwatch_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func init() {
@@ -44,7 +44,7 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "state", waiter.StateRunning),
+					resource.TestCheckResourceAttr(resourceName, "state", tfcloudwatch.StateRunning),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.metric_stream_to_firehose", "arn"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),

@@ -1,4 +1,4 @@
-package aws
+package cloudwatch_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
@@ -421,7 +421,7 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
-		resp, err := finder.FindMetricAlarmByName(conn, rs.Primary.ID)
+		resp, err := tfcloudwatch.FindMetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -442,7 +442,7 @@ func testAccCheckAWSCloudWatchMetricAlarmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := finder.FindMetricAlarmByName(conn, rs.Primary.ID)
+		resp, err := tfcloudwatch.FindMetricAlarmByName(conn, rs.Primary.ID)
 		if err == nil {
 			if resp != nil && aws.StringValue(resp.AlarmName) == rs.Primary.ID {
 				return fmt.Errorf("Alarm Still Exists: %s", rs.Primary.ID)
