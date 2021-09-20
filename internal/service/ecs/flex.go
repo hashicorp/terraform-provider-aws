@@ -3,6 +3,7 @@ package ecs
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Takes the result of flatmap. Expand for an array of load balancers and

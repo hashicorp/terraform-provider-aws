@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceService() *schema.Resource {
@@ -203,7 +204,7 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"container_name": {
@@ -365,7 +366,7 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -897,7 +898,7 @@ func expandPlacementConstraints(tfList []interface{}) ([]*ecs.PlacementConstrain
 			apiObject.Type = aws.String(v)
 		}
 
-		if err := validateAwsEcsPlacementConstraint(aws.StringValue(apiObject.Type), aws.StringValue(apiObject.Expression)); err != nil {
+		if err := validateAwsECSPlacementConstraint(aws.StringValue(apiObject.Type), aws.StringValue(apiObject.Expression)); err != nil {
 			return result, err
 		}
 
@@ -948,7 +949,7 @@ func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) 
 			return nil, fmt.Errorf("missing field attribute in placement strategy configuration block")
 		}
 
-		if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
+		if err := validateAwsECSPlacementStrategy(t, f); err != nil {
 			return nil, err
 		}
 		ps := &ecs.PlacementStrategy{
