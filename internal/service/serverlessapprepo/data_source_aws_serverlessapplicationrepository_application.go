@@ -1,10 +1,9 @@
-package aws
+package serverlessapprepo
 
 import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -53,7 +52,7 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 	applicationID := d.Get("application_id").(string)
 	semanticVersion := d.Get("semantic_version").(string)
 
-	output, err := finder.findApplication(conn, applicationID, semanticVersion)
+	output, err := findApplication(conn, applicationID, semanticVersion)
 	if err != nil {
 		descriptor := applicationID
 		if semanticVersion != "" {
