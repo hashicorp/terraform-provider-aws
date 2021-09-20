@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func waitAgentReady(conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeAgentOutput, error) {

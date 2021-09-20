@@ -3,7 +3,6 @@ package datasync_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
