@@ -19,7 +19,7 @@ func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnit
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
@@ -94,14 +94,14 @@ func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrManagedScalingPolicy_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEMRManagedScalingPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEMRManagedScalingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -168,7 +168,7 @@ func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).emrconn
+		conn := acctest.Provider.Meta().(*AWSClient).emrconn
 		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
@@ -184,7 +184,7 @@ func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAWSEmrManagedScalingPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := acctest.Provider.Meta().(*AWSClient).emrconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_managed_scaling_policy" {
 			continue
