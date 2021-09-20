@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsQuickSightUser() *schema.Resource {
+func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQuickSightUserCreate,
-		Read:   resourceAwsQuickSightUserRead,
-		Update: resourceAwsQuickSightUserUpdate,
-		Delete: resourceAwsQuickSightUserDelete,
+		Create: resourceUserCreate,
+		Read:   resourceUserRead,
+		Update: resourceUserUpdate,
+		Delete: resourceUserDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -90,7 +90,7 @@ func resourceAwsQuickSightUser() *schema.Resource {
 	}
 }
 
-func resourceAwsQuickSightUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
@@ -128,10 +128,10 @@ func resourceAwsQuickSightUserCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.User.UserName)))
 
-	return resourceAwsQuickSightUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsQuickSightUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(d.Id())
@@ -165,7 +165,7 @@ func resourceAwsQuickSightUserRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsQuickSightUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(d.Id())
@@ -191,10 +191,10 @@ func resourceAwsQuickSightUserUpdate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error updating QuickSight User %s: %s", d.Id(), err)
 	}
 
-	return resourceAwsQuickSightUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsQuickSightUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, userName, err := resourceAwsQuickSightUserParseID(d.Id())

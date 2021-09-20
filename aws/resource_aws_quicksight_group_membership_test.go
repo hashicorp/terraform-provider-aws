@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightGroupMembershipExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsQuickSightGroupMembership(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
