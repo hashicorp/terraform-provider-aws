@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSignerSigningJob() *schema.Resource {
+func ResourceSigningJob() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSignerSigningJobCreate,
-		Read:   resourceAwsSignerSigningJobRead,
+		Create: resourceSigningJobCreate,
+		Read:   resourceSigningJobRead,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -195,7 +195,7 @@ func resourceAwsSignerSigningJob() *schema.Resource {
 	}
 }
 
-func resourceAwsSignerSigningJobCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningJobCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	profileName := d.Get("profile_name")
 	source := d.Get("source").([]interface{})
@@ -228,10 +228,10 @@ func resourceAwsSignerSigningJobCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(jobId)
 
-	return resourceAwsSignerSigningJobRead(d, meta)
+	return resourceSigningJobRead(d, meta)
 }
 
-func resourceAwsSignerSigningJobRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	jobId := d.Id()
 

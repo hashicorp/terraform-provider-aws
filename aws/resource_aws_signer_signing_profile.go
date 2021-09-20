@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSignerSigningProfile() *schema.Resource {
+func ResourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSignerSigningProfileCreate,
-		Read:   resourceAwsSignerSigningProfileRead,
-		Update: resourceAwsSignerSigningProfileUpdate,
-		Delete: resourceAwsSignerSigningProfileDelete,
+		Create: resourceSigningProfileCreate,
+		Read:   resourceSigningProfileRead,
+		Update: resourceSigningProfileUpdate,
+		Delete: resourceSigningProfileDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -122,7 +122,7 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 	}
 }
 
-func resourceAwsSignerSigningProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -156,10 +156,10 @@ func resourceAwsSignerSigningProfileCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(profileName)
 
-	return resourceAwsSignerSigningProfileRead(d, meta)
+	return resourceSigningProfileRead(d, meta)
 }
 
-func resourceAwsSignerSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -233,7 +233,7 @@ func resourceAwsSignerSigningProfileRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSignerSigningProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 
 	arn := d.Get("arn").(string)
@@ -245,10 +245,10 @@ func resourceAwsSignerSigningProfileUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSignerSigningProfileRead(d, meta)
+	return resourceSigningProfileRead(d, meta)
 }
 
-func resourceAwsSignerSigningProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSigningProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SignerConn
 
 	_, err := conn.CancelSigningProfile(&signer.CancelSigningProfileInput{
