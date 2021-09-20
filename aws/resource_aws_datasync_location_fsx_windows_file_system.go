@@ -112,7 +112,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 		FsxFilesystemArn:  aws.String(fsxArn),
 		User:              aws.String(d.Get("user").(string)),
 		Password:          aws.String(d.Get("password").(string)),
-		SecurityGroupArns: expandStringSet(d.Get("security_group_arns").(*schema.Set)),
+		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              tags.IgnoreAws().DatasyncTags(),
 	}
 
@@ -169,7 +169,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	d.Set("user", output.User)
 	d.Set("domain", output.Domain)
 
-	if err := d.Set("security_group_arns", flattenStringSet(output.SecurityGroupArns)); err != nil {
+	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
 		return fmt.Errorf("error setting security_group_arns: %w", err)
 	}
 

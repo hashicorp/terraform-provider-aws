@@ -109,7 +109,7 @@ func resourceAwsDataSyncLocationSmbCreate(d *schema.ResourceData, meta interface
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationSmbInput{
-		AgentArns:      expandStringSet(d.Get("agent_arns").(*schema.Set)),
+		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
 		MountOptions:   expandDataSyncSmbMountOptions(d.Get("mount_options").([]interface{})),
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
@@ -172,7 +172,7 @@ func resourceAwsDataSyncLocationSmbRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	d.Set("agent_arns", flattenStringSet(output.AgentArns))
+	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
 
 	d.Set("arn", output.LocationArn)
 
@@ -208,7 +208,7 @@ func resourceAwsDataSyncLocationSmbUpdate(d *schema.ResourceData, meta interface
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationSmbInput{
 			LocationArn:  aws.String(d.Id()),
-			AgentArns:    expandStringSet(d.Get("agent_arns").(*schema.Set)),
+			AgentArns:    flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
 			MountOptions: expandDataSyncSmbMountOptions(d.Get("mount_options").([]interface{})),
 			Password:     aws.String(d.Get("password").(string)),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
