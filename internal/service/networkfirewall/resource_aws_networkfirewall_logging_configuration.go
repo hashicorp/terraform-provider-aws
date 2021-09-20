@@ -1,4 +1,4 @@
-package aws
+package networkfirewall
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,7 +96,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] Reading Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
-	output, err := finder.FindLoggingConfiguration(ctx, conn, d.Id())
+	output, err := FindLoggingConfiguration(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Logging Configuration for NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -155,7 +154,7 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Deleting Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
-	output, err := finder.FindLoggingConfiguration(ctx, conn, d.Id())
+	output, err := FindLoggingConfiguration(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil

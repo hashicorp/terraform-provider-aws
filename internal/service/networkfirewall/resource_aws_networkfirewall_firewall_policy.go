@@ -1,4 +1,4 @@
-package aws
+package networkfirewall
 
 import (
 	"context"
@@ -12,10 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -149,7 +147,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s", d.Id())
 
-	output, err := finder.FindFirewallPolicy(ctx, conn, d.Id())
+	output, err := FindFirewallPolicy(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -233,7 +231,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		FirewallPolicyArn: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, waiter.firewallPolicyTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, firewallPolicyTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteFirewallPolicyWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use") {
@@ -255,7 +253,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall Policy (%s): %w", d.Id(), err))
 	}
 
-	if _, err := waiter.waitFirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil
 		}
