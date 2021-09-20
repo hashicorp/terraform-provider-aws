@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -82,13 +83,13 @@ func testSweepTimestreamWriteTables(region string) error {
 }
 
 func TestAccAWSTimestreamWriteTable_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_timestreamwrite_table.test"
 	dbResourceName := "aws_timestreamwrite_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func TestAccAWSTimestreamWriteTable_basic(t *testing.T) {
 				Config: testAccAWSTimestreamWriteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteTableExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", dbResourceName, "database_name"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
@@ -114,11 +115,11 @@ func TestAccAWSTimestreamWriteTable_basic(t *testing.T) {
 
 func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +127,7 @@ func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 				Config: testAccAWSTimestreamWriteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteTableExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsTimestreamWriteTable(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsTimestreamWriteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,12 +136,12 @@ func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 }
 
 func TestAccAWSTimestreamWriteTable_RetentionProperties(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
@@ -185,11 +186,11 @@ func TestAccAWSTimestreamWriteTable_RetentionProperties(t *testing.T) {
 
 func TestAccAWSTimestreamWriteTable_Tags(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
@@ -319,7 +320,7 @@ resource "aws_timestreamwrite_database" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigBasic(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
@@ -330,7 +331,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigRetentionProperties(rName string, magneticStoreDays, memoryStoreHours int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
@@ -346,7 +347,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
@@ -361,7 +362,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
