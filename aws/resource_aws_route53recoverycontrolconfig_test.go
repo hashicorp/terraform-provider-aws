@@ -2,6 +2,7 @@ package aws
 
 import (
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRoute53RecoveryControlConfig_serial(t *testing.T) {
