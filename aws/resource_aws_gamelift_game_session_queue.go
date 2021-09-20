@@ -104,7 +104,7 @@ func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interf
 		Limit: &limit,
 	})
 	if err != nil {
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Gamelift Session Queues (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -215,7 +215,7 @@ func resourceAwsGameliftGameSessionQueueDelete(d *schema.ResourceData, meta inte
 	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
 		Name: aws.String(d.Id()),
 	})
-	if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

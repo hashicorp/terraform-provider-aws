@@ -71,7 +71,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -136,7 +136,7 @@ func TestAccAWSGameliftBuild_tags(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -199,7 +199,7 @@ func TestAccAWSGameliftBuild_disappears(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -295,7 +295,7 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 				return fmt.Errorf("Gamelift Build still exists")
 			}
 		}
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			return nil
 		}
 

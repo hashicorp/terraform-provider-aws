@@ -54,7 +54,7 @@ func testSweepGameliftFleets(region string) error {
 				})
 				if err != nil {
 					msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
-					if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+					if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -243,7 +243,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -325,7 +325,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -392,7 +392,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -513,7 +513,7 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -600,14 +600,14 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 			_, err := conn.DeleteFleet(input)
 			if err != nil {
 				msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *res.FleetId)
-				if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+				if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.DeleteFleet(input)
 		}
 		if err != nil {

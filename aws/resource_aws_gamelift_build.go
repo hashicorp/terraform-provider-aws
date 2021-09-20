@@ -97,14 +97,14 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 		var err error
 		out, err = conn.CreateBuild(&input)
 		if err != nil {
-			if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") {
+			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.CreateBuild(&input)
 	}
 	if err != nil {
@@ -146,7 +146,7 @@ func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) erro
 		BuildId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Gamelift Build (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

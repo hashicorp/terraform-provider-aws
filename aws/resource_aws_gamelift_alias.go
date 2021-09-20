@@ -106,7 +106,7 @@ func resourceAwsGameliftAliasRead(d *schema.ResourceData, meta interface{}) erro
 		AliasId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			d.SetId("")
 			log.Printf("[WARN] Gamelift Alias (%s) not found, removing from state", d.Id())
 			return nil
