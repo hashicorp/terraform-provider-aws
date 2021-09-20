@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
@@ -45,7 +46,7 @@ func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
 }
 
 func dataSourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.DescribeSecretInput{

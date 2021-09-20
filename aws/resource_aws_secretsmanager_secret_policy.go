@@ -14,6 +14,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecretsManagerSecretPolicy() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsSecretsManagerSecretPolicy() *schema.Resource {
 }
 
 func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.PutResourcePolicyInput{
 		ResourcePolicy: aws.String(d.Get("policy").(string)),
@@ -87,7 +88,7 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSecretsManagerSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
@@ -144,7 +145,7 @@ func resourceAwsSecretsManagerSecretPolicyRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -181,7 +182,7 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSecretsManagerSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.DeleteResourcePolicyInput{
 		SecretId: aws.String(d.Id()),

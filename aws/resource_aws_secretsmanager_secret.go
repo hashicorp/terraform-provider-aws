@@ -18,6 +18,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecretsManagerSecret() *schema.Resource {
@@ -146,8 +147,8 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 }
 
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var secretName string
@@ -260,9 +261,9 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &secretsmanager.DescribeSecretInput{
 		SecretId: aws.String(d.Id()),
@@ -357,7 +358,7 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -487,7 +488,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		err := removeSecretsManagerSecretReplicas(conn, d.Id(), v.(*schema.Set).List())

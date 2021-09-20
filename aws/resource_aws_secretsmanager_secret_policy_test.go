@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).secretsmanagerconn
+	conn := client.(*conns.AWSClient).SecretsManagerConn
 
 	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
@@ -167,7 +168,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_policy" {
@@ -239,7 +240,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName string, policy
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).secretsmanagerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
 		input := &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}
