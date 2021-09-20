@@ -2,7 +2,6 @@ package directconnect
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidConnectionBandWidth(t *testing.T) {
