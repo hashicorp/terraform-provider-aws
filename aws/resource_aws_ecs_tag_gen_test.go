@@ -15,7 +15,7 @@ import (
 )
 
 func testAccCheckEcsTagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecsconn
+	conn := acctest.Provider.Meta().(*AWSClient).ecsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_tag" {
@@ -61,7 +61,7 @@ func testAccCheckEcsTagExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+		conn := acctest.Provider.Meta().(*AWSClient).ecsconn
 
 		_, err = keyvaluetags.EcsGetTag(conn, identifier, key)
 
