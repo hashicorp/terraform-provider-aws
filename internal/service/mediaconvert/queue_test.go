@@ -16,7 +16,7 @@ import (
 	tfmediaconvert "github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 )
 
-func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
+func TestAccMediaConvertQueue_basic(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -46,7 +46,7 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
+func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 	acctest.Skip(t, "MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
 
 	var queue mediaconvert.Queue
@@ -90,7 +90,7 @@ func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaConvertQueue_withStatus(t *testing.T) {
+func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -124,7 +124,7 @@ func TestAccAWSMediaConvertQueue_withStatus(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
+func TestAccMediaConvertQueue_withTags(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -169,7 +169,7 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaConvertQueue_disappears(t *testing.T) {
+func TestAccMediaConvertQueue_disappears(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -192,7 +192,7 @@ func TestAccAWSMediaConvertQueue_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaConvertQueue_withDescription(t *testing.T) {
+func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
