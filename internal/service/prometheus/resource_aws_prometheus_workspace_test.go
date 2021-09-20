@@ -1,4 +1,4 @@
-package aws
+package prometheus_test
 
 import (
 	"fmt"
