@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceFleet() *schema.Resource {
@@ -192,19 +193,19 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateFleetInput{
 		BuildId:         aws.String(d.Get("build_id").(string)),
@@ -350,7 +351,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
-	tags, err := keyvaluetags.GameliftListTags(conn, arn)
+	tags, err := tftags.GameliftListTags(conn, arn)
 
 	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
 		return nil
@@ -421,7 +422,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.GameliftUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Game Lift Fleet (%s) tags: %s", arn, err)
 		}
 	}
