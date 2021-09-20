@@ -40,7 +40,7 @@ func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,14 +65,14 @@ func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesActiveReceiptRuleSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesActiveReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +81,7 @@ func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_active_receipt_rule_set" {
@@ -114,7 +114,7 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 			return fmt.Errorf("SES Active Receipt Rule Set name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 		if err != nil {

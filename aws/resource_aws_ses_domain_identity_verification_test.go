@@ -33,7 +33,7 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +67,7 @@ func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -90,7 +90,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		domain := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -112,9 +112,9 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		expected := arn.ARN{
-			AccountID: testAccProvider.Meta().(*AWSClient).accountid,
-			Partition: testAccProvider.Meta().(*AWSClient).partition,
-			Region:    testAccProvider.Meta().(*AWSClient).region,
+			AccountID: acctest.Provider.Meta().(*AWSClient).accountid,
+			Partition: acctest.Provider.Meta().(*AWSClient).partition,
+			Region:    acctest.Provider.Meta().(*AWSClient).region,
 			Resource:  fmt.Sprintf("identity/%s", domain),
 			Service:   "ses",
 		}

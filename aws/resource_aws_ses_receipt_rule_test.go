@@ -26,11 +26,11 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESReceiptRuleBasicConfig(rName, testAccDefaultEmailAddress),
+				Config: testAccAWSSESReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -44,7 +44,7 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workmail_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recipients.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "recipients.*", testAccDefaultEmailAddress),
+					resource.TestCheckTypeSetElemAttr(resourceName, "recipients.*", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "scan_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tls_policy", "RequireEnvVar"),
@@ -72,7 +72,7 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccAWSSESReceiptRule_snsActionEncoding(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,7 +183,7 @@ func TestAccAWSSESReceiptRule_lambdaAction(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccAWSSESReceiptRule_stopAction(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -256,7 +256,7 @@ func TestAccAWSSESReceiptRule_order(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -289,7 +289,7 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -332,22 +332,22 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 			testAccPreCheckSESReceiptRule(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESReceiptRuleBasicConfig(rName, testAccDefaultEmailAddress),
+				Config: testAccAWSSESReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), ruleSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSSESReceiptRuleBasicConfig(rName, testAccDefaultEmailAddress),
+				Config: testAccAWSSESReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -356,7 +356,7 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 }
 
 func testAccCheckSESReceiptRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_rule" {
@@ -396,7 +396,7 @@ func testAccCheckAwsSESReceiptRuleExists(n string, rule *ses.ReceiptRule) resour
 			return fmt.Errorf("SES Receipt Rule name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		params := &ses.DescribeReceiptRuleInput{
 			RuleName:    aws.String(rs.Primary.Attributes["name"]),
@@ -426,7 +426,7 @@ func testAccAwsSesReceiptRuleImportStateIdFunc(resourceName string) resource.Imp
 }
 
 func testAccPreCheckSESReceiptRule(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	input := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String("MyRule"),
@@ -490,7 +490,7 @@ resource "aws_ses_receipt_rule" "test" {
     position    = 1
   }
 }
-`, rName, testAccDefaultEmailAddress)
+`, rName, acctest.DefaultEmailAddress)
 }
 
 func testAccAWSSESReceiptRuleSNSActionConfig(rName string) string {
@@ -516,7 +516,7 @@ resource "aws_ses_receipt_rule" "test" {
     position  = 1
   }
 }
-`, rName, testAccDefaultEmailAddress)
+`, rName, acctest.DefaultEmailAddress)
 }
 
 func testAccAWSSESReceiptRuleSNSActionEncodingConfig(rName string) string {
@@ -543,7 +543,7 @@ resource "aws_ses_receipt_rule" "test" {
     position  = 1
   }
 }
-`, rName, testAccDefaultEmailAddress)
+`, rName, acctest.DefaultEmailAddress)
 }
 
 func testAccAWSSESReceiptRuleLambdaActionConfig(rName string) string {
@@ -600,7 +600,7 @@ resource "aws_ses_receipt_rule" "test" {
 
   depends_on = [aws_lambda_permission.test]
 }
-`, rName, testAccDefaultEmailAddress)
+`, rName, acctest.DefaultEmailAddress)
 }
 
 func testAccAWSSESReceiptRuleStopActionConfig(rName string) string {
@@ -627,7 +627,7 @@ resource "aws_ses_receipt_rule" "test" {
     position  = 1
   }
 }
-`, rName, testAccDefaultEmailAddress)
+`, rName, acctest.DefaultEmailAddress)
 }
 
 func testAccAWSSESReceiptRuleOrderConfig(rName string) string {

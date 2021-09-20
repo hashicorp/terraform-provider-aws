@@ -27,7 +27,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +81,7 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -90,9 +90,9 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), cloudwatchDestinationResourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), kinesisDestinationResourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), snsDestinationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesEventDestination(), cloudwatchDestinationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesEventDestination(), kinesisDestinationResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesEventDestination(), snsDestinationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -141,7 +141,7 @@ func testAccCheckAwsSESEventDestinationExists(n string, v *ses.EventDestination)
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
 			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),

@@ -19,7 +19,7 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +70,7 @@ func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +95,7 @@ func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 }
 
 func testAccCheckAwsSESIdentityPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_identity_policy" {
@@ -137,7 +137,7 @@ func testAccCheckAwsSESIdentityPolicyExists(resourceName string) resource.TestCh
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		identityARN, policyName, err := resourceAwsSesIdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {

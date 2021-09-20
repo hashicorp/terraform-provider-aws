@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepSesReceiptRuleSets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -32,7 +32,7 @@ func testSweepSesReceiptRuleSets(region string) error {
 	// Setting the name of the receipt rule set to make active to null disables all email receiving.
 	log.Printf("[INFO] Disabling any currently active SES Receipt Rule Set")
 	_, err = conn.SetActiveReceiptRuleSet(&ses.SetActiveReceiptRuleSetInput{})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 		return nil
 	}
@@ -45,7 +45,7 @@ func testSweepSesReceiptRuleSets(region string) error {
 
 	for {
 		output, err := conn.ListReceiptRuleSets(input)
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -88,7 +88,7 @@ func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,14 +115,14 @@ func TestAccAWSSESReceiptRuleSet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleSetExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,7 +131,7 @@ func TestAccAWSSESReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckSESReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_rule_set" {
@@ -170,7 +170,7 @@ func testAccCheckAwsSESReceiptRuleSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Receipt Rule Set name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*AWSClient).sesconn
 
 		params := &ses.DescribeReceiptRuleSetInput{
 			RuleSetName: aws.String(rs.Primary.ID),
