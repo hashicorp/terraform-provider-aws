@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSfnStateMachine() *schema.Resource {
+func ResourceStateMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSfnStateMachineCreate,
-		Read:   resourceAwsSfnStateMachineRead,
-		Update: resourceAwsSfnStateMachineUpdate,
-		Delete: resourceAwsSfnStateMachineDelete,
+		Create: resourceStateMachineCreate,
+		Read:   resourceStateMachineRead,
+		Update: resourceStateMachineUpdate,
+		Delete: resourceStateMachineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -120,7 +120,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 	}
 }
 
-func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -179,10 +179,10 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.StateMachineArn))
 
-	return resourceAwsSfnStateMachineRead(d, meta)
+	return resourceStateMachineRead(d, meta)
 }
 
-func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -251,7 +251,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -312,10 +312,10 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsSfnStateMachineRead(d, meta)
+	return resourceStateMachineRead(d, meta)
 }
 
-func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{

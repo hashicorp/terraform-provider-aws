@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSfnActivity() *schema.Resource {
+func ResourceActivity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSfnActivityCreate,
-		Read:   resourceAwsSfnActivityRead,
-		Update: resourceAwsSfnActivityUpdate,
-		Delete: resourceAwsSfnActivityDelete,
+		Create: resourceActivityCreate,
+		Read:   resourceActivityRead,
+		Update: resourceActivityUpdate,
+		Delete: resourceActivityDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,7 +44,7 @@ func resourceAwsSfnActivity() *schema.Resource {
 	}
 }
 
-func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -62,10 +62,10 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(activity.ActivityArn))
 
-	return resourceAwsSfnActivityRead(d, meta)
+	return resourceActivityRead(d, meta)
 }
 
-func resourceAwsSfnActivityUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	if d.HasChange("tags_all") {
@@ -75,10 +75,10 @@ func resourceAwsSfnActivityUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsSfnActivityRead(d, meta)
+	return resourceActivityRead(d, meta)
 }
 
-func resourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -122,7 +122,7 @@ func resourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 
