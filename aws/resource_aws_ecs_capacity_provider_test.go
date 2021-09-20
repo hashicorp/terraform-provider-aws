@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/lister"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {

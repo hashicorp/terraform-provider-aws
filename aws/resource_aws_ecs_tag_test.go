@@ -58,7 +58,7 @@ func TestAccAWSEcsTag_disappears(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11951
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11951
 func TestAccAWSEcsTag_ResourceArn_BatchComputeEnvironment(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_tag.test"
