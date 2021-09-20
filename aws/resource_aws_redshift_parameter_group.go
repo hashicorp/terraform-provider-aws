@@ -107,7 +107,7 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(createOpts.ParameterGroupName))
 
 	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
-		parameters := expandRedshiftParameters(v.List())
+		parameters := expandParameters(v.List())
 
 		modifyOpts := redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
@@ -176,7 +176,7 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	d.Set("parameter", flattenRedshiftParameters(describeParametersResp.Parameters))
+	d.Set("parameter", flattenParameters(describeParametersResp.Parameters))
 	return nil
 }
 
@@ -196,7 +196,7 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []redshift.Parameter
-		parameters := expandRedshiftParameters(ns.Difference(os).List())
+		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			modifyOpts := redshift.ModifyClusterParameterGroupInput{

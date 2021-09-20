@@ -93,10 +93,10 @@ func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta int
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		SourceIds:        expandStringSet(d.Get("source_ids").(*schema.Set)),
+		SourceIds:        flex.ExpandStringSet(d.Get("source_ids").(*schema.Set)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		Severity:         aws.String(d.Get("severity").(string)),
-		EventCategories:  expandStringSet(d.Get("event_categories").(*schema.Set)),
+		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 		Tags:             tags.IgnoreAws().RedshiftTags(),
 	}
 
@@ -155,10 +155,10 @@ func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta inter
 	if err := d.Set("enabled", sub.Enabled); err != nil {
 		return err
 	}
-	if err := d.Set("source_ids", flattenStringList(sub.SourceIdsList)); err != nil {
+	if err := d.Set("source_ids", flex.FlattenStringList(sub.SourceIdsList)); err != nil {
 		return err
 	}
-	if err := d.Set("event_categories", flattenStringList(sub.EventCategoriesList)); err != nil {
+	if err := d.Set("event_categories", flex.FlattenStringList(sub.EventCategoriesList)); err != nil {
 		return err
 	}
 	if err := d.Set("customer_aws_id", sub.CustomerAwsId); err != nil {
@@ -207,10 +207,10 @@ func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta int
 		SubscriptionName: aws.String(d.Id()),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		SourceIds:        expandStringSet(d.Get("source_ids").(*schema.Set)),
+		SourceIds:        flex.ExpandStringSet(d.Get("source_ids").(*schema.Set)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		Severity:         aws.String(d.Get("severity").(string)),
-		EventCategories:  expandStringSet(d.Get("event_categories").(*schema.Set)),
+		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 	}
 
 	log.Printf("[DEBUG] Redshift Event Subscription modification request: %#v", req)
