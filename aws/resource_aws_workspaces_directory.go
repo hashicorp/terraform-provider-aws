@@ -218,7 +218,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
-		input.SubnetIds = expandStringSet(v.(*schema.Set))
+		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
@@ -284,7 +284,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", directoryID, ipGroupIds.List())
 		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(directoryID),
-			GroupIds:    expandStringSet(ipGroupIds),
+			GroupIds:    flex.ExpandStringSet(ipGroupIds),
 		})
 		if err != nil {
 			return fmt.Errorf("error asassociating WorkSpaces Directory (%s) ip groups: %w", directoryID, err)
@@ -313,7 +313,7 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("directory_id", directory.DirectoryId)
-	if err := d.Set("subnet_ids", flattenStringSet(directory.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
@@ -335,11 +335,11 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
 	}
 
-	if err := d.Set("ip_group_ids", flattenStringSet(directory.IpGroupIds)); err != nil {
+	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
 		return fmt.Errorf("error setting ip_group_ids: %w", err)
 	}
 
-	if err := d.Set("dns_ip_addresses", flattenStringSet(directory.DnsIpAddresses)); err != nil {
+	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
 		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
 	}
 
@@ -417,7 +417,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), added.GoString())
 		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
-			GroupIds:    expandStringSet(added),
+			GroupIds:    flex.ExpandStringSet(added),
 		})
 		if err != nil {
 			return fmt.Errorf("error asassociating WorkSpaces Directory (%s) IP Groups: %w", d.Id(), err)
@@ -426,7 +426,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 		log.Printf("[DEBUG] Disassociating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), removed.GoString())
 		_, err = conn.DisassociateIpGroups(&workspaces.DisassociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
-			GroupIds:    expandStringSet(removed),
+			GroupIds:    flex.ExpandStringSet(removed),
 		})
 		if err != nil {
 			return fmt.Errorf("error disasassociating WorkSpaces Directory (%s) IP Groups: %w", d.Id(), err)
