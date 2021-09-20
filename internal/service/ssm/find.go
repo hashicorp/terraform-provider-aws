@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindDocumentByName returns the Document corresponding to the specified name.
