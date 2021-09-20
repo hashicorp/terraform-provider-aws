@@ -2,7 +2,7 @@ package verify
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+
 )
 
 func TestCIDRBlocksEqual(t *testing.T) {

@@ -29,12 +29,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	organizationsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/organizations/finder"
-	stsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sts/finder"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 )
 
 const (
@@ -764,13 +764,13 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(t *testing.T) {
-	organization, err := organizationsfinder.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+	organization, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
 
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := stsfinder.FindCallerIdentity(Provider.Meta().(*conns.AWSClient).STSConn)
+	callerIdentity, err := tfsts.FindCallerIdentity(Provider.Meta().(*conns.AWSClient).STSConn)
 
 	if err != nil {
 		t.Fatalf("error getting current identity: %s", err)

@@ -13,8 +13,8 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,13 +37,13 @@ func SharedRegionalSweeperClient(region string) (interface{}, error) {
 		return client, nil
 	}
 
-	_, _, err := acctest.RequireOneOfEnvVar([]string{acctest.EnvVarProfile, acctest.EnvVarAccessKeyId, acctest.EnvVarContainerCredentialsFullUri}, "credentials for running sweepers")
+	_, _, err := RequireOneOfEnvVar([]string{EnvVarProfile, EnvVarAccessKeyId, EnvVarContainerCredentialsFullUri}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv(acctest.EnvVarAccessKeyId) != "" {
-		_, err := acctest.RequireEnvVar(acctest.EnvVarSecretAccessKey, "static credentials value when using "+acctest.EnvVarAccessKeyId)
+	if os.Getenv(EnvVarAccessKeyId) != "" {
+		_, err := RequireEnvVar(EnvVarSecretAccessKey, "static credentials value when using "+EnvVarAccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -54,23 +54,23 @@ func SharedRegionalSweeperClient(region string) (interface{}, error) {
 		Region:     region,
 	}
 
-	if role := os.Getenv(acctest.EnvVarAssumeRoleARN); role != "" {
+	if role := os.Getenv(EnvVarAssumeRoleARN); role != "" {
 		conf.AssumeRoleARN = role
 
 		conf.AssumeRoleDurationSeconds = defaultSweeperAssumeRoleDurationSeconds
-		if v := os.Getenv(acctest.EnvVarAssumeRoleDuration); v != "" {
+		if v := os.Getenv(EnvVarAssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, fmt.Errorf("environment variable %s: %w", acctest.EnvVarAssumeRoleDuration, err)
+				return nil, fmt.Errorf("environment variable %s: %w", EnvVarAssumeRoleDuration, err)
 			}
 			conf.AssumeRoleDurationSeconds = d
 		}
 
-		if v := os.Getenv(acctest.EnvVarAssumeRoleExternalID); v != "" {
+		if v := os.Getenv(EnvVarAssumeRoleExternalID); v != "" {
 			conf.AssumeRoleExternalID = v
 		}
 
-		if v := os.Getenv(acctest.EnvVarAssumeRoleSessionName); v != "" {
+		if v := os.Getenv(EnvVarAssumeRoleSessionName); v != "" {
 			conf.AssumeRoleSessionName = v
 		}
 	}
@@ -112,7 +112,7 @@ func SweepOrchestratorContext(ctx context.Context, sweepResources []*SweepResour
 
 		g.Go(func() error {
 			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
-				err := acctest.DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err := DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
 					if strings.Contains(err.Error(), "Throttling") {
@@ -127,7 +127,7 @@ func SweepOrchestratorContext(ctx context.Context, sweepResources []*SweepResour
 			})
 
 			if tfresource.TimedOut(err) {
-				err = acctest.DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err = DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 			}
 
 			return err
