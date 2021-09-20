@@ -78,7 +78,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.VpcLinkId))
 
-	if _, err := waiter.VpcLinkAvailable(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitVPCLinkAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) availability: %s", d.Id(), err)
 	}
 
@@ -90,7 +90,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, _, err := waiter.VpcLinkStatus(conn, d.Id())()
+	outputRaw, _, err := waiter.StatusVPCLink(conn, d.Id())()
 	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 VPC Link (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -170,7 +170,7 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	_, err = waiter.VpcLinkDeleted(conn, d.Id())
+	_, err = waiter.WaitVPCLinkDeleted(conn, d.Id())
 	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}

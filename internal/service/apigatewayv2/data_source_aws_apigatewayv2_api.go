@@ -112,7 +112,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	apiID := d.Get("api_id").(string)
 
-	api, err := finder.ApiByID(conn, apiID)
+	api, err := finder.FindAPIByID(conn, apiID)
 
 	if tfresource.NotFound(err) {
 		return fmt.Errorf("no API Gateway v2 API matched; change the search criteria and try again")

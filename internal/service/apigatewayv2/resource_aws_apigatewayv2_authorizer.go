@@ -100,7 +100,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
 
-	apiOutput, err := finder.ApiByID(conn, apiId)
+	apiOutput, err := finder.FindAPIByID(conn, apiId)
 
 	if err != nil {
 		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)

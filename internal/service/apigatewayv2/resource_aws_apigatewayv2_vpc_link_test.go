@@ -61,7 +61,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 				continue
 			}
 
-			_, err = waiter.VpcLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
+			_, err = waiter.WaitVPCLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
 			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
@@ -223,7 +223,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutp
 			return err
 		}
 
-		_, err := waiter.VpcLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
+		_, err := waiter.WaitVPCLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
 		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			return nil
 		}

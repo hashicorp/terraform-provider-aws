@@ -374,7 +374,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DomainNameByName(conn, rs.Primary.ID)
+		_, err := finder.FindDomainNameByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -403,7 +403,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
-		output, err := finder.DomainNameByName(conn, rs.Primary.ID)
+		output, err := finder.FindDomainNameByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

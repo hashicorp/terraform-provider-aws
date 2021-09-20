@@ -135,7 +135,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.DomainName))
 
-	if _, err := waiter.DomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -147,7 +147,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.DomainNameByName(conn, d.Id())
+	output, err := finder.FindDomainNameByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 domain name (%s) not found, removing from state", d.Id())
@@ -222,7 +222,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating API Gateway v2 domain name (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.DomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
 		}
 	}

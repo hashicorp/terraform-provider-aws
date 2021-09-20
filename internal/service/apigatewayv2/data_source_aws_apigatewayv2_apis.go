@@ -43,7 +43,7 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 
 	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
-	apis, err := finder.Apis(conn, &apigatewayv2.GetApisInput{})
+	apis, err := finder.FindAPIs(conn, &apigatewayv2.GetApisInput{})
 
 	if err != nil {
 		return fmt.Errorf("error reading API Gateway v2 APIs: %w", err)

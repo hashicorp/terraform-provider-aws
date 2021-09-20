@@ -9,19 +9,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ApiByID returns the API corresponding to the specified ID.
+// FindAPIByID returns the API corresponding to the specified ID.
 // Returns NotFoundError if no API is found.
-func ApiByID(conn *apigatewayv2.ApiGatewayV2, apiID string) (*apigatewayv2.GetApiOutput, error) {
+func FindAPIByID(conn *apigatewayv2.ApiGatewayV2, apiID string) (*apigatewayv2.GetApiOutput, error) {
 	input := &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiID),
 	}
 
-	return Api(conn, input)
+	return FindAPI(conn, input)
 }
 
-// Api returns the API corresponding to the specified input.
+// FindAPI returns the API corresponding to the specified input.
 // Returns NotFoundError if no API is found.
-func Api(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
+func FindAPI(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
 	output, err := conn.GetApi(input)
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
@@ -46,12 +46,12 @@ func Api(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (*api
 	return output, nil
 }
 
-// Apis returns the APIs corresponding to the specified input.
+// FindAPIs returns the APIs corresponding to the specified input.
 // Returns an empty slice if no APIs are found.
-func Apis(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
+func FindAPIs(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
 	var apis []*apigatewayv2.Api
 
-	err := lister.GetApisPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+	err := lister.GetAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -74,15 +74,15 @@ func Apis(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]
 	return apis, nil
 }
 
-func DomainNameByName(conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
+func FindDomainNameByName(conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
 	input := &apigatewayv2.GetDomainNameInput{
 		DomainName: aws.String(name),
 	}
 
-	return DomainName(conn, input)
+	return FindDomainName(conn, input)
 }
 
-func DomainName(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNameInput) (*apigatewayv2.GetDomainNameOutput, error) {
+func FindDomainName(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNameInput) (*apigatewayv2.GetDomainNameOutput, error) {
 	output, err := conn.GetDomainName(input)
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
