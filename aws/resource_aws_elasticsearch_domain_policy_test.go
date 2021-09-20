@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
@@ -56,8 +57,8 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
-						awsClient := acctest.Provider.Meta().(*AWSClient)
-						expectedArn, err := buildESDomainArn(name, awsClient.partition, awsClient.accountid, awsClient.region)
+						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+						expectedArn, err := buildESDomainArn(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
 						if err != nil {
 							return err
 						}

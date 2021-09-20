@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*AWSClient).esconn
+				conn := meta.(*conns.AWSClient).ElasticSearchConn
 				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -448,8 +449,8 @@ func resourceAwsElasticSearchDomainImport(
 }
 
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// The API doesn't check for duplicate names
@@ -672,9 +673,9 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 }
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -814,7 +815,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -980,7 +981,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
 	domainName := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting ElasticSearch domain: %q", domainName)

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsElasticSearchDomain() *schema.Resource {
@@ -276,14 +277,14 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 }
 
 func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
-	esconn := meta.(*AWSClient).esconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &elasticsearchservice.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
-	resp, err := esconn.DescribeElasticsearchDomain(req)
+	resp, err := conn.DescribeElasticsearchDomain(req)
 	if err != nil {
 		return fmt.Errorf("error querying elasticsearch_domain: %w", err)
 	}
@@ -385,7 +386,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 
 	d.Set("processing", ds.Processing)
 
-	tags, err := keyvaluetags.ElasticsearchserviceListTags(esconn, d.Id())
+	tags, err := keyvaluetags.ElasticsearchserviceListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)
