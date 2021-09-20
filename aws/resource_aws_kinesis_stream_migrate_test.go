@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testResourceAwsKinesisStreamStateDataV0() map[string]interface{} {

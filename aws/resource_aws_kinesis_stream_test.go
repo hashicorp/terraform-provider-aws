@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -70,12 +71,12 @@ func testSweepKinesisStreams(region string) error {
 func TestAccAWSKinesisStream_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -100,12 +101,12 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d-0", rInt) // We can get away with just import testing one of them
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -146,11 +147,11 @@ func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 }
 
 func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -164,13 +165,13 @@ func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
 
 func TestAccAWSKinesisStream_encryption(t *testing.T) {
 	var stream kinesis.StreamDescription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -222,13 +223,13 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 		}
 	}
 
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -265,12 +266,12 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -316,12 +317,12 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -367,12 +368,12 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -397,12 +398,12 @@ func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 
 func TestAccAWSKinesisStream_Tags(t *testing.T) {
 	var stream kinesis.StreamDescription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
@@ -551,12 +552,12 @@ func testAccCheckKinesisStreamTags(n string, tagCount int) resource.TestCheckFun
 
 func TestAccAWSKinesisStream_UpdateKmsKeyId(t *testing.T) {
 	var stream kinesis.StreamDescription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
