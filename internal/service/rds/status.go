@@ -1,4 +1,4 @@
-package waiter
+package rds
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
