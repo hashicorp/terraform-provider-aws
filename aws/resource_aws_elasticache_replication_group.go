@@ -751,7 +751,7 @@ func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, glob
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DisassociateGlobalReplicationGroup(input)
 	}
 	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "is not associated with Global Replication Group") {
@@ -785,12 +785,12 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteReplicationGroup(input)
-		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 			return nil
 		}
 		// Cache Cluster is creating/deleting or Replication Group is snapshotting
 		// InvalidReplicationGroupState: Cache cluster tf-acc-test-uqhe-003 is not in a valid state to be deleted
-		if isAWSErr(err, elasticache.ErrCodeInvalidReplicationGroupStateFault, "") {
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidReplicationGroupStateFault, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -798,11 +798,11 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteReplicationGroup(input)
 	}
 
-	if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 		return nil
 	}
 	if err != nil {

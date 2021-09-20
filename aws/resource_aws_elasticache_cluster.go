@@ -653,7 +653,7 @@ func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := deleteElasticacheCacheCluster(conn, d.Id(), finalSnapshotID)
 	if err != nil {
-		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", d.Id(), err)
@@ -707,7 +707,7 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCacheCluster(input)
 	}
 
