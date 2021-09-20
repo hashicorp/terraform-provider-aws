@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func TestAwsCloudFrontDistributionMigrateState(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAwsCloudFrontDistributionMigrateState(t *testing.T) {
 			Attributes: testCase.Attributes,
 		}
 
-		tfResource := ResourceDistribution()
+		tfResource := tfcloudfront.ResourceDistribution()
 
 		if tfResource.MigrateState == nil {
 			t.Fatalf("bad: %s, err: missing MigrateState function in resource", testName)

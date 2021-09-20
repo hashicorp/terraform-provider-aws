@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
@@ -88,7 +89,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceOriginAccessIdentity(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginAccessIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -51,7 +51,7 @@ func testSweepCloudFrontRealtimeLogConfigs(region string) error {
 			id := aws.StringValue(config.ARN)
 
 			log.Printf("[INFO] Deleting CloudFront Real-time Log Config: %s", id)
-			r := ResourceRealtimeLogConfig()
+			r := tfcloudfront.ResourceRealtimeLogConfig()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -128,7 +128,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRealtimeLogConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

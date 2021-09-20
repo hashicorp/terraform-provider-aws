@@ -45,7 +45,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      aliasesHash,
+				Set:      AliasesHash,
 			},
 			"ordered_cache_behavior": {
 				Type:     schema.TypeList,
@@ -149,7 +149,7 @@ func ResourceDistribution() *schema.Resource {
 									},
 								},
 							},
-							Set: lambdaFunctionAssociationHash,
+							Set: LambdaFunctionAssociationHash,
 						},
 						"function_association": {
 							Type:     schema.TypeSet,
@@ -223,7 +223,7 @@ func ResourceDistribution() *schema.Resource {
 			"custom_error_response": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      customErrorResponseHash,
+				Set:      CustomErrorResponseHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"error_caching_min_ttl": {
@@ -349,7 +349,7 @@ func ResourceDistribution() *schema.Resource {
 									},
 								},
 							},
-							Set: lambdaFunctionAssociationHash,
+							Set: LambdaFunctionAssociationHash,
 						},
 						"function_association": {
 							Type:     schema.TypeSet,
@@ -454,7 +454,7 @@ func ResourceDistribution() *schema.Resource {
 			"origin_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      originGroupHash,
+				Set:      OriginGroupHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"origin_id": {
@@ -496,7 +496,7 @@ func ResourceDistribution() *schema.Resource {
 			"origin": {
 				Type:     schema.TypeSet,
 				Required: true,
-				Set:      originHash,
+				Set:      OriginHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_attempts": {
@@ -555,7 +555,7 @@ func ResourceDistribution() *schema.Resource {
 						"custom_header": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      originCustomHeaderHash,
+							Set:      OriginCustomHeaderHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -844,7 +844,7 @@ func resourceDistributionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.Get("wait_for_deployment").(bool) {
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+		if err := DistributionWaitUntilDeployed(d.Id(), meta); err != nil {
 			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
 		}
 	}
@@ -946,7 +946,7 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.Get("wait_for_deployment").(bool) {
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+		if err := DistributionWaitUntilDeployed(d.Id(), meta); err != nil {
 			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
 		}
 	}
@@ -1075,7 +1075,7 @@ func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+		if err := DistributionWaitUntilDeployed(d.Id(), meta); err != nil {
 			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
 		}
 
@@ -1130,7 +1130,7 @@ func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error 
 // resourceAwsCloudFrontWebDistributionWaitUntilDeployed blocks until the
 // distribution is deployed. It currently takes exactly 15 minutes to deploy
 // but that might change in the future.
-func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interface{}) error {
+func DistributionWaitUntilDeployed(id string, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},

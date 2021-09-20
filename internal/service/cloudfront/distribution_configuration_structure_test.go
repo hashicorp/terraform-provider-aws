@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func defaultCacheBehaviorConf() map[string]interface{} {
@@ -50,7 +51,7 @@ func lambdaFunctionAssociationsConf() *schema.Set {
 		},
 	}
 
-	return schema.NewSet(lambdaFunctionAssociationHash, x)
+	return schema.NewSet(tfcloudfront.LambdaFunctionAssociationHash, x)
 }
 
 func functionAssociationsConf() *schema.Set {
@@ -65,7 +66,7 @@ func functionAssociationsConf() *schema.Set {
 		},
 	}
 
-	return schema.NewSet(functionAssociationHash, x)
+	return schema.NewSet(tfcloudfront.FunctionAssociationHash, x)
 }
 
 func forwardedValuesConf() map[string]interface{} {
@@ -105,7 +106,7 @@ func cachedMethodsConf() *schema.Set {
 }
 
 func originCustomHeadersConf() *schema.Set {
-	return schema.NewSet(originCustomHeaderHash, []interface{}{originCustomHeaderConf1(), originCustomHeaderConf2()})
+	return schema.NewSet(tfcloudfront.OriginCustomHeaderHash, []interface{}{originCustomHeaderConf1(), originCustomHeaderConf2()})
 }
 
 func originCustomHeaderConf1() map[string]interface{} {
@@ -171,7 +172,7 @@ func originWithS3Conf() map[string]interface{} {
 }
 
 func multiOriginConf() *schema.Set {
-	return schema.NewSet(originHash, []interface{}{originWithCustomConf(), originWithS3Conf()})
+	return schema.NewSet(tfcloudfront.OriginHash, []interface{}{originWithCustomConf(), originWithS3Conf()})
 }
 
 func originGroupMembers() []interface{} {
@@ -197,7 +198,7 @@ func originGroupConf() map[string]interface{} {
 }
 
 func originGroupsConf() *schema.Set {
-	return schema.NewSet(originGroupHash, []interface{}{originGroupConf()})
+	return schema.NewSet(tfcloudfront.OriginGroupHash, []interface{}{originGroupConf()})
 }
 
 func geoRestrictionWhitelistConf() map[string]interface{} {
@@ -237,7 +238,7 @@ func customErrorResponsesConf() []interface{} {
 }
 
 func aliasesConf() *schema.Set {
-	return schema.NewSet(aliasesHash, []interface{}{"example.com", "www.example.com"})
+	return schema.NewSet(tfcloudfront.AliasesHash, []interface{}{"example.com", "www.example.com"})
 }
 
 func loggingConfigConf() map[string]interface{} {
@@ -249,7 +250,7 @@ func loggingConfigConf() map[string]interface{} {
 }
 
 func customErrorResponsesConfSet() *schema.Set {
-	return schema.NewSet(customErrorResponseHash, customErrorResponsesConf())
+	return schema.NewSet(tfcloudfront.CustomErrorResponseHash, customErrorResponsesConf())
 }
 
 func customErrorResponsesConfFirst() map[string]interface{} {
@@ -295,7 +296,7 @@ func viewerCertificateConfSetACM() map[string]interface{} {
 
 func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) {
 	data := defaultCacheBehaviorConf()
-	dcb := expandCloudFrontDefaultCacheBehavior(data)
+	dcb := tfcloudfront.ExpandDefaultCacheBehavior(data)
 	if dcb == nil {
 		t.Fatalf("ExpandDefaultCacheBehavior returned nil")
 	}
@@ -342,7 +343,7 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 
 func TestCloudFrontStructure_expandTrustedSigners(t *testing.T) {
 	data := trustedSignersConf()
-	ts := expandTrustedSigners(data)
+	ts := tfcloudfront.ExpandTrustedSigners(data)
 	if *ts.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *ts.Quantity)
 	}
@@ -356,8 +357,8 @@ func TestCloudFrontStructure_expandTrustedSigners(t *testing.T) {
 
 func TestCloudFrontStructure_flattenTrustedSigners(t *testing.T) {
 	in := trustedSignersConf()
-	ts := expandTrustedSigners(in)
-	out := flattenTrustedSigners(ts)
+	ts := tfcloudfront.ExpandTrustedSigners(in)
+	out := tfcloudfront.FlattenTrustedSigners(ts)
 
 	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -366,7 +367,7 @@ func TestCloudFrontStructure_flattenTrustedSigners(t *testing.T) {
 
 func TestCloudFrontStructure_expandTrustedSigners_empty(t *testing.T) {
 	data := []interface{}{}
-	ts := expandTrustedSigners(data)
+	ts := tfcloudfront.ExpandTrustedSigners(data)
 	if *ts.Quantity != 0 {
 		t.Fatalf("Expected Quantity to be 0, got %v", *ts.Quantity)
 	}
@@ -380,7 +381,7 @@ func TestCloudFrontStructure_expandTrustedSigners_empty(t *testing.T) {
 
 func TestCloudFrontStructure_expandLambdaFunctionAssociations(t *testing.T) {
 	data := lambdaFunctionAssociationsConf()
-	lfa := expandLambdaFunctionAssociations(data.List())
+	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(data.List())
 	if *lfa.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *lfa.Quantity)
 	}
@@ -397,8 +398,8 @@ func TestCloudFrontStructure_expandLambdaFunctionAssociations(t *testing.T) {
 
 func TestCloudFrontStructure_flattenlambdaFunctionAssociations(t *testing.T) {
 	in := lambdaFunctionAssociationsConf()
-	lfa := expandLambdaFunctionAssociations(in.List())
-	out := flattenLambdaFunctionAssociations(lfa)
+	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(in.List())
+	out := tfcloudfront.FlattenLambdaFunctionAssociations(lfa)
 
 	if !reflect.DeepEqual(in.List(), out.List()) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -407,7 +408,7 @@ func TestCloudFrontStructure_flattenlambdaFunctionAssociations(t *testing.T) {
 
 func TestCloudFrontStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
 	data := new(schema.Set)
-	lfa := expandLambdaFunctionAssociations(data.List())
+	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(data.List())
 	if *lfa.Quantity != 0 {
 		t.Fatalf("Expected Quantity to be 0, got %v", *lfa.Quantity)
 	}
@@ -421,7 +422,7 @@ func TestCloudFrontStructure_expandlambdaFunctionAssociations_empty(t *testing.T
 
 func TestCloudFrontStructure_expandFunctionAssociations(t *testing.T) {
 	data := functionAssociationsConf()
-	lfa := expandFunctionAssociations(data.List())
+	lfa := tfcloudfront.ExpandFunctionAssociations(data.List())
 	if *lfa.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *lfa.Quantity)
 	}
@@ -438,8 +439,8 @@ func TestCloudFrontStructure_expandFunctionAssociations(t *testing.T) {
 
 func TestCloudFrontStructure_flattenFunctionAssociations(t *testing.T) {
 	in := functionAssociationsConf()
-	lfa := expandFunctionAssociations(in.List())
-	out := flattenFunctionAssociations(lfa)
+	lfa := tfcloudfront.ExpandFunctionAssociations(in.List())
+	out := tfcloudfront.FlattenFunctionAssociations(lfa)
 
 	if !reflect.DeepEqual(in.List(), out.List()) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -448,7 +449,7 @@ func TestCloudFrontStructure_flattenFunctionAssociations(t *testing.T) {
 
 func TestCloudFrontStructure_expandFunctionAssociations_empty(t *testing.T) {
 	data := new(schema.Set)
-	lfa := expandFunctionAssociations(data.List())
+	lfa := tfcloudfront.ExpandFunctionAssociations(data.List())
 	if *lfa.Quantity != 0 {
 		t.Fatalf("Expected Quantity to be 0, got %v", *lfa.Quantity)
 	}
@@ -462,7 +463,7 @@ func TestCloudFrontStructure_expandFunctionAssociations_empty(t *testing.T) {
 
 func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
 	data := forwardedValuesConf()
-	fv := expandForwardedValues(data)
+	fv := tfcloudfront.ExpandForwardedValues(data)
 	if !*fv.QueryString {
 		t.Fatalf("Expected QueryString to be true, got %v", *fv.QueryString)
 	}
@@ -476,8 +477,8 @@ func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
 
 func TestCloudFrontStructure_flattenForwardedValues(t *testing.T) {
 	in := forwardedValuesConf()
-	fv := expandForwardedValues(in)
-	out := flattenForwardedValues(fv)
+	fv := tfcloudfront.ExpandForwardedValues(in)
+	out := tfcloudfront.FlattenForwardedValues(fv)
 
 	if !out["query_string"].(bool) {
 		t.Fatalf("Expected out[query_string] to be true, got %v", out["query_string"])
@@ -486,7 +487,7 @@ func TestCloudFrontStructure_flattenForwardedValues(t *testing.T) {
 
 func TestCloudFrontStructure_expandHeaders(t *testing.T) {
 	data := headersConf()
-	h := expandHeaders(data.List())
+	h := tfcloudfront.ExpandHeaders(data.List())
 	if *h.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *h.Quantity)
 	}
@@ -497,8 +498,8 @@ func TestCloudFrontStructure_expandHeaders(t *testing.T) {
 
 func TestCloudFrontStructure_flattenHeaders(t *testing.T) {
 	in := headersConf()
-	h := expandHeaders(in.List())
-	out := schema.NewSet(schema.HashString, flattenHeaders(h))
+	h := tfcloudfront.ExpandHeaders(in.List())
+	out := schema.NewSet(schema.HashString, tfcloudfront.FlattenHeaders(h))
 
 	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -507,7 +508,7 @@ func TestCloudFrontStructure_flattenHeaders(t *testing.T) {
 
 func TestCloudFrontStructure_expandQueryStringCacheKeys(t *testing.T) {
 	data := queryStringCacheKeysConf()
-	k := expandQueryStringCacheKeys(data)
+	k := tfcloudfront.ExpandQueryStringCacheKeys(data)
 	if *k.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *k.Quantity)
 	}
@@ -518,8 +519,8 @@ func TestCloudFrontStructure_expandQueryStringCacheKeys(t *testing.T) {
 
 func TestCloudFrontStructure_flattenQueryStringCacheKeys(t *testing.T) {
 	in := queryStringCacheKeysConf()
-	k := expandQueryStringCacheKeys(in)
-	out := flattenQueryStringCacheKeys(k)
+	k := tfcloudfront.ExpandQueryStringCacheKeys(in)
+	out := tfcloudfront.FlattenQueryStringCacheKeys(k)
 
 	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -528,7 +529,7 @@ func TestCloudFrontStructure_flattenQueryStringCacheKeys(t *testing.T) {
 
 func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
 	data := cookiePreferenceConf()
-	cp := expandCookiePreference(data)
+	cp := tfcloudfront.ExpandCookiePreference(data)
 	if *cp.Forward != "whitelist" {
 		t.Fatalf("Expected Forward to be whitelist, got %v", *cp.Forward)
 	}
@@ -539,8 +540,8 @@ func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCookiePreference(t *testing.T) {
 	in := cookiePreferenceConf()
-	cp := expandCookiePreference(in)
-	out := flattenCookiePreference(cp)
+	cp := tfcloudfront.ExpandCookiePreference(in)
+	out := tfcloudfront.FlattenCookiePreference(cp)
 
 	if e, a := in["forward"], out["forward"]; e != a {
 		t.Fatalf("Expected forward to be %v, got %v", e, a)
@@ -549,7 +550,7 @@ func TestCloudFrontStructure_flattenCookiePreference(t *testing.T) {
 
 func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
 	data := cookieNamesConf()
-	cn := expandCookieNames(data.List())
+	cn := tfcloudfront.ExpandCookieNames(data.List())
 	if *cn.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *cn.Quantity)
 	}
@@ -560,8 +561,8 @@ func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
 	in := cookieNamesConf()
-	cn := expandCookieNames(in.List())
-	out := schema.NewSet(schema.HashString, flattenCookieNames(cn))
+	cn := tfcloudfront.ExpandCookieNames(in.List())
+	out := schema.NewSet(schema.HashString, tfcloudfront.FlattenCookieNames(cn))
 
 	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -570,7 +571,7 @@ func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
 
 func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 	data := allowedMethodsConf()
-	am := expandAllowedMethods(data)
+	am := tfcloudfront.ExpandAllowedMethods(data)
 	if *am.Quantity != 7 {
 		t.Fatalf("Expected Quantity to be 7, got %v", *am.Quantity)
 	}
@@ -581,8 +582,8 @@ func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
 	in := allowedMethodsConf()
-	am := expandAllowedMethods(in)
-	out := flattenAllowedMethods(am)
+	am := tfcloudfront.ExpandAllowedMethods(in)
+	out := tfcloudfront.FlattenAllowedMethods(am)
 
 	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -591,7 +592,7 @@ func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 	data := cachedMethodsConf()
-	cm := expandCachedMethods(data)
+	cm := tfcloudfront.ExpandCachedMethods(data)
 	if *cm.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *cm.Quantity)
 	}
@@ -602,8 +603,8 @@ func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCachedMethods(t *testing.T) {
 	in := cachedMethodsConf()
-	cm := expandCachedMethods(in)
-	out := flattenCachedMethods(cm)
+	cm := tfcloudfront.ExpandCachedMethods(in)
+	out := tfcloudfront.FlattenCachedMethods(cm)
 
 	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -612,7 +613,7 @@ func TestCloudFrontStructure_flattenCachedMethods(t *testing.T) {
 
 func TestCloudFrontStructure_expandOrigins(t *testing.T) {
 	data := multiOriginConf()
-	origins := expandOrigins(data)
+	origins := tfcloudfront.ExpandOrigins(data)
 	if *origins.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *origins.Quantity)
 	}
@@ -623,8 +624,8 @@ func TestCloudFrontStructure_expandOrigins(t *testing.T) {
 
 func TestCloudFrontStructure_flattenOrigins(t *testing.T) {
 	in := multiOriginConf()
-	origins := expandOrigins(in)
-	out := flattenOrigins(origins)
+	origins := tfcloudfront.ExpandOrigins(in)
+	out := tfcloudfront.FlattenOrigins(origins)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
@@ -634,7 +635,7 @@ func TestCloudFrontStructure_flattenOrigins(t *testing.T) {
 
 func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
 	in := originGroupsConf()
-	groups := expandOriginGroups(in)
+	groups := tfcloudfront.ExpandOriginGroups(in)
 
 	if *groups.Quantity != 1 {
 		t.Fatalf("Expected origin group quantity to be %v, got %v", 1, *groups.Quantity)
@@ -670,8 +671,8 @@ func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
 
 func TestCloudFrontStructure_flattenOriginGroups(t *testing.T) {
 	in := originGroupsConf()
-	groups := expandOriginGroups(in)
-	out := flattenOriginGroups(groups)
+	groups := tfcloudfront.ExpandOriginGroups(in)
+	out := tfcloudfront.FlattenOriginGroups(groups)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
@@ -681,7 +682,7 @@ func TestCloudFrontStructure_flattenOriginGroups(t *testing.T) {
 
 func TestCloudFrontStructure_expandOrigin(t *testing.T) {
 	data := originWithCustomConf()
-	or := expandOrigin(data)
+	or := tfcloudfront.ExpandOrigin(data)
 	if *or.Id != "CustomOrigin" {
 		t.Fatalf("Expected Id to be CustomOrigin, got %v", *or.Id)
 	}
@@ -701,8 +702,8 @@ func TestCloudFrontStructure_expandOrigin(t *testing.T) {
 
 func TestCloudFrontStructure_flattenOrigin(t *testing.T) {
 	in := originWithCustomConf()
-	or := expandOrigin(in)
-	out := flattenOrigin(or)
+	or := tfcloudfront.ExpandOrigin(in)
+	out := tfcloudfront.FlattenOrigin(or)
 
 	if out["origin_id"] != "CustomOrigin" {
 		t.Fatalf("Expected out[origin_id] to be CustomOrigin, got %v", out["origin_id"])
@@ -717,7 +718,7 @@ func TestCloudFrontStructure_flattenOrigin(t *testing.T) {
 
 func TestCloudFrontStructure_expandCustomHeaders(t *testing.T) {
 	in := originCustomHeadersConf()
-	chs := expandCustomHeaders(in)
+	chs := tfcloudfront.ExpandCustomHeaders(in)
 	if *chs.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *chs.Quantity)
 	}
@@ -728,8 +729,8 @@ func TestCloudFrontStructure_expandCustomHeaders(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCustomHeaders(t *testing.T) {
 	in := originCustomHeadersConf()
-	chs := expandCustomHeaders(in)
-	out := flattenCustomHeaders(chs)
+	chs := tfcloudfront.ExpandCustomHeaders(in)
+	out := tfcloudfront.FlattenCustomHeaders(chs)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
@@ -739,8 +740,8 @@ func TestCloudFrontStructure_flattenCustomHeaders(t *testing.T) {
 
 func TestCloudFrontStructure_flattenOriginCustomHeader(t *testing.T) {
 	in := originCustomHeaderConf1()
-	och := expandOriginCustomHeader(in)
-	out := flattenOriginCustomHeader(och)
+	och := tfcloudfront.ExpandOriginCustomHeader(in)
+	out := tfcloudfront.FlattenOriginCustomHeader(och)
 
 	if out["name"] != "X-Custom-Header1" {
 		t.Fatalf("Expected out[name] to be X-Custom-Header1, got %v", out["name"])
@@ -752,7 +753,7 @@ func TestCloudFrontStructure_flattenOriginCustomHeader(t *testing.T) {
 
 func TestCloudFrontStructure_expandOriginCustomHeader(t *testing.T) {
 	in := originCustomHeaderConf1()
-	och := expandOriginCustomHeader(in)
+	och := tfcloudfront.ExpandOriginCustomHeader(in)
 
 	if *och.HeaderName != "X-Custom-Header1" {
 		t.Fatalf("Expected HeaderName to be X-Custom-Header1, got %v", *och.HeaderName)
@@ -764,7 +765,7 @@ func TestCloudFrontStructure_expandOriginCustomHeader(t *testing.T) {
 
 func TestCloudFrontStructure_expandCustomOriginConfig(t *testing.T) {
 	data := customOriginConf()
-	co := expandCustomOriginConfig(data)
+	co := tfcloudfront.ExpandCustomOriginConfig(data)
 	if *co.OriginProtocolPolicy != "http-only" {
 		t.Fatalf("Expected OriginProtocolPolicy to be http-only, got %v", *co.OriginProtocolPolicy)
 	}
@@ -784,8 +785,8 @@ func TestCloudFrontStructure_expandCustomOriginConfig(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCustomOriginConfig(t *testing.T) {
 	in := customOriginConf()
-	co := expandCustomOriginConfig(in)
-	out := flattenCustomOriginConfig(co)
+	co := tfcloudfront.ExpandCustomOriginConfig(in)
+	out := tfcloudfront.FlattenCustomOriginConfig(co)
 
 	if e, a := in["http_port"], out["http_port"]; e != a {
 		t.Fatalf("Expected http_port to be %v, got %v", e, a)
@@ -809,7 +810,7 @@ func TestCloudFrontStructure_flattenCustomOriginConfig(t *testing.T) {
 
 func TestCloudFrontStructure_expandCustomOriginConfigSSL(t *testing.T) {
 	in := customOriginSslProtocolsConf()
-	ocs := expandCustomOriginConfigSSL(in.List())
+	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	if *ocs.Quantity != 4 {
 		t.Fatalf("Expected Quantity to be 4, got %v", *ocs.Quantity)
 	}
@@ -817,8 +818,8 @@ func TestCloudFrontStructure_expandCustomOriginConfigSSL(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
 	in := customOriginSslProtocolsConf()
-	ocs := expandCustomOriginConfigSSL(in.List())
-	out := flattenCustomOriginConfigSSL(ocs)
+	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
+	out := tfcloudfront.FlattenCustomOriginConfigSSL(ocs)
 
 	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -827,7 +828,7 @@ func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
 
 func TestCloudFrontStructure_expandOriginShield(t *testing.T) {
 	data := originShield()
-	o := expandOriginShield(data)
+	o := tfcloudfront.ExpandOriginShield(data)
 	if *o.Enabled != true {
 		t.Fatalf("Expected Enabled to be true, got %v", *o.Enabled)
 	}
@@ -838,8 +839,8 @@ func TestCloudFrontStructure_expandOriginShield(t *testing.T) {
 
 func TestCloudFrontStructure_flattenOriginShield(t *testing.T) {
 	in := originShield()
-	o := expandOriginShield(in)
-	out := flattenOriginShield(o)
+	o := tfcloudfront.ExpandOriginShield(in)
+	out := tfcloudfront.FlattenOriginShield(o)
 
 	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -848,7 +849,7 @@ func TestCloudFrontStructure_flattenOriginShield(t *testing.T) {
 
 func TestCloudFrontStructure_expandS3OriginConfig(t *testing.T) {
 	data := s3OriginConf()
-	s3o := expandS3OriginConfig(data)
+	s3o := tfcloudfront.ExpandS3OriginConfig(data)
 	if *s3o.OriginAccessIdentity != "origin-access-identity/cloudfront/E127EXAMPLE51Z" {
 		t.Fatalf("Expected OriginAccessIdentity to be origin-access-identity/cloudfront/E127EXAMPLE51Z, got %v", *s3o.OriginAccessIdentity)
 	}
@@ -856,8 +857,8 @@ func TestCloudFrontStructure_expandS3OriginConfig(t *testing.T) {
 
 func TestCloudFrontStructure_flattenS3OriginConfig(t *testing.T) {
 	in := s3OriginConf()
-	s3o := expandS3OriginConfig(in)
-	out := flattenS3OriginConfig(s3o)
+	s3o := tfcloudfront.ExpandS3OriginConfig(in)
+	out := tfcloudfront.FlattenS3OriginConfig(s3o)
 
 	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -866,7 +867,7 @@ func TestCloudFrontStructure_flattenS3OriginConfig(t *testing.T) {
 
 func TestCloudFrontStructure_expandCustomErrorResponses(t *testing.T) {
 	data := customErrorResponsesConfSet()
-	ers := expandCustomErrorResponses(data)
+	ers := tfcloudfront.ExpandCustomErrorResponses(data)
 	if *ers.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *ers.Quantity)
 	}
@@ -877,8 +878,8 @@ func TestCloudFrontStructure_expandCustomErrorResponses(t *testing.T) {
 
 func TestCloudFrontStructure_flattenCustomErrorResponses(t *testing.T) {
 	in := customErrorResponsesConfSet()
-	ers := expandCustomErrorResponses(in)
-	out := flattenCustomErrorResponses(ers)
+	ers := tfcloudfront.ExpandCustomErrorResponses(in)
+	out := tfcloudfront.FlattenCustomErrorResponses(ers)
 
 	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -887,7 +888,7 @@ func TestCloudFrontStructure_flattenCustomErrorResponses(t *testing.T) {
 
 func TestCloudFrontStructure_expandCustomErrorResponse(t *testing.T) {
 	data := customErrorResponsesConfFirst()
-	er := expandCustomErrorResponse(data)
+	er := tfcloudfront.ExpandCustomErrorResponse(data)
 	if *er.ErrorCode != 404 {
 		t.Fatalf("Expected ErrorCode to be 404, got %v", *er.ErrorCode)
 	}
@@ -904,7 +905,7 @@ func TestCloudFrontStructure_expandCustomErrorResponse(t *testing.T) {
 
 func TestCloudFrontStructure_expandCustomErrorResponse_emptyResponseCode(t *testing.T) {
 	data := customErrorResponseConfNoResponseCode()
-	er := expandCustomErrorResponse(data)
+	er := tfcloudfront.ExpandCustomErrorResponse(data)
 	if *er.ResponseCode != "" {
 		t.Fatalf("Expected ResponseCode to be empty string, got %v", *er.ResponseCode)
 	}
@@ -915,8 +916,8 @@ func TestCloudFrontStructure_expandCustomErrorResponse_emptyResponseCode(t *test
 
 func TestCloudFrontStructure_flattenCustomErrorResponse(t *testing.T) {
 	in := customErrorResponsesConfFirst()
-	er := expandCustomErrorResponse(in)
-	out := flattenCustomErrorResponse(er)
+	er := tfcloudfront.ExpandCustomErrorResponse(in)
+	out := tfcloudfront.FlattenCustomErrorResponse(er)
 
 	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
@@ -926,7 +927,7 @@ func TestCloudFrontStructure_flattenCustomErrorResponse(t *testing.T) {
 func TestCloudFrontStructure_expandLoggingConfig(t *testing.T) {
 	data := loggingConfigConf()
 
-	lc := expandLoggingConfig(data)
+	lc := tfcloudfront.ExpandLoggingConfig(data)
 	if !*lc.Enabled {
 		t.Fatalf("Expected Enabled to be true, got %v", *lc.Enabled)
 	}
@@ -942,7 +943,7 @@ func TestCloudFrontStructure_expandLoggingConfig(t *testing.T) {
 }
 
 func TestCloudFrontStructure_expandLoggingConfig_nilValue(t *testing.T) {
-	lc := expandLoggingConfig(nil)
+	lc := tfcloudfront.ExpandLoggingConfig(nil)
 	if *lc.Enabled {
 		t.Fatalf("Expected Enabled to be false, got %v", *lc.Enabled)
 	}
@@ -959,7 +960,7 @@ func TestCloudFrontStructure_expandLoggingConfig_nilValue(t *testing.T) {
 
 func TestCloudFrontStructure_expandAliases(t *testing.T) {
 	data := aliasesConf()
-	a := expandAliases(data)
+	a := tfcloudfront.ExpandAliases(data)
 	if *a.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *a.Quantity)
 	}
@@ -970,8 +971,8 @@ func TestCloudFrontStructure_expandAliases(t *testing.T) {
 
 func TestCloudFrontStructure_flattenAliases(t *testing.T) {
 	in := aliasesConf()
-	a := expandAliases(in)
-	out := flattenAliases(a)
+	a := tfcloudfront.ExpandAliases(in)
+	out := tfcloudfront.FlattenAliases(a)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
@@ -981,7 +982,7 @@ func TestCloudFrontStructure_flattenAliases(t *testing.T) {
 
 func TestCloudFrontStructure_expandRestrictions(t *testing.T) {
 	data := geoRestrictionsConf()
-	r := expandRestrictions(data)
+	r := tfcloudfront.ExpandRestrictions(data)
 	if *r.GeoRestriction.RestrictionType != "whitelist" {
 		t.Fatalf("Expected GeoRestriction.RestrictionType to be whitelist, got %v", *r.GeoRestriction.RestrictionType)
 	}
@@ -989,7 +990,7 @@ func TestCloudFrontStructure_expandRestrictions(t *testing.T) {
 
 func TestCloudFrontStructure_expandGeoRestriction_whitelist(t *testing.T) {
 	data := geoRestrictionWhitelistConf()
-	gr := expandGeoRestriction(data)
+	gr := tfcloudfront.ExpandGeoRestriction(data)
 	if *gr.RestrictionType != "whitelist" {
 		t.Fatalf("Expected RestrictionType to be whitelist, got %v", *gr.RestrictionType)
 	}
@@ -1003,8 +1004,8 @@ func TestCloudFrontStructure_expandGeoRestriction_whitelist(t *testing.T) {
 
 func TestCloudFrontStructure_flattenGeoRestriction_whitelist(t *testing.T) {
 	in := geoRestrictionWhitelistConf()
-	gr := expandGeoRestriction(in)
-	out := flattenGeoRestriction(gr)
+	gr := tfcloudfront.ExpandGeoRestriction(in)
+	out := tfcloudfront.FlattenGeoRestriction(gr)
 
 	if e, a := in["restriction_type"], out["restriction_type"]; e != a {
 		t.Fatalf("Expected restriction_type to be %s, got %s", e, a)
@@ -1016,7 +1017,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_whitelist(t *testing.T) {
 
 func TestCloudFrontStructure_expandGeoRestriction_no_items(t *testing.T) {
 	data := geoRestrictionConfNoItems()
-	gr := expandGeoRestriction(data)
+	gr := tfcloudfront.ExpandGeoRestriction(data)
 	if *gr.RestrictionType != "none" {
 		t.Fatalf("Expected RestrictionType to be none, got %v", *gr.RestrictionType)
 	}
@@ -1030,8 +1031,8 @@ func TestCloudFrontStructure_expandGeoRestriction_no_items(t *testing.T) {
 
 func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 	in := geoRestrictionConfNoItems()
-	gr := expandGeoRestriction(in)
-	out := flattenGeoRestriction(gr)
+	gr := tfcloudfront.ExpandGeoRestriction(in)
+	out := tfcloudfront.FlattenGeoRestriction(gr)
 
 	if e, a := in["restriction_type"], out["restriction_type"]; e != a {
 		t.Fatalf("Expected restriction_type to be %s, got %s", e, a)
@@ -1043,7 +1044,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 
 func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certificate(t *testing.T) {
 	data := viewerCertificateConfSetCloudFrontDefault()
-	vc := expandViewerCertificate(data)
+	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
 		t.Fatalf("Expected ACMCertificateArn to be unset, got %v", *vc.ACMCertificateArn)
 	}
@@ -1063,7 +1064,7 @@ func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certific
 
 func TestCloudFrontStructure_expandViewerCertificate_iam_certificate_id(t *testing.T) {
 	data := viewerCertificateConfSetIAM()
-	vc := expandViewerCertificate(data)
+	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
 		t.Fatalf("Expected ACMCertificateArn to be unset, got %v", *vc.ACMCertificateArn)
 	}
@@ -1083,7 +1084,7 @@ func TestCloudFrontStructure_expandViewerCertificate_iam_certificate_id(t *testi
 
 func TestCloudFrontStructure_expandViewerCertificate_acm_certificate_arn(t *testing.T) {
 	data := viewerCertificateConfSetACM()
-	vc := expandViewerCertificate(data)
+	vc := tfcloudfront.ExpandViewerCertificate(data)
 
 	// lintignore:AWSAT003,AWSAT005
 	if *vc.ACMCertificateArn != "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012" {
