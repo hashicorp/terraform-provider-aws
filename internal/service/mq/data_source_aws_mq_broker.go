@@ -1,4 +1,4 @@
-package aws
+package mq
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"

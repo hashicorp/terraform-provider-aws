@@ -1,4 +1,4 @@
-package aws
+package mq_test
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package aws
+package mq_test
 
 import (
 	"fmt"
@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 )
 
 func init() {
@@ -115,7 +115,7 @@ func testSweepMqBrokers(region string) error {
 		})
 		if tfawserr.ErrMessageContains(err, mq.ErrCodeBadRequestException, "while in state [CREATION_IN_PROGRESS") {
 			log.Printf("[WARN] Broker in state CREATION_IN_PROGRESS and must complete creation before deletion")
-			if _, err = waiter.WaitBrokerCreated(conn, aws.StringValue(bs.BrokerId)); err != nil {
+			if _, err = tfmq.WaitBrokerCreated(conn, aws.StringValue(bs.BrokerId)); err != nil {
 				return err
 			}
 
@@ -127,7 +127,7 @@ func testSweepMqBrokers(region string) error {
 		if err != nil {
 			return err
 		}
-		if _, err = waiter.WaitBrokerDeleted(conn, aws.StringValue(bs.BrokerId)); err != nil {
+		if _, err = tfmq.WaitBrokerDeleted(conn, aws.StringValue(bs.BrokerId)); err != nil {
 			return err
 		}
 	}
