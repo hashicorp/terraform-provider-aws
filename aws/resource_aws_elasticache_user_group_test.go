@@ -21,7 +21,7 @@ func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAWSElasticacheUserGroup_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,7 +92,7 @@ func TestAccAWSElasticacheUserGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,14 +133,14 @@ func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticacheUserGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheUserGroupExists(resourceName, &userGroup),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticacheUserGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +149,7 @@ func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheUserGroupDestroy(s *terraform.State) error {
-	return testAccCheckAWSElasticacheUserGroupDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSElasticacheUserGroupDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSElasticacheUserGroupDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -174,7 +174,7 @@ func testAccCheckAWSElasticacheUserGroupDestroyWithProvider(s *terraform.State, 
 }
 
 func testAccCheckAWSElasticacheUserGroupExists(n string, v *elasticache.UserGroup) resource.TestCheckFunc {
-	return testAccCheckAWSElasticacheUserGroupExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSElasticacheUserGroupExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSElasticacheUserGroupExistsWithProvider(n string, v *elasticache.UserGroup, providerF func() *schema.Provider) resource.TestCheckFunc {

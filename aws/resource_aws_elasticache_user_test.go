@@ -23,7 +23,7 @@ func TestAccAWSElasticacheUser_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccAWSElasticacheUser_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +94,7 @@ func TestAccAWSElasticacheUser_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,14 +144,14 @@ func TestAccAWSElasticacheUser_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticacheUserConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheUserExists(resourceName, &user),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticacheUser(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,7 +160,7 @@ func TestAccAWSElasticacheUser_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheUserDestroy(s *terraform.State) error {
-	return testAccCheckAWSElasticacheUserDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSElasticacheUserDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -190,7 +190,7 @@ func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provi
 }
 
 func testAccCheckAWSElasticacheUserExists(n string, v *elasticache.User) resource.TestCheckFunc {
-	return testAccCheckAWSElasticacheUserExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSElasticacheUserExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.User, providerF func() *schema.Provider) resource.TestCheckFunc {
