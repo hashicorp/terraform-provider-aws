@@ -81,7 +81,7 @@ func testSweepEmrClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSEMRCluster_basic(t *testing.T) {
+func TestAccEMRCluster_basic(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -117,7 +117,7 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
+func TestAccEMRCluster_additionalInfo(t *testing.T) {
 	var cluster emr.Cluster
 	expectedJSON := `
 {
@@ -159,7 +159,7 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_disappears(t *testing.T) {
+func TestAccEMRCluster_disappears(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -182,7 +182,7 @@ func TestAccAWSEMRCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
+func TestAccEMRCluster_sJSON(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -215,7 +215,7 @@ func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_CoreInstanceGroup_AutoscalingPolicy(t *testing.T) {
+func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 	var cluster1, cluster2, cluster3 emr.Cluster
 	autoscalingPolicy1 := `
 {
@@ -332,7 +332,7 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_AutoscalingPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_CoreInstanceGroup_BidPrice(t *testing.T) {
+func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -374,7 +374,7 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_BidPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceCount(t *testing.T) {
+func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 	var cluster1, cluster2, cluster3 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -425,7 +425,7 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceType(t *testing.T) {
+func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -467,7 +467,7 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_CoreInstanceGroup_Name(t *testing.T) {
+func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -509,7 +509,7 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_Ec2Attributes_DefaultManagedSecurityGroups(t *testing.T) {
+func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) {
 	var cluster emr.Cluster
 	var vpc ec2.Vpc
 
@@ -552,7 +552,7 @@ func TestAccAWSEMRCluster_Ec2Attributes_DefaultManagedSecurityGroups(t *testing.
 	})
 }
 
-func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
+func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -588,7 +588,7 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_MasterInstanceGroup_BidPrice(t *testing.T) {
+func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -630,7 +630,7 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_BidPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceCount(t *testing.T) {
+func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -672,7 +672,7 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceType(t *testing.T) {
+func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -714,7 +714,7 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_MasterInstanceGroup_Name(t *testing.T) {
+func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.test"
@@ -756,7 +756,7 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_security_config(t *testing.T) {
+func TestAccEMRCluster_security(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -788,7 +788,7 @@ func TestAccAWSEMRCluster_security_config(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
+func TestAccEMRCluster_Step_basic(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -826,7 +826,7 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
+func TestAccEMRCluster_Step_mode(t *testing.T) {
 	var cluster1, cluster2, cluster3 emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -892,7 +892,7 @@ func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
+func TestAccEMRCluster_Step_multiple(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -934,7 +934,7 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
+func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.test"
@@ -1034,7 +1034,7 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
+func TestAccEMRCluster_terminationProtected(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1091,7 +1091,7 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_keepJob(t *testing.T) {
+func TestAccEMRCluster_keepJob(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1123,7 +1123,7 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
+func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1172,7 +1172,7 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
+func TestAccEMRCluster_s3Logging(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1205,7 +1205,7 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_tags(t *testing.T) {
+func TestAccEMRCluster_tags(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1250,7 +1250,7 @@ func TestAccAWSEMRCluster_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
+func TestAccEMRCluster_RootVolume_size(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1289,7 +1289,7 @@ func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_step_concurrency_level(t *testing.T) {
+func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 	var cluster emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1327,7 +1327,7 @@ func TestAccAWSEMRCluster_step_concurrency_level(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_ebs_config(t *testing.T) {
+func TestAccEMRCluster_ebs(t *testing.T) {
 	var cluster emr.Cluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1359,7 +1359,7 @@ func TestAccAWSEMRCluster_ebs_config(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
+func TestAccEMRCluster_CustomAMI_id(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1391,7 +1391,7 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_InstanceFleet_basic(t *testing.T) {
+func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1458,7 +1458,7 @@ func TestAccAWSEMRCluster_InstanceFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_InstanceFleet_master_only(t *testing.T) {
+func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"

@@ -16,7 +16,7 @@ import (
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 )
 
-func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
+func TestAccEMRInstanceFleet_basic(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
@@ -44,7 +44,7 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
+func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
@@ -80,7 +80,7 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
+func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
@@ -108,7 +108,7 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
+func TestAccEMRInstanceFleet_full(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
@@ -136,7 +136,7 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
+func TestAccEMRInstanceFleet_disappears(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
