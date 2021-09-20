@@ -100,7 +100,7 @@ func testSweepSecurityGroups(region string) error {
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteSecurityGroup(input)
 
-				if isAWSErr(err, "DependencyViolation", "") {
+				if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 					return resource.RetryableError(err)
 				}
 				if err != nil {

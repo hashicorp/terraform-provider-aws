@@ -77,7 +77,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 			return resource.NonRetryableError(err)
 		}
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
 		if igRaw == nil {
 			return fmt.Errorf("error finding Internet Gateway (%s) after creation; retry running Terraform", d.Id())
@@ -189,17 +189,17 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 			return nil
 		}
 
-		if isAWSErr(err, "DependencyViolation", "") {
+		if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteInternetGateway(input)
 	}
 	if err != nil {
@@ -231,13 +231,13 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 		if err == nil {
 			return nil
 		}
-		if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.AttachInternetGateway(input)
 	}
 	if err != nil {
@@ -368,7 +368,7 @@ func IGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 			InternetGatewayIds: []*string{aws.String(id)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("[ERROR] Error on IGStateRefresh: %s", err)
@@ -400,7 +400,7 @@ func IGAttachStateRefreshFunc(conn *ec2.EC2, id string, expected string) resourc
 			InternetGatewayIds: []*string{aws.String(id)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("[ERROR] Error on IGStateRefresh: %s", err)

@@ -161,7 +161,7 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	transitGateway, err := ec2DescribeTransitGateway(conn, d.Id())
 
-	if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -281,19 +281,19 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTransitGateway(input)
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted VPN Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted VPN Attachments") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Cross Region Peering Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Cross Region Peering Attachments") {
 			return resource.RetryableError(err)
 		}
 
@@ -304,11 +304,11 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteTransitGateway(input)
 	}
 
-	if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 		return nil
 	}
 

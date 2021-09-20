@@ -228,7 +228,7 @@ func NGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		}
 		resp, err := conn.DescribeNatGateways(opts)
 		if err != nil {
-			if isAWSErr(err, "NatGatewayNotFound", "") {
+			if tfawserr.ErrMessageContains(err, "NatGatewayNotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on NGStateRefresh: %s", err)

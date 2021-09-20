@@ -48,7 +48,7 @@ func testSweepLaunchTemplates(region string) error {
 			log.Printf("[INFO] Deleting EC2 Launch Template: %s", id)
 			_, err := conn.DeleteLaunchTemplate(input)
 
-			if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 				continue
 			}
 
@@ -1435,7 +1435,7 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 			log.Printf("[WARN] launch template (%s) not found.", rs.Primary.ID)
 			continue
 		}

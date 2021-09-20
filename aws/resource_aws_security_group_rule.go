@@ -252,7 +252,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 		log.Printf("[DEBUG] Found rule for Security Group Rule (%s): %s", id, rule)
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		sg, err := finder.SecurityGroupByID(conn, sg_id)
 		if err != nil {
 			return fmt.Errorf("Error finding security group: %w", err)

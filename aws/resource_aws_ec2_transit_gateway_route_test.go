@@ -205,7 +205,7 @@ func testAccCheckAWSEc2TransitGatewayRouteDestroy(s *terraform.State) error {
 
 		route, err := ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue
 		}
 

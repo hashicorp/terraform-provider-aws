@@ -223,7 +223,7 @@ func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
 				aws.String(rs.Primary.ID),
 			},
 		})
-		if isAWSErr(err, "InvalidDhcpOptionID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") {
 			continue
 		}
 		if err == nil {
@@ -234,7 +234,7 @@ func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !isAWSErr(err, "InvalidDhcpOptionID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") {
 			return err
 		}
 	}

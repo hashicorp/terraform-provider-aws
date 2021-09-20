@@ -86,7 +86,7 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				// Fix timing issue where describe is called prior to
 				// create being effectively processed by AWS
-				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 					return out, "pending", nil
 				}
 				return out, "", err
@@ -123,7 +123,7 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 	}
 	out, err := conn.DescribePlacementGroups(&input)
 	if err != nil {
-		if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 			log.Printf("[WARN] Placement Group %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -199,7 +199,7 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
-				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 					return out, ec2.PlacementGroupStateDeleted, nil
 				}
 				return out, "", err

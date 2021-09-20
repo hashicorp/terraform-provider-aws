@@ -134,7 +134,7 @@ func resourceAwsEc2TrafficMirrorFilterRead(d *schema.ResourceData, meta interfac
 
 	out, err := conn.DescribeTrafficMirrorFilters(input)
 
-	if isAWSErr(err, "InvalidTrafficMirrorFilterId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorFilterId.NotFound", "") {
 		log.Printf("[WARN] EC2 Traffic Mirror Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -46,7 +46,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 				log.Printf("[INFO] Deleting EC2 Transit Gateway Peering Attachment: %s", id)
 				_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
 
-				if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 					continue
 				}
 
@@ -287,7 +287,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy(s *terraform.State
 
 		peeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
 
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			continue
 		}
 

@@ -151,7 +151,7 @@ func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateR
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on CustomerGatewayRefresh: %s", err)
@@ -220,7 +220,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 		Filters: []*ec2.Filter{gatewayFilter},
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 			log.Printf("[WARN] Customer Gateway (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -291,7 +291,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 			return nil
 		} else {
 			return fmt.Errorf("[ERROR] Error deleting CustomerGateway: %s", err)
@@ -310,7 +310,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		resp, err := conn.DescribeCustomerGateways(input)
 
 		if err != nil {
-			if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -323,7 +323,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		var resp *ec2.DescribeCustomerGatewaysOutput
 		resp, err = conn.DescribeCustomerGateways(input)
 

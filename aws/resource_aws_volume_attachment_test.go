@@ -264,7 +264,7 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeVolumes(request)
 		if err != nil {
-			if isAWSErr(err, "InvalidVolume.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 				return nil
 			}
 			return fmt.Errorf("error describing volumes (%s): %s", rs.Primary.ID, err)

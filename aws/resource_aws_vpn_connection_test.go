@@ -76,7 +76,7 @@ func testSweepEc2VpnConnections(region string) error {
 
 		_, err := conn.DeleteVpnConnection(input)
 
-		if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
 			continue
 		}
 

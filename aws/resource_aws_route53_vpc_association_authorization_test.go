@@ -83,7 +83,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 		}
 
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
-		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 			return nil
 		}
 		if err != nil {

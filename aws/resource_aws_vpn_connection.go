@@ -565,7 +565,7 @@ func vpnConnectionRefreshFunc(conn *ec2.EC2, connectionId string) resource.State
 		})
 
 		if err != nil {
-			if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on VPNConnectionRefresh: %s", err)
@@ -591,7 +591,7 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 		VpnConnectionIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
 		log.Printf("[WARN] EC2 VPN Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1015,7 +1015,7 @@ func resourceAwsVpnConnectionDelete(d *schema.ResourceData, meta interface{}) er
 		VpnConnectionId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
 		return nil
 	}
 

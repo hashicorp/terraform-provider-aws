@@ -263,7 +263,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -320,11 +320,11 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 			return nil
 		}
 
-		if isAWSErr(err, "VolumeInUse", "") {
+		if tfawserr.ErrMessageContains(err, "VolumeInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
 		}
 
@@ -335,7 +335,7 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteVolume(input)
 	}
 
@@ -371,11 +371,11 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.DescribeVolumes(describeInput)
 	}
 
-	if isAWSErr(err, "InvalidVolume.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 		return nil
 	}
 

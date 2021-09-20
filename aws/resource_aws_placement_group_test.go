@@ -178,7 +178,7 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 			GroupNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
 
-		if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 			continue
 		}
 

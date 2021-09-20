@@ -63,7 +63,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, m
 
 	principals, err := findResourceVpcEndpointServiceAllowedPrincipals(conn, svcId)
 	if err != nil {
-		if isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
 			log.Printf("[WARN]VPC Endpoint Service (%s) not found, removing VPC Endpoint Service allowed principal (%s) from state", svcId, d.Id())
 			d.SetId("")
 			return nil
@@ -99,7 +99,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData,
 		RemoveAllowedPrincipals: aws.StringSlice([]string{arn}),
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
 			return fmt.Errorf("Error deleting VPC Endpoint Service allowed principal: %s", err.Error())
 		}
 	}

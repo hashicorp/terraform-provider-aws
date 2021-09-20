@@ -119,7 +119,7 @@ func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeKeyPairs(req)
 	if err != nil {
-		if isAWSErr(err, "InvalidKeyPair.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidKeyPair.NotFound", "") {
 			log.Printf("[WARN] Key Pair (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

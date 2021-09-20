@@ -146,7 +146,7 @@ func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Reading Glue Security Configuration: %s", input)
 	output, err := conn.GetSecurityConfiguration(input)
 
-	if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -191,7 +191,7 @@ func deleteGlueSecurityConfiguration(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteSecurityConfiguration(input)
 
-	if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 		return nil
 	}
 

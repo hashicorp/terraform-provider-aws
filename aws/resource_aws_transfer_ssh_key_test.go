@@ -100,7 +100,7 @@ func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
 			ServerId: aws.String(serverID),
 		})
 
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 

@@ -118,7 +118,7 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.AssociateAddress(request)
 	}
 	if err != nil {
@@ -177,7 +177,7 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		response, err = conn.DescribeAddresses(request)
 	}
 
@@ -224,7 +224,7 @@ func resourceAwsEipAssociationDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DisassociateAddress(opts)
 	if err != nil {
-		if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Elastic IP association: %s", err)

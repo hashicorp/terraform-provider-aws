@@ -153,7 +153,7 @@ func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interfac
 
 	tags, err := keyvaluetags.ElasticacheListTags(conn, d.Get("arn").(string))
 
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
 		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
 	}
 
@@ -228,13 +228,13 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
 	}
 
-	if isAWSErr(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
 		return nil
 	}
 

@@ -90,7 +90,7 @@ func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, me
 		ConnectionNotificationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
 			log.Printf("[WARN] VPC Endpoint connection notification (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -133,7 +133,7 @@ func resourceAwsVpcEndpointConnectionNotificationDelete(d *schema.ResourceData, 
 		ConnectionNotificationIds: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
 			log.Printf("[DEBUG] VPC Endpoint connection notification %s is already gone", d.Id())
 		} else {
 			return fmt.Errorf("Error deleting VPC Endpoint connection notification: %s", err.Error())

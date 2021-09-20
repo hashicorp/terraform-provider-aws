@@ -101,7 +101,7 @@ func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}
 
 	describeResp, err := conn.DescribeClusterSubnetGroups(&describeOpts)
 	if err != nil {
-		if isAWSErr(err, "ClusterSubnetGroupNotFoundFault", "") {
+		if tfawserr.ErrMessageContains(err, "ClusterSubnetGroupNotFoundFault", "") {
 			log.Printf("[INFO] Redshift Subnet Group: %s was not found", d.Id())
 			d.SetId("")
 			return nil
@@ -183,7 +183,7 @@ func resourceAwsRedshiftSubnetGroupDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteClusterSubnetGroup(&redshift.DeleteClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(d.Id()),
 	})
-	if err != nil && isAWSErr(err, "ClusterSubnetGroupNotFoundFault", "") {
+	if err != nil && tfawserr.ErrMessageContains(err, "ClusterSubnetGroupNotFoundFault", "") {
 		return nil
 	}
 

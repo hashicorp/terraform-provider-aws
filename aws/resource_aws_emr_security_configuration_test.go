@@ -47,7 +47,7 @@ func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, "InvalidRequestException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
 

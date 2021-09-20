@@ -41,7 +41,7 @@ func testSweepFlowLogs(region string) error {
 			_, err := conn.DeleteFlowLogs(&ec2.DeleteFlowLogsInput{
 				FlowLogIds: aws.StringSlice([]string{id}),
 			})
-			if isAWSErr(err, "InvalidFlowLogId.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidFlowLogId.NotFound", "") {
 				continue
 			}
 			if err != nil {

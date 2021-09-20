@@ -1057,11 +1057,11 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
+		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
+		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
 			return resource.RetryableError(err)
 		}
 
@@ -1072,7 +1072,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 	}
 
@@ -1221,7 +1221,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if isAWSErr(err, "InvalidSpotFleetRequestId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestId.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -1703,7 +1703,7 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		n, err := activeInstances(spotFleetRequestID)
 		if err != nil {
 			return err

@@ -420,7 +420,7 @@ func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
 
 		resp, spotErr := conn.DescribeSpotInstanceRequests(req)
 		// Verify the error is what we expect
-		if !isAWSErr(spotErr, "InvalidSpotInstanceRequestID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(spotErr, "InvalidSpotInstanceRequestID.NotFound", "") {
 			return spotErr
 		}
 		var s *ec2.SpotInstanceRequest
@@ -453,7 +453,7 @@ func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we expect
-		if !isAWSErr(instErr, "InvalidInstanceID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(instErr, "InvalidInstanceID.NotFound", "") {
 			return instErr
 		}
 	}
@@ -538,7 +538,7 @@ func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstance
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		instance, err := resourceAwsInstanceFindByID(conn, aws.StringValue(sir.InstanceId))
 		if err != nil {
-			if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				return fmt.Errorf("Spot Instance %q not found", aws.StringValue(sir.InstanceId))
 			}
 			return err

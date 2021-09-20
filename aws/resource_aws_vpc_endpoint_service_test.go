@@ -319,7 +319,7 @@ func testAccCheckVpcEndpointServiceDestroy(s *terraform.State) error {
 		})
 		if err != nil {
 			// Verify the error is what we want
-			if isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
 				continue
 			}
 			return err
