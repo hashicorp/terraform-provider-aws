@@ -1,4 +1,4 @@
-package aws
+package sfn_test
 
 import (
 	"fmt"
