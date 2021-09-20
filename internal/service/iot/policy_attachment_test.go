@@ -90,7 +90,7 @@ func testSweepIotPolicyAttachments(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIotPolicyAttachment_basic(t *testing.T) {
+func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 	policyName := sdkacctest.RandomWithPrefix("PolicyName-")
 	policyName2 := sdkacctest.RandomWithPrefix("PolicyName2-")
 

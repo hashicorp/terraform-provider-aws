@@ -73,7 +73,7 @@ func testSweepIotPolicies(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIoTPolicy_basic(t *testing.T) {
+func TestAccIoTPolicy_basic(t *testing.T) {
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_policy.test"
@@ -103,7 +103,7 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTPolicy_disappears(t *testing.T) {
+func TestAccIoTPolicy_disappears(t *testing.T) {
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_policy.test"

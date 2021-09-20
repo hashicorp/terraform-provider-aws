@@ -90,7 +90,7 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
+func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 	thingName := sdkacctest.RandomWithPrefix("tf-acc")
 	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
 

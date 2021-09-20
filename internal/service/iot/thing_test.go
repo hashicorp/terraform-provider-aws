@@ -71,7 +71,7 @@ func testSweepIotThings(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIotThing_basic(t *testing.T) {
+func TestAccIoTThing_basic(t *testing.T) {
 	var thing iot.DescribeThingOutput
 	rString := sdkacctest.RandString(8)
 	thingName := fmt.Sprintf("tf_acc_thing_%s", rString)
@@ -104,7 +104,7 @@ func TestAccAWSIotThing_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIotThing_full(t *testing.T) {
+func TestAccIoTThing_full(t *testing.T) {
 	var thing iot.DescribeThingOutput
 	rString := sdkacctest.RandString(8)
 	thingName := fmt.Sprintf("tf_acc_thing_%s", rString)

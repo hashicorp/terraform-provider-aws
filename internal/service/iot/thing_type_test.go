@@ -70,7 +70,7 @@ func testSweepIotThingTypes(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIotThingType_basic(t *testing.T) {
+func TestAccIoTThingType_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,7 +95,7 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIotThingType_full(t *testing.T) {
+func TestAccIoTThingType_full(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
