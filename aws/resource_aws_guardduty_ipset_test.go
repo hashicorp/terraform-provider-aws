@@ -24,7 +24,7 @@ func testAccAwsGuardDutyIpset_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func testAccAwsGuardDutyIpset_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func testAccAwsGuardDutyIpset_tags(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_ipset" {
@@ -152,7 +152,7 @@ func testAccCheckAwsGuardDutyIpsetExists(name string) resource.TestCheckFunc {
 			IpSetId:    aws.String(ipSetId),
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 		_, err = conn.GetIPSet(input)
 		return err
 	}

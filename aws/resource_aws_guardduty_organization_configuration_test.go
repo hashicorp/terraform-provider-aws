@@ -19,7 +19,7 @@ func testAccAwsGuardDutyOrganizationConfiguration_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// GuardDuty Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
@@ -57,7 +57,7 @@ func testAccAwsGuardDutyOrganizationConfiguration_s3logs(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
 			{

@@ -19,7 +19,7 @@ func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func testAccAwsGuardDutyOrganizationAdminAccount_basic(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_organization_admin_account" {
@@ -73,7 +73,7 @@ func testAccCheckAwsGuardDutyOrganizationAdminAccountExists(resourceName string)
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 		adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, rs.Primary.ID)
 

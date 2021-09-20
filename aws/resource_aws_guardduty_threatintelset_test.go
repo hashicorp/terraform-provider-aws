@@ -24,7 +24,7 @@ func testAccAwsGuardDutyThreatintelset_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyThreatintelsetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func testAccAwsGuardDutyThreatintelset_tags(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyThreatintelsetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_threatintelset" {
@@ -152,7 +152,7 @@ func testAccCheckAwsGuardDutyThreatintelsetExists(name string) resource.TestChec
 			ThreatIntelSetId: aws.String(threatIntelSetId),
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
 		_, err = conn.GetThreatIntelSet(input)
 		return err
 	}
