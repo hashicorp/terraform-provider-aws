@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepAppmeshVirtualGateways(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -76,7 +76,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Appmesh virtual gateway sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -96,7 +96,7 @@ func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,14 +141,14 @@ func testAccAwsAppmeshVirtualGateway_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppmeshVirtualGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppmeshVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +165,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,7 +258,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -322,7 +322,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -399,7 +399,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -486,7 +486,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -590,7 +590,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -688,7 +688,7 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -760,7 +760,7 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -799,7 +799,7 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_node" {
@@ -821,7 +821,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

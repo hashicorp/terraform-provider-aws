@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepAppmeshGatewayRoutes(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -89,7 +89,7 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Appmesh virtual gateway sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -111,7 +111,7 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,14 +158,14 @@ func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppmeshGatewayRouteConfigHttpRoute(meshName, vgName, grName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppmeshGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppmeshGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,7 +185,7 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,7 +258,7 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -331,7 +331,7 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -402,7 +402,7 @@ func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -452,7 +452,7 @@ func testAccAwsAppmeshGatewayRouteImportStateIdFunc(resourceName string) resourc
 }
 
 func testAccCheckAppmeshGatewayRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_gateway_route" {
@@ -474,7 +474,7 @@ func testAccCheckAppmeshGatewayRouteDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshGatewayRouteExists(name string, v *appmesh.GatewayRouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
