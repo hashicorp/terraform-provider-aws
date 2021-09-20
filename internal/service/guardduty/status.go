@@ -1,4 +1,4 @@
-package waiter
+package guardduty
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,7 +58,7 @@ func statusPublishingDestination(conn *guardduty.GuardDuty, destinationID, detec
 	}
 }
 
-// TODO: Migrate to shared internal package for aws package and this package
+// TODO: Migrate to shared internal package guardduty
 func getOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
 	input := &guardduty.ListOrganizationAdminAccountsInput{}
 	var result *guardduty.AdminAccount
