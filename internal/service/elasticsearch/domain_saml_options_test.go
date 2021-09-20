@@ -15,7 +15,7 @@ import (
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 )
 
-func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
+func TestAccElasticSearchDomainSamlOptions_SAML_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
@@ -49,7 +49,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
+func TestAccElasticSearchDomainSamlOptions_SAML_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -72,7 +72,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
+func TestAccElasticSearchDomainSamlOptions_SAMLDisappears_domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -96,7 +96,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticSearchDomainSAMLOptions_Update(t *testing.T) {
+func TestAccElasticSearchDomainSamlOptions_SAML_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
@@ -128,7 +128,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticSearchDomainSAMLOptions_Disabled(t *testing.T) {
+func TestAccElasticSearchDomainSamlOptions_SAML_disabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"

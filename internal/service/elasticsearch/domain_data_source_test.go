@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
+func TestAccElasticSearchDomainDataSource_Data_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
@@ -43,7 +43,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
+func TestAccElasticSearchDomainDataSource_Data_advanced(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"

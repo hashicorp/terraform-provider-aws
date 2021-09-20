@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
+func TestAccElasticSearchDomainPolicy_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
