@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -115,7 +116,7 @@ var validateLexBotAliasName = validation.All(
 )
 
 func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
@@ -168,7 +169,7 @@ func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(d.Get("bot_name").(string)),
@@ -184,10 +185,10 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -208,7 +209,7 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutBotAliasInput{
 		BotName:    aws.String(d.Get("bot_name").(string)),
@@ -258,7 +259,7 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)

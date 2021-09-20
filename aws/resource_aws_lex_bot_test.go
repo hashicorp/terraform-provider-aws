@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepLexBots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).lexmodelconn
+	conn := client.(*conns.AWSClient).LexModelBuildingConn
 	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
@@ -740,7 +741,7 @@ func testAccCheckAwsLexBotExistsWithVersion(rName, botVersion string, output *le
 		}
 
 		var err error
-		conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 		output, err = conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 			Name:           aws.String(rs.Primary.ID),
@@ -763,7 +764,7 @@ func testAccCheckAwsLexBotExists(rName string, output *lexmodelbuildingservice.G
 
 func testAccCheckAwsLexBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 		_, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 			Name:           aws.String(botName),
@@ -781,7 +782,7 @@ func testAccCheckAwsLexBotNotExists(botName, botVersion string) resource.TestChe
 }
 
 func testAccCheckAwsLexBotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_bot" {

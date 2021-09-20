@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLexSlotType() *schema.Resource {
@@ -79,7 +80,7 @@ func dataSourceAwsLexSlotType() *schema.Resource {
 func dataSourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	slotTypeName := d.Get("name").(string)
 
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
 		Name:    aws.String(slotTypeName),

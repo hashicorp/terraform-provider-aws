@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -224,7 +225,7 @@ var validateLexBotVersion = validation.All(
 )
 
 func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutBotInput{
@@ -282,7 +283,7 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(d.Id()),
@@ -298,10 +299,10 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -353,7 +354,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutBotInput{
 		Checksum:                     aws.String(d.Get("checksum").(string)),
@@ -407,7 +408,7 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteBotInput{
 		Name: aws.String(d.Id()),

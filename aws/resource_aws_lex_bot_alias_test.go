@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepLexBotAliases(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).lexmodelconn
+	conn := client.(*conns.AWSClient).LexModelBuildingConn
 	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
@@ -418,7 +419,7 @@ func testAccCheckAwsLexBotAliasExists(rName string, output *lexmodelbuildingserv
 		botAliasName := rs.Primary.Attributes["name"]
 
 		var err error
-		conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 		output, err = conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
@@ -437,7 +438,7 @@ func testAccCheckAwsLexBotAliasExists(rName string, output *lexmodelbuildingserv
 
 func testAccCheckAwsLexBotAliasDestroy(botName, botAliasName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).lexmodelconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 		_, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
