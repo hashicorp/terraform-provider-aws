@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepSchemasDiscoverers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -53,7 +53,7 @@ func testSweepSchemasDiscoverers(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EventBridge Schemas Discoverer sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -73,7 +73,7 @@ func TestAccAWSSchemasDiscoverer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,14 +102,14 @@ func TestAccAWSSchemasDiscoverer_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSchemasDiscovererConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasDiscovererExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSchemasDiscoverer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSchemasDiscoverer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func TestAccAWSSchemasDiscoverer_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +166,7 @@ func TestAccAWSSchemasDiscoverer_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,7 +204,7 @@ func TestAccAWSSchemasDiscoverer_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSSchemasDiscovererDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).schemasconn
+	conn := acctest.Provider.Meta().(*AWSClient).schemasconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_discoverer" {
@@ -238,7 +238,7 @@ func testAccCheckSchemasDiscovererExists(n string, v *schemas.DescribeDiscoverer
 			return fmt.Errorf("No EventBridge Schemas Discoverer ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).schemasconn
+		conn := acctest.Provider.Meta().(*AWSClient).schemasconn
 
 		output, err := finder.DiscovererByID(conn, rs.Primary.ID)
 
