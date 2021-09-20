@@ -5,12 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccResourceAwsKmsCiphertext_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -30,8 +31,8 @@ func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
 	resourceName := "aws_kms_ciphertext.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -51,8 +52,8 @@ func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 	resourceName := "aws_kms_ciphertext.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

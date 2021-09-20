@@ -6,18 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKmsGrant_basic(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -45,11 +46,11 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 
 func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -93,11 +94,11 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 
 func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -120,11 +121,11 @@ func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 
 func TestAccAWSKmsGrant_bare(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -149,11 +150,11 @@ func TestAccAWSKmsGrant_bare(t *testing.T) {
 
 func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -181,11 +182,11 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 
 func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -207,11 +208,11 @@ func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
 
 func TestAccAWSKmsGrant_disappears(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{

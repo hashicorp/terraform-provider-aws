@@ -6,24 +6,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKmsAlias_basic(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
@@ -31,7 +32,7 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists(resourceName, &alias),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`alias/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`alias/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", tfkms.AliasNamePrefix+rName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
@@ -48,12 +49,12 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 
 func TestAccAWSKmsAlias_disappears(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +62,7 @@ func TestAccAWSKmsAlias_disappears(t *testing.T) {
 				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists(resourceName, &alias),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsAlias(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKmsAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,12 +72,12 @@ func TestAccAWSKmsAlias_disappears(t *testing.T) {
 
 func TestAccAWSKmsAlias_Name_Generated(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
@@ -99,12 +100,12 @@ func TestAccAWSKmsAlias_Name_Generated(t *testing.T) {
 
 func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
@@ -127,14 +128,14 @@ func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
 
 func TestAccAWSKmsAlias_UpdateKeyID(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 	key1ResourceName := "aws_kms_key.test"
 	key2ResourceName := "aws_kms_key.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
@@ -165,14 +166,14 @@ func TestAccAWSKmsAlias_UpdateKeyID(t *testing.T) {
 
 func TestAccAWSKmsAlias_MultipleAliasesForSameKey(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 	alias2ResourceName := "aws_kms_alias.test2"
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
@@ -198,12 +199,12 @@ func TestAccAWSKmsAlias_MultipleAliasesForSameKey(t *testing.T) {
 
 func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
 	var alias kms.AliasListEntry
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
@@ -20,8 +21,8 @@ func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
 
 	// Run a resource test to setup our KMS key
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -65,8 +66,8 @@ func testAccDataSourceAwsKmsSecretsDecrypt(t *testing.T, plaintext string, encry
 		dataSourceName := "data.aws_kms_secrets.test"
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:   func() { testAccPreCheck(t) },
-			ErrorCheck: testAccErrorCheck(t, kms.EndpointsID),
+			PreCheck:   func() { acctest.PreCheck(t) },
+			ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
 			Providers:  testAccProviders,
 			Steps: []resource.TestStep{
 				{
