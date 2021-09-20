@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfprometheus "github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
 )
 
 func TestAccAWSAMPWorkspace_basic(t *testing.T) {
@@ -65,7 +66,7 @@ func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 				Config: testAWSAMPWorkspaceConfigWithoutAlias(),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAWSAMPWorkspaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWorkspace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfprometheus.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
