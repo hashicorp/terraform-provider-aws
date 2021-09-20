@@ -24,7 +24,7 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +67,7 @@ func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +112,7 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +184,7 @@ func testAccCheckAWSOpsworksLayerExists(n string, opslayer *opsworks.Layer) reso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribeLayersInput{
 			LayerIds: []*string{aws.String(rs.Primary.ID)},
@@ -267,7 +267,7 @@ func testAccCheckAWSOpsworksCreateLayerAttributes(
 }
 
 func testAccCheckAwsOpsworksLayerDestroy(resourceType string, s *terraform.State) error {
-	opsworksconn := testAccProvider.Meta().(*AWSClient).opsworksconn
+	opsworksconn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourceType {
 			continue

@@ -19,7 +19,7 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +103,7 @@ func TestAccAWSOpsworksPermission_Self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil, // Cannot delete own OpsWorks Permission
 		Steps: []resource.TestStep{
 			{
@@ -138,7 +138,7 @@ func testAccCheckAWSOpsworksPermissionExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribePermissionsInput{
 			StackId:    aws.String(rs.Primary.Attributes["stack_id"]),
@@ -180,7 +180,7 @@ func testAccCheckAWSOpsworksCreatePermissionAttributes(
 }
 
 func testAccCheckAwsOpsworksPermissionDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_permission" {

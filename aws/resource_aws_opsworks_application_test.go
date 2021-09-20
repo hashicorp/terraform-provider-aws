@@ -22,7 +22,7 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func testAccCheckAWSOpsworksApplicationExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribeAppsInput{
 			AppIds: []*string{&rs.Primary.ID},
@@ -231,7 +231,7 @@ func testAccCheckAWSOpsworksUpdateAppAttributes(
 }
 
 func testAccCheckAwsOpsworksApplicationDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_application" {

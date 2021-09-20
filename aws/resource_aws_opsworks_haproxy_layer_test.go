@@ -18,7 +18,7 @@ func TestAccAWSOpsworksHAProxyLayer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func TestAccAWSOpsworksHAProxyLayer_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
