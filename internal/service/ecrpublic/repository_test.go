@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecrpublic "github.com/hashicorp/terraform-provider-aws/internal/service/ecrpublic"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepEcrPublicRepositories(region string) error {
 		}
 
 		for _, repository := range page.Repositories {
-			r := ResourceRepository()
+			r := tfecrpublic.ResourceRepository()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(repository.RepositoryName))
 			d.Set("registry_id", repository.RegistryId)
@@ -352,7 +353,7 @@ func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
 				Config: testAccAWSEcrPublicRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecrpublic.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
