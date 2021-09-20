@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -65,12 +66,12 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 
 func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 	var policy secretsmanager.GetResourcePolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -102,12 +103,12 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 
 func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	var policy secretsmanager.GetResourcePolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -144,12 +145,12 @@ func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 
 func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	var policy secretsmanager.GetResourcePolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -157,7 +158,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
