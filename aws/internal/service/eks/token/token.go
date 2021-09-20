@@ -44,6 +44,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Identity is returned on successful Verify() results. It contains a parsed
