@@ -131,7 +131,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		OutputFormat: aws.String(d.Get("output_format").(string)),
-		Tags:         tags.IgnoreAws().CloudwatchTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -196,7 +196,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	tags, err := tftags.CloudwatchListTags(conn, aws.StringValue(output.Arn))
+	tags, err := ListTags(conn, aws.StringValue(output.Arn))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for CloudWatch Metric Stream (%s): %w", d.Id(), err))
