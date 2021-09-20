@@ -279,7 +279,7 @@ func testAccCheckAwsOpsworksLayerDestroy(resourceType string, s *terraform.State
 
 		_, err := opsworksconn.DescribeLayers(req)
 		if err != nil {
-			if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err

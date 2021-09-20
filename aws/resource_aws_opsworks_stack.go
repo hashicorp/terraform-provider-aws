@@ -479,7 +479,7 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 			trustErr := "not the necessary trust relationship"
 			validateErr := "validate IAM role permission"
 
-			if isAWSErr(err, "ValidationException", propErr) || isAWSErr(err, "ValidationException", trustErr) || isAWSErr(err, "ValidationException", validateErr) {
+			if tfawserr.ErrMessageContains(err, "ValidationException", propErr) || tfawserr.ErrMessageContains(err, "ValidationException", trustErr) || tfawserr.ErrMessageContains(err, "ValidationException", validateErr) {
 				log.Printf("[INFO] Waiting for service IAM role to propagate")
 				return resource.RetryableError(err)
 			}
@@ -488,7 +488,7 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = client.CreateStack(req)
 	}
 	if err != nil {

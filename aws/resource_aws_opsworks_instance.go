@@ -474,7 +474,7 @@ func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := client.DescribeInstances(req)
 	if err != nil {
-		if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			d.SetId("")
 			return nil
 		}
@@ -971,7 +971,7 @@ func OpsworksInstanceStateRefreshFunc(conn *opsworks.OpsWorks, instanceID string
 			InstanceIds: []*string{aws.String(instanceID)},
 		})
 		if err != nil {
-			if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 				resp = nil
 			} else {
 				log.Printf("Error on OpsworksInstanceStateRefresh: %s", err)

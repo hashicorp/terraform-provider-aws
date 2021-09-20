@@ -250,7 +250,7 @@ func testAccCheckAwsOpsworksApplicationDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 	}
