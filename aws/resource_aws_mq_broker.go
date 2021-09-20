@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMqBroker() *schema.Resource {
@@ -344,8 +345,8 @@ func resourceAwsMqBroker() *schema.Resource {
 }
 
 func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("broker_name").(string)
@@ -413,9 +414,9 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 		BrokerId: aws.String(d.Id()),
@@ -499,7 +500,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
+	conn := meta.(*conns.AWSClient).MQConn
 
 	requiresReboot := false
 
@@ -569,7 +570,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMqBrokerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
+	conn := meta.(*conns.AWSClient).MQConn
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
 	_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{

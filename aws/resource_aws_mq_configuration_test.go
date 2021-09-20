@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
@@ -181,7 +182,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 }
 
 func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_configuration" {

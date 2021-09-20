@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -80,7 +81,7 @@ func testSweepMqBrokers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).mqconn
+	conn := client.(*conns.AWSClient).MQConn
 
 	resp, err := conn.ListBrokers(&mq.ListBrokersInput{
 		MaxResults: aws.Int64(100),
@@ -1202,7 +1203,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 }
 
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_broker" {
@@ -1238,7 +1239,7 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 			return fmt.Errorf("No MQ Broker is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).mqconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 		resp, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 			BrokerId: aws.String(rs.Primary.ID),
 		})
@@ -1254,7 +1255,7 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 }
 
 func testAccPreCheckAWSMq(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
 	input := &mq.ListBrokersInput{}
 
