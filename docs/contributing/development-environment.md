@@ -15,7 +15,7 @@ Clone repository to: `$HOME/development/terraform-providers/`
 
 ```sh
 $ mkdir -p $HOME/development/terraform-providers/; cd $HOME/development/terraform-providers/
-$ git clone git@github.com:terraform-providers/terraform-provider-aws
+$ git clone git@github.com:hashicorp/terraform-provider-aws
 ...
 ```
 
