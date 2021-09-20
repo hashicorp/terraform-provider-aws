@@ -140,7 +140,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
 	}
 
-	output, err := finder.SchemaByNameAndRegistryName(conn, name, registryName)
+	output, err := finder.FindSchemaByNameAndRegistryName(conn, name, registryName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Schema (%s) not found, removing from state", d.Id())

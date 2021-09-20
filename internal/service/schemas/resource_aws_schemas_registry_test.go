@@ -258,7 +258,7 @@ func testAccCheckAWSSchemasRegistryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.RegistryByName(conn, rs.Primary.ID)
+		_, err := finder.FindRegistryByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -287,7 +287,7 @@ func testAccCheckSchemasRegistryExists(n string, v *schemas.DescribeRegistryOutp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
-		output, err := finder.RegistryByName(conn, rs.Primary.ID)
+		output, err := finder.FindRegistryByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

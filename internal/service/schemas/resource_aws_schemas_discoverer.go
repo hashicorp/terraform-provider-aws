@@ -89,7 +89,7 @@ func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.DiscovererByID(conn, d.Id())
+	output, err := finder.FindDiscovererByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Discoverer (%s) not found, removing from state", d.Id())

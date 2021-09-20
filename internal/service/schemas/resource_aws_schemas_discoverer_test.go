@@ -215,7 +215,7 @@ func testAccCheckAWSSchemasDiscovererDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DiscovererByID(conn, rs.Primary.ID)
+		_, err := finder.FindDiscovererByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -244,7 +244,7 @@ func testAccCheckSchemasDiscovererExists(n string, v *schemas.DescribeDiscoverer
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
-		output, err := finder.DiscovererByID(conn, rs.Primary.ID)
+		output, err := finder.FindDiscovererByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

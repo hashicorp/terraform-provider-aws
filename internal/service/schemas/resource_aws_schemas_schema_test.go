@@ -234,7 +234,7 @@ func testAccCheckAWSSchemasSchemaDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.SchemaByNameAndRegistryName(conn, name, registryName)
+		_, err = finder.FindSchemaByNameAndRegistryName(conn, name, registryName)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -269,7 +269,7 @@ func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
-		output, err := finder.SchemaByNameAndRegistryName(conn, name, registryName)
+		output, err := finder.FindSchemaByNameAndRegistryName(conn, name, registryName)
 
 		if err != nil {
 			return err

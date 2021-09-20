@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
+func FindDiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
 	input := &schemas.DescribeDiscovererInput{
 		DiscovererId: aws.String(id),
 	}
@@ -36,7 +36,7 @@ func DiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDiscover
 	return output, nil
 }
 
-func RegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
+func FindRegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
 	input := &schemas.DescribeRegistryInput{
 		RegistryName: aws.String(name),
 	}
@@ -64,7 +64,7 @@ func RegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegist
 	return output, nil
 }
 
-func SchemaByNameAndRegistryName(conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
+func FindSchemaByNameAndRegistryName(conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
 	input := &schemas.DescribeSchemaInput{
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
