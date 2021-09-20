@@ -412,7 +412,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
 
-	if _, err := waiter.EventSourceMappingCreate(conn, d.Id()); err != nil {
+	if _, err := waiter.waitEventSourceMappingCreate(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
 	}
 
@@ -422,7 +422,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, d.Id())
+	eventSourceMappingConfiguration, err := finder.FindEventSourceMappingConfigurationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
@@ -481,9 +481,9 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 
 	switch state := d.Get("state").(string); state {
-	case waiter.EventSourceMappingStateEnabled, waiter.EventSourceMappingStateEnabling:
+	case waiter.eventSourceMappingStateEnabled, waiter.eventSourceMappingStateEnabling:
 		d.Set("enabled", true)
-	case waiter.EventSourceMappingStateDisabled, waiter.EventSourceMappingStateDisabling:
+	case waiter.eventSourceMappingStateDisabled, waiter.eventSourceMappingStateDisabling:
 		d.Set("enabled", false)
 	default:
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) is neither enabled nor disabled, but %s", d.Id(), state)
@@ -554,7 +554,7 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.eventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
@@ -576,7 +576,7 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.EventSourceMappingUpdate(conn, d.Id()); err != nil {
+	if _, err := waiter.waitEventSourceMappingUpdate(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
 	}
 
@@ -592,7 +592,7 @@ func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) 
 		UUID: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.eventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
@@ -618,7 +618,7 @@ func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.EventSourceMappingDelete(conn, d.Id()); err != nil {
+	if _, err := waiter.waitEventSourceMappingDelete(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to delete: %w", d.Id(), err)
 	}
 

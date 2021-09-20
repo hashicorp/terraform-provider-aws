@@ -8,19 +8,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// EventSourceMappingConfigurationByID returns the event source mapping corresponding to the specified ID.
+// FindEventSourceMappingConfigurationByID returns the event source mapping corresponding to the specified ID.
 // Returns NotFoundError if no event source mapping is found.
-func EventSourceMappingConfigurationByID(conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
+func FindEventSourceMappingConfigurationByID(conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
 	input := &lambda.GetEventSourceMappingInput{
 		UUID: aws.String(uuid),
 	}
 
-	return EventSourceMappingConfiguration(conn, input)
+	return FindEventSourceMappingConfiguration(conn, input)
 }
 
-// EventSourceMappingConfiguration returns the event source mapping corresponding to the specified input.
+// FindEventSourceMappingConfiguration returns the event source mapping corresponding to the specified input.
 // Returns NotFoundError if no event source mapping is found.
-func EventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
+func FindEventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
 	output, err := conn.GetEventSourceMapping(input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {

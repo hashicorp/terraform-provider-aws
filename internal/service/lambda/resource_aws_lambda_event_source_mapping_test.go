@@ -939,7 +939,7 @@ func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
+		_, err := finder.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -969,7 +969,7 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
+		eventSourceMappingConfiguration, err := finder.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

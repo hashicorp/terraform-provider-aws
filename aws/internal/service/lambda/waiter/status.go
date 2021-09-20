@@ -10,18 +10,18 @@ import (
 )
 
 const (
-	EventSourceMappingStateCreating  = "Creating"
-	EventSourceMappingStateDeleting  = "Deleting"
-	EventSourceMappingStateDisabled  = "Disabled"
-	EventSourceMappingStateDisabling = "Disabling"
-	EventSourceMappingStateEnabled   = "Enabled"
-	EventSourceMappingStateEnabling  = "Enabling"
-	EventSourceMappingStateUpdating  = "Updating"
+	eventSourceMappingStateCreating  = "Creating"
+	eventSourceMappingStateDeleting  = "Deleting"
+	eventSourceMappingStateDisabled  = "Disabled"
+	eventSourceMappingStateDisabling = "Disabling"
+	eventSourceMappingStateEnabled   = "Enabled"
+	eventSourceMappingStateEnabling  = "Enabling"
+	eventSourceMappingStateUpdating  = "Updating"
 )
 
-func EventSourceMappingState(conn *lambda.Lambda, id string) resource.StateRefreshFunc {
+func statusEventSourceMappingState(conn *lambda.Lambda, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, id)
+		eventSourceMappingConfiguration, err := finder.FindEventSourceMappingConfigurationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
