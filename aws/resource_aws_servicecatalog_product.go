@@ -16,6 +16,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogProduct() *schema.Resource {
@@ -142,8 +143,8 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.CreateProductInput{
@@ -232,9 +233,9 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Id())
 
@@ -284,7 +285,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
@@ -358,7 +359,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteProductInput{
 		Id: aws.String(d.Id()),

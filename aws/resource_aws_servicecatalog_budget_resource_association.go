@@ -13,6 +13,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogBudgetResourceAssociation() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsServiceCatalogBudgetResourceAssociation() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogBudgetResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
 		BudgetName: aws.String(d.Get("budget_name").(string)),
@@ -82,7 +83,7 @@ func resourceAwsServiceCatalogBudgetResourceAssociationCreate(d *schema.Resource
 }
 
 func resourceAwsServiceCatalogBudgetResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	budgetName, resourceID, err := tfservicecatalog.BudgetResourceAssociationParseID(d.Id())
 
@@ -113,7 +114,7 @@ func resourceAwsServiceCatalogBudgetResourceAssociationRead(d *schema.ResourceDa
 }
 
 func resourceAwsServiceCatalogBudgetResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	budgetName, resourceID, err := tfservicecatalog.BudgetResourceAssociationParseID(d.Id())
 

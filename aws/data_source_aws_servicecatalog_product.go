@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsServiceCatalogProduct() *schema.Resource {
@@ -81,7 +82,7 @@ func dataSourceAwsServiceCatalogProduct() *schema.Resource {
 }
 
 func dataSourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
 
@@ -112,7 +113,7 @@ func dataSourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(pvs.ProductId))
 
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if err := d.Set("tags", keyvaluetags.ServicecatalogKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)

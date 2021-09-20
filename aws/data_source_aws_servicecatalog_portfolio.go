@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
@@ -54,7 +55,7 @@ func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
 }
 
 func dataSourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get("id").(string)),
@@ -87,7 +88,7 @@ func dataSourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta inter
 	d.Set("name", detail.DisplayName)
 	d.Set("provider_name", detail.ProviderName)
 
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags := keyvaluetags.ServicecatalogKeyValueTags(output.Tags)
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
