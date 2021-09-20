@@ -1,4 +1,4 @@
-package aws
+package workspaces
 
 import (
 	"fmt"
@@ -9,10 +9,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -225,7 +223,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.DirectoryRegisterInvalidResourceStateTimeout,
+		DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectory(input)
 		},
@@ -239,7 +237,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryID)
 
-	_, err = waiter.WaitDirectoryRegistered(conn, d.Id())
+	_, err = WaitDirectoryRegistered(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to register: %w", d.Id(), err)
@@ -302,7 +300,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	directory, err := finder.FindDirectoryByID(conn, d.Id())
+	directory, err := FindDirectoryByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
@@ -452,7 +450,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.DirectoryDeregisterInvalidResourceStateTimeout,
+		DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),
@@ -470,7 +468,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deregistering WorkSpaces Directory (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.WaitDirectoryDeregistered(conn, d.Id())
+	_, err = WaitDirectoryDeregistered(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to deregister: %w", d.Id(), err)
