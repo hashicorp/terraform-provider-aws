@@ -1,4 +1,4 @@
-package aws
+package cloud9_test
 
 import (
 	"fmt"
