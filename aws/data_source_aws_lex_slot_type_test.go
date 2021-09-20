@@ -4,22 +4,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexSlotTypeConfig_basic(rName),
 					testAccDataSourceAwsLexSlotTypeConfig_basic(),
 				),
@@ -39,17 +40,17 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexSlotTypeConfig_withVersion(rName),
 					testAccDataSourceAwsLexSlotTypeConfig_withVersion(),
 				),

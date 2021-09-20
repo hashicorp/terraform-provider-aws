@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -98,16 +99,16 @@ func testSweepLexBotAliases(region string) error {
 func TestAccAwsLexBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotAliasID),
 					testAccAwsLexBotConfig_basic(testBotAliasID),
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
@@ -117,9 +118,9 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias create."),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date"),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
@@ -138,17 +139,17 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotAliasID),
 					testAccAwsLexBotConfig_basic(testBotAliasID),
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
@@ -164,7 +165,7 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotAliasID),
 					testAccAwsLexBotConfig_createVersion(testBotAliasID),
 					testAccAwsLexBotAliasConfig_botVersionUpdate(testBotAliasID),
@@ -185,21 +186,21 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 					testAccAwsLexBotAliasConfig_conversationLogsText(testBotAliasID),
@@ -231,8 +232,8 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotAliasID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -240,13 +241,13 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 					testAccAwsLexBotAliasConfig_conversationLogsAudio(testBotAliasID),
@@ -278,8 +279,8 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotAliasID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -288,13 +289,13 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 					testAccAwsLexBotAliasConfig_conversationLogsBoth(testBotAliasID),
@@ -332,16 +333,16 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 func TestAccAwsLexBotAlias_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotAliasID),
 					testAccAwsLexBotConfig_basic(testBotAliasID),
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
@@ -356,7 +357,7 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotAliasID),
 					testAccAwsLexBotConfig_basic(testBotAliasID),
 					testAccAwsLexBotAliasConfig_descriptionUpdate(testBotAliasID),
@@ -378,23 +379,23 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 func TestAccAwsLexBotAlias_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotAliasID),
 					testAccAwsLexBotConfig_basic(testBotAliasID),
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexBotAliasExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsLexBotAlias(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLexBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

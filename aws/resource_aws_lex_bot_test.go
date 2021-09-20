@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -71,16 +72,16 @@ func testSweepLexBots(region string) error {
 func TestAccAwsLexBot_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -94,14 +95,14 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "child_directed", "false"),
 					resource.TestCheckNoResourceAttr(rName, "clarification_prompt"),
 					resource.TestCheckResourceAttr(rName, "create_version", "false"),
-					testAccCheckResourceAttrRfc3339(rName, "created_date"),
+					acctest.CheckResourceAttrRFC3339(rName, "created_date"),
 					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 					resource.TestCheckResourceAttr(rName, "detect_sentiment", "false"),
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", "false"),
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
 					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
 					resource.TestCheckNoResourceAttr(rName, "intent"),
-					testAccCheckResourceAttrRfc3339(rName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(rName, "last_updated_date"),
 					resource.TestCheckResourceAttr(rName, "locale", "en-US"),
 					resource.TestCheckResourceAttr(rName, "name", testBotID),
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),
@@ -139,17 +140,17 @@ func TestAccAwsLexBot_version_serial(t *testing.T) {
 func testAccAwsLexBot_createVersion(t *testing.T) {
 	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -161,7 +162,7 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_createVersion(testBotID),
 				),
@@ -184,16 +185,16 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 func TestAccAwsLexBot_abortStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_abortStatement(testBotID),
 				),
@@ -213,7 +214,7 @@ func TestAccAwsLexBot_abortStatement(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_abortStatementUpdate(testBotID),
 				),
@@ -241,16 +242,16 @@ func TestAccAwsLexBot_abortStatement(t *testing.T) {
 func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_clarificationPrompt(testBotID),
 				),
@@ -271,7 +272,7 @@ func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_clarificationPromptUpdate(testBotID),
 				),
@@ -294,16 +295,16 @@ func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
 func TestAccAwsLexBot_childDirected(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -317,7 +318,7 @@ func TestAccAwsLexBot_childDirected(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_childDirectedUpdate(testBotID),
 				),
@@ -338,16 +339,16 @@ func TestAccAwsLexBot_childDirected(t *testing.T) {
 func TestAccAwsLexBot_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -361,7 +362,7 @@ func TestAccAwsLexBot_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_descriptionUpdate(testBotID),
 				),
@@ -382,16 +383,16 @@ func TestAccAwsLexBot_description(t *testing.T) {
 func TestAccAwsLexBot_detectSentiment(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -405,7 +406,7 @@ func TestAccAwsLexBot_detectSentiment(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_detectSentimentUpdate(testBotID),
 				),
@@ -426,16 +427,16 @@ func TestAccAwsLexBot_detectSentiment(t *testing.T) {
 func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -449,7 +450,7 @@ func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_enableModelImprovementsUpdate(testBotID),
 				),
@@ -471,16 +472,16 @@ func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
 func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -494,7 +495,7 @@ func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_idleSessionTtlInSecondsUpdate(testBotID),
 				),
@@ -515,16 +516,16 @@ func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
 func TestAccAwsLexBot_intents(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intentMultiple(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -538,7 +539,7 @@ func TestAccAwsLexBot_intents(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intentMultiple(testBotID),
 					testAccAwsLexBotConfig_intentsUpdate(testBotID),
 				),
@@ -565,19 +566,19 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 	intentResourceName := "aws_lex_intent.test"
 	intentResourceName2 := "aws_lex_intent.test_2"
 
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	version := "1"
 	updatedVersion := "2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_createVersion(testBotID),
 					testAccAwsLexBotConfig_intentMultiple(testBotID),
 					testAccAwsLexBotAliasConfig_basic(testBotID),
@@ -593,7 +594,7 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intentMultipleSecondUpdated(testBotID),
 					testAccAwsLexBotConfig_multipleIntentsWithVersion(testBotID),
 					testAccAwsLexBotAliasConfig_basic(testBotID),
@@ -616,16 +617,16 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 func TestAccAwsLexBot_locale(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -639,7 +640,7 @@ func TestAccAwsLexBot_locale(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_localeUpdate(testBotID),
 				),
@@ -660,16 +661,16 @@ func TestAccAwsLexBot_locale(t *testing.T) {
 func TestAccAwsLexBot_voiceId(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
@@ -683,7 +684,7 @@ func TestAccAwsLexBot_voiceId(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_voiceIdUpdate(testBotID),
 				),
@@ -704,22 +705,22 @@ func TestAccAwsLexBot_voiceId(t *testing.T) {
 func TestAccAwsLexBot_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAwsLexBotConfig_intent(testBotID),
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsLexBot(), rName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLexBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
