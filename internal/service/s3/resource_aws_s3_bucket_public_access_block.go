@@ -110,7 +110,7 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 
 	// Retry for eventual consistency on creation
 	var output *s3.GetPublicAccessBlockOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetPublicAccessBlock(input)
 

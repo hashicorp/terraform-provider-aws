@@ -87,7 +87,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Putting S3 Bucket Metrics Configuration: %s", input)
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketMetricsConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {

@@ -318,7 +318,7 @@ func TestAccAWSS3Bucket_Tags_withSystemTags(t *testing.T) {
 					return fmt.Errorf("error deleting CloudFormation stack: %w", err)
 				}
 
-				if _, err := waiter.StackDeleted(conn, stackID, requestToken, 10*time.Minute); err != nil {
+				if _, err := waiter.WaitStackDeleted(conn, stackID, requestToken, 10*time.Minute); err != nil {
 					return fmt.Errorf("Error waiting for CloudFormation stack deletion: %s", err)
 				}
 
@@ -2915,7 +2915,7 @@ func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) r
 			return fmt.Errorf("error creating CloudFormation stack: %w", err)
 		}
 
-		stack, err := waiter.StackCreated(conn, aws.StringValue(resp.StackId), requestToken, 10*time.Minute)
+		stack, err := waiter.WaitStackCreated(conn, aws.StringValue(resp.StackId), requestToken, 10*time.Minute)
 		if err != nil {
 			return fmt.Errorf("Error waiting for CloudFormation stack creation: %w", err)
 		}

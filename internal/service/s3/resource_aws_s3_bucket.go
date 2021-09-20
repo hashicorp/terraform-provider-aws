@@ -807,7 +807,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.BucketCreatedTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.bucketCreatedTimeout, func() *resource.RetryError {
 		_, err := conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -1961,7 +1961,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.PropagationTimeout,
+		waiter.propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryption(i)
 		},

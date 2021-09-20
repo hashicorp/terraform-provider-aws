@@ -312,7 +312,7 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketNotificationConfiguration(i)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
