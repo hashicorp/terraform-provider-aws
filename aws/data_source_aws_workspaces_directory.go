@@ -5,9 +5,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDirectory() *schema.Resource {
@@ -86,7 +87,7 @@ func DataSourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -212,7 +213,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
 	}
 
-	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
+	tags, err := tftags.WorkspacesListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %w", err)
 	}
