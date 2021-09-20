@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
@@ -196,9 +196,9 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoQueue := d.Get("fifo_queue").(bool)
 
 	if fifoQueue {
-		name = naming.GenerateWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsqs.FifoQueueNameSuffix)
+		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsqs.FifoQueueNameSuffix)
 	} else {
-		name = naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
 
 	input := &sqs.CreateQueueInput{
@@ -298,9 +298,9 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", naming.NamePrefixFromNameWithSuffix(name, tfsqs.FifoQueueNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsqs.FifoQueueNameSuffix))
 	} else {
-		d.Set("name_prefix", naming.NamePrefixFromName(name))
+		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 	d.Set("url", d.Id())
 
@@ -403,9 +403,9 @@ func resourceAwsSqsQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		var name string
 
 		if fifoQueue {
-			name = naming.GenerateWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsqs.FifoQueueNameSuffix)
+			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsqs.FifoQueueNameSuffix)
 		} else {
-			name = naming.Generate(diff.Get("name").(string), diff.Get("name_prefix").(string))
+			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}
 
 		var re *regexp.Regexp
