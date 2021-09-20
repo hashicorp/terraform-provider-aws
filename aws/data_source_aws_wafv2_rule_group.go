@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsWafv2RuleGroup() *schema.Resource {
@@ -39,7 +40,7 @@ func dataSourceAwsWafv2RuleGroup() *schema.Resource {
 }
 
 func dataSourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 	name := d.Get("name").(string)
 
 	var foundRuleGroup *wafv2.RuleGroupSummary

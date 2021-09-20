@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafv2RegexPatternSet() *schema.Resource {
@@ -88,8 +89,8 @@ func resourceAwsWafv2RegexPatternSet() *schema.Resource {
 }
 
 func resourceAwsWafv2RegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	params := &wafv2.CreateRegexPatternSetInput{
 		Name:                  aws.String(d.Get("name").(string)),
@@ -125,9 +126,9 @@ func resourceAwsWafv2RegexPatternSetCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	params := &wafv2.GetRegexPatternSetInput{
 		Id:    aws.String(d.Id()),
 		Name:  aws.String(d.Get("name").(string)),
@@ -177,7 +178,7 @@ func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Updating WAFv2 RegexPatternSet %s", d.Id())
 
@@ -214,7 +215,7 @@ func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 RegexPatternSet %s", d.Id())
 	params := &wafv2.DeleteRegexPatternSetInput{

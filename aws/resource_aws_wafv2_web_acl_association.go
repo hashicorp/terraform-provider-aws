@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -51,7 +52,7 @@ func resourceAwsWafv2WebACLAssociation() *schema.Resource {
 }
 
 func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 	resourceArn := d.Get("resource_arn").(string)
 	webAclArn := d.Get("web_acl_arn").(string)
 	params := &wafv2.AssociateWebACLInput{
@@ -83,7 +84,7 @@ func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 	resourceArn := d.Get("resource_arn").(string)
 	webAclArn := d.Get("web_acl_arn").(string)
 	params := &wafv2.GetWebACLForResourceInput{
@@ -109,7 +110,7 @@ func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafv2WebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 Web ACL Association %s", d.Id())
 
