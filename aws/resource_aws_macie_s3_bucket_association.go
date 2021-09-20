@@ -69,7 +69,7 @@ func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta inte
 		S3Resources: []*macie.S3ResourceClassification{
 			{
 				BucketName:         aws.String(d.Get("bucket_name").(string)),
-				ClassificationType: expandMacieClassificationType(d),
+				ClassificationType: expandClassificationType(d),
 			},
 		},
 	}
@@ -125,7 +125,7 @@ func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	if err := d.Set("classification_type", flattenMacieClassificationType(res.ClassificationType)); err != nil {
+	if err := d.Set("classification_type", flattenClassificationType(res.ClassificationType)); err != nil {
 		return fmt.Errorf("error setting classification_type: %s", err)
 	}
 
@@ -140,7 +140,7 @@ func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta inte
 			S3ResourcesUpdate: []*macie.S3ResourceClassificationUpdate{
 				{
 					BucketName:               aws.String(d.Get("bucket_name").(string)),
-					ClassificationTypeUpdate: expandMacieClassificationTypeUpdate(d),
+					ClassificationTypeUpdate: expandClassificationTypeUpdate(d),
 				},
 			},
 		}
