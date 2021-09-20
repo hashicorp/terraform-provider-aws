@@ -1,4 +1,4 @@
-package glue
+package neptune
 
 import (
 	"fmt"
