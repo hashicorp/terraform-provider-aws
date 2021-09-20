@@ -89,7 +89,7 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	groupID := d.Get("replication_group_id").(string)
 
-	rg, err := finder.ReplicationGroupByID(conn, groupID)
+	rg, err := finder.FindReplicationGroupByID(conn, groupID)
 	if err != nil {
 		return fmt.Errorf("error reading ElastiCache Replication Group (%s): %w", groupID, err)
 	}

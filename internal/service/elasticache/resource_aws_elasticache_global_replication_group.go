@@ -171,7 +171,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(output.GlobalReplicationGroup.GlobalReplicationGroupId))
 
-	if _, err := waiter.GlobalReplicationGroupAvailable(conn, d.Id(), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+	if _, err := waiter.WaitGlobalReplicationGroupAvailable(conn, d.Id(), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", d.Id(), err)
 	}
 
@@ -181,7 +181,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	globalReplicationGroup, err := finder.GlobalReplicationGroupByID(conn, d.Id())
+	globalReplicationGroup, err := finder.FindGlobalReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -249,7 +249,7 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		return err
 	}
 
-	if _, err := waiter.GlobalReplicationGroupAvailable(conn, id, waiter.GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
+	if _, err := waiter.WaitGlobalReplicationGroupAvailable(conn, id, waiter.GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
@@ -301,7 +301,7 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		return err
 	}
 
-	if _, err := waiter.GlobalReplicationGroupDeleted(conn, id); err != nil {
+	if _, err := waiter.WaitGlobalReplicationGroupDeleted(conn, id); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 

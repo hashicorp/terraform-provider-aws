@@ -115,7 +115,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.ElastiCacheUserById(conn, d.Id())
+	resp, err := finder.FindElastiCacheUserByID(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserNotFoundFault, "")) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -188,7 +188,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating ElastiCache User (%s): %w", d.Id(), err)
 			}
 
-			if err := waiter.UserActive(conn, d.Id()); err != nil {
+			if err := waiter.WaitUserActive(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
 			}
 		}
@@ -223,7 +223,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting ElastiCache User (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.UserDeleted(conn, d.Id()); err != nil {
+	if err := waiter.WaitUserDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
 			return nil
 		}

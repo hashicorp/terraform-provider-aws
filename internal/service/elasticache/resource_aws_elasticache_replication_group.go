@@ -111,8 +111,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfelasticache.EngineRedis,
-				ValidateFunc: validation.StringInSlice([]string{tfelasticache.EngineRedis}, true),
+				Default:      tfelasticache.engineRedis,
+				ValidateFunc: validation.StringInSlice([]string{tfelasticache.engineRedis}, true),
 			},
 			"engine_version": {
 				Type:         schema.TypeString,
@@ -437,7 +437,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
 
-	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Replication Group (%s): waiting for completion: %w", d.Id(), err)
 	}
@@ -447,7 +447,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := waiter.GlobalReplicationGroupAvailable(conn, v.(string), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+		if _, err := waiter.WaitGlobalReplicationGroupAvailable(conn, v.(string), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
 		}
 	}
@@ -460,7 +460,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rgp, err := finder.ReplicationGroupByID(conn, d.Id())
+	rgp, err := finder.FindReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -768,7 +768,7 @@ func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, glob
 		return err
 	}
 
-	_, err = waiter.GlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = waiter.WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
@@ -812,7 +812,7 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		return err
 	}
 
-	_, err = waiter.ReplicationGroupDeleted(conn, replicationGroupID, timeout)
+	_, err = waiter.WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
 	if err != nil {
 		return err
 	}
@@ -878,7 +878,7 @@ func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elas
 		return fmt.Errorf("error modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
-	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
@@ -901,7 +901,7 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 		if err != nil {
 			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
@@ -915,7 +915,7 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 		if err != nil {
 			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
@@ -949,7 +949,7 @@ func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = waiter.ReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = waiter.WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
@@ -968,7 +968,7 @@ func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = waiter.ReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = waiter.WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}
@@ -982,7 +982,7 @@ func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache,
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
 
-	_, err = waiter.ReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
+	_, err = waiter.WaitReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}

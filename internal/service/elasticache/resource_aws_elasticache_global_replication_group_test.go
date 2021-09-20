@@ -330,7 +330,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		grg, err := finder.GlobalReplicationGroupByID(conn, rs.Primary.ID)
+		grg, err := finder.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
 		}
@@ -353,7 +353,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupDestroy(s *terraform.State)
 			continue
 		}
 
-		_, err := finder.GlobalReplicationGroupByID(conn, rs.Primary.ID)
+		_, err := finder.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

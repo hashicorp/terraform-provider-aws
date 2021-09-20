@@ -175,7 +175,7 @@ func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provi
 			continue
 		}
 
-		user, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
+		user, err := finder.FindElastiCacheUserByID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) || tfresource.NotFound(err) {
 			continue
@@ -210,7 +210,7 @@ func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.U
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
+		resp, err := finder.FindElastiCacheUserByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)
 		}
