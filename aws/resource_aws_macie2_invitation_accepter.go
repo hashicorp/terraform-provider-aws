@@ -70,7 +70,7 @@ func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.Resou
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		err = conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {

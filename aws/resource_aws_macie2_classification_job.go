@@ -413,7 +413,7 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateClassificationJobWithContext(ctx, input)
 	}
 
