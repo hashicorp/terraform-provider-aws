@@ -1,4 +1,4 @@
-package aws
+package mediaconvert_test
 
 import (
 	"fmt"
