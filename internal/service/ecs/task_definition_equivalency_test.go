@@ -1,8 +1,9 @@
 package ecs_test
 
 import (
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"testing"
+
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func TestAwsEcsContainerDefinitionsAreEquivalent_basic(t *testing.T) {
