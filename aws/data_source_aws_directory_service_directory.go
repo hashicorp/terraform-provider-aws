@@ -158,9 +158,9 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 
 	var addresses []interface{}
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		addresses = flattenStringList(dir.ConnectSettings.ConnectIps)
+		addresses = flex.FlattenStringList(dir.ConnectSettings.ConnectIps)
 	} else {
-		addresses = flattenStringList(dir.DnsIpAddrs)
+		addresses = flex.FlattenStringList(dir.DnsIpAddrs)
 	}
 	if err := d.Set("dns_ip_addresses", addresses); err != nil {
 		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
@@ -172,11 +172,11 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 	d.Set("edition", dir.Edition)
 	d.Set("type", dir.Type)
 
-	if err := d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings)); err != nil {
+	if err := d.Set("vpc_settings", flattenVPCSettings(dir.VpcSettings)); err != nil {
 		return fmt.Errorf("error setting VPC settings: %w", err)
 	}
 
-	if err := d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
+	if err := d.Set("connect_settings", flattenConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
 		return fmt.Errorf("error setting connect settings: %w", err)
 	}
 

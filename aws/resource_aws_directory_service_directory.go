@@ -464,9 +464,9 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("description", dir.Description)
 
 	if *dir.Type == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", flattenStringSet(dir.ConnectSettings.ConnectIps))
+		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
 	} else {
-		d.Set("dns_ip_addresses", flattenStringSet(dir.DnsIpAddrs))
+		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
 	}
 	d.Set("name", dir.Name)
 	d.Set("short_name", dir.ShortName)
@@ -474,11 +474,11 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("edition", dir.Edition)
 	d.Set("type", dir.Type)
 
-	if err := d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings)); err != nil {
+	if err := d.Set("vpc_settings", flattenVPCSettings(dir.VpcSettings)); err != nil {
 		return fmt.Errorf("error setting VPC settings: %s", err)
 	}
 
-	if err := d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
+	if err := d.Set("connect_settings", flattenConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
 		return fmt.Errorf("error setting connect settings: %s", err)
 	}
 
