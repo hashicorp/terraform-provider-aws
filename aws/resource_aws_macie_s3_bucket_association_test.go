@@ -18,7 +18,7 @@ func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMacie(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMacie(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 }
 
 func testAccCheckAWSMacieS3BucketAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macieconn
+	conn := acctest.Provider.Meta().(*AWSClient).macieconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie_s3_bucket_association" {
@@ -108,7 +108,7 @@ func testAccCheckAWSMacieS3BucketAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).macieconn
+		conn := acctest.Provider.Meta().(*AWSClient).macieconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -145,7 +145,7 @@ func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestChe
 }
 
 func testAccPreCheckAWSMacie(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).macieconn
+	conn := acctest.Provider.Meta().(*AWSClient).macieconn
 
 	input := &macie.ListS3ResourcesInput{}
 
