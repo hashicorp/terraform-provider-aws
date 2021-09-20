@@ -52,7 +52,7 @@ func testSweepMwaaEnvironment(region string) error {
 	return nil
 }
 
-func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
+func TestAccMWAAEnvironment_basic(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -114,7 +114,7 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
+func TestAccMWAAEnvironment_disappears(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -138,7 +138,7 @@ func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
+func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -184,7 +184,7 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
+func TestAccMWAAEnvironment_log(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -269,7 +269,7 @@ func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSMwaaEnvironment_full(t *testing.T) {
+func TestAccMWAAEnvironment_full(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -343,7 +343,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 	})
 }
 
-func TestAccAWSMwaaEnvironment_PluginsS3ObjectVersion(t *testing.T) {
+func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
