@@ -702,7 +702,7 @@ func validateAwsLbTargetGroupHealthCheckPort(v interface{}, k string) (ws []stri
 	return
 }
 
-func lbTargetGroupSuffixFromARN(arn *string) string {
+func TargetGroupSuffixFromARN(arn *string) string {
 	if arn == nil {
 		return ""
 	}
@@ -723,7 +723,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", targetGroup.TargetGroupArn)
-	d.Set("arn_suffix", lbTargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 

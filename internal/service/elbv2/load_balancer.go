@@ -723,7 +723,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 	return l
 }
 
-func lbSuffixFromARN(arn *string) string {
+func SuffixFromARN(arn *string) string {
 	if arn == nil {
 		return ""
 	}
@@ -744,7 +744,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", lb.LoadBalancerArn)
-	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
+	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
 	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))

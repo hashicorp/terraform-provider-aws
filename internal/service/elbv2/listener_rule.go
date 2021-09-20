@@ -609,7 +609,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// The listener arn isn't in the response but can be derived from the rule arn
-	d.Set("listener_arn", lbListenerARNFromRuleARN(aws.StringValue(rule.RuleArn)))
+	d.Set("listener_arn", ListenerARNFromRuleARN(aws.StringValue(rule.RuleArn)))
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if aws.StringValue(rule.Priority) == "default" {
@@ -901,7 +901,7 @@ func validateAwsLbListenerRulePriority(v interface{}, k string) (ws []string, er
 // arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
 var lbListenerARNFromRuleARNRegexp = regexp.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
 
-func lbListenerARNFromRuleARN(ruleArn string) string {
+func ListenerARNFromRuleARN(ruleArn string) string {
 	if arnComponents := lbListenerARNFromRuleARNRegexp.FindStringSubmatch(ruleArn); len(arnComponents) > 1 {
 		return arnComponents[1] + arnComponents[2]
 	}

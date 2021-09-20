@@ -222,7 +222,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
 
 	d.Set("arn", lb.LoadBalancerArn)
-	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
+	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
 	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))

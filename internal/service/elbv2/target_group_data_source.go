@@ -182,7 +182,7 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
 
 	d.Set("arn", targetGroup.TargetGroupArn)
-	d.Set("arn_suffix", lbTargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 
