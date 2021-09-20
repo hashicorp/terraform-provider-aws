@@ -52,7 +52,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 				CertificateAuthorityArn: aws.String(arn),
 				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
 			})
-			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -68,7 +68,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 			CertificateAuthorityArn:     aws.String(arn),
 			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
 		})
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -580,7 +580,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error 
 		output, err := conn.DescribeCertificateAuthority(input)
 
 		if err != nil {
-			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
