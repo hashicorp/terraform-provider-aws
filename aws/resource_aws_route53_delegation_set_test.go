@@ -8,18 +8,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
-	refName := acctest.RandomWithPrefix("tf-acc-test")
+	refName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_delegation_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 				Config: testAccRoute53DelegationSetConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
-					testAccMatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("delegationset/.+")),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("delegationset/.+")),
 				),
 			},
 			{
@@ -43,18 +44,18 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
-	refName := acctest.RandomWithPrefix("tf-acc-test")
+	refName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_delegation_set.test"
 	primaryZoneResourceName := "aws_route53_zone.primary"
 	secondaryZoneResourceName := "aws_route53_zone.secondary"
 
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 	zoneName1 := fmt.Sprintf("primary.%s", domain)
 	zoneName2 := fmt.Sprintf("secondary.%s", domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
@@ -79,12 +80,12 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 }
 
 func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
-	refName := acctest.RandomWithPrefix("tf-acc-test")
+	refName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_delegation_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +93,7 @@ func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
 				Config: testAccRoute53DelegationSetConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53DelegationSet(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53DelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

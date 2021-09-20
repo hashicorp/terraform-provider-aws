@@ -7,17 +7,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRoute53DelegationSetDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_delegation_set.dset"
 	resourceName := "aws_route53_delegation_set.dset"
 
-	zoneName := testAccRandomDomainName()
+	zoneName := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
