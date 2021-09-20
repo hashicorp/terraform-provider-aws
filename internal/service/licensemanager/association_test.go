@@ -12,7 +12,7 @@ import (
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 )
 
-func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
+func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 	var licenseSpecification licensemanager.LicenseSpecification
 	resourceName := "aws_licensemanager_association.example"
 

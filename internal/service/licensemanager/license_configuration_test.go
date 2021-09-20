@@ -63,7 +63,7 @@ func testSweepLicenseManagerLicenseConfigurations(region string) error {
 	return nil
 }
 
-func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
+func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	var licenseConfiguration licensemanager.LicenseConfiguration
 	resourceName := "aws_licensemanager_license_configuration.example"
 
@@ -99,7 +99,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLicenseManagerLicenseConfiguration_update(t *testing.T) {
+func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	var licenseConfiguration licensemanager.LicenseConfiguration
 	resourceName := "aws_licensemanager_license_configuration.example"
 
