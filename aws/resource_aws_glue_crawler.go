@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCrawler() *schema.Resource {
@@ -83,7 +84,7 @@ func ResourceCrawler() *schema.Resource {
 			"schema_change_policy": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -227,7 +228,7 @@ func ResourceCrawler() *schema.Resource {
 			"configuration": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -238,7 +239,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"crawler_lineage_settings": {
@@ -254,7 +255,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recrawl_behavior": {

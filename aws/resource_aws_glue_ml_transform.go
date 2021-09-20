@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMLTransform() *schema.Resource {
@@ -128,7 +129,7 @@ func ResourceMLTransform() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),

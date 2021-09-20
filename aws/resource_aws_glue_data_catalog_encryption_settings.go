@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDataCatalogEncryptionSettings() *schema.Resource {
@@ -43,7 +44,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 									"aws_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"return_connection_password_encrypted": {
 										Type:     schema.TypeBool,
@@ -66,7 +67,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 									"sse_aws_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},

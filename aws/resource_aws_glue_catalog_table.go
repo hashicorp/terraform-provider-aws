@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCatalogTable() *schema.Resource {
@@ -200,7 +201,7 @@ func ResourceCatalogTable() *schema.Resource {
 												"schema_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 													ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
 												},
 												"schema_name": {

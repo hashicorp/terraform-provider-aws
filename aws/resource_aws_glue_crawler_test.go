@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {
@@ -1517,7 +1518,7 @@ func testAccCheckAWSGlueCrawlerConfiguration(crawler *glue.Crawler, acctestJSON 
 			return fmt.Errorf("unable to compact acceptance test configuration JSON: %s", err)
 		}
 
-		if !jsonBytesEqual(apiJSONBuffer.Bytes(), acctestJSONBuffer.Bytes()) {
+		if !verify.JSONBytesEqual(apiJSONBuffer.Bytes(), acctestJSONBuffer.Bytes()) {
 			return fmt.Errorf("expected configuration JSON to match %v, received JSON: %v", acctestJSON, apiJSON)
 		}
 		return nil
