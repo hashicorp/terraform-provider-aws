@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("docdb"),

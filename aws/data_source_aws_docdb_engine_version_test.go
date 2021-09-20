@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDocDBEngineVersionDataSource_basic(t *testing.T) {
@@ -79,7 +80,7 @@ func TestAccAWSDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccAWSDocDBEngineVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("docdb"),

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDocDBClusterSnapshot() *schema.Resource {
@@ -88,7 +89,7 @@ func resourceAwsDocDBClusterSnapshot() *schema.Resource {
 }
 
 func resourceAwsDocDBClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*conns.AWSClient).DocDBConn
 
 	params := &docdb.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
@@ -120,7 +121,7 @@ func resourceAwsDocDBClusterSnapshotCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDocDBClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*conns.AWSClient).DocDBConn
 
 	params := &docdb.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
@@ -163,7 +164,7 @@ func resourceAwsDocDBClusterSnapshotRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDocDBClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*conns.AWSClient).DocDBConn
 
 	params := &docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),

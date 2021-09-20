@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDocDBCluster_basic(t *testing.T) {
@@ -478,7 +479,7 @@ func testAccCheckDocDBClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckDocDBClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).docdbconn
+	conn := provider.Meta().(*conns.AWSClient).DocDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_cluster" {
@@ -528,7 +529,7 @@ func testAccCheckDocDBClusterExistsWithProvider(n string, v *docdb.DBCluster, pr
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).docdbconn
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn
 		resp, err := conn.DescribeDBClusters(&docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -568,8 +569,8 @@ func testAccCheckDocDBClusterSnapshot(rInt int) resource.TestCheckFunc {
 			// Try and delete the snapshot before we check for the cluster not found
 			snapshot_identifier := fmt.Sprintf("tf-acctest-docdbcluster-snapshot-%d", rInt)
 
-			awsClient := acctest.Provider.Meta().(*AWSClient)
-			conn := awsClient.docdbconn
+			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+			conn := awsClient.DocDBConn
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(
