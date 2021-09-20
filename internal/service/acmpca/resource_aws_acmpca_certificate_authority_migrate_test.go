@@ -1,4 +1,4 @@
-package aws
+package acmpca_test
 
 import (
 	"testing"

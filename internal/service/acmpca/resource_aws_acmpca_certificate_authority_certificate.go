@@ -1,4 +1,4 @@
-package aws
+package acmpca
 
 import (
 	"fmt"
@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +73,7 @@ func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta 
 func resourceCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	output, err := finder.FindCertificateAuthorityCertificateByARN(conn, d.Id())
+	output, err := FindCertificateAuthorityCertificateByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")

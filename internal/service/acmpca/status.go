@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -17,7 +16,7 @@ const (
 // statusCertificateAuthority fetches the Deployment and its Status
 func statusCertificateAuthority(conn *acmpca.ACMPCA, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificateAuthority, err := finder.FindCertificateAuthorityByARN(conn, arn)
+		certificateAuthority, err := FindCertificateAuthorityByARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 			return nil, certificateAuthorityStatusNotFound, nil
