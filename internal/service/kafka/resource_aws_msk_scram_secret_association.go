@@ -72,7 +72,7 @@ func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface
 func resourceScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
-	secretArnList, err := finder.ScramSecrets(conn, d.Id())
+	secretArnList, err := finder.FindScramSecrets(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Scram secret(s) for MSK cluster (%s) not found, removing from state", d.Id())
@@ -129,7 +129,7 @@ func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface
 func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
-	secretArnList, err := finder.ScramSecrets(conn, d.Id())
+	secretArnList, err := finder.FindScramSecrets(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {

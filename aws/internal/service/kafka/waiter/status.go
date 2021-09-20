@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	ConfigurationStateDeleted = "Deleted"
-	ConfigurationStateUnknown = "Unknown"
+	configurationStateDeleted = "Deleted"
+	configurationStateUnknown = "Unknown"
 )
 
-// ConfigurationState fetches the Operation and its Status
-func ConfigurationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+// statusConfigurationState fetches the Operation and its Status
+func statusConfigurationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(arn),
@@ -23,15 +23,15 @@ func ConfigurationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc
 		output, err := conn.DescribeConfiguration(input)
 
 		if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
-			return output, ConfigurationStateDeleted, nil
+			return output, configurationStateDeleted, nil
 		}
 
 		if err != nil {
-			return output, ConfigurationStateUnknown, err
+			return output, configurationStateUnknown, err
 		}
 
 		if output == nil {
-			return output, ConfigurationStateUnknown, nil
+			return output, configurationStateUnknown, nil
 		}
 
 		return output, aws.StringValue(output.State), nil

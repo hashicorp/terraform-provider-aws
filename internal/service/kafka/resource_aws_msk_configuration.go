@@ -176,7 +176,7 @@ func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting MSK Configuration (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ConfigurationDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitConfigurationDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MSK Configuration (%s): %w", d.Id(), err)
 	}
 

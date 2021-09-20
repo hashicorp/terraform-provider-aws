@@ -174,7 +174,7 @@ func testAccCheckMskScramSecretAssociationExists(resourceName string) resource.T
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
-		_, err := finder.ScramSecrets(conn, rs.Primary.ID)
+		_, err := finder.FindScramSecrets(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

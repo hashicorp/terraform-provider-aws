@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ScramSecrets returns the matching MSK Cluster's associated secrets
-func ScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
+// FindScramSecrets returns the matching MSK Cluster's associated secrets
+func FindScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	input := &kafka.ListScramSecretsInput{
 		ClusterArn: aws.String(clusterArn),
 	}

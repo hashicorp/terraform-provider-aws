@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	ClusterCreateTimeout = 120 * time.Minute
-	ClusterUpdateTimeout = 120 * time.Minute
-	ClusterDeleteTimeout = 120 * time.Minute
+	clusterCreateTimeout = 120 * time.Minute
+	clusterUpdateTimeout = 120 * time.Minute
+	clusterDeleteTimeout = 120 * time.Minute
 )
 
 const (
 	// Maximum amount of time to wait for an Configuration to return Deleted
-	ConfigurationDeletedTimeout = 5 * time.Minute
+	configurationDeletedTimeout = 5 * time.Minute
 )
 
-// ConfigurationDeleted waits for an Configuration to return Deleted
-func ConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+// waitConfigurationDeleted waits for an Configuration to return Deleted
+func waitConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafka.ConfigurationStateDeleting},
-		Target:  []string{ConfigurationStateDeleted},
-		Refresh: ConfigurationState(conn, arn),
-		Timeout: ConfigurationDeletedTimeout,
+		Target:  []string{configurationStateDeleted},
+		Refresh: statusConfigurationState(conn, arn),
+		Timeout: configurationDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
