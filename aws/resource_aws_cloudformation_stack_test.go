@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepCloudformationStacks(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -64,7 +64,7 @@ func testSweepCloudformationStacks(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
 		return nil
 	}
@@ -84,7 +84,7 @@ func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +110,7 @@ func TestAccAWSCloudFormationStack_CreationFailure_DoNothing(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestAccAWSCloudFormationStack_CreationFailure_Delete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSCloudFormationStack_CreationFailure_Rollback(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +166,7 @@ func TestAccAWSCloudFormationStack_UpdateFailure(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,14 +191,14 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFormationStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(resourceName, &stack),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -214,7 +214,7 @@ func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,7 +240,7 @@ func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -268,7 +268,7 @@ func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -329,7 +329,7 @@ func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -367,7 +367,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -400,7 +400,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -428,7 +428,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -461,7 +461,7 @@ func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -490,7 +490,7 @@ func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -512,7 +512,7 @@ func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*AWSClient).cfconn
 		params := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(rs.Primary.ID),
 		}
@@ -531,7 +531,7 @@ func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack
 }
 
 func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cfconn
+	conn := acctest.Provider.Meta().(*AWSClient).cfconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack" {
@@ -570,7 +570,7 @@ func testAccCheckCloudFormationStackNotRecreated(i, j *cloudformation.Stack) res
 
 func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cfconn
+		conn := acctest.Provider.Meta().(*AWSClient).cfconn
 
 		input := &cloudformation.DeleteStackInput{
 			StackName: stack.StackName,
