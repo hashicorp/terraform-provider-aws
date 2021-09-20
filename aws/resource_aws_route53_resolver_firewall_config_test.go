@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepRoute53ResolverFirewallConfigs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -57,7 +57,7 @@ func testSweepRoute53ResolverFirewallConfigs(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall configs sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -76,7 +76,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,14 +104,14 @@ func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverFirewallConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallConfigExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverFirewallConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ResolverFirewallConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +120,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_config" {
@@ -158,7 +158,7 @@ func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolve
 			return fmt.Errorf("No Route 53 Resolver DNS Firewall config ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 		out, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
 

@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepEksIdentityProviderConfigs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -35,7 +35,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 	conn := client.(*AWSClient).eksconn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -57,13 +57,13 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfeks.IdentityProviderConfigCreateResourceID(aws.StringValue(cluster), aws.StringValue(identityProviderConfig.Name)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
 			})
 
-			if testSweepSkipSweepError(err) {
+			if acctest.SkipSweepError(err) {
 				continue
 			}
 
@@ -75,7 +75,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping EKS Identity Provider Configs sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
@@ -84,7 +84,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = acctest.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Identity Provider Configs (%s): %w", region, err))
@@ -103,7 +103,7 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,14 +146,14 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEksIdentityProviderConfigConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEksIdentityProviderConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -170,7 +170,7 @@ func TestAccAWSEksIdentityProviderConfig_AllOidcOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +208,7 @@ func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourc
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*AWSClient).eksconn
 
 		output, err := finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
@@ -278,7 +278,7 @@ func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourc
 
 func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 	ctx := context.TODO()
-	conn := testAccProvider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*AWSClient).eksconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_identity_provider_config" {

@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepConfigConfigurationAggregators(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -30,7 +30,7 @@ func testSweepConfigConfigurationAggregators(region string) error {
 
 	resp, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
 			return nil
 		}
@@ -68,7 +68,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +103,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +162,7 @@ func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,14 +210,14 @@ func TestAccAWSConfigConfigurationAggregator_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsConfigConfigurationAggregator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConfigConfigurationAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -249,7 +249,7 @@ func testAccCheckAWSConfigConfigurationAggregatorExists(n string, obj *configser
 			return fmt.Errorf("No config configuration aggregator ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*AWSClient).configconn
 		out, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{
 			ConfigurationAggregatorNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -268,7 +268,7 @@ func testAccCheckAWSConfigConfigurationAggregatorExists(n string, obj *configser
 }
 
 func testAccCheckAWSConfigConfigurationAggregatorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*AWSClient).configconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_aggregator" {
