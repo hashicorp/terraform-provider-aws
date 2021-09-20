@@ -1,4 +1,4 @@
-package aws
+package ssoadmin
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,7 +89,7 @@ func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
 	}
 
-	policy, err := finder.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+	policy, err := FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", managedPolicyArn, permissionSetArn)

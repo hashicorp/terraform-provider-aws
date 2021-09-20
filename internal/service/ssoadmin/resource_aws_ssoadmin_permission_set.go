@@ -1,4 +1,4 @@
-package aws
+package ssoadmin
 
 import (
 	"fmt"
@@ -13,9 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -284,7 +283,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 	}
 
 	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := resource.Retry(waiter.awsSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
+	err := resource.Retry(awsSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.ProvisionPermissionSet(input)
 
@@ -313,7 +312,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 		return fmt.Errorf("error provisioning SSO Permission Set (%s): empty output", arn)
 	}
 
-	_, err = waiter.waitPermissionSetProvisioned(conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
+	_, err = waitPermissionSetProvisioned(conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Permission Set (%s) to provision: %w", arn, err)
 	}

@@ -1,4 +1,4 @@
-package aws
+package ssoadmin_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
@@ -183,7 +183,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy(s *terraform.State) e
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		policy, err := finder.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+		policy, err := tfssoadmin.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 			continue
@@ -223,7 +223,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
-		policy, err := finder.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+		policy, err := tfssoadmin.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 		if err != nil {
 			return err

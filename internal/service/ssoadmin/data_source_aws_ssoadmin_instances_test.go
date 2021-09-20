@@ -1,4 +1,4 @@
-package aws
+package ssoadmin_test
 
 import (
 	"regexp"
