@@ -2,7 +2,6 @@ package dynamodb
 
 import (
 	"github.com/mitchellh/copystructure"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {

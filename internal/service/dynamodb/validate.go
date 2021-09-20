@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
