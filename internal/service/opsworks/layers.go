@@ -352,7 +352,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 
 	arn := aws.StringValue(layer.Arn)
 	d.Set("arn", arn)
-	tags, err := tftags.OpsworksListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %s", arn, err)
@@ -438,7 +438,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	}.String()
 
 	if len(tags) > 0 {
-		if err := tftags.OpsworksUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
 		}
 	}
@@ -518,7 +518,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		arn := d.Get("arn").(string)
-		if err := tftags.OpsworksUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %s", arn, err)
 		}
 	}
