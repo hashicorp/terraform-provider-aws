@@ -228,7 +228,7 @@ func testAccCheckRoute53ResolverFirewallDomainListDestroy(s *terraform.State) er
 		}
 
 		// Try to find the resource
-		_, err := finder.FirewallDomainListByID(conn, rs.Primary.ID)
+		_, err := finder.FindFirewallDomainListByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
 		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
@@ -254,7 +254,7 @@ func testAccCheckRoute53ResolverFirewallDomainListExists(n string, v *route53res
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		out, err := finder.FirewallDomainListByID(conn, rs.Primary.ID)
+		out, err := finder.FindFirewallDomainListByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

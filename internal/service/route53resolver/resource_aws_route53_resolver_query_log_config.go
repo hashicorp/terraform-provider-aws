@@ -87,7 +87,7 @@ func resourceQueryLogConfigCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(output.ResolverQueryLogConfig.Id))
 
-	_, err = waiter.QueryLogConfigCreated(conn, d.Id())
+	_, err = waiter.waitQueryLogConfigCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to become available: %w", d.Id(), err)
@@ -101,7 +101,7 @@ func resourceQueryLogConfigRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	queryLogConfig, err := finder.ResolverQueryLogConfigByID(conn, d.Id())
+	queryLogConfig, err := finder.FindResolverQueryLogConfigByID(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
@@ -174,7 +174,7 @@ func resourceQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Route53 Resolver Query Log Config (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.QueryLogConfigDeleted(conn, d.Id())
+	_, err = waiter.waitQueryLogConfigDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to be deleted: %w", d.Id(), err)

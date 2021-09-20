@@ -56,7 +56,7 @@ func resourceQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.ResolverQueryLogConfigAssociation.Id))
 
-	_, err = waiter.QueryLogConfigAssociationCreated(conn, d.Id())
+	_, err = waiter.waitQueryLogConfigAssociationCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config Association (%s) to become available: %w", d.Id(), err)
@@ -68,7 +68,7 @@ func resourceQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interf
 func resourceQueryLogConfigAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	queryLogConfigAssociation, err := finder.ResolverQueryLogConfigAssociationByID(conn, d.Id())
+	queryLogConfigAssociation, err := finder.FindResolverQueryLogConfigAssociationByID(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver Query Log Config Association (%s) not found, removing from state", d.Id())
@@ -109,7 +109,7 @@ func resourceQueryLogConfigAssociationDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error deleting Route53 Resolver Query Log Config Association (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.QueryLogConfigAssociationDeleted(conn, d.Id())
+	_, err = waiter.waitQueryLogConfigAssociationDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config Association (%s) to be deleted: %w", d.Id(), err)

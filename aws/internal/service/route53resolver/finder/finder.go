@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ResolverQueryLogConfigAssociationByID returns the query logging configuration association corresponding to the specified ID.
+// FindResolverQueryLogConfigAssociationByID returns the query logging configuration association corresponding to the specified ID.
 // Returns nil if no configuration is found.
-func ResolverQueryLogConfigAssociationByID(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
+func FindResolverQueryLogConfigAssociationByID(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
 	input := &route53resolver.GetResolverQueryLogConfigAssociationInput{
 		ResolverQueryLogConfigAssociationId: aws.String(queryLogConfigAssociationID),
 	}
@@ -27,9 +27,9 @@ func ResolverQueryLogConfigAssociationByID(conn *route53resolver.Route53Resolver
 	return output.ResolverQueryLogConfigAssociation, nil
 }
 
-// ResolverQueryLogConfigByID returns the query logging configuration corresponding to the specified ID.
+// FindResolverQueryLogConfigByID returns the query logging configuration corresponding to the specified ID.
 // Returns nil if no configuration is found.
-func ResolverQueryLogConfigByID(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
+func FindResolverQueryLogConfigByID(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
 	input := &route53resolver.GetResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(queryLogConfigID),
 	}
@@ -46,9 +46,9 @@ func ResolverQueryLogConfigByID(conn *route53resolver.Route53Resolver, queryLogC
 	return output.ResolverQueryLogConfig, nil
 }
 
-// ResolverDnssecConfigByID returns the dnssec configuration corresponding to the specified ID.
+// FindResolverDNSSECConfigByID returns the dnssec configuration corresponding to the specified ID.
 // Returns nil if no configuration is found.
-func ResolverDnssecConfigByID(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
+func FindResolverDNSSECConfigByID(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
 	input := &route53resolver.ListResolverDnssecConfigsInput{}
 
 	var config *route53resolver.ResolverDnssecConfig
@@ -79,9 +79,9 @@ func ResolverDnssecConfigByID(conn *route53resolver.Route53Resolver, dnssecConfi
 	return config, nil
 }
 
-// FirewallRuleGroupByID returns the DNS Firewall rule group corresponding to the specified ID.
+// FindFirewallRuleGroupByID returns the DNS Firewall rule group corresponding to the specified ID.
 // Returns nil if no DNS Firewall rule group is found.
-func FirewallRuleGroupByID(conn *route53resolver.Route53Resolver, firewallGroupId string) (*route53resolver.FirewallRuleGroup, error) {
+func FindFirewallRuleGroupByID(conn *route53resolver.Route53Resolver, firewallGroupId string) (*route53resolver.FirewallRuleGroup, error) {
 	input := &route53resolver.GetFirewallRuleGroupInput{
 		FirewallRuleGroupId: aws.String(firewallGroupId),
 	}
@@ -98,9 +98,9 @@ func FirewallRuleGroupByID(conn *route53resolver.Route53Resolver, firewallGroupI
 	return output.FirewallRuleGroup, nil
 }
 
-// FirewallDomainListByID returns the DNS Firewall rule group corresponding to the specified ID.
+// FindFirewallDomainListByID returns the DNS Firewall rule group corresponding to the specified ID.
 // Returns nil if no DNS Firewall rule group is found.
-func FirewallDomainListByID(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
+func FindFirewallDomainListByID(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
 	input := &route53resolver.GetFirewallDomainListInput{
 		FirewallDomainListId: aws.String(firewallDomainListId),
 	}
@@ -118,9 +118,9 @@ func FirewallDomainListByID(conn *route53resolver.Route53Resolver, firewallDomai
 	return output.FirewallDomainList, nil
 }
 
-// FirewallConfigByID returns the dnssec configuration corresponding to the specified ID.
+// FindFirewallConfigByID returns the dnssec configuration corresponding to the specified ID.
 // Returns NotFoundError if no configuration is found.
-func FirewallConfigByID(conn *route53resolver.Route53Resolver, firewallConfigID string) (*route53resolver.FirewallConfig, error) {
+func FindFirewallConfigByID(conn *route53resolver.Route53Resolver, firewallConfigID string) (*route53resolver.FirewallConfig, error) {
 	input := &route53resolver.ListFirewallConfigsInput{}
 
 	var config *route53resolver.FirewallConfig
@@ -151,9 +151,9 @@ func FirewallConfigByID(conn *route53resolver.Route53Resolver, firewallConfigID 
 	return config, nil
 }
 
-// FirewallRuleByID returns the DNS Firewall rule corresponding to the specified rule group and domain list IDs.
+// FindFirewallRuleByID returns the DNS Firewall rule corresponding to the specified rule group and domain list IDs.
 // Returns nil if no DNS Firewall rule is found.
-func FirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId string) (*route53resolver.FirewallRule, error) {
+func FindFirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId string) (*route53resolver.FirewallRule, error) {
 	firewallRuleGroupId, firewallDomainListId, err := tfroute53resolver.FirewallRuleParseID(firewallRuleId)
 
 	if err != nil {
@@ -192,9 +192,9 @@ func FirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId stri
 	return rule, nil
 }
 
-// FirewallRuleGroupAssociationByID returns the DNS Firewall rule group association corresponding to the specified ID.
+// FindFirewallRuleGroupAssociationByID returns the DNS Firewall rule group association corresponding to the specified ID.
 // Returns nil if no DNS Firewall rule group association is found.
-func FirewallRuleGroupAssociationByID(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
+func FindFirewallRuleGroupAssociationByID(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
 	input := &route53resolver.GetFirewallRuleGroupAssociationInput{
 		FirewallRuleGroupAssociationId: aws.String(firewallRuleGroupAssociationId),
 	}

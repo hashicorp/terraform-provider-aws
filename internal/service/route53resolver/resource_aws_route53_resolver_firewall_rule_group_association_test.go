@@ -280,7 +280,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupAssociationDestroy(s *terraform
 		}
 
 		// Try to find the resource
-		_, err := finder.FirewallRuleGroupAssociationByID(conn, rs.Primary.ID)
+		_, err := finder.FindFirewallRuleGroupAssociationByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
 		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
@@ -306,7 +306,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupAssociationExists(n string, v *
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		out, err := finder.FirewallRuleGroupAssociationByID(conn, rs.Primary.ID)
+		out, err := finder.FindFirewallRuleGroupAssociationByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

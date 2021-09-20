@@ -26,10 +26,10 @@ const (
 	resolverFirewallRuleGroupAssociationStatusUnknown  = "Unknown"
 )
 
-// QueryLogConfigAssociationStatus fetches the QueryLogConfigAssociation and its Status
-func QueryLogConfigAssociationStatus(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) resource.StateRefreshFunc {
+// statusQueryLogConfigAssociation fetches the QueryLogConfigAssociation and its Status
+func statusQueryLogConfigAssociation(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		queryLogConfigAssociation, err := finder.ResolverQueryLogConfigAssociationByID(conn, queryLogConfigAssociationID)
+		queryLogConfigAssociation, err := finder.FindResolverQueryLogConfigAssociationByID(conn, queryLogConfigAssociationID)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return nil, resolverQueryLogConfigAssociationStatusNotFound, nil
@@ -47,10 +47,10 @@ func QueryLogConfigAssociationStatus(conn *route53resolver.Route53Resolver, quer
 	}
 }
 
-// QueryLogConfigStatus fetches the QueryLogConfig and its Status
-func QueryLogConfigStatus(conn *route53resolver.Route53Resolver, queryLogConfigID string) resource.StateRefreshFunc {
+// statusQueryLogConfig fetches the QueryLogConfig and its Status
+func statusQueryLogConfig(conn *route53resolver.Route53Resolver, queryLogConfigID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		queryLogConfig, err := finder.ResolverQueryLogConfigByID(conn, queryLogConfigID)
+		queryLogConfig, err := finder.FindResolverQueryLogConfigByID(conn, queryLogConfigID)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return nil, resolverQueryLogConfigStatusNotFound, nil
@@ -68,10 +68,10 @@ func QueryLogConfigStatus(conn *route53resolver.Route53Resolver, queryLogConfigI
 	}
 }
 
-// DnssecConfigStatus fetches the DnssecConfig and its Status
-func DnssecConfigStatus(conn *route53resolver.Route53Resolver, dnssecConfigID string) resource.StateRefreshFunc {
+// statusDNSSECConfig fetches the DnssecConfig and its Status
+func statusDNSSECConfig(conn *route53resolver.Route53Resolver, dnssecConfigID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		dnssecConfig, err := finder.ResolverDnssecConfigByID(conn, dnssecConfigID)
+		dnssecConfig, err := finder.FindResolverDNSSECConfigByID(conn, dnssecConfigID)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return nil, resolverDnssecConfigStatusNotFound, nil
@@ -89,10 +89,10 @@ func DnssecConfigStatus(conn *route53resolver.Route53Resolver, dnssecConfigID st
 	}
 }
 
-// FirewallDomainListStatus fetches the FirewallDomainList and its Status
-func FirewallDomainListStatus(conn *route53resolver.Route53Resolver, firewallDomainListId string) resource.StateRefreshFunc {
+// statusFirewallDomainList fetches the FirewallDomainList and its Status
+func statusFirewallDomainList(conn *route53resolver.Route53Resolver, firewallDomainListId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		firewallDomainList, err := finder.FirewallDomainListByID(conn, firewallDomainListId)
+		firewallDomainList, err := finder.FindFirewallDomainListByID(conn, firewallDomainListId)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return nil, firewallDomainListStatusNotFound, nil
@@ -110,10 +110,10 @@ func FirewallDomainListStatus(conn *route53resolver.Route53Resolver, firewallDom
 	}
 }
 
-// FirewallRuleGroupAssociationStatus fetches the FirewallRuleGroupAssociation and its Status
-func FirewallRuleGroupAssociationStatus(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) resource.StateRefreshFunc {
+// statusFirewallRuleGroupAssociation fetches the FirewallRuleGroupAssociation and its Status
+func statusFirewallRuleGroupAssociation(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		firewallRuleGroupAssociation, err := finder.FirewallRuleGroupAssociationByID(conn, firewallRuleGroupAssociationId)
+		firewallRuleGroupAssociation, err := finder.FindFirewallRuleGroupAssociationByID(conn, firewallRuleGroupAssociationId)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return nil, resolverFirewallRuleGroupAssociationStatusNotFound, nil

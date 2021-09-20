@@ -72,7 +72,7 @@ func resourceFirewallConfigCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceFirewallConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	config, err := finder.FirewallConfigByID(conn, d.Id())
+	config, err := finder.FindFirewallConfigByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Resolver DNS Firewall config (%s) not found, removing from state", d.Id())
