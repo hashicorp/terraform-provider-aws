@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
 func init() {
@@ -89,7 +90,7 @@ func testSweepBackupVaults(region string) error {
 				continue
 			}
 
-			r := ResourceVault()
+			r := tfbackup.ResourceVault()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -232,7 +233,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVault(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
