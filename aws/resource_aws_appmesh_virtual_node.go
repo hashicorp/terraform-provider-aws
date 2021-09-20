@@ -18,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppmeshVirtualNode() *schema.Resource {
+func ResourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualNodeCreate,
-		Read:   resourceAwsAppmeshVirtualNodeRead,
-		Update: resourceAwsAppmeshVirtualNodeUpdate,
-		Delete: resourceAwsAppmeshVirtualNodeDelete,
+		Create: resourceVirtualNodeCreate,
+		Read:   resourceVirtualNodeRead,
+		Update: resourceVirtualNodeUpdate,
+		Delete: resourceVirtualNodeDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualNodeImport,
 		},
@@ -1058,7 +1058,7 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 	}
 }
 
-func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -1082,10 +1082,10 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
 
-	return resourceAwsAppmeshVirtualNodeRead(d, meta)
+	return resourceVirtualNodeRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1177,7 +1177,7 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
@@ -1208,10 +1208,10 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsAppmeshVirtualNodeRead(d, meta)
+	return resourceVirtualNodeRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual node: %s", d.Id())

@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppmeshVirtualService() *schema.Resource {
+func ResourceVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualServiceCreate,
-		Read:   resourceAwsAppmeshVirtualServiceRead,
-		Update: resourceAwsAppmeshVirtualServiceUpdate,
-		Delete: resourceAwsAppmeshVirtualServiceDelete,
+		Create: resourceVirtualServiceCreate,
+		Read:   resourceVirtualServiceRead,
+		Update: resourceVirtualServiceUpdate,
+		Delete: resourceVirtualServiceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualServiceImport,
 		},
@@ -134,7 +134,7 @@ func resourceAwsAppmeshVirtualService() *schema.Resource {
 	}
 }
 
-func resourceAwsAppmeshVirtualServiceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -157,10 +157,10 @@ func resourceAwsAppmeshVirtualServiceCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.VirtualService.Metadata.Uid))
 
-	return resourceAwsAppmeshVirtualServiceRead(d, meta)
+	return resourceVirtualServiceRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -252,7 +252,7 @@ func resourceAwsAppmeshVirtualServiceRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsAppmeshVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
@@ -282,10 +282,10 @@ func resourceAwsAppmeshVirtualServiceUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsAppmeshVirtualServiceRead(d, meta)
+	return resourceVirtualServiceRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualServiceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual service: %s", d.Id())

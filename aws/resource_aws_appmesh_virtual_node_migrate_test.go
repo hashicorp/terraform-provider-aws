@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAWSAppmeshVirtualNodeMigrateState(t *testing.T) {
@@ -52,7 +53,7 @@ func TestAWSAppmeshVirtualNodeMigrateState(t *testing.T) {
 			Attributes: tc.Attributes,
 		}
 
-		is, err := resourceAwsAppmeshVirtualNode().MigrateState(tc.StateVersion, is, tc.Meta)
+		is, err := ResourceVirtualNode().MigrateState(tc.StateVersion, is, tc.Meta)
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}

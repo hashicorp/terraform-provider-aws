@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppmeshVirtualGateway() *schema.Resource {
+func ResourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualGatewayCreate,
-		Read:   resourceAwsAppmeshVirtualGatewayRead,
-		Update: resourceAwsAppmeshVirtualGatewayUpdate,
-		Delete: resourceAwsAppmeshVirtualGatewayDelete,
+		Create: resourceVirtualGatewayCreate,
+		Read:   resourceVirtualGatewayRead,
+		Update: resourceVirtualGatewayUpdate,
+		Delete: resourceVirtualGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualGatewayImport,
 		},
@@ -686,7 +686,7 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsAppmeshVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -710,10 +710,10 @@ func resourceAwsAppmeshVirtualGatewayCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.VirtualGateway.Metadata.Uid))
 
-	return resourceAwsAppmeshVirtualGatewayRead(d, meta)
+	return resourceVirtualGatewayRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -803,7 +803,7 @@ func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsAppmeshVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
@@ -833,10 +833,10 @@ func resourceAwsAppmeshVirtualGatewayUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsAppmeshVirtualGatewayRead(d, meta)
+	return resourceVirtualGatewayRead(d, meta)
 }
 
-func resourceAwsAppmeshVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual gateway (%s)", d.Id())

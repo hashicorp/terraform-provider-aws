@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -144,7 +145,7 @@ func testAccAwsAppmeshVirtualNode_disappears(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppmeshVirtualNode(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceVirtualNode(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

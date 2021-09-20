@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppmeshMesh() *schema.Resource {
+func ResourceMesh() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshMeshCreate,
-		Read:   resourceAwsAppmeshMeshRead,
-		Update: resourceAwsAppmeshMeshUpdate,
-		Delete: resourceAwsAppmeshMeshDelete,
+		Create: resourceMeshCreate,
+		Read:   resourceMeshRead,
+		Update: resourceMeshUpdate,
+		Delete: resourceMeshDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -100,7 +100,7 @@ func resourceAwsAppmeshMesh() *schema.Resource {
 	}
 }
 
-func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -120,10 +120,10 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(meshName)
 
-	return resourceAwsAppmeshMeshRead(d, meta)
+	return resourceMeshRead(d, meta)
 }
 
-func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -213,7 +213,7 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
@@ -239,10 +239,10 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsAppmeshMeshRead(d, meta)
+	return resourceMeshRead(d, meta)
 }
 
-func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMeshDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh service mesh: %s", d.Id())

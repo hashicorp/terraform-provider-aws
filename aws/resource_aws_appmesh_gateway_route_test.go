@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appmesh/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -57,7 +58,7 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 							gatewayRouteName := aws.StringValue(gatewayRoute.GatewayRouteName)
 
 							log.Printf("[INFO] Deleting App Mesh service mesh (%s) virtual gateway (%s) gateway route: %s", meshName, virtualGatewayName, gatewayRouteName)
-							r := resourceAwsAppmeshGatewayRoute()
+							r := ResourceGatewayRoute()
 							d := r.Data(nil)
 							d.SetId("????????????????") // ID not used in Delete.
 							d.Set("mesh_name", meshName)
@@ -166,7 +167,7 @@ func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 				Config: testAccAppmeshGatewayRouteConfigHttpRoute(meshName, vgName, grName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshGatewayRouteExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppmeshGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
