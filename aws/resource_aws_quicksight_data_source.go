@@ -912,7 +912,7 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 
 			_, err := conn.UpdateDataSourcePermissions(params)
 			if err != nil {
-				return diag.Errorf("error updating QuickSight Data Source (%s) permissions: %s", aws.String(dataSourceId), err)
+				return diag.Errorf("error updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
 			}
 		}
 	}
