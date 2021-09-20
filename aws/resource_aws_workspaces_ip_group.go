@@ -9,8 +9,9 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceIPGroup() *schema.Resource {
@@ -51,18 +52,18 @@ func ResourceIPGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	rules := d.Get("rules").(*schema.Set).List()
 
@@ -113,7 +114,7 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", ipGroup.GroupDesc)
 	d.Set("rules", flattenIpGroupRules(ipGroup.UserRules))
 
-	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
+	tags, err := tftags.WorkspacesListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for WorkSpaces IP Group (%s): %w", d.Id(), err)
 	}
@@ -150,7 +151,7 @@ func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
