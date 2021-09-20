@@ -178,7 +178,7 @@ func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) err
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			log.Printf("[WARN] EFS access point %q could not be found.", d.Id())
 			d.SetId("")
 			return nil
@@ -237,14 +237,14 @@ func resourceAwsEfsAccessPointDelete(d *schema.ResourceData, meta interface{}) e
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting EFS Access Point (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.AccessPointDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for EFS access point (%s) deletion: %w", d.Id(), err)

@@ -186,7 +186,7 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeMountTargetNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
 			// The EFS mount target could not be found,
 			// which would indicate that it might be
 			// already deleted.
@@ -286,7 +286,7 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 				MountTargetId: aws.String(id),
 			})
 			if err != nil {
-				if isAWSErr(err, efs.ErrCodeMountTargetNotFound, "") {
+				if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
 					return nil, "", nil
 				}
 
