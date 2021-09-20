@@ -108,7 +108,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
+func TestAccCloudWatchEventsTarget_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
@@ -176,7 +176,7 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
+func TestAccCloudWatchEventsTarget_eventBusName(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	var v1, v2 events.Target
@@ -221,7 +221,7 @@ func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
+func TestAccCloudWatchEventsTarget_eventBusARN(t *testing.T) {
 	// "ValidationException: Adding an EventBus as a target within an account is not allowed."
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("CloudWatch Events Target EventBus ARNs are not supported in %s partition", got)
@@ -261,7 +261,7 @@ func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_GeneratedTargetId(t *testing.T) {
+func TestAccCloudWatchEventsTarget_generatedTargetID(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
@@ -294,7 +294,7 @@ func TestAccAWSCloudWatchEventTarget_GeneratedTargetId(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_RetryPolicy_DeadLetterConfig(t *testing.T) {
+func TestAccCloudWatchEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
 	queueResourceName := "aws_sqs_queue.test"
@@ -328,7 +328,7 @@ func TestAccAWSCloudWatchEventTarget_RetryPolicy_DeadLetterConfig(t *testing.T) 
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
+func TestAccCloudWatchEventsTarget_full(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
 	var v events.Target
@@ -364,7 +364,7 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
+func TestAccCloudWatchEventsTarget_disappears(t *testing.T) {
 	var v events.Target
 
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -391,7 +391,7 @@ func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
+func TestAccCloudWatchEventsTarget_ssmDocument(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v events.Target
 	rName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
@@ -422,7 +422,7 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_http(t *testing.T) {
+func TestAccCloudWatchEventsTarget_http(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	var v events.Target
@@ -457,7 +457,7 @@ func TestAccAWSCloudWatchEventTarget_http(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
+func TestAccCloudWatchEventsTarget_ecs(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
@@ -493,7 +493,7 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_redshift(t *testing.T) {
+func TestAccCloudWatchEventsTarget_redshift(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	var v events.Target
@@ -526,7 +526,7 @@ func TestAccAWSCloudWatchEventTarget_redshift(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_ecsWithBlankLaunchType(t *testing.T) {
+func TestAccCloudWatchEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
@@ -582,7 +582,7 @@ func TestAccAWSCloudWatchEventTarget_ecsWithBlankLaunchType(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_ecsWithBlankTaskCount(t *testing.T) {
+func TestAccCloudWatchEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v events.Target
 	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
@@ -611,7 +611,7 @@ func TestAccAWSCloudWatchEventTarget_ecsWithBlankTaskCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_ecsFull(t *testing.T) {
+func TestAccCloudWatchEventsTarget_ecsFull(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v events.Target
 	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
@@ -648,7 +648,7 @@ func TestAccAWSCloudWatchEventTarget_ecsFull(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
+func TestAccCloudWatchEventsTarget_batch(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
 	var v events.Target
@@ -679,7 +679,7 @@ func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_kinesis(t *testing.T) {
+func TestAccCloudWatchEventsTarget_kinesis(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v events.Target
 	rName := sdkacctest.RandomWithPrefix("tf_kinesis_target")
@@ -707,7 +707,7 @@ func TestAccAWSCloudWatchEventTarget_kinesis(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_sqs(t *testing.T) {
+func TestAccCloudWatchEventsTarget_sqs(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v events.Target
 	rName := sdkacctest.RandomWithPrefix("tf_sqs_target")
@@ -736,7 +736,7 @@ func TestAccAWSCloudWatchEventTarget_sqs(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
+func TestAccCloudWatchEventsTarget_Input_transformer(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v events.Target
 	rName := sdkacctest.RandomWithPrefix("tf_input_transformer")
@@ -793,7 +793,7 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_inputTransformerJsonString(t *testing.T) {
+func TestAccCloudWatchEventsTarget_inputTransformerJSONString(t *testing.T) {
 	var target events.Target
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -819,7 +819,7 @@ func TestAccAWSCloudWatchEventTarget_inputTransformerJsonString(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_PartnerEventBus(t *testing.T) {
+func TestAccCloudWatchEventsTarget_partnerEventBus(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {

@@ -88,7 +88,7 @@ func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
+func TestAccCloudWatchEventsRule_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -157,7 +157,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
+func TestAccCloudWatchEventsRule_eventBusName(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
@@ -208,7 +208,7 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
+func TestAccCloudWatchEventsRule_role(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -238,7 +238,7 @@ func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
+func TestAccCloudWatchEventsRule_description(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -274,7 +274,7 @@ func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
+func TestAccCloudWatchEventsRule_pattern(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -311,7 +311,7 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_ScheduleAndPattern(t *testing.T) {
+func TestAccCloudWatchEventsRule_scheduleAndPattern(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -340,7 +340,7 @@ func TestAccAWSCloudWatchEventRule_ScheduleAndPattern(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_NamePrefix(t *testing.T) {
+func TestAccCloudWatchEventsRule_namePrefix(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := "tf-acc-test-prefix-"
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -368,7 +368,7 @@ func TestAccAWSCloudWatchEventRule_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
+func TestAccCloudWatchEventsRule_Name_generated(t *testing.T) {
 	var v events.DescribeRuleOutput
 	resourceName := "aws_cloudwatch_event_rule.test"
 
@@ -395,7 +395,7 @@ func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
+func TestAccCloudWatchEventsRule_tags(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -447,7 +447,7 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
+func TestAccCloudWatchEventsRule_isEnabled(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -491,7 +491,7 @@ func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
+func TestAccCloudWatchEventsRule_partnerEventBus(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {
@@ -532,7 +532,7 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
+func TestAccCloudWatchEventsRule_eventBusARN(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	resourceName := "aws_cloudwatch_event_rule.test"

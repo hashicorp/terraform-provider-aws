@@ -77,7 +77,7 @@ func testSweepCloudWatchEventBuses(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
+func TestAccCloudWatchEventsBus_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	busNameModified := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -129,7 +129,7 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventBus_tags(t *testing.T) {
+func TestAccCloudWatchEventsBus_tags(t *testing.T) {
 	var v1, v2, v3, v4 events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -185,7 +185,7 @@ func TestAccAWSCloudWatchEventBus_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventBus_default(t *testing.T) {
+func TestAccCloudWatchEventsBus_default(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
@@ -200,7 +200,7 @@ func TestAccAWSCloudWatchEventBus_default(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
+func TestAccCloudWatchEventsBus_disappears(t *testing.T) {
 	var v events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -224,7 +224,7 @@ func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventBus_PartnerEventSource(t *testing.T) {
+func TestAccCloudWatchEventsBus_partnerEventSource(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {

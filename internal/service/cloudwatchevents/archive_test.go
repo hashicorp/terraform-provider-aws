@@ -73,7 +73,7 @@ func testSweepCloudWatchEventArchives(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchEventArchive_basic(t *testing.T) {
+func TestAccCloudWatchEventsArchive_basic(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_archive.test"
@@ -104,7 +104,7 @@ func TestAccAWSCloudWatchEventArchive_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventArchive_update(t *testing.T) {
+func TestAccCloudWatchEventsArchive_update(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	resourceName := "aws_cloudwatch_event_archive.test"
 	archiveName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -134,7 +134,7 @@ func TestAccAWSCloudWatchEventArchive_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
+func TestAccCloudWatchEventsArchive_disappears(t *testing.T) {
 	var v events.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_archive.test"
@@ -206,7 +206,7 @@ func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiv
 	}
 }
 
-func TestAccAWSCloudWatchEventArchive_retentionSetOnCreation(t *testing.T) {
+func TestAccCloudWatchEventsArchive_retentionSetOnCreation(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_archive.test"

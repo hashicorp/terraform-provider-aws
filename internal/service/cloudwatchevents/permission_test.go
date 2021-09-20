@@ -70,7 +70,7 @@ func testSweepCloudWatchEventPermissions(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
+func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"
 	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -141,7 +141,7 @@ func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventPermission_EventBusName(t *testing.T) {
+func TestAccCloudWatchEventsPermission_eventBusName(t *testing.T) {
 	principal1 := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
@@ -174,7 +174,7 @@ func TestAccAWSCloudWatchEventPermission_EventBusName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
+func TestAccCloudWatchEventsPermission_action(t *testing.T) {
 	principal := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_permission.test"
@@ -217,7 +217,7 @@ func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventPermission_Condition(t *testing.T) {
+func TestAccCloudWatchEventsPermission_condition(t *testing.T) {
 	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_permission.test"
 
@@ -256,7 +256,7 @@ func TestAccAWSCloudWatchEventPermission_Condition(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
+func TestAccCloudWatchEventsPermission_multiple(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "222222222222"
 	statementID1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -293,7 +293,7 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
+func TestAccCloudWatchEventsPermission_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 	principal := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix("tf-acc-test")
