@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
