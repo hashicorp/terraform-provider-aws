@@ -147,7 +147,7 @@ func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		signingProfileInput.Tags = tags.IgnoreAws().SignerTags()
+		signingProfileInput.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.PutSigningProfile(signingProfileInput)
@@ -216,7 +216,7 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting signer signing profile status: %s", err)
 	}
 
-	tags := tftags.SignerKeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -241,7 +241,7 @@ func resourceSigningProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SignerUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Signer signing profile (%s) tags: %s", arn, err)
 		}
 	}
