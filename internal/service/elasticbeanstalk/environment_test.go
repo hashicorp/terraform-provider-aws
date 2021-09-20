@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func init() {
