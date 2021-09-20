@@ -57,7 +57,7 @@ func testSweepNetworkFirewallFirewalls(region string) error {
 
 			log.Printf("[INFO] Deleting NetworkFirewall Firewall: %s", arn)
 
-			r := ResourceFirewall()
+			r := tfnetworkfirewall.ResourceFirewall()
 			d := r.Data(nil)
 			d.SetId(arn)
 			diags := r.DeleteContext(ctx, d, client)
@@ -365,7 +365,7 @@ func TestAccAwsNetworkFirewallFirewall_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallFirewall_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFirewall(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceFirewall(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
