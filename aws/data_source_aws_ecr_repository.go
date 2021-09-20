@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceRepository() *schema.Resource {
@@ -65,7 +66,7 @@ func DataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -102,7 +103,7 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
-	tags, err := keyvaluetags.EcrListTags(conn, arn)
+	tags, err := tftags.EcrListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
 	}

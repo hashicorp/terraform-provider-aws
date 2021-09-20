@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecr/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceRepository() *schema.Resource {
@@ -27,7 +28,7 @@ func ResourceRepository() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
@@ -100,8 +101,8 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -109,7 +110,7 @@ func ResourceRepository() *schema.Resource {
 func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
@@ -198,7 +199,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
-	tags, err := keyvaluetags.EcrListTags(conn, arn)
+	tags, err := tftags.EcrListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
 	}
@@ -288,7 +289,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.EcrUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.EcrUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", arn, err)
 		}
 	}
