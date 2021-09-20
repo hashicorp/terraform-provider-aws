@@ -18,7 +18,7 @@ func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,14 +40,14 @@ func testAccAWSLakeFormationDataLakeSettings_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLakeFormationDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLakeFormationDataLakeSettings(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLakeFormationDataLakeSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -61,7 +61,7 @@ func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -77,7 +77,7 @@ func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
 }
 
 func testAccCheckAWSLakeFormationDataLakeSettingsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+	conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_data_lake_settings" {
@@ -115,7 +115,7 @@ func testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName string) res
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+		conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 

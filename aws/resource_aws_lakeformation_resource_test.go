@@ -22,7 +22,7 @@ func TestAccAWSLakeFormationResource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,14 +44,14 @@ func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLakeFormationResourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationResourceExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLakeFormationResource(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLakeFormationResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSLakeFormationResource_updateRoleToRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +134,7 @@ func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,7 +163,7 @@ func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
 // func TestAccAWSLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckAWSLakeFormationResourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+	conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_resource" {
@@ -195,7 +195,7 @@ func testAccCheckAWSLakeFormationResourceExists(resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+		conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
 
 		input := &lakeformation.DescribeResourceInput{
 			ResourceArn: aws.String(rs.Primary.ID),

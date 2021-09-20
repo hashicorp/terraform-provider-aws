@@ -18,7 +18,7 @@ func TestAccAWSLakeFormationResourceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
