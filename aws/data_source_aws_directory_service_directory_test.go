@@ -16,7 +16,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsDirectoryServiceDirectoryConfig_NonExistent,
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_SimpleAD(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckDirectoryServiceSimpleDirectory(t) },
 		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsDirectoryServiceDirectoryConfig_SimpleAD(alias, domainName),
@@ -70,7 +70,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_MicrosoftAD(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsDirectoryServiceDirectoryConfig_MicrosoftAD(alias, domainName),
@@ -107,7 +107,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_connector(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceDirectoryServiceDirectoryConfig_connector(domainName),

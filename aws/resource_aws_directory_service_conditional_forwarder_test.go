@@ -19,7 +19,7 @@ func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDirectoryServiceConditionalForwarderDestroy,
 		Steps: []resource.TestStep{
 			// test create
@@ -53,7 +53,7 @@ func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDirectoryServiceConditionalForwarderDestroy(s *terraform.State) error {
-	dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+	dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_conditional_forwarder" {
@@ -102,7 +102,7 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 			return err
 		}
 
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+		dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
 
 		res, err := dsconn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),

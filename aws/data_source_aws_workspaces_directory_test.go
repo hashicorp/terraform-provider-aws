@@ -25,7 +25,7 @@ func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspacesDirectoryConfig(rName, domain),
