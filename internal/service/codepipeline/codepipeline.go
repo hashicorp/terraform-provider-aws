@@ -193,7 +193,7 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	params := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-		Tags:     tags.IgnoreAws().CodepipelineTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
@@ -542,7 +542,7 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
 
-	tags, err := tftags.CodepipelineListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodePipeline (%s): %w", arn, err)
@@ -582,7 +582,7 @@ func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CodepipelineUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating CodePipeline (%s) tags: %w", arn, err)
 		}
 	}
