@@ -151,7 +151,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceDat
 		d.Set("status", result.Status)
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
-		if err := d.Set("asserted_controls", flattenStringList(result.AssertedControls)); err != nil {
+		if err := d.Set("asserted_controls", flex.FlattenStringList(result.AssertedControls)); err != nil {
 			return fmt.Errorf("Error setting asserted_controls: %w", err)
 		}
 
@@ -172,11 +172,11 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceDat
 		d.Set("status", result.Status)
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
-		if err := d.Set("gating_controls", flattenStringList(result.GatingControls)); err != nil {
+		if err := d.Set("gating_controls", flex.FlattenStringList(result.GatingControls)); err != nil {
 			return fmt.Errorf("Error setting gating_controls: %w", err)
 		}
 
-		if err := d.Set("target_controls", flattenStringList(result.TargetControls)); err != nil {
+		if err := d.Set("target_controls", flex.FlattenStringList(result.TargetControls)); err != nil {
 			return fmt.Errorf("Error setting target_controls: %w", err)
 		}
 
@@ -240,7 +240,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int64(int64(d.Get("wait_period_ms").(int))),
 		RuleConfig:       expandRoute53RecoveryControlConfigRuleConfig(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
-		AssertedControls: expandStringList(d.Get("asserted_controls").([]interface{})),
+		AssertedControls: flex.ExpandStringList(d.Get("asserted_controls").([]interface{})),
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
@@ -276,8 +276,8 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int64(int64(d.Get("wait_period_ms").(int))),
 		RuleConfig:      expandRoute53RecoveryControlConfigRuleConfig(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
-		GatingControls:  expandStringList(d.Get("gating_controls").([]interface{})),
-		TargetControls:  expandStringList(d.Get("target_controls").([]interface{})),
+		GatingControls:  flex.ExpandStringList(d.Get("gating_controls").([]interface{})),
+		TargetControls:  flex.ExpandStringList(d.Get("target_controls").([]interface{})),
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
