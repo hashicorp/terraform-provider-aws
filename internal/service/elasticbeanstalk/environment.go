@@ -237,7 +237,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		EnvironmentName: aws.String(name),
 		ApplicationName: aws.String(app),
 		OptionSettings:  extractOptionSettings(settings),
-		Tags:            tags.IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
+		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
 	}
 
 	if desc != "" {
@@ -469,7 +469,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Get the current time to filter getBeanstalkEnvironmentErrors messages
 		t := time.Now()
-		if err := tftags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk environment (%s) tags: %s", arn, err)
 		}
 
@@ -621,7 +621,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := tftags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %w", arn, err)

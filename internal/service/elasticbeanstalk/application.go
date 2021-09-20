@@ -88,7 +88,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	req := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
 		Description:     aws.String(description),
-		Tags:            tags.IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
+		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
 	}
 
 	app, err := beanstalkConn.CreateApplication(req)
@@ -124,7 +124,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk Application (%s) tags: %s", arn, err)
 		}
 	}
@@ -261,7 +261,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("appversion_lifecycle", flattenResourceLifecycleConfig(app.ResourceLifecycleConfig))
 	}
 
-	tags, err := tftags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application (%s): %s", arn, err)
