@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func Organization(conn *organizations.Organizations) (*organizations.Organization, error) {
+func FindOrganization(conn *organizations.Organizations) (*organizations.Organization, error) {
 	input := &organizations.DescribeOrganizationInput{}
 
 	output, err := conn.DescribeOrganization(input)
