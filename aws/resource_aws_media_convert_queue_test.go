@@ -233,7 +233,7 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err

@@ -141,7 +141,7 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	resp, err := conn.GetQueue(getOpts)
-	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -203,7 +203,7 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		_, err = conn.UpdateQueue(updateOpts)
-		if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -234,7 +234,7 @@ func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	_, err = conn.DeleteQueue(delOpts)
-	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
