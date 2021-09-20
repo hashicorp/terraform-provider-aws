@@ -323,7 +323,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 		}
 		out, err := conn.DescribeDirectories(&input)
 
-		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			continue
 		}
 
@@ -488,11 +488,11 @@ func testAccPreCheckAWSDirectoryServiceSimpleDirectory(t *testing.T) {
 
 	_, err := conn.CreateDirectory(input)
 
-	if isAWSErr(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
+	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !isAWSErr(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
+	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }

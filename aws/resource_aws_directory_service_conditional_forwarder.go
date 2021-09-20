@@ -86,7 +86,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 	})
 
 	if err != nil {
-		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			log.Printf("[WARN] Directory Service Conditional Forwarder (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -145,7 +145,7 @@ func resourceAwsDirectoryServiceConditionalForwarderDelete(d *schema.ResourceDat
 		RemoteDomainName: aws.String(domainName),
 	})
 
-	if err != nil && !isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 		return err
 	}
 
