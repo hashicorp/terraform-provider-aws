@@ -1,4 +1,4 @@
-package aws
+package lexmodelbuilding_test
 
 import (
 	"fmt"
