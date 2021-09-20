@@ -26,14 +26,14 @@ func init() {
 }
 
 func testSweepCodepipelinePipelines(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).codepipelineconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &codepipeline.ListPipelinesInput{}
@@ -49,7 +49,7 @@ func testSweepCodepipelinePipelines(region string) error {
 
 			d.SetId(aws.StringValue(pipeline.Name))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -59,11 +59,11 @@ func testSweepCodepipelinePipelines(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Codepipeline Pipeline for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Codepipeline Pipeline for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -84,7 +84,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,14 +189,14 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodePipeline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -216,7 +216,7 @@ func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,7 +258,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,7 +291,7 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -511,7 +511,7 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -544,7 +544,7 @@ func TestAccAWSCodePipeline_WithGitHubv1SourceAction(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -618,7 +618,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+		conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
 
 		out, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
 			Name: aws.String(rs.Primary.ID),
@@ -634,7 +634,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 }
 
 func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+	conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codepipeline" {

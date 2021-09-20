@@ -28,7 +28,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,7 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +195,7 @@ func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -239,7 +239,7 @@ func testAccCheckAWSCodePipelineWebhookExists(n string, webhook *codepipeline.Li
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+		conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
 
 		resp, err := getCodePipelineWebhook(conn, rs.Primary.ID)
 
