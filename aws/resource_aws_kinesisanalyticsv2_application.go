@@ -2257,7 +2257,7 @@ func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*ki
 		}
 
 		if vPropertyMap, ok := mPropertyGroup["property_map"].(map[string]interface{}); ok && len(vPropertyMap) > 0 {
-			propertyGroup.PropertyMap = expandStringMap(vPropertyMap)
+			propertyGroup.PropertyMap = flex.ExpandStringMap(vPropertyMap)
 		}
 
 		propertyGroups = append(propertyGroups, propertyGroup)
@@ -2449,11 +2449,11 @@ func expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration []interface{}) *
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
 
 	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
-		vpcConfiguration.SecurityGroupIds = expandStringSet(vSecurityGroupIds)
+		vpcConfiguration.SecurityGroupIds = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
 	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
-		vpcConfiguration.SubnetIds = expandStringSet(vSubnetIds)
+		vpcConfiguration.SubnetIds = flex.ExpandStringSet(vSubnetIds)
 	}
 
 	return vpcConfiguration
@@ -2469,11 +2469,11 @@ func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interfac
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
 
 	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
-		vpcConfigurationUpdate.SecurityGroupIdUpdates = expandStringSet(vSecurityGroupIds)
+		vpcConfigurationUpdate.SecurityGroupIdUpdates = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
 	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
-		vpcConfigurationUpdate.SubnetIdUpdates = expandStringSet(vSubnetIds)
+		vpcConfigurationUpdate.SubnetIdUpdates = flex.ExpandStringSet(vSubnetIds)
 	}
 
 	if vVpcConfigurationId, ok := mVpcConfiguration["vpc_configuration_id"].(string); ok && vVpcConfigurationId != "" {
@@ -2613,7 +2613,7 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 			inputDescription := inputDescriptions[0]
 
 			mInput := map[string]interface{}{
-				"in_app_stream_names": flattenStringList(inputDescription.InAppStreamNames),
+				"in_app_stream_names": flex.FlattenStringList(inputDescription.InAppStreamNames),
 				"input_id":            aws.StringValue(inputDescription.InputId),
 				"name_prefix":         aws.StringValue(inputDescription.NamePrefix),
 			}
@@ -2751,8 +2751,8 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
 
 		mVpcConfiguration := map[string]interface{}{
-			"security_group_ids":   flattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
-			"subnet_ids":           flattenStringSet(vpcConfigurationDescription.SubnetIds),
+			"security_group_ids":   flex.FlattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
+			"subnet_ids":           flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
 			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
 			"vpc_id":               aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
