@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeCommitTrigger() *schema.Resource {
+func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeCommitTriggerCreate,
-		Read:   resourceAwsCodeCommitTriggerRead,
-		Delete: resourceAwsCodeCommitTriggerDelete,
+		Create: resourceTriggerCreate,
+		Read:   resourceTriggerRead,
+		Delete: resourceTriggerDelete,
 
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
@@ -71,7 +71,7 @@ func resourceAwsCodeCommitTrigger() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeCommitTriggerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
@@ -92,10 +92,10 @@ func resourceAwsCodeCommitTriggerCreate(d *schema.ResourceData, meta interface{}
 	d.SetId(d.Get("repository_name").(string))
 	d.Set("configuration_id", resp.ConfigurationId)
 
-	return resourceAwsCodeCommitTriggerRead(d, meta)
+	return resourceTriggerRead(d, meta)
 }
 
-func resourceAwsCodeCommitTriggerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	input := &codecommit.GetRepositoryTriggersInput{
@@ -112,7 +112,7 @@ func resourceAwsCodeCommitTriggerRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsCodeCommitTriggerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCodeCommitRepository() *schema.Resource {
+func DataSourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeCommitRepositoryRead,
+		Read: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
@@ -45,7 +45,7 @@ func dataSourceAwsCodeCommitRepository() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	repositoryName := d.Get("repository_name").(string)
