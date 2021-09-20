@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -85,8 +86,8 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -115,8 +116,8 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +128,7 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "."),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -145,8 +146,8 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -157,7 +158,7 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -175,8 +176,8 @@ func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -224,12 +225,12 @@ func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
 func TestAccAWSRoute53ResolverRule_updateName(t *testing.T) {
 	var rule1, rule2 route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
-	name1 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
-	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
+	name1 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
+	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -266,11 +267,11 @@ func TestAccAWSRoute53ResolverRule_forward(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 	resourceNameEp1 := "aws_route53_resolver_endpoint.foo"
 	resourceNameEp2 := "aws_route53_resolver_endpoint.bar"
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
+	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -342,11 +343,11 @@ func TestAccAWSRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	var rule1, rule2 route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 	resourceNameEp := "aws_route53_resolver_endpoint.foo"
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
+	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{

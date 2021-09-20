@@ -7,11 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,12 +69,12 @@ func testSweepRoute53ResolverFirewallRules(region string) error {
 
 func TestAccAWSRoute53ResolverFirewallRule_basic(t *testing.T) {
 	var v route53resolver.FirewallRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleDestroy,
 		Steps: []resource.TestStep{
@@ -99,12 +100,12 @@ func TestAccAWSRoute53ResolverFirewallRule_basic(t *testing.T) {
 
 func TestAccAWSRoute53ResolverFirewallRule_block(t *testing.T) {
 	var v route53resolver.FirewallRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleDestroy,
 		Steps: []resource.TestStep{
@@ -128,12 +129,12 @@ func TestAccAWSRoute53ResolverFirewallRule_block(t *testing.T) {
 
 func TestAccAWSRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 	var v route53resolver.FirewallRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleDestroy,
 		Steps: []resource.TestStep{
@@ -160,12 +161,12 @@ func TestAccAWSRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 
 func TestAccAWSRoute53ResolverFirewallRule_disappears(t *testing.T) {
 	var v route53resolver.FirewallRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleDestroy,
 		Steps: []resource.TestStep{
@@ -173,7 +174,7 @@ func TestAccAWSRoute53ResolverFirewallRule_disappears(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverFirewallRule(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverFirewallRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

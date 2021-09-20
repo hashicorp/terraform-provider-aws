@@ -5,25 +5,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(route53resolver.EndpointsID, testAccErrorCheckSkipRoute53)
+	acctest.RegisterServiceErrorCheckFunc(route53resolver.EndpointsID, testAccErrorCheckSkipRoute53)
 }
 
 func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
 	ds2ResourceName := "data.aws_route53_resolver_rule.by_domain_name"
 	ds3ResourceName := "data.aws_route53_resolver_rule.by_name_and_rule_type"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck: testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -68,13 +69,13 @@ func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSRoute53ResolverRuleDataSource_ResolverEndpointIdWithTags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck: testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -101,18 +102,18 @@ func TestAccAWSRoute53ResolverRuleDataSource_ResolverEndpointIdWithTags(t *testi
 
 func TestAccAWSRoute53ResolverRuleDataSource_SharedByMe(t *testing.T) {
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckAWSRoute53Resolver(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRule_sharedByMe(rName),
@@ -139,18 +140,18 @@ func TestAccAWSRoute53ResolverRuleDataSource_SharedByMe(t *testing.T) {
 
 func TestAccAWSRoute53ResolverRuleDataSource_SharedWithMe(t *testing.T) {
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckAWSRoute53Resolver(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRule_sharedWithMe(rName),
@@ -222,7 +223,7 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 }
 
 func testAccDataSourceAwsRoute53ResolverRule_sharedByMe(rName string) string {
-	return testAccAlternateAccountProviderConfig() + testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "example" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
@@ -266,7 +267,7 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 }
 
 func testAccDataSourceAwsRoute53ResolverRule_sharedWithMe(rName string) string {
-	return testAccAlternateAccountProviderConfig() + testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "example" {
   domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
@@ -310,3 +311,12 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 }
 `, rName)
 }
+// testAccErrorCheckSkipRoute53 skips Route53 tests that have error messages indicating unsupported features
+func testAccErrorCheckSkipRoute53(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Operations related to PublicDNS",
+		"Regional control plane current does not support",
+		"NoSuchHostedZone: The specified hosted zone",
+	)
+}
+

@@ -6,20 +6,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
-	name := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rInt := sdkacctest.RandInt()
 	direction := "INBOUND"
 	resourceName := "aws_route53_resolver_endpoint.foo"
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -40,15 +41,15 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
 }
 
 func TestAccAWSRoute53ResolverEndpointDataSource_Filter(t *testing.T) {
-	name := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rInt := sdkacctest.RandInt()
 	direction := "OUTBOUND"
 	resourceName := "aws_route53_resolver_endpoint.foo"
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +70,7 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Filter(t *testing.T) {
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_base(rInt int) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -131,7 +132,7 @@ resource "aws_security_group" "sg2" {
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {
-	return composeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
@@ -163,7 +164,7 @@ data "aws_route53_resolver_endpoint" "foo" {
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt int, direction, name string) string {
-	return composeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
