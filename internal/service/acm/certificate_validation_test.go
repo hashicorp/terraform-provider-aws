@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSAcmCertificateValidation_basic(t *testing.T) {
+func TestAccACMCertificateValidation_basic(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	certificateResourceName := "aws_acm_certificate.test"
@@ -34,7 +34,7 @@ func TestAccAWSAcmCertificateValidation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_timeout(t *testing.T) {
+func TestAccACMCertificateValidation_timeout(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -52,7 +52,7 @@ func TestAccAWSAcmCertificateValidation_timeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdns(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	certificateResourceName := "aws_acm_certificate.test"
@@ -80,7 +80,7 @@ func TestAccAWSAcmCertificateValidation_validationRecordFqdns(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdnsEmail(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNSEmail(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -98,7 +98,7 @@ func TestAccAWSAcmCertificateValidation_validationRecordFqdnsEmail(t *testing.T)
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdnsRoot(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNSRoot(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	certificateResourceName := "aws_acm_certificate.test"
 	resourceName := "aws_acm_certificate_validation.test"
@@ -119,7 +119,7 @@ func TestAccAWSAcmCertificateValidation_validationRecordFqdnsRoot(t *testing.T) 
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdnsRootAndWildcard(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNSRootAndWildcard(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 	certificateResourceName := "aws_acm_certificate.test"
@@ -141,7 +141,7 @@ func TestAccAWSAcmCertificateValidation_validationRecordFqdnsRootAndWildcard(t *
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdnsSan(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNSSan(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -164,7 +164,7 @@ func TestAccAWSAcmCertificateValidation_validationRecordFqdnsSan(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdnsWildcard(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNSWildcard(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 	certificateResourceName := "aws_acm_certificate.test"
@@ -186,7 +186,7 @@ func TestAccAWSAcmCertificateValidation_validationRecordFqdnsWildcard(t *testing
 	})
 }
 
-func TestAccAWSAcmCertificateValidation_validationRecordFqdnsWildcardAndRoot(t *testing.T) {
+func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 	certificateResourceName := "aws_acm_certificate.test"

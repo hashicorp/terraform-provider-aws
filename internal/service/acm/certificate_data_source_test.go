@@ -14,7 +14,7 @@ import (
 
 const ACMCertificateRe = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
 
-func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
+func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -89,7 +89,7 @@ func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
+func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -153,7 +153,7 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
+func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -193,7 +193,7 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateDataSource_KeyTypes(t *testing.T) {
+func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(4096)
