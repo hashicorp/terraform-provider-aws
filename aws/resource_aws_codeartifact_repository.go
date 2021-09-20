@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeArtifactRepository() *schema.Resource {
+func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeArtifactRepositoryCreate,
-		Read:   resourceAwsCodeArtifactRepositoryRead,
-		Update: resourceAwsCodeArtifactRepositoryUpdate,
-		Delete: resourceAwsCodeArtifactRepositoryDelete,
+		Create: resourceRepositoryCreate,
+		Read:   resourceRepositoryRead,
+		Update: resourceRepositoryUpdate,
+		Delete: resourceRepositoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -95,7 +95,7 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -142,10 +142,10 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsCodeArtifactRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Updating CodeArtifact Repository")
 
@@ -215,10 +215,10 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsCodeArtifactRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -283,7 +283,7 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsCodeArtifactRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
 

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeArtifactDomain() *schema.Resource {
+func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeArtifactDomainCreate,
-		Read:   resourceAwsCodeArtifactDomainRead,
-		Delete: resourceAwsCodeArtifactDomainDelete,
-		Update: resourceAwsCodeArtifactDomainUpdate,
+		Create: resourceDomainCreate,
+		Read:   resourceDomainRead,
+		Delete: resourceDomainDelete,
+		Update: resourceDomainUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -87,10 +87,10 @@ func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(domain.Domain.Arn))
 
-	return resourceAwsCodeArtifactDomainRead(d, meta)
+	return resourceDomainRead(d, meta)
 }
 
-func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -144,7 +144,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 
 	if d.HasChange("tags_all") {
@@ -154,10 +154,10 @@ func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsCodeArtifactDomainRead(d, meta)
+	return resourceDomainRead(d, meta)
 }
 
-func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
