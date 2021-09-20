@@ -102,7 +102,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().TimestreamwriteTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateTableWithContext(ctx, input)
@@ -160,7 +160,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("table_name", table.TableName)
 
-	tags, err := tftags.TimestreamwriteListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Timestream Table (%s): %w", arn, err))
@@ -206,7 +206,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.TimestreamwriteUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Timestream Table (%s) tags: %w", d.Get("arn").(string), err))
 		}
 	}
