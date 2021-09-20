@@ -7,16 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
@@ -39,9 +40,9 @@ func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 
 func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
@@ -64,9 +65,9 @@ func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(t 
 
 func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnits(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
@@ -89,9 +90,9 @@ func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnit
 
 func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
@@ -100,7 +101,7 @@ func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEmrManagedScalingPolicy_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEMRManagedScalingPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEMRManagedScalingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,7 +111,7 @@ func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 
 // testAccErrorCheckSkipEmrManagedScalingPolicy skips tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipEmrManagedScalingPolicy(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Managed scaling is not available",
 	)
 }
