@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepAPIGatewayV2DomainNames(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -55,7 +55,7 @@ func testSweepAPIGatewayV2DomainNames(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 domain names sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -72,14 +72,14 @@ func TestAccAWSAPIGatewayV2DomainName_basic(t *testing.T) {
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test.0"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,21 +111,21 @@ func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayV2DomainName(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayV2DomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,14 +138,14 @@ func TestAccAWSAPIGatewayV2DomainName_Tags(t *testing.T) {
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test.0"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,14 +197,14 @@ func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
 	certResourceName0 := "aws_acm_certificate.test.0"
 	certResourceName1 := "aws_acm_certificate.test.1"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -279,7 +279,7 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -363,7 +363,7 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_domain_name" {
@@ -397,7 +397,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 			return fmt.Errorf("No API Gateway v2 domain name ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		output, err := finder.DomainNameByName(conn, rs.Primary.ID)
 

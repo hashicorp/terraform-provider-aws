@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,7 +24,7 @@ func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +70,7 @@ func TestAccAWSAPIGatewayV2Stage_basicHttp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +116,7 @@ func TestAccAWSAPIGatewayV2Stage_defaultHttpStage(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,7 +162,7 @@ func TestAccAWSAPIGatewayV2Stage_autoDeployHttp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,14 +234,14 @@ func TestAccAWSAPIGatewayV2Stage_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayV2Stage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayV2Stage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -257,7 +259,7 @@ func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -329,7 +331,7 @@ func TestAccAWSAPIGatewayV2Stage_ClientCertificateIdAndDescription(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -399,7 +401,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsWebSocket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -490,7 +492,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsHttp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -582,7 +584,7 @@ func TestAccAWSAPIGatewayV2Stage_Deployment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -628,7 +630,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -756,7 +758,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -861,7 +863,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp_WithRoute(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -945,7 +947,7 @@ func TestAccAWSAPIGatewayV2Stage_StageVariables(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1014,7 +1016,7 @@ func TestAccAWSAPIGatewayV2Stage_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1075,7 +1077,7 @@ func TestAccAWSAPIGatewayV2Stage_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2StageDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_stage" {
@@ -1110,7 +1112,7 @@ func testAccCheckAWSAPIGatewayV2StageExists(n string, vApiId *string, v *apigate
 			return fmt.Errorf("No API Gateway v2 stage ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
@@ -1512,9 +1514,10 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 `, rName))
 }
+
 // testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn checks whether a CloudWatch role ARN has been configured in the current AWS region.
 func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
 
@@ -1530,4 +1533,3 @@ func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
 		t.Skip("skipping tests; no API Gateway CloudWatch role ARN has been configured in this region")
 	}
 }
-

@@ -21,7 +21,7 @@ func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSAPIGatewayV2Deployment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func TestAccAWSAPIGatewayV2Deployment_Triggers(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func TestAccAWSAPIGatewayV2Deployment_Triggers(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_deployment" {
@@ -154,7 +154,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2DeploymentDisappears(apiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		_, err := conn.DeleteDeployment(&apigatewayv2.DeleteDeploymentInput{
 			ApiId:        apiId,
@@ -176,7 +176,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentExists(n string, vApiId *string, v *ap
 			return fmt.Errorf("No API Gateway v2 deployment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetDeployment(&apigatewayv2.GetDeploymentInput{
