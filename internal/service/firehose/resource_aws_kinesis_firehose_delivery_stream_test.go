@@ -1,4 +1,4 @@
-package aws
+package firehose_test
 
 import (
 	"fmt"

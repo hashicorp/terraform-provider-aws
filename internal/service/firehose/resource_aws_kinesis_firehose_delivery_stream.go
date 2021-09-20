@@ -1,4 +1,4 @@
-package aws
+package firehose
 
 import (
 	"fmt"
@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 const (
@@ -2526,7 +2526,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		createInput.Tags = tags.IgnoreAws().FirehoseTags()
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
 			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
@@ -2672,7 +2672,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateDestination(updateInput)
 		if err != nil {
 			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
