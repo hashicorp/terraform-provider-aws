@@ -1,4 +1,4 @@
-package aws
+package apigatewayv2
 
 import (
 	"fmt"
@@ -11,10 +11,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -135,7 +133,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.DomainName))
 
-	if _, err := waiter.WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -147,7 +145,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.FindDomainNameByName(conn, d.Id())
+	output, err := FindDomainNameByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 domain name (%s) not found, removing from state", d.Id())
@@ -222,7 +220,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating API Gateway v2 domain name (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
 		}
 	}

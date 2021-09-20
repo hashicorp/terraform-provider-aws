@@ -1,4 +1,4 @@
-package aws
+package apigatewayv2
 
 import (
 	"fmt"
@@ -6,8 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,7 +42,7 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 
 	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
-	apis, err := finder.FindAPIs(conn, &apigatewayv2.GetApisInput{})
+	apis, err := FindAPIs(conn, &apigatewayv2.GetApisInput{})
 
 	if err != nil {
 		return fmt.Errorf("error reading API Gateway v2 APIs: %w", err)

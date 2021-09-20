@@ -1,4 +1,4 @@
-package aws
+package apigatewayv2
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -68,7 +67,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.DeploymentId))
 
-	if _, err := waiter.WaitDeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
+	if _, err := WaitDeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) creation: %s", d.Id(), err)
 	}
 
@@ -78,7 +77,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
-	outputRaw, _, err := waiter.StatusDeployment(conn, d.Get("api_id").(string), d.Id())()
+	outputRaw, _, err := StatusDeployment(conn, d.Get("api_id").(string), d.Id())()
 	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -112,7 +111,7 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating API Gateway v2 deployment: %s", err)
 	}
 
-	if _, err := waiter.WaitDeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
+	if _, err := WaitDeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) update: %s", d.Id(), err)
 	}
 

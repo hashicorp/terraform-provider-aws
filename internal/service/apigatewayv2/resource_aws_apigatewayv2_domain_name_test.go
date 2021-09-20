@@ -1,4 +1,4 @@
-package aws
+package apigatewayv2_test
 
 import (
 	"fmt"
@@ -12,14 +12,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/lister"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
 func init() {
@@ -38,7 +38,7 @@ func testSweepAPIGatewayV2DomainNames(region string) error {
 	input := &apigatewayv2.GetDomainNamesInput{}
 	var sweeperErrs *multierror.Error
 
-	err = lister.GetDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
+	err = tfapigatewayv2.GetDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -374,7 +374,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindDomainNameByName(conn, rs.Primary.ID)
+		_, err := tfapigatewayv2.FindDomainNameByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -403,7 +403,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
-		output, err := finder.FindDomainNameByName(conn, rs.Primary.ID)
+		output, err := tfapigatewayv2.FindDomainNameByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

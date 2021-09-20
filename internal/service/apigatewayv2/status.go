@@ -7,8 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -38,7 +37,7 @@ func StatusDeployment(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId strin
 
 func StatusDomainName(conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainName, err := finder.FindDomainNameByName(conn, name)
+		domainName, err := FindDomainNameByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

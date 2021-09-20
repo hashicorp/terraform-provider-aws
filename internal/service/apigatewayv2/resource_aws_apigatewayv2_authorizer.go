@@ -1,4 +1,4 @@
-package aws
+package apigatewayv2
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -100,7 +99,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
 
-	apiOutput, err := finder.FindAPIByID(conn, apiId)
+	apiOutput, err := FindAPIByID(conn, apiId)
 
 	if err != nil {
 		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
