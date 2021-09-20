@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func readAwsPartitionID(id string) (catalogID string, dbName string, tableName string, values []string, error error) {

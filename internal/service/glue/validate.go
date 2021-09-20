@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func mapKeyInSlice(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
