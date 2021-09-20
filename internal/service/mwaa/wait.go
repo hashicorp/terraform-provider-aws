@@ -1,4 +1,4 @@
-package waiter
+package mwaa
 
 import (
 	"time"

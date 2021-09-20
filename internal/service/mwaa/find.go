@@ -1,4 +1,4 @@
-package finder
+package mwaa
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
