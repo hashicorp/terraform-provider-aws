@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
+func TestAccDocDBOrderableDBInstanceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_docdb_orderable_db_instance.test"
 	class := "db.t3.medium"
 	engine := "docdb"
@@ -37,7 +37,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
+func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_docdb_orderable_db_instance.test"
 	engine := "docdb"
 	engineVersion := "3.6.0"

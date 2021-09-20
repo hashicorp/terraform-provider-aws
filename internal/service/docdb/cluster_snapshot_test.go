@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
+func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 	var dbClusterSnapshot docdb.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_docdb_cluster_snapshot.test"

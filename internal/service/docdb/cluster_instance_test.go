@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
+func TestAccDocDBClusterInstance_basic(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -66,7 +66,7 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
+func TestAccDocDBClusterInstance_az(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -99,7 +99,7 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
+func TestAccDocDBClusterInstance_namePrefix(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rNamePrefix := "tf-acc-test"
@@ -134,7 +134,7 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
+func TestAccDocDBClusterInstance_generatedName(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -167,7 +167,7 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
+func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -200,7 +200,7 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/5350
-func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
+func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
