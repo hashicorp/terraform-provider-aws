@@ -65,7 +65,7 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 
 	instanceID := d.Get("instance_id").(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		Attributes:       expandStringMap(d.Get("attributes").(map[string]interface{})),
+		Attributes:       flex.ExpandStringMap(d.Get("attributes").(map[string]interface{})),
 		CreatorRequestId: aws.String(resource.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
