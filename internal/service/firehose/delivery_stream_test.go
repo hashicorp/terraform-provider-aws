@@ -83,7 +83,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 	return nil
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
+func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rInt := sdkacctest.RandInt()
 
@@ -131,7 +131,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
+func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rInt := sdkacctest.RandInt()
 
@@ -162,7 +162,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3basic(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -186,7 +186,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
@@ -237,7 +237,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyARN(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
@@ -284,7 +284,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
@@ -329,7 +329,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
@@ -373,7 +373,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -397,7 +397,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3WithCloudWatchLogging(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -419,7 +419,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_s3Updates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
@@ -460,7 +460,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
+func TestAccFirehoseDeliveryStream_extendedS3basic(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
@@ -497,7 +497,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Enabled(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversion_enabled(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -545,7 +545,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ExternalUpdate(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -605,7 +605,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ExternalUpdate(t *testin
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Deserializer_Update(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionDeserializer_update(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -648,7 +648,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_HiveJsonSerDe_Empty(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionHiveJSONSerDe_empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -680,7 +680,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOpenXJSONSerDe_empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -712,7 +712,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_OrcSerDe_Empty(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOrcSerDe_empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -744,7 +744,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionParquetSerDe_empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -776,7 +776,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConfiguration_Serializer_Update(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionSerializer_update(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -819,7 +819,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ErrorOutputPrefix(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -857,7 +857,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ErrorOutputPrefix(t *tes
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12600
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ProcessingConfiguration_Empty(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3Processing_empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -886,7 +886,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ProcessingConfiguration_
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
+func TestAccFirehoseDeliveryStream_extendedS3KMSKeyARN(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
@@ -922,7 +922,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
@@ -1012,7 +1012,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_KinesisStreamSource(t *testing.T) {
+func TestAccFirehoseDeliveryStream_ExtendedS3_kinesisStreamSource(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1041,7 +1041,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_KinesisStreamSource(t *t
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1098,7 +1098,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_splunkUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	ri := sdkacctest.RandInt()
@@ -1163,7 +1163,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration(t *testing.T) {
+func TestAccFirehoseDeliveryStream_httpEndpoint(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	ri := sdkacctest.RandInt()
@@ -1230,7 +1230,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration(t *testin
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration_RetryDuration(t *testing.T) {
+func TestAccFirehoseDeliveryStream_HTTPEndpoint_retryDuration(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1262,7 +1262,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration_RetryDura
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1326,7 +1326,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1392,7 +1392,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 
 // This doesn't actually test updating VPC Configuration. It tests changing Elasticsearch configuration
 // when the Kinesis Firehose delivery stream has a VPC Configuration.
-func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t *testing.T) {
+func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1460,7 +1460,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 }
 
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1657
-func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *testing.T) {
+func TestAccFirehoseDeliveryStream_missingProcessing(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
