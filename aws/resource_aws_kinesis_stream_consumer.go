@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKinesisStreamConsumer() *schema.Resource {
+func ResourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisStreamConsumerCreate,
-		Read:   resourceAwsKinesisStreamConsumerRead,
-		Delete: resourceAwsKinesisStreamConsumerDelete,
+		Create: resourceStreamConsumerCreate,
+		Read:   resourceStreamConsumerRead,
+		Delete: resourceStreamConsumerDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -51,7 +51,7 @@ func resourceAwsKinesisStreamConsumer() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisStreamConsumerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
 	name := d.Get("name").(string)
@@ -77,10 +77,10 @@ func resourceAwsKinesisStreamConsumerCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsKinesisStreamConsumerRead(d, meta)
+	return resourceStreamConsumerRead(d, meta)
 }
 
-func resourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
 	consumer, err := finder.StreamConsumerByARN(conn, d.Id())
@@ -112,7 +112,7 @@ func resourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsKinesisStreamConsumerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamConsumerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 
 	input := &kinesis.DeregisterStreamConsumerInput{
