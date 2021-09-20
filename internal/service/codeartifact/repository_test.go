@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
 func init() {
@@ -319,7 +320,7 @@ func TestAccAWSCodeArtifactRepository_disappears(t *testing.T) {
 				Config: testAccAWSCodeArtifactRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -339,7 +340,7 @@ func testAccCheckAWSCodeArtifactRepositoryExists(n string) resource.TestCheckFun
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
-		owner, domain, repo, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
+		owner, domain, repo, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -359,7 +360,7 @@ func testAccCheckAWSCodeArtifactRepositoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		owner, domain, repo, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
+		owner, domain, repo, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

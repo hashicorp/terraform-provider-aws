@@ -99,7 +99,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading CodeArtifact Domain: %s", d.Id())
 
-	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
+	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
-	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
+	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeCodeArtifactDomainID(id string) (string, string, error) {
+func DecodeDomainID(id string) (string, string, error) {
 	repoArn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", err

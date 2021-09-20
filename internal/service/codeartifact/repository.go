@@ -227,7 +227,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading CodeArtifact Repository: %s", d.Id())
 
-	owner, domain, repo, err := decodeCodeArtifactRepositoryID(d.Id())
+	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
 
-	owner, domain, repo, err := decodeCodeArtifactRepositoryID(d.Id())
+	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -365,7 +365,7 @@ func flattenCodeArtifactExternalConnections(connections []*codeartifact.Reposito
 	return ls
 }
 
-func decodeCodeArtifactRepositoryID(id string) (string, string, string, error) {
+func DecodeRepositoryID(id string) (string, string, string, error) {
 	repoArn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", "", err
