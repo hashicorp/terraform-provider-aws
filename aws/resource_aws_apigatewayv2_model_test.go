@@ -7,16 +7,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
 	resourceName := "aws_apigatewayv2_model.test"
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	schema := `
 {
@@ -32,8 +33,8 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ModelDestroy,
 		Steps: []resource.TestStep{
@@ -44,7 +45,7 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
 				),
 			},
 			{
@@ -61,7 +62,7 @@ func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
 	resourceName := "aws_apigatewayv2_model.test"
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	schema := `
 {
@@ -77,8 +78,8 @@ func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ModelDestroy,
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
 	resourceName := "aws_apigatewayv2_model.test"
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	schema1 := `
 {
@@ -129,8 +130,8 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ModelDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
 				),
 			},
 			{
@@ -151,7 +152,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
 				),
 			},
 			{
@@ -161,7 +162,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
 				),
 			},
 			{
