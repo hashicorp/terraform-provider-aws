@@ -1,4 +1,4 @@
-package aws
+package ses_test
 
 import (
 	"fmt"
