@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcrPublicRepository() *schema.Resource {
@@ -106,7 +107,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 }
 
 func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	input := ecrpublic.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -137,7 +138,7 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	log.Printf("[DEBUG] Reading ECR Public repository %s", d.Id())
 	var out *ecrpublic.DescribeRepositoriesOutput
@@ -217,7 +218,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	deleteInput := &ecrpublic.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -270,7 +271,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcrPublicRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	if d.HasChange("catalog_data") {
 		if err := resourceAwsEcrPublicRepositoryUpdateCatalogData(conn, d); err != nil {
