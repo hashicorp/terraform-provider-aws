@@ -83,7 +83,7 @@ func resourceAwsWafGeoMatchSetRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetGeoMatchSet(params)
 	if err != nil {
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF GeoMatchSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
