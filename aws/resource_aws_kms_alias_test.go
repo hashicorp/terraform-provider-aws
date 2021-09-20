@@ -9,7 +9,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -114,7 +114,7 @@ func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
 				Config: testAccAWSKmsAliasConfigNamePrefix(rName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists(resourceName, &alias),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				),
 			},
