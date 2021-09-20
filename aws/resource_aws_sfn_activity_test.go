@@ -21,7 +21,7 @@ func TestAccAWSSfnActivity_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func TestAccAWSSfnActivity_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +96,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Step Function ID set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sfnconn
+		conn := acctest.Provider.Meta().(*AWSClient).sfnconn
 
 		_, err := conn.DescribeActivity(&sfn.DescribeActivityInput{
 			ActivityArn: aws.String(rs.Primary.ID),
@@ -107,7 +107,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSSfnActivityDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sfnconn
+	conn := acctest.Provider.Meta().(*AWSClient).sfnconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_activity" {
