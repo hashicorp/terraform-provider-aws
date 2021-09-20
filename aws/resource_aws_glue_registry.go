@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
 )
 
 func resourceAwsGlueRegistry() *schema.Resource {
