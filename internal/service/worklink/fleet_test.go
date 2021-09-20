@@ -17,7 +17,7 @@ import (
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 )
 
-func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
+func TestAccWorkLinkFleet_basic(t *testing.T) {
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
@@ -45,7 +45,7 @@ func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
+func TestAccWorkLinkFleet_displayName(t *testing.T) {
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
@@ -78,7 +78,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
+func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
@@ -111,7 +111,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
+func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
@@ -137,7 +137,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
+func TestAccWorkLinkFleet_network(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
@@ -180,7 +180,7 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
+func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
@@ -214,7 +214,7 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
+func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/saml-metadata.xml"
@@ -246,7 +246,7 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
+func TestAccWorkLinkFleet_disappears(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
