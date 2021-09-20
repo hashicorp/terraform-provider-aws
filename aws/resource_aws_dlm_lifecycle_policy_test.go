@@ -7,18 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.basic"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 				Config: dlmLifecyclePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
@@ -51,11 +52,11 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 
 func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.full"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -100,12 +101,12 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 }
 
 func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -203,7 +204,7 @@ func testAccPreCheckAWSDlm(t *testing.T) {
 
 	_, err := conn.GetLifecyclePolicies(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
