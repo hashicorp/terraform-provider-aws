@@ -49,7 +49,7 @@ func testSweepWafv2RuleGroups(region string) error {
 		for _, ruleGroup := range page.RuleGroups {
 			id := aws.StringValue(ruleGroup.Id)
 
-			r := ResourceRuleGroup()
+			r := tfwafv2.ResourceRuleGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", ruleGroup.LockToken)
@@ -740,7 +740,7 @@ func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
