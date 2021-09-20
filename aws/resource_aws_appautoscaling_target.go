@@ -77,10 +77,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -88,7 +88,7 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 	}
 
@@ -121,7 +121,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
 	}
 
@@ -155,7 +155,7 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 
 	_, err := conn.DeregisterScalableTarget(input)
 
-	if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 		return nil
 	}
 

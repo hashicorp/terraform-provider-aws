@@ -214,23 +214,23 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.PutScalingPolicy(&params)
 	}
 	if err != nil {
@@ -251,7 +251,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		var err error
 		p, err = getAwsAppautoscalingPolicy(d, meta)
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -261,7 +261,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		p, err = getAwsAppautoscalingPolicy(d, meta)
 	}
 	if err != nil {
@@ -305,17 +305,17 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutScalingPolicy(&params)
 	}
 	if err != nil {
@@ -345,11 +345,11 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
 
-		if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+		if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 			return nil
 		}
 
@@ -359,7 +359,7 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteScalingPolicy(&params)
 	}
 

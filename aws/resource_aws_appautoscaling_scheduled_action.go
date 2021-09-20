@@ -131,7 +131,7 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.PutScheduledAction(input)
 		}
 		if err != nil {
