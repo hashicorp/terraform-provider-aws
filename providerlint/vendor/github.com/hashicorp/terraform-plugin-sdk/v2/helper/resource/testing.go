@@ -675,7 +675,7 @@ func ComposeAggregateTestCheckFunc(fs ...TestCheckFunc) TestCheckFunc {
 // know ahead of time what the values will be.
 func TestCheckResourceAttrSet(name, key string) TestCheckFunc {
 	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -710,7 +710,7 @@ func testCheckResourceAttrSet(is *terraform.InstanceState, name string, key stri
 // the value in state for the given name/key combination.
 func TestCheckResourceAttr(name, key, value string) TestCheckFunc {
 	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -765,7 +765,7 @@ func testCheckResourceAttr(is *terraform.InstanceState, name string, key string,
 // NO value exists in state for the given name/key combination.
 func TestCheckNoResourceAttr(name, key string) TestCheckFunc {
 	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -813,7 +813,7 @@ func testCheckNoResourceAttr(is *terraform.InstanceState, name string, key strin
 // in state for the given name/key combination matches the given regex.
 func TestMatchResourceAttr(name, key string, r *regexp.Regexp) TestCheckFunc {
 	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -870,12 +870,12 @@ func TestCheckModuleResourceAttrPtr(mp []string, name string, key string, value 
 // in state for a pair of name/key combinations are equal.
 func TestCheckResourceAttrPair(nameFirst, keyFirst, nameSecond, keySecond string) TestCheckFunc {
 	return checkIfIndexesIntoTypeSetPair(keyFirst, keySecond, func(s *terraform.State) error {
-		isFirst, err := primaryInstanceState(s, nameFirst)
+		isFirst, err := acctest.PrimaryInstanceState(s, nameFirst)
 		if err != nil {
 			return err
 		}
 
-		isSecond, err := primaryInstanceState(s, nameSecond)
+		isSecond, err := acctest.PrimaryInstanceState(s, nameSecond)
 		if err != nil {
 			return err
 		}
@@ -1021,9 +1021,9 @@ func modulePathPrimaryInstanceState(s *terraform.State, mp addrs.ModuleInstance,
 	return modulePrimaryInstanceState(s, ms, name)
 }
 
-// primaryInstanceState returns the primary instance state for the given
+// acctest.PrimaryInstanceState returns the primary instance state for the given
 // resource name in the root module.
-func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+func acctest.PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	ms := s.RootModule()
 	return modulePrimaryInstanceState(s, ms, name)
 }

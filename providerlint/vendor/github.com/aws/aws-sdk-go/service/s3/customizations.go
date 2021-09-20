@@ -16,7 +16,7 @@ func defaultInitClientFn(c *client.Client) {
 	// Support building custom endpoints based on config
 	c.Handlers.Build.PushFront(endpointHandler)
 
-	// Require SSL when using SSE keys
+	// RequireEnvVar SSL when using SSE keys
 	c.Handlers.Validate.PushBack(validateSSERequiresSSL)
 	c.Handlers.Build.PushBack(computeSSEKeyMD5)
 	c.Handlers.Build.PushBack(computeCopySourceSSEKeyMD5)

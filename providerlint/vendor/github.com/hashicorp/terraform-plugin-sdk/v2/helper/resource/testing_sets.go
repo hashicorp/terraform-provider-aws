@@ -35,7 +35,7 @@ const (
 // Provide a full mapping of attributes to be sure the unique element exists.
 func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string) TestCheckFunc {
 	return func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string
 //
 func TestMatchTypeSetElemNestedAttrs(name, attr string, values map[string]*regexp.Regexp) TestCheckFunc {
 	return func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -115,7 +115,7 @@ func TestMatchTypeSetElemNestedAttrs(name, attr string, values map[string]*regex
 // TypeSet where its elements are a simple value
 func TestCheckTypeSetElemAttr(name, attr, value string) TestCheckFunc {
 	return func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
+		is, err := acctest.PrimaryInstanceState(s, name)
 		if err != nil {
 			return err
 		}
@@ -137,12 +137,12 @@ func TestCheckTypeSetElemAttr(name, attr, value string) TestCheckFunc {
 // E.g., TestCheckTypeSetElemAttrPair("aws_spot_fleet_request.bar", "launch_specification.*.instance_type", "data.data.aws_ec2_instance_type_offering.available", "instance_type")
 func TestCheckTypeSetElemAttrPair(nameFirst, keyFirst, nameSecond, keySecond string) TestCheckFunc {
 	return func(s *terraform.State) error {
-		isFirst, err := primaryInstanceState(s, nameFirst)
+		isFirst, err := acctest.PrimaryInstanceState(s, nameFirst)
 		if err != nil {
 			return err
 		}
 
-		isSecond, err := primaryInstanceState(s, nameSecond)
+		isSecond, err := acctest.PrimaryInstanceState(s, nameSecond)
 		if err != nil {
 			return err
 		}

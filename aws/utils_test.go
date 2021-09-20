@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 var base64encodingTests = []struct {

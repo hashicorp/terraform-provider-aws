@@ -24,12 +24,12 @@ another resource.
 
 Otherwise, available ARN testing check functions include:
 
-- testAccCheckResourceAttrGlobalARN
-- testAccCheckResourceAttrGlobalARNNoAccount
-- testAccCheckResourceAttrRegionalARN
-- testAccMatchResourceAttrGlobalARN
-- testAccMatchResourceAttrRegionalARN
-- testAccMatchResourceAttrRegionalARNNoAccount
+- acctest.CheckResourceAttrGlobalARN
+- acctest.CheckResourceAttrGlobalARNNoAccount
+- acctest.CheckResourceAttrRegionalARN
+- acctest.MatchResourceAttrGlobalARN
+- acctest.MatchResourceAttrRegionalARN
+- acctest.MatchResourceAttrRegionalARNNoAccount
 `
 
 const analyzerName = "AWSAT001"
@@ -63,7 +63,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		pass.Reportf(callExpr.Pos(), "%s: prefer resource.TestCheckResourceAttrPair() or ARN check functions (e.g. testAccMatchResourceAttrRegionalARN)", analyzerName)
+		pass.Reportf(callExpr.Pos(), "%s: prefer resource.TestCheckResourceAttrPair() or ARN check functions (e.g. acctest.MatchResourceAttrRegionalARN)", analyzerName)
 	}
 
 	return nil, nil

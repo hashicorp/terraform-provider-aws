@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // testAccCurRegion is the chosen Cost and Usage Reporting testing region
@@ -32,7 +33,7 @@ var testAccProviderCurConfigure sync.Once
 
 // testAccPreCheckCur verifies AWS credentials and that Cost and Usage Reporting is supported
 func testAccPreCheckCur(t *testing.T) {
-	testAccPartitionHasServicePreCheck(costandusagereportservice.ServiceName, t)
+	acctest.PreCheckPartitionHasService(costandusagereportservice.ServiceName, t)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
@@ -62,7 +63,7 @@ func testAccPreCheckCur(t *testing.T) {
 
 	_, err := conn.DescribeReportDefinitions(input)
 
-	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "AccessDeniedException", "linked account is not allowed to modify report preference") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "AccessDeniedException", "linked account is not allowed to modify report preference") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -76,7 +77,7 @@ func testAccPreCheckCur(t *testing.T) {
 // Testing Cost and Usage Reporting assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccCurRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetCurRegion())
+	return acctest.ConfigRegionalProvider(testAccGetCurRegion())
 }
 
 // testAccGetCurRegion returns the Cost and Usage Reporting region for testing
@@ -85,7 +86,7 @@ func testAccGetCurRegion() string {
 		return testAccCurRegion
 	}
 
-	if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), testAccGetPartition(), costandusagereportservice.ServiceName); ok {
+	if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), acctest.Partition(), costandusagereportservice.ServiceName); ok {
 		// return available region (random if multiple)
 		for regionID := range rs {
 			testAccCurRegion = regionID
@@ -93,7 +94,7 @@ func testAccGetCurRegion() string {
 		}
 	}
 
-	testAccCurRegion = testAccGetRegion()
+	testAccCurRegion = acctest.Region()
 
 	return testAccCurRegion
 }

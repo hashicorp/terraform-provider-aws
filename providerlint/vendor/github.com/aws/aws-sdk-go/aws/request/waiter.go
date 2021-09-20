@@ -229,7 +229,7 @@ func (a *WaiterAcceptor) match(name string, l aws.Logger, req *Request, err erro
 
 	switch a.Matcher {
 	case PathAllWaiterMatch, PathWaiterMatch:
-		// Require all matches to be equal for result to match
+		// RequireEnvVar all matches to be equal for result to match
 		vals, _ = awsutil.ValuesAtPath(req.Data, a.Argument)
 		if len(vals) == 0 {
 			break

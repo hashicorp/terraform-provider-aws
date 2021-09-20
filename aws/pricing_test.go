@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // testAccPricingRegion is the chosen Pricing testing region
@@ -30,7 +31,7 @@ var testAccProviderPricingConfigure sync.Once
 
 // testAccPreCheckPricing verifies AWS credentials and that Pricing is supported
 func testAccPreCheckPricing(t *testing.T) {
-	testAccPartitionHasServicePreCheck(pricing.EndpointsID, t)
+	acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
@@ -58,7 +59,7 @@ func testAccPreCheckPricing(t *testing.T) {
 // Testing Pricing assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccPricingRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetPricingRegion())
+	return acctest.ConfigRegionalProvider(testAccGetPricingRegion())
 }
 
 // testAccGetPricingRegion returns the Pricing region for testing
@@ -67,7 +68,7 @@ func testAccGetPricingRegion() string {
 		return testAccPricingRegion
 	}
 
-	if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), testAccGetPartition(), pricing.ServiceName); ok {
+	if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), acctest.Partition(), pricing.ServiceName); ok {
 		// return available region (random if multiple)
 		for regionID := range rs {
 			testAccPricingRegion = regionID
@@ -75,7 +76,7 @@ func testAccGetPricingRegion() string {
 		}
 	}
 
-	testAccPricingRegion = testAccGetRegion()
+	testAccPricingRegion = acctest.Region()
 
 	return testAccPricingRegion
 }

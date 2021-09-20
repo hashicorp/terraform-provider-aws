@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestIsAwsErr(t *testing.T) {

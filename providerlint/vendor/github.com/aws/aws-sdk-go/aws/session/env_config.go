@@ -282,7 +282,7 @@ func envConfigLoad(enableSharedConfig bool) (envConfig, error) {
 	setFromEnvVal(&creds.SecretAccessKey, credSecretEnvKey)
 	setFromEnvVal(&creds.SessionToken, credSessionEnvKey)
 	if creds.HasKeys() {
-		// Require logical grouping of credentials
+		// RequireEnvVar logical grouping of credentials
 		creds.ProviderName = EnvProviderName
 		cfg.Creds = creds
 	}
