@@ -1,4 +1,4 @@
-package aws
+package dms_test
 
 import (
 	"fmt"
