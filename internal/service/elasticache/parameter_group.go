@@ -86,7 +86,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 		CacheParameterGroupName:   aws.String(d.Get("name").(string)),
 		CacheParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:               aws.String(d.Get("description").(string)),
-		Tags:                      tags.IgnoreAws().ElasticacheTags(),
+		Tags:                      Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create ElastiCache Parameter Group: %#v", createOpts)
@@ -126,7 +126,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("description", describeResp.CacheParameterGroups[0].Description)
 	d.Set("arn", describeResp.CacheParameterGroups[0].ARN)
 
-	tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(describeResp.CacheParameterGroups[0].ARN))
+	tags, err := ListTags(conn, aws.StringValue(describeResp.CacheParameterGroups[0].ARN))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ElastiCache Parameter Group (%s): %w", d.Id(), err)
@@ -165,7 +165,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ElastiCache Parameter Group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

@@ -204,7 +204,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", cluster.ARN)
 
-	tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(cluster.ARN))
+	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)

@@ -95,7 +95,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		CacheSubnetGroupDescription: aws.String(desc),
 		CacheSubnetGroupName:        aws.String(name),
 		SubnetIds:                   subnetIds,
-		Tags:                        tags.IgnoreAws().ElasticacheTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	_, err := conn.CreateCacheSubnetGroup(req)
@@ -156,7 +156,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", group.CacheSubnetGroupDescription)
 	d.Set("subnet_ids", ids)
 
-	tags, err := tftags.ElasticacheListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
 		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
@@ -201,7 +201,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
