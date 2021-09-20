@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -184,13 +185,13 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"logging": {
 				Type:             schema.TypeList,
 				MaxItems:         1,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket_name": {
@@ -260,7 +261,7 @@ func ResourceCluster() *schema.Resource {
 					}
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"publicly_accessible": {
 				Type:     schema.TypeBool,

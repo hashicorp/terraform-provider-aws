@@ -3,6 +3,7 @@ package redshift
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func expandParameters(configured []interface{}) []*redshift.Parameter {
