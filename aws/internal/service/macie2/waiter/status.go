@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// MemberRelationshipStatus fetches the Member and its relationship status
-func MemberRelationshipStatus(conn *macie2.Macie2, adminAccountID string) resource.StateRefreshFunc {
+// statusMemberRelationship fetches the Member and its relationship status
+func statusMemberRelationship(conn *macie2.Macie2, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		adminAccount, err := finder.MemberNotAssociated(conn, adminAccountID)
+		adminAccount, err := finder.findMemberNotAssociated(conn, adminAccountID)
 
 		if err != nil {
 			return nil, "Unknown", err
