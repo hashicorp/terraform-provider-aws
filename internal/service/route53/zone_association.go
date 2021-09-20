@@ -86,7 +86,7 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 			Target:     []string{route53.ChangeStatusInsync},
 			Timeout:    10 * time.Minute,
 			MinTimeout: 2 * time.Second,
-			Refresh:    resourceAwsRoute53ZoneAssociationRefreshFunc(conn, cleanChangeID(aws.StringValue(output.ChangeInfo.Id)), d.Id()),
+			Refresh:    resourceAwsRoute53ZoneAssociationRefreshFunc(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id)), d.Id()),
 		}
 
 		if _, err := wait.WaitForState(); err != nil {
@@ -100,7 +100,7 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
+	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 		vpcRegion = meta.(*conns.AWSClient).Region
 	}
 
-	hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
+	hostedZoneSummary, err := GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
 	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") && !d.IsNewResource() {
 		log.Printf("[WARN] Route 53 Zone Association (%s) not found, removing from state", d.Id())
@@ -148,7 +148,7 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
+	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsRoute53ZoneAssociationParseId(id string) (string, string, string, error) {
+func ZoneAssociationParseID(id string) (string, string, string, error) {
 	parts := strings.Split(id, ":")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
@@ -217,7 +217,7 @@ func resourceAwsRoute53ZoneAssociationRefreshFunc(conn *route53.Route53, changeI
 	}
 }
 
-func route53GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion string) (*route53.HostedZoneSummary, error) {
+func GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion string) (*route53.HostedZoneSummary, error) {
 	input := &route53.ListHostedZonesByVPCInput{
 		VPCId:     aws.String(vpcID),
 		VPCRegion: aws.String(vpcRegion),

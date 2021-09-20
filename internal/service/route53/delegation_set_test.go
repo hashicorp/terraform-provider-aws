@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
@@ -94,7 +95,7 @@ func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
 				Config: testAccRoute53DelegationSetConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDelegationSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceDelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +138,7 @@ func testAccCheckRoute53DelegationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Delegation set does not exist: %#v", rs.Primary.ID)
 		}
 
-		setID := cleanDelegationSetId(*out.DelegationSet.Id)
+		setID := tfroute53.CleanDelegationSetID(*out.DelegationSet.Id)
 		if setID != rs.Primary.ID {
 			return fmt.Errorf("Delegation set ID does not match:\nExpected: %#v\nReturned: %#v", rs.Primary.ID, setID)
 		}

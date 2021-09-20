@@ -61,7 +61,7 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 				Config: testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHostedZoneDNSSEC(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceHostedZoneDNSSEC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

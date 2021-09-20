@@ -74,7 +74,7 @@ func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta inte
 func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
+	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
+	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsRoute53VPCAssociationAuthorizationParseId(id string) (string, string, error) {
+func VPCAssociationAuthorizationParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
