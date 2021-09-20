@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepElasticacheParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*conns.AWSClient).ElastiCacheConn
 
 	err = conn.DescribeCacheParameterGroupsPages(&elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 		if len(page.CacheParameterGroups) == 0 {
@@ -460,7 +461,7 @@ func TestAccAWSElasticacheParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_parameter_group" {
@@ -516,7 +517,7 @@ func testAccCheckAWSElasticacheParameterGroupExists(n string, v *elasticache.Cac
 			return fmt.Errorf("No Cache Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 		opts := elasticache.DescribeCacheParameterGroupsInput{
 			CacheParameterGroupName: aws.String(rs.Primary.ID),

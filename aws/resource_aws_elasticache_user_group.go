@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticacheUserGroup() *schema.Resource {
@@ -65,8 +66,8 @@ var resourceAwsElasticacheUserGroupPendingStates = []string{
 }
 
 func resourceAwsElasticacheUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserGroupInput{
@@ -79,7 +80,7 @@ func resourceAwsElasticacheUserGroupCreate(d *schema.ResourceData, meta interfac
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if len(tags) > 0 && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		input.Tags = tags.IgnoreAws().ElasticacheTags()
 	}
 
@@ -110,9 +111,9 @@ func resourceAwsElasticacheUserGroupCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsElasticacheUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := finder.ElastiCacheUserGroupById(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
@@ -131,7 +132,7 @@ func resourceAwsElasticacheUserGroupRead(d *schema.ResourceData, meta interface{
 	d.Set("user_group_id", resp.UserGroupId)
 
 	// Tags are currently only supported in AWS Commercial.
-	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(resp.ARN))
 
 		if err != nil {
@@ -157,7 +158,7 @@ func resourceAwsElasticacheUserGroupRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	hasChange := false
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -203,7 +204,7 @@ func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if d.HasChange("tags_all") && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
@@ -215,7 +216,7 @@ func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsElasticacheUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.DeleteUserGroupInput{
 		UserGroupId: aws.String(d.Id()),

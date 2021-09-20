@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
@@ -82,7 +83,7 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 }
 
 func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	groupID := d.Get("replication_group_id").(string)
 

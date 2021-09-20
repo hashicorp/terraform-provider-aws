@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepElasticacheClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*conns.AWSClient).ElastiCacheConn
 
 	var sweeperErrs *multierror.Error
 
@@ -840,7 +841,7 @@ func testAccCheckAWSElasticacheClusterRecreated(i, j *elasticache.CacheCluster) 
 }
 
 func testAccCheckAWSElasticacheClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_cluster" {
@@ -869,7 +870,7 @@ func testAccCheckAWSElasticacheClusterExists(n string, v *elasticache.CacheClust
 			return fmt.Errorf("No cache cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 		resp, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
 			CacheClusterId: aws.String(rs.Primary.ID),
 		})
@@ -898,7 +899,7 @@ func testAccCheckAWSElasticacheClusterEc2ClassicExists(n string, v *elasticache.
 			return fmt.Errorf("No cache cluster ID is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).ElastiCacheConn
 
 		input := &elasticache.DescribeCacheClustersInput{
 			CacheClusterId: aws.String(rs.Primary.ID),

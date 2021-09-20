@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsElastiCacheUser() *schema.Resource {
@@ -46,7 +47,7 @@ func dataSourceAwsElastiCacheUser() *schema.Resource {
 }
 
 func dataSourceAwsElastiCacheUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	params := &elasticache.DescribeUsersInput{
 		UserId: aws.String(d.Get("user_id").(string)),
