@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
 )
 
 func testAccAWSSecurityHubMember_basic(t *testing.T) {

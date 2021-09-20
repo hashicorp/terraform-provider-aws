@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 )
 
 func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
