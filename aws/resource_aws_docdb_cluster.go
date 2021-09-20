@@ -9,13 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -55,7 +59,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cluster_identifier_prefix"},
-				ValidateFunc:  validateDocDBIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
@@ -63,7 +67,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cluster_identifier"},
-				ValidateFunc:  validateDocDBIdentifierPrefix,
+				ValidateFunc:  validIdentifierPrefix,
 			},
 
 			"cluster_members": {
@@ -107,7 +111,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Default:      "docdb",
 				ForceNew:     true,
-				ValidateFunc: validateDocDBEngine(),
+				ValidateFunc: validEngine(),
 			},
 
 			"engine_version": {
@@ -191,7 +195,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 
 			"preferred_maintenance_window": {
@@ -204,7 +208,7 @@ func ResourceCluster() *schema.Resource {
 					}
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 
 			"backup_retention_period": {
@@ -219,7 +223,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"cluster_resource_id": {
@@ -835,10 +839,29 @@ func buildDocDBCloudwatchLogsExportConfiguration(d *schema.ResourceData) *docdb.
 	o := oraw.([]interface{})
 	n := nraw.([]interface{})
 
-	create, disable := diffCloudwatchLogsExportConfiguration(o, n)
+	create, disable := diffCloudWatchLogsExportConfiguration(o, n)
 
 	return &docdb.CloudwatchLogsExportConfiguration{
 		EnableLogTypes:  flex.ExpandStringList(create),
 		DisableLogTypes: flex.ExpandStringList(disable),
 	}
+}
+
+func diffCloudWatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
+	add := make([]interface{}, 0)
+	disable := make([]interface{}, 0)
+
+	for _, n := range new {
+		if _, contains := verify.SliceContainsString(old, n.(string)); !contains {
+			add = append(add, n)
+		}
+	}
+
+	for _, o := range old {
+		if _, contains := verify.SliceContainsString(new, o.(string)); !contains {
+			disable = append(disable, o)
+		}
+	}
+
+	return add, disable
 }

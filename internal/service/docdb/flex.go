@@ -3,6 +3,7 @@ package docdb
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Takes the result of flatmap.Expand for an array of parameters and

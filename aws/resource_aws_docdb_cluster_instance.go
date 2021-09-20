@@ -15,6 +15,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceClusterInstance() *schema.Resource {
@@ -86,7 +87,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "docdb",
-				ValidateFunc: validateDocDBEngine(),
+				ValidateFunc: validEngine(),
 			},
 
 			"engine_version": {
@@ -105,7 +106,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validateDocDBIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 
 			"identifier_prefix": {
@@ -113,7 +114,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateDocDBIdentifierPrefix,
+				ValidateFunc: validIdentifierPrefix,
 			},
 
 			"instance_class": {
@@ -142,7 +143,7 @@ func ResourceClusterInstance() *schema.Resource {
 					}
 					return ""
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 
 			"promotion_tier": {
