@@ -223,7 +223,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
-		output, err := finder.BackupByID(conn, rs.Primary.ID)
+		output, err := finder.FindBackupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -246,7 +246,7 @@ func testAccCheckFsxBackupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.BackupByID(conn, rs.Primary.ID)
+		_, err := finder.FindBackupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

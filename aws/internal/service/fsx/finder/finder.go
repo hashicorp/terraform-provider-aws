@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
+func FindBackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	input := &fsx.DescribeBackupsInput{
 		BackupIds: aws.StringSlice([]string{id}),
 	}
@@ -36,7 +36,7 @@ func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return output.Backups[0], nil
 }
 
-func FileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []*string{aws.String(id)},
 	}

@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func BackupStatus(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusBackup(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.BackupByID(conn, id)
+		output, err := finder.FindBackupByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +25,9 @@ func BackupStatus(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
-func FileSystemStatus(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusFileSystem(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FileSystemByID(conn, id)
+		output, err := finder.FindFileSystemByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,9 @@ func FileSystemStatus(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
-func FileSystemAdministrativeActionsStatus(conn *fsx.FSx, id, action string) resource.StateRefreshFunc {
+func statusFileSystemAdministrativeActions(conn *fsx.FSx, id, action string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FileSystemByID(conn, id)
+		output, err := finder.FindFileSystemByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

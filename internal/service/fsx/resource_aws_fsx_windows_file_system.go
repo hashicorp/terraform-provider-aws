@@ -378,7 +378,7 @@ func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitFileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for FSx Windows File System (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -445,7 +445,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating FSx Windows File System (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.waitFileSystemAdministrativeActionsCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx Windows File System (%s) to update: %w", d.Id(), err)
 		}
 	}
@@ -458,7 +458,7 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filesystem, err := finder.FileSystemByID(conn, d.Id())
+	filesystem, err := finder.FindFileSystemByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Windows File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -554,7 +554,7 @@ func resourceWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting FSx Windows File System (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for FSx Windows File System (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -587,7 +587,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error associating aliases to FSx file system (%s): %w", identifier, err)
 			}
 
-			if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
+			if _, err := waiter.waitFileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
 				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
 			}
 		}
@@ -606,7 +606,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error disassociating aliases from FSx file system (%s): %w", identifier, err)
 			}
 
-			if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
+			if _, err := waiter.waitFileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
 				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
 			}
 		}

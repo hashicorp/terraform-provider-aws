@@ -89,7 +89,7 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(result.Backup.BackupId))
 
 	log.Println("[DEBUG] Waiting for FSx backup to become available")
-	if _, err := waiter.BackupAvailable(conn, d.Id()); err != nil {
+	if _, err := waiter.waitBackupAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for FSx Backup (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -115,7 +115,7 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	backup, err := finder.BackupByID(conn, d.Id())
+	backup, err := finder.FindBackupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -168,7 +168,7 @@ func resourceBackupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Waiting for backup to delete")
-	if _, err := waiter.BackupDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitBackupDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for FSx Backup (%s) to deleted: %w", d.Id(), err)
 	}
 
