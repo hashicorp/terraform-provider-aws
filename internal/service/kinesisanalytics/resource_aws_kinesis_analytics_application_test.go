@@ -1,4 +1,4 @@
-package aws
+package kinesisanalytics_test
 
 import (
 	"fmt"
@@ -14,14 +14,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesisanalytics "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
+	tfkinesisanalytics "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 )
 
 func init() {
@@ -40,7 +40,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 	input := &kinesisanalytics.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
+	err = tfkinesisanalytics.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -49,7 +49,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := finder.FindApplicationDetailByName(conn, name)
+			application, err := tfkinesisanalytics.FindApplicationDetailByName(conn, name)
 
 			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
@@ -1960,7 +1960,7 @@ func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		_, err := tfkinesisanalytics.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1988,7 +1988,7 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, v *kinesisanalytics
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
 
-		application, err := finder.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		application, err := tfkinesisanalytics.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err
