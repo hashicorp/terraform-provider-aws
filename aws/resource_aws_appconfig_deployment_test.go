@@ -7,13 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment.test"
 	appResourceName := "aws_appconfig_application.test"
 	confProfResourceName := "aws_appconfig_configuration_profile.test"
@@ -22,8 +23,8 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 	confVersionResourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:  testAccProviders,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
@@ -33,7 +34,7 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 				Config: testAccAWSAppConfigDeploymentConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigDeploymentExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}/deployment/1`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}/deployment/1`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_version", confVersionResourceName, "version_number"),
@@ -55,13 +56,13 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment.test"
 	strategy := "AppConfig.Linear50PercentEvery30Seconds"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:  testAccProviders,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
@@ -84,12 +85,12 @@ func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeployment_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -205,7 +206,7 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 }
 
 func testAccAWSAppConfigDeploymentConfigName(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAppConfigDeploymentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
@@ -220,7 +221,7 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccAWSAppConfigDeploymentConfig_PredefinedStrategy(rName, strategy string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAppConfigDeploymentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
@@ -235,7 +236,7 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccAWSAppConfigDeploymentTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAppConfigDeploymentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
@@ -253,7 +254,7 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccAWSAppConfigDeploymentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAppConfigDeploymentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{

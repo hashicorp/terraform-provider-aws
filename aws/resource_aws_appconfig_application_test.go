@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -79,12 +80,12 @@ func testSweepAppConfigApplications(region string) error {
 }
 
 func TestAccAWSAppConfigApplication_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +93,7 @@ func TestAccAWSAppConfigApplication_basic(t *testing.T) {
 				Config: testAccAWSAppConfigApplicationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigApplicationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -107,12 +108,12 @@ func TestAccAWSAppConfigApplication_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -120,7 +121,7 @@ func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigApplicationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigApplicationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppconfigApplication(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,13 +130,13 @@ func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
 }
 
 func TestAccAWSAppConfigApplication_updateName(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-update")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -162,13 +163,13 @@ func TestAccAWSAppConfigApplication_updateName(t *testing.T) {
 }
 
 func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	description := acctest.RandomWithPrefix("tf-acc-test-update")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -208,12 +209,12 @@ func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
 }
 
 func TestAccAWSAppConfigApplication_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{

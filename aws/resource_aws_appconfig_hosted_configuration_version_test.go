@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -124,12 +125,12 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 }
 
 func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +138,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 				Config: testAccAWSAppConfigHostedConfigurationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/configurationprofile/[a-z0-9]{4,7}/hostedconfigurationversion/[0-9]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/configurationprofile/[a-z0-9]{4,7}/hostedconfigurationversion/[0-9]+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_appconfig_application.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", "aws_appconfig_configuration_profile.test", "configuration_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "content", "{\"foo\":\"bar\"}"),
@@ -156,12 +157,12 @@ func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigHostedConfigurationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -253,7 +254,7 @@ func testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName strin
 }
 
 func testAccAWSAppConfigHostedConfigurationVersion(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAppConfigConfigurationProfileConfigName(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_hosted_configuration_version" "test" {
