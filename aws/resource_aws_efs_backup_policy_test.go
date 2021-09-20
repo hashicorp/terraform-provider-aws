@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
@@ -121,7 +122,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 		output, err := finder.BackupPolicyByID(conn, rs.Primary.ID)
 
@@ -136,7 +137,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 }
 
 func testAccCheckEfsBackupPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_backup_policy" {

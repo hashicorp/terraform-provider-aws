@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBackupVaultNotifications() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 }
 
 func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
@@ -70,7 +71,7 @@ func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.GetBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -97,7 +98,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),

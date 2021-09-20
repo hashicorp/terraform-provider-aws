@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEfsBackupPolicy() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsEfsBackupPolicy() *schema.Resource {
 }
 
 func resourceAwsEfsBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	fsID := d.Get("file_system_id").(string)
 
@@ -67,7 +68,7 @@ func resourceAwsEfsBackupPolicyCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEfsBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	output, err := finder.BackupPolicyByID(conn, d.Id())
 
@@ -91,7 +92,7 @@ func resourceAwsEfsBackupPolicyRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEfsBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	if err := efsBackupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return err
@@ -101,7 +102,7 @@ func resourceAwsEfsBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEfsBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	err := efsBackupPolicyPut(conn, d.Id(), map[string]interface{}{
 		"status": efs.StatusDisabled,

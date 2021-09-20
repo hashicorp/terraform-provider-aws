@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsBackupPlan_basic(t *testing.T) {
@@ -644,7 +645,7 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_plan" {
 			continue
@@ -668,7 +669,7 @@ func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
 
 func testAccCheckAwsBackupPlanExists(name string, plan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
