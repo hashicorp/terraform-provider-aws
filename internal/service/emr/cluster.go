@@ -1063,7 +1063,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	instanceFleets, err := fetchAllEMRInstanceFleets(conn, d.Id())
+	instanceFleets, err := FetchAllInstanceFleets(conn, d.Id())
 
 	if err == nil { // find instance fleets
 
@@ -1388,7 +1388,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 
-		count = countEMRRemainingInstances(resp, d.Id())
+		count = CountRemainingInstances(resp, d.Id())
 		if count != 0 {
 			return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", d.Id(), count))
 		}
@@ -1399,7 +1399,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.ListInstances(input)
 
 		if err == nil {
-			count = countEMRRemainingInstances(resp, d.Id())
+			count = CountRemainingInstances(resp, d.Id())
 		}
 	}
 
@@ -1414,7 +1414,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func countEMRRemainingInstances(resp *emr.ListInstancesOutput, emrClusterId string) int {
+func CountRemainingInstances(resp *emr.ListInstancesOutput, emrClusterId string) int {
 	if resp == nil {
 		log.Printf("[ERROR] response is nil")
 		return 0
@@ -2039,7 +2039,7 @@ func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType stri
 	return config
 }
 
-func fetchAllEMRInstanceFleets(conn *emr.EMR, clusterID string) ([]*emr.InstanceFleet, error) {
+func FetchAllInstanceFleets(conn *emr.EMR, clusterID string) ([]*emr.InstanceFleet, error) {
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
