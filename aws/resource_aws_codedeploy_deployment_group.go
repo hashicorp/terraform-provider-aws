@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -1460,7 +1460,7 @@ func resourceAwsCodeDeployTagFilterHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func resourceAwsCodeDeployTagSetHash(v interface{}) int {
@@ -1493,14 +1493,14 @@ func resourceAwsCodeDeployTriggerConfigHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", s))
 		}
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func loadBalancerInfoHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	if v == nil {
-		return hashcode.String(buf.String())
+		return create.StringHashcode(buf.String())
 	}
 
 	m := v.(map[string]interface{})
@@ -1508,5 +1508,5 @@ func loadBalancerInfoHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
