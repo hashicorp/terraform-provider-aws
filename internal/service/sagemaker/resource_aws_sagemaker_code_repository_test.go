@@ -198,7 +198,7 @@ func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		codeRepository, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
+		codeRepository, err := finder.FindCodeRepositoryByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find CodeRepository") {
 			continue
@@ -228,7 +228,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
+		resp, err := finder.FindCodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

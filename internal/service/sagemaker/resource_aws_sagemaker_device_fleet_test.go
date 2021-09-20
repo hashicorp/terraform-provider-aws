@@ -209,7 +209,7 @@ func testAccCheckAWSSagemakerDeviceFleetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		deviceFleet, err := finder.DeviceFleetByName(conn, rs.Primary.ID)
+		deviceFleet, err := finder.FindDeviceFleetByName(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -238,7 +238,7 @@ func testAccCheckAWSSagemakerDeviceFleetExists(n string, device_fleet *sagemaker
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.DeviceFleetByName(conn, rs.Primary.ID)
+		resp, err := finder.FindDeviceFleetByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

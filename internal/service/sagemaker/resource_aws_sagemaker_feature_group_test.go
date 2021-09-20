@@ -394,7 +394,7 @@ func testAccCheckAWSSagemakerFeatureGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
+		_, err := finder.FindFeatureGroupByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -423,7 +423,7 @@ func testAccCheckAWSSagemakerFeatureGroupExists(n string, v *sagemaker.DescribeF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
-		output, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
+		output, err := finder.FindFeatureGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

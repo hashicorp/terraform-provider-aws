@@ -325,7 +325,7 @@ func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	endpointConfig, err := finder.EndpointConfigByName(conn, d.Id())
+	endpointConfig, err := finder.FindEndpointConfigByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Endpoint Configuration (%s) not found, removing from state", d.Id())

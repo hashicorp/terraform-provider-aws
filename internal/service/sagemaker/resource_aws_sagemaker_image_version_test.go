@@ -123,7 +123,7 @@ func testAccCheckAWSSagemakerImageVersionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		imageVersion, err := finder.ImageVersionByName(conn, rs.Primary.ID)
+		imageVersion, err := finder.FindImageVersionByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -153,7 +153,7 @@ func testAccCheckAWSSagemakerImageVersionExists(n string, image *sagemaker.Descr
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.ImageVersionByName(conn, rs.Primary.ID)
+		resp, err := finder.FindImageVersionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

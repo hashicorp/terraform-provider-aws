@@ -205,7 +205,7 @@ func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(name)
 	log.Printf("[INFO] sagemaker notebook instance ID: %s", d.Id())
 
-	if _, err := waiter.NotebookInstanceInService(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitNotebookInstanceInService(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to create: %w", d.Id(), err)
 	}
 
@@ -390,7 +390,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating sagemaker notebook instance: %s", err)
 		}
 
-		if _, err := waiter.NotebookInstanceStopped(conn, d.Id()); err != nil {
+		if _, err := waiter.WaitNotebookInstanceStopped(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to stop: %w", d.Id(), err)
 		}
 
@@ -434,7 +434,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("Error waiting for sagemaker notebook instance to start: %s", err)
 			}
 
-			if _, err := waiter.NotebookInstanceInService(conn, d.Id()); err != nil {
+			if _, err := waiter.WaitNotebookInstanceInService(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to to start after update: %w", d.Id(), err)
 			}
 		}
@@ -472,7 +472,7 @@ func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error trying to delete sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waiter.NotebookInstanceDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitNotebookInstanceDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
@@ -505,7 +505,7 @@ func stopSagemakerNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 		return fmt.Errorf("Error stopping sagemaker notebook instance: %s", err)
 	}
 
-	if _, err := waiter.NotebookInstanceStopped(conn, id); err != nil {
+	if _, err := waiter.WaitNotebookInstanceStopped(conn, id); err != nil {
 		return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to stop: %w", id, err)
 	}
 

@@ -388,7 +388,7 @@ func testAccCheckSagemakerEndpointConfigurationDestroy(s *terraform.State) error
 			continue
 		}
 
-		_, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
+		_, err := finder.FindEndpointConfigByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -416,7 +416,7 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		_, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
+		_, err := finder.FindEndpointConfigByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

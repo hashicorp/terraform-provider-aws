@@ -126,7 +126,7 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	deviceFleet, err := finder.DeviceFleetByName(conn, d.Id())
+	deviceFleet, err := finder.FindDeviceFleetByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Unable to find SageMaker Device Fleet (%s); removing from state", d.Id())
 		d.SetId("")

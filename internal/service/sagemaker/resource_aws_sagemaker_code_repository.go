@@ -93,7 +93,7 @@ func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	codeRepository, err := finder.CodeRepositoryByName(conn, d.Id())
+	codeRepository, err := finder.FindCodeRepositoryByName(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")

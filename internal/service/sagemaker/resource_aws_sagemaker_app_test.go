@@ -219,7 +219,7 @@ func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
 		appType := rs.Primary.Attributes["app_type"]
 		appName := rs.Primary.Attributes["app_name"]
 
-		app, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
+		app, err := finder.FindAppByName(conn, domainID, userProfileName, appType, appName)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -255,7 +255,7 @@ func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutpu
 		appType := rs.Primary.Attributes["app_type"]
 		appName := rs.Primary.Attributes["app_name"]
 
-		resp, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
+		resp, err := finder.FindAppByName(conn, domainID, userProfileName, appType, appName)
 		if err != nil {
 			return err
 		}

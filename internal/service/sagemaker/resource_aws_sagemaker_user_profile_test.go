@@ -303,7 +303,7 @@ func testAccCheckAWSSagemakerUserProfileDestroy(s *terraform.State) error {
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 
-		userProfile, err := finder.UserProfileByName(conn, domainID, userProfileName)
+		userProfile, err := finder.FindUserProfileByName(conn, domainID, userProfileName)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -338,7 +338,7 @@ func testAccCheckAWSSagemakerUserProfileExists(n string, userProfile *sagemaker.
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 
-		resp, err := finder.UserProfileByName(conn, domainID, userProfileName)
+		resp, err := finder.FindUserProfileByName(conn, domainID, userProfileName)
 		if err != nil {
 			return err
 		}

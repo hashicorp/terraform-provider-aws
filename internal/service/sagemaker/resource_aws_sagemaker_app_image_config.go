@@ -126,7 +126,7 @@ func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	image, err := finder.AppImageConfigByName(conn, d.Id())
+	image, err := finder.FindAppImageConfigByName(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")

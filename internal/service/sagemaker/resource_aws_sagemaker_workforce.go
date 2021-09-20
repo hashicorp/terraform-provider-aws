@@ -187,7 +187,7 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	workforce, err := finder.WorkforceByName(conn, d.Id())
+	workforce, err := finder.FindWorkforceByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Workforce (%s) not found, removing from state", d.Id())

@@ -170,7 +170,7 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	workteam, err := finder.WorkteamByName(conn, d.Id())
+	workteam, err := finder.FindWorkteamByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Workteam (%s) not found, removing from state", d.Id())

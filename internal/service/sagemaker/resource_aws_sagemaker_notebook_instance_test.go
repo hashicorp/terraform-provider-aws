@@ -59,7 +59,7 @@ func testSweepSagemakerNotebookInstances(region string) error {
 				continue
 			}
 
-			if _, err := waiter.NotebookInstanceDeleted(conn, name); err != nil {
+			if _, err := waiter.WaitNotebookInstanceDeleted(conn, name); err != nil {
 				log.Printf("error waiting for sagemaker notebook instance (%s) to delete: %s", name, err)
 				continue
 			}

@@ -70,7 +70,7 @@ func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(name)
 
-	if _, err := waiter.ImageVersionCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitImageVersionCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -80,7 +80,7 @@ func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	image, err := finder.ImageVersionByName(conn, d.Id())
+	image, err := finder.FindImageVersionByName(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
@@ -116,7 +116,7 @@ func resourceImageVersionDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting Sagemaker Image Version (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ImageVersionDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitImageVersionDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}

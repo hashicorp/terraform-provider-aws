@@ -196,7 +196,7 @@ func testAccCheckAWSSagemakerModelPackageGroupDestroy(s *terraform.State) error 
 			continue
 		}
 
-		ModelPackageGroup, err := finder.ModelPackageGroupByName(conn, rs.Primary.ID)
+		ModelPackageGroup, err := finder.FindModelPackageGroupByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "does not exist") {
 			continue
@@ -226,7 +226,7 @@ func testAccCheckAWSSagemakerModelPackageGroupExists(n string, mpg *sagemaker.De
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.ModelPackageGroupByName(conn, rs.Primary.ID)
+		resp, err := finder.FindModelPackageGroupByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

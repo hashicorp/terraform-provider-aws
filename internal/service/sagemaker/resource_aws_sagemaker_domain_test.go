@@ -448,7 +448,7 @@ func testAccCheckAWSSagemakerDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		domain, err := finder.DomainByName(conn, rs.Primary.ID)
+		domain, err := finder.FindDomainByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -484,7 +484,7 @@ func testAccCheckAWSSagemakerDomainExists(n string, codeRepo *sagemaker.Describe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.DomainByName(conn, rs.Primary.ID)
+		resp, err := finder.FindDomainByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

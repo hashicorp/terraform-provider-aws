@@ -105,7 +105,7 @@ func resourceHumanTaskUiRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	humanTaskUi, err := finder.HumanTaskUiByName(conn, d.Id())
+	humanTaskUi, err := finder.FindHumanTaskUiByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker HumanTaskUi (%s) not found, removing from state", d.Id())

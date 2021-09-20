@@ -323,7 +323,7 @@ func testAccCheckAWSSagemakerWorkteamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.WorkteamByName(conn, rs.Primary.ID)
+		_, err := finder.FindWorkteamByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -352,7 +352,7 @@ func testAccCheckAWSSagemakerWorkteamExists(n string, workteam *sagemaker.Workte
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
-		output, err := finder.WorkteamByName(conn, rs.Primary.ID)
+		output, err := finder.FindWorkteamByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

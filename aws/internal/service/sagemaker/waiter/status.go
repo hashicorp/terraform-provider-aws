@@ -13,19 +13,19 @@ import (
 )
 
 const (
-	SagemakerNotebookInstanceStatusNotFound  = "NotFound"
-	SagemakerImageStatusNotFound             = "NotFound"
-	SagemakerImageStatusFailed               = "Failed"
-	SagemakerImageVersionStatusNotFound      = "NotFound"
-	SagemakerImageVersionStatusFailed        = "Failed"
-	SagemakerDomainStatusNotFound            = "NotFound"
-	SagemakerUserProfileStatusNotFound       = "NotFound"
-	SagemakerModelPackageGroupStatusNotFound = "NotFound"
-	SagemakerAppStatusNotFound               = "NotFound"
+	SageMakerNotebookInstanceStatusNotFound  = "NotFound"
+	SageMakerImageStatusNotFound             = "NotFound"
+	SageMakerImageStatusFailed               = "Failed"
+	SageMakerImageVersionStatusNotFound      = "NotFound"
+	SageMakerImageVersionStatusFailed        = "Failed"
+	SageMakerDomainStatusNotFound            = "NotFound"
+	SageMakerUserProfileStatusNotFound       = "NotFound"
+	SageMakerModelPackageGroupStatusNotFound = "NotFound"
+	SageMakerAppStatusNotFound               = "NotFound"
 )
 
-// NotebookInstanceStatus fetches the NotebookInstance and its Status
-func NotebookInstanceStatus(conn *sagemaker.SageMaker, notebookName string) resource.StateRefreshFunc {
+// StatusNotebookInstance fetches the NotebookInstance and its Status
+func StatusNotebookInstance(conn *sagemaker.SageMaker, notebookName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeNotebookInstanceInput{
 			NotebookInstanceName: aws.String(notebookName),
@@ -34,7 +34,7 @@ func NotebookInstanceStatus(conn *sagemaker.SageMaker, notebookName string) reso
 		output, err := conn.DescribeNotebookInstance(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, SagemakerNotebookInstanceStatusNotFound, nil
+			return nil, SageMakerNotebookInstanceStatusNotFound, nil
 		}
 
 		if err != nil {
@@ -42,15 +42,15 @@ func NotebookInstanceStatus(conn *sagemaker.SageMaker, notebookName string) reso
 		}
 
 		if output == nil {
-			return nil, SagemakerNotebookInstanceStatusNotFound, nil
+			return nil, SageMakerNotebookInstanceStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.NotebookInstanceStatus), nil
 	}
 }
 
-// ModelPackageGroupStatus fetches the ModelPackageGroup and its Status
-func ModelPackageGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+// StatusModelPackageGroup fetches the ModelPackageGroup and its Status
+func StatusModelPackageGroup(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeModelPackageGroupInput{
 			ModelPackageGroupName: aws.String(name),
@@ -59,7 +59,7 @@ func ModelPackageGroupStatus(conn *sagemaker.SageMaker, name string) resource.St
 		output, err := conn.DescribeModelPackageGroup(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
-			return nil, SagemakerModelPackageGroupStatusNotFound, nil
+			return nil, SageMakerModelPackageGroupStatusNotFound, nil
 		}
 
 		if err != nil {
@@ -67,15 +67,15 @@ func ModelPackageGroupStatus(conn *sagemaker.SageMaker, name string) resource.St
 		}
 
 		if output == nil {
-			return nil, SagemakerModelPackageGroupStatusNotFound, nil
+			return nil, SageMakerModelPackageGroupStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.ModelPackageGroupStatus), nil
 	}
 }
 
-// ImageStatus fetches the Image and its Status
-func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+// StatusImage fetches the Image and its Status
+func StatusImage(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeImageInput{
 			ImageName: aws.String(name),
@@ -84,15 +84,15 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 		output, err := conn.DescribeImage(input)
 
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
-			return nil, SagemakerImageStatusNotFound, nil
+			return nil, SageMakerImageStatusNotFound, nil
 		}
 
 		if err != nil {
-			return nil, SagemakerImageStatusFailed, err
+			return nil, SageMakerImageStatusFailed, err
 		}
 
 		if output == nil {
-			return nil, SagemakerImageStatusNotFound, nil
+			return nil, SageMakerImageStatusNotFound, nil
 		}
 
 		if aws.StringValue(output.ImageStatus) == sagemaker.ImageStatusCreateFailed {
@@ -103,8 +103,8 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 	}
 }
 
-// ImageVersionStatus fetches the ImageVersion and its Status
-func ImageVersionStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+// StatusImageVersion fetches the ImageVersion and its Status
+func StatusImageVersion(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeImageVersionInput{
 			ImageName: aws.String(name),
@@ -113,15 +113,15 @@ func ImageVersionStatus(conn *sagemaker.SageMaker, name string) resource.StateRe
 		output, err := conn.DescribeImageVersion(input)
 
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No ImageVersion with the name") {
-			return nil, SagemakerImageVersionStatusNotFound, nil
+			return nil, SageMakerImageVersionStatusNotFound, nil
 		}
 
 		if err != nil {
-			return nil, SagemakerImageVersionStatusFailed, err
+			return nil, SageMakerImageVersionStatusFailed, err
 		}
 
 		if output == nil {
-			return nil, SagemakerImageVersionStatusNotFound, nil
+			return nil, SageMakerImageVersionStatusNotFound, nil
 		}
 
 		if aws.StringValue(output.ImageVersionStatus) == sagemaker.ImageVersionStatusCreateFailed {
@@ -132,8 +132,8 @@ func ImageVersionStatus(conn *sagemaker.SageMaker, name string) resource.StateRe
 	}
 }
 
-// DomainStatus fetches the Domain and its Status
-func DomainStatus(conn *sagemaker.SageMaker, domainID string) resource.StateRefreshFunc {
+// StatusDomain fetches the Domain and its Status
+func StatusDomain(conn *sagemaker.SageMaker, domainID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeDomainInput{
 			DomainId: aws.String(domainID),
@@ -150,16 +150,16 @@ func DomainStatus(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 		}
 
 		if output == nil {
-			return nil, SagemakerDomainStatusNotFound, nil
+			return nil, SageMakerDomainStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func FeatureGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusFeatureGroup(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FeatureGroupByName(conn, name)
+		output, err := finder.FindFeatureGroupByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -173,8 +173,8 @@ func FeatureGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRe
 	}
 }
 
-// UserProfileStatus fetches the UserProfile and its Status
-func UserProfileStatus(conn *sagemaker.SageMaker, domainID, userProfileName string) resource.StateRefreshFunc {
+// StatusUserProfile fetches the UserProfile and its Status
+func StatusUserProfile(conn *sagemaker.SageMaker, domainID, userProfileName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeUserProfileInput{
 			DomainId:        aws.String(domainID),
@@ -184,7 +184,7 @@ func UserProfileStatus(conn *sagemaker.SageMaker, domainID, userProfileName stri
 		output, err := conn.DescribeUserProfile(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, SagemakerUserProfileStatusNotFound, nil
+			return nil, SageMakerUserProfileStatusNotFound, nil
 		}
 
 		if err != nil {
@@ -192,15 +192,15 @@ func UserProfileStatus(conn *sagemaker.SageMaker, domainID, userProfileName stri
 		}
 
 		if output == nil {
-			return nil, SagemakerUserProfileStatusNotFound, nil
+			return nil, SageMakerUserProfileStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-// AppStatus fetches the App and its Status
-func AppStatus(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) resource.StateRefreshFunc {
+// StatusApp fetches the App and its Status
+func StatusApp(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeAppInput{
 			DomainId:        aws.String(domainID),
@@ -212,7 +212,7 @@ func AppStatus(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 		output, err := conn.DescribeApp(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, SagemakerAppStatusNotFound, nil
+			return nil, SageMakerAppStatusNotFound, nil
 		}
 
 		if err != nil {
@@ -220,7 +220,7 @@ func AppStatus(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 		}
 
 		if output == nil {
-			return nil, SagemakerAppStatusNotFound, nil
+			return nil, SageMakerAppStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

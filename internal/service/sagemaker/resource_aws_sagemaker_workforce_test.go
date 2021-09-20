@@ -245,7 +245,7 @@ func testAccCheckAWSSagemakerWorkforceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.WorkforceByName(conn, rs.Primary.ID)
+		_, err := finder.FindWorkforceByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -274,7 +274,7 @@ func testAccCheckAWSSagemakerWorkforceExists(n string, workforce *sagemaker.Work
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
-		output, err := finder.WorkforceByName(conn, rs.Primary.ID)
+		output, err := finder.FindWorkforceByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

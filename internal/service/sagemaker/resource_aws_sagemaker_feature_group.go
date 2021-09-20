@@ -256,7 +256,7 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(name)
 
-	if _, err := waiter.FeatureGroupCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitFeatureGroupCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for SageMaker Feature Group (%s) to create: %w", d.Id(), err)
 	}
 
@@ -268,7 +268,7 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.FeatureGroupByName(conn, d.Id())
+	output, err := finder.FindFeatureGroupByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Feature Group (%s) not found, removing from state", d.Id())
@@ -347,7 +347,7 @@ func resourceFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.FeatureGroupDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitFeatureGroupDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return nil
 		}

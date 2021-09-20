@@ -251,7 +251,7 @@ func testAccCheckAWSSagemakerImageDestroy(s *terraform.State) error {
 			continue
 		}
 
-		Image, err := finder.ImageByName(conn, rs.Primary.ID)
+		Image, err := finder.FindImageByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -281,7 +281,7 @@ func testAccCheckAWSSagemakerImageExists(n string, image *sagemaker.DescribeImag
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.ImageByName(conn, rs.Primary.ID)
+		resp, err := finder.FindImageByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
