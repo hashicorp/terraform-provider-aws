@@ -1,7 +1,7 @@
 SWEEP?=us-east-1,us-east-2,us-west-2
 TEST?=./...
-SWEEP_DIR?=./aws
-PKG_NAME=aws
+SWEEP_DIR?=./internal
+PKG_NAME=internal
 TEST_COUNT?=1
 ACCTEST_TIMEOUT?=180m
 ACCTEST_PARALLELISM?=20
@@ -13,9 +13,9 @@ build: fmtcheck
 
 gen:
 	rm -f aws/*_gen.go aws/*_gen_test.go
-	rm -f aws/internal/keyvaluetags/*_gen.go
-	rm -f aws/internal/namevaluesfilters/*_gen.go
-	rm -f aws/internal/service/**/lister/*_gen.go
+	rm -f internal/keyvaluetags/*_gen.go
+	rm -f internal/namevaluesfilters/*_gen.go
+	rm -f internal/service/**/lister/*_gen.go
 	go generate ./...
 
 sweep:
