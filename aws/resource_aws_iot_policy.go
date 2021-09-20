@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotPolicyCreate,
-		Read:   resourceAwsIotPolicyRead,
-		Update: resourceAwsIotPolicyUpdate,
-		Delete: resourceAwsIotPolicyDelete,
+		Create: resourcePolicyCreate,
+		Read:   resourcePolicyRead,
+		Update: resourcePolicyUpdate,
+		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -43,7 +43,7 @@ func resourceAwsIotPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsIotPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*conns.AWSClient).IoTConn
 
@@ -58,10 +58,10 @@ func resourceAwsIotPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(out.PolicyName))
 
-	return resourceAwsIotPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	out, err := conn.GetPolicy(&iot.GetPolicyInput{
@@ -86,7 +86,7 @@ func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIotPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("policy") {
@@ -101,10 +101,10 @@ func resourceAwsIotPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsIotPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*conns.AWSClient).IoTConn
 

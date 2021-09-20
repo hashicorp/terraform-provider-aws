@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 				}
 
 				for _, principal := range page.Principals {
-					r := resourceAwsIotThingPrincipalAttachment()
+					r := ResourceThingPrincipalAttachment()
 					d := r.Data(nil)
 
 					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(thing.ThingName), aws.StringValue(principal)))

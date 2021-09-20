@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotCertificate() *schema.Resource {
+func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotCertificateCreate,
-		Read:   resourceAwsIotCertificateRead,
-		Update: resourceAwsIotCertificateUpdate,
-		Delete: resourceAwsIotCertificateDelete,
+		Create: resourceCertificateCreate,
+		Read:   resourceCertificateRead,
+		Update: resourceCertificateUpdate,
+		Delete: resourceCertificateDelete,
 		Schema: map[string]*schema.Schema{
 			"csr": {
 				Type:     schema.TypeString,
@@ -49,7 +49,7 @@ func resourceAwsIotCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsIotCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if _, ok := d.GetOk("csr"); ok {
@@ -79,10 +79,10 @@ func resourceAwsIotCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		d.Set("private_key", out.KeyPair.PrivateKey)
 	}
 
-	return resourceAwsIotCertificateRead(d, meta)
+	return resourceCertificateRead(d, meta)
 }
 
-func resourceAwsIotCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	out, err := conn.DescribeCertificate(&iot.DescribeCertificateInput{
@@ -99,7 +99,7 @@ func resourceAwsIotCertificateRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsIotCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("active") {
@@ -117,10 +117,10 @@ func resourceAwsIotCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsIotCertificateRead(d, meta)
+	return resourceCertificateRead(d, meta)
 }
 
-func resourceAwsIotCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	_, err := conn.UpdateCertificate(&iot.UpdateCertificateInput{

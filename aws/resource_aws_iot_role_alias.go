@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotRoleAlias() *schema.Resource {
+func ResourceRoleAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotRoleAliasCreate,
-		Read:   resourceAwsIotRoleAliasRead,
-		Update: resourceAwsIotRoleAliasUpdate,
-		Delete: resourceAwsIotRoleAliasDelete,
+		Create: resourceRoleAliasCreate,
+		Read:   resourceRoleAliasRead,
+		Update: resourceRoleAliasUpdate,
+		Delete: resourceRoleAliasDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,7 +44,7 @@ func resourceAwsIotRoleAlias() *schema.Resource {
 	}
 }
 
-func resourceAwsIotRoleAliasCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	roleAlias := d.Get("alias").(string)
@@ -62,7 +62,7 @@ func resourceAwsIotRoleAliasCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.SetId(roleAlias)
-	return resourceAwsIotRoleAliasRead(d, meta)
+	return resourceRoleAliasRead(d, meta)
 }
 
 func getIotRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDescription, error) {
@@ -82,7 +82,7 @@ func getIotRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDesc
 	return roleAliasDescriptionOutput.RoleAliasDescription, nil
 }
 
-func resourceAwsIotRoleAliasRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	var roleAliasDescription *iot.RoleAliasDescription
@@ -107,7 +107,7 @@ func resourceAwsIotRoleAliasRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsIotRoleAliasDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	alias := d.Get("alias").(string)
@@ -123,7 +123,7 @@ func resourceAwsIotRoleAliasDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsIotRoleAliasUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("credential_duration") {
@@ -148,5 +148,5 @@ func resourceAwsIotRoleAliasUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsIotRoleAliasRead(d, meta)
+	return resourceRoleAliasRead(d, meta)
 }

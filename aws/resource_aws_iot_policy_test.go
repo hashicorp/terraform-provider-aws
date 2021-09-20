@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepIotPolicies(region string) error {
 		}
 
 		for _, policy := range page.Policies {
-			r := resourceAwsIotPolicy()
+			r := ResourcePolicy()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(policy.PolicyName))
@@ -117,7 +118,7 @@ func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 				Config: testAccAWSIoTPolicyConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIotPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

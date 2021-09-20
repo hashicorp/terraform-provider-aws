@@ -13,12 +13,12 @@ import (
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
-func resourceAwsIotThingType() *schema.Resource {
+func ResourceThingType() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingTypeCreate,
-		Read:   resourceAwsIotThingTypeRead,
-		Update: resourceAwsIotThingTypeUpdate,
-		Delete: resourceAwsIotThingTypeDelete,
+		Create: resourceThingTypeCreate,
+		Read:   resourceThingTypeRead,
+		Update: resourceThingTypeUpdate,
+		Delete: resourceThingTypeDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -74,7 +74,7 @@ func resourceAwsIotThingType() *schema.Resource {
 	}
 }
 
-func resourceAwsIotThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.CreateThingTypeInput{
@@ -113,10 +113,10 @@ func resourceAwsIotThingTypeCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsIotThingTypeRead(d, meta)
+	return resourceThingTypeRead(d, meta)
 }
 
-func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.DescribeThingTypeInput{
@@ -146,7 +146,7 @@ func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsIotThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("deprecated") {
@@ -163,10 +163,10 @@ func resourceAwsIotThingTypeUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsIotThingTypeRead(d, meta)
+	return resourceThingTypeRead(d, meta)
 }
 
-func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	// In order to delete an IoT Thing Type, you must deprecate it first and wait
