@@ -345,7 +345,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	}
 
 	if preferredAzs := d.Get("availability_zones").(*schema.Set); preferredAzs.Len() > 0 {
-		params.PreferredCacheClusterAZs = expandStringSet(preferredAzs)
+		params.PreferredCacheClusterAZs = flex.ExpandStringSet(preferredAzs)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -361,15 +361,15 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	}
 
 	if SGNames := d.Get("security_group_names").(*schema.Set); SGNames.Len() > 0 {
-		params.CacheSecurityGroupNames = expandStringSet(SGNames)
+		params.CacheSecurityGroupNames = flex.ExpandStringSet(SGNames)
 	}
 
 	if SGIds := d.Get("security_group_ids").(*schema.Set); SGIds.Len() > 0 {
-		params.SecurityGroupIds = expandStringSet(SGIds)
+		params.SecurityGroupIds = flex.ExpandStringSet(SGIds)
 	}
 
 	if snaps := d.Get("snapshot_arns").(*schema.Set); snaps.Len() > 0 {
-		params.SnapshotArns = expandStringSet(snaps)
+		params.SnapshotArns = flex.ExpandStringSet(snaps)
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
@@ -503,7 +503,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	d.Set("kms_key_id", rgp.KmsKeyId)
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
-	if err := d.Set("member_clusters", flattenStringSet(rgp.MemberClusters)); err != nil {
+	if err := d.Set("member_clusters", flex.FlattenStringSet(rgp.MemberClusters)); err != nil {
 		return fmt.Errorf("error setting member_clusters: %w", err)
 	}
 	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
@@ -625,14 +625,14 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 	if d.HasChange("security_group_ids") {
 		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
-			params.SecurityGroupIds = expandStringSet(attr)
+			params.SecurityGroupIds = flex.ExpandStringSet(attr)
 			requestUpdate = true
 		}
 	}
 
 	if d.HasChange("security_group_names") {
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			params.CacheSecurityGroupNames = expandStringSet(attr)
+			params.CacheSecurityGroupNames = flex.ExpandStringSet(attr)
 			requestUpdate = true
 		}
 	}

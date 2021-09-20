@@ -76,7 +76,7 @@ func resourceAwsElasticacheUserGroupCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("user_ids"); ok {
-		input.UserIds = expandStringSet(v.(*schema.Set))
+		input.UserIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	// Tags are currently only supported in AWS Commercial.
@@ -172,11 +172,11 @@ func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interfac
 			usersAdd := n.(*schema.Set).Difference(o.(*schema.Set))
 
 			if usersAdd.Len() > 0 {
-				req.UserIdsToAdd = expandStringSet(usersAdd)
+				req.UserIdsToAdd = flex.ExpandStringSet(usersAdd)
 				hasChange = true
 			}
 			if usersRemove.Len() > 0 {
-				req.UserIdsToRemove = expandStringSet(usersRemove)
+				req.UserIdsToRemove = flex.ExpandStringSet(usersRemove)
 				hasChange = true
 			}
 		}

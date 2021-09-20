@@ -130,7 +130,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 		d.Set("reader_endpoint_address", rg.NodeGroups[0].ReaderEndpoint.Address)
 	}
 	d.Set("number_cache_clusters", len(rg.MemberClusters))
-	if err := d.Set("member_clusters", flattenStringList(rg.MemberClusters)); err != nil {
+	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
 		return fmt.Errorf("error setting member_clusters: %w", err)
 	}
 	d.Set("node_type", rg.CacheNodeType)

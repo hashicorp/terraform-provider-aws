@@ -284,8 +284,8 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		req.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		req.CacheSecurityGroupNames = expandStringSet(d.Get("security_group_names").(*schema.Set))
-		req.SecurityGroupIds = expandStringSet(d.Get("security_group_ids").(*schema.Set))
+		req.CacheSecurityGroupNames = flex.ExpandStringSet(d.Get("security_group_names").(*schema.Set))
+		req.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
 		req.Tags = tags.IgnoreAws().ElasticacheTags()
 	}
 
@@ -340,7 +340,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 
 	snaps := d.Get("snapshot_arns").([]interface{})
 	if len(snaps) > 0 {
-		req.SnapshotArns = expandStringList(snaps)
+		req.SnapshotArns = flex.ExpandStringList(snaps)
 		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
 	}
 
@@ -357,7 +357,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
-		req.PreferredAvailabilityZones = expandStringList(v.([]interface{}))
+		req.PreferredAvailabilityZones = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	id, err := createElasticacheCacheCluster(conn, req)
@@ -460,10 +460,10 @@ func elasticacheSetResourceDataFromCacheCluster(d *schema.ResourceData, c *elast
 	}
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
+	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
 		return fmt.Errorf("error setting security_group_names: %w", err)
 	}
-	if err := d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups)); err != nil {
+	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
 		return fmt.Errorf("error setting security_group_ids: %w", err)
 	}
 
@@ -510,7 +510,7 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 	requestUpdate := false
 	if d.HasChange("security_group_ids") {
 		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.SecurityGroupIds = expandStringSet(attr)
+			req.SecurityGroupIds = flex.ExpandStringSet(attr)
 			requestUpdate = true
 		}
 	}
@@ -582,7 +582,7 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 				if len(v.([]interface{})) != n {
 					return fmt.Errorf("length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
 				}
-				req.NewAvailabilityZones = expandStringList(v.([]interface{})[o:])
+				req.NewAvailabilityZones = flex.ExpandStringList(v.([]interface{})[o:])
 			}
 		}
 
