@@ -143,7 +143,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), CloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
-	tags := tftags.CloudformationKeyValueTags(stack.Tags)
+	tags := tfcloudformation.KeyValueTags(stack.Tags)
 	var applicationID, semanticVersion string
 	if v, ok := tags[serverlessApplicationRepositoryCloudFormationStackTagApplicationID]; ok {
 		applicationID = aws.StringValue(v.Value)
@@ -306,7 +306,7 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
 		Capabilities:  flex.ExpandStringSet(d.Get("capabilities").(*schema.Set)),
-		Tags:          tags.IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
+		Tags:          Tags(tags.IgnoreServerlessApplicationRepository()),
 	}
 	if v, ok := d.GetOk("semantic_version"); ok {
 		changeSetRequest.SemanticVersion = aws.String(v.(string))
