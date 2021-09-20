@@ -27,7 +27,7 @@ func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,14 +118,14 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferAccessS3BasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferAccessExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsTransferAccess(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTransferAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,7 +146,7 @@ func testAccAWSTransferAccess_s3_policy(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,7 +177,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 		output, err := finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
 
@@ -192,7 +192,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 }
 
 func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_access" {
