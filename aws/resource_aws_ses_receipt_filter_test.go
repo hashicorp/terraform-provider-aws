@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
 				Config: testAccAWSSESReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptFilterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSesReceiptFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

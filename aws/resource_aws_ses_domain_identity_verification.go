@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesDomainIdentityVerification() *schema.Resource {
+func ResourceDomainIdentityVerification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainIdentityVerificationCreate,
-		Read:   resourceAwsSesDomainIdentityVerificationRead,
-		Delete: resourceAwsSesDomainIdentityVerificationDelete,
+		Create: resourceDomainIdentityVerificationCreate,
+		Read:   resourceDomainIdentityVerificationRead,
+		Delete: resourceDomainIdentityVerificationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,7 +54,7 @@ func getAwsSesIdentityVerificationAttributes(conn *ses.SES, domainName string) (
 	return response.VerificationAttributes[domainName], nil
 }
 
-func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 	domainName := d.Get("domain").(string)
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -87,10 +87,10 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Domain verification successful for %s", domainName)
 	d.SetId(domainName)
-	return resourceAwsSesDomainIdentityVerificationRead(d, meta)
+	return resourceDomainIdentityVerificationRead(d, meta)
 }
 
-func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
@@ -126,7 +126,7 @@ func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsSesDomainIdentityVerificationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainIdentityVerificationDelete(d *schema.ResourceData, meta interface{}) error {
 	// No need to do anything, domain identity will be deleted when aws_ses_domain_identity is deleted
 	return nil
 }

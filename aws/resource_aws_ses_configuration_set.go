@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesConfigurationSet() *schema.Resource {
+func ResourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesConfigurationSetCreate,
-		Read:   resourceAwsSesConfigurationSetRead,
-		Update: resourceAwsSesConfigurationSetUpdate,
-		Delete: resourceAwsSesConfigurationSetDelete,
+		Create: resourceConfigurationSetCreate,
+		Read:   resourceConfigurationSetRead,
+		Update: resourceConfigurationSetUpdate,
+		Delete: resourceConfigurationSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsSesConfigurationSet() *schema.Resource {
 	}
 }
 
-func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	configurationSetName := d.Get("name").(string)
@@ -121,10 +121,10 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsSesConfigurationSetRead(d, meta)
+	return resourceConfigurationSetRead(d, meta)
 }
 
-func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
@@ -170,7 +170,7 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	if d.HasChange("delivery_options") {
@@ -209,10 +209,10 @@ func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsSesConfigurationSetRead(d, meta)
+	return resourceConfigurationSetRead(d, meta)
 }
 
-func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())

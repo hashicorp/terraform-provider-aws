@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesDomainMailFrom() *schema.Resource {
+func ResourceDomainMailFrom() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSesDomainMailFromSet,
-		Read:   resourceAwsSesDomainMailFromRead,
+		Read:   resourceDomainMailFromRead,
 		Update: resourceAwsSesDomainMailFromSet,
-		Delete: resourceAwsSesDomainMailFromDelete,
+		Delete: resourceDomainMailFromDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,10 +59,10 @@ func resourceAwsSesDomainMailFromSet(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(domainName)
 
-	return resourceAwsSesDomainMailFromRead(d, meta)
+	return resourceDomainMailFromRead(d, meta)
 }
 
-func resourceAwsSesDomainMailFromRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
@@ -98,7 +98,7 @@ func resourceAwsSesDomainMailFromRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSesDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()

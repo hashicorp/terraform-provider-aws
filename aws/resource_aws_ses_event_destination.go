@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesEventDestination() *schema.Resource {
+func ResourceEventDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesEventDestinationCreate,
-		Read:   resourceAwsSesEventDestinationRead,
-		Delete: resourceAwsSesEventDestinationDelete,
+		Create: resourceEventDestinationCreate,
+		Read:   resourceEventDestinationRead,
+		Delete: resourceEventDestinationDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSesEventDestinationImport,
 		},
@@ -152,7 +152,7 @@ func resourceAwsSesEventDestination() *schema.Resource {
 	}
 }
 
-func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	configurationSetName := d.Get("configuration_set_name").(string)
@@ -205,10 +205,10 @@ func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface
 	d.SetId(eventDestinationName)
 
 	log.Printf("[WARN] SES DONE")
-	return resourceAwsSesEventDestinationRead(d, meta)
+	return resourceEventDestinationRead(d, meta)
 }
 
-func resourceAwsSesEventDestinationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	configurationSetName := d.Get("configuration_set_name").(string)
@@ -268,7 +268,7 @@ func resourceAwsSesEventDestinationRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsSesEventDestinationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	log.Printf("[DEBUG] SES Delete Configuration Set Destination: %s", d.Id())

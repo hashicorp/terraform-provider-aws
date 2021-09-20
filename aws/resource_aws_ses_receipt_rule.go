@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesReceiptRule() *schema.Resource {
+func ResourceReceiptRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesReceiptRuleCreate,
-		Update: resourceAwsSesReceiptRuleUpdate,
-		Read:   resourceAwsSesReceiptRuleRead,
-		Delete: resourceAwsSesReceiptRuleDelete,
+		Create: resourceReceiptRuleCreate,
+		Update: resourceReceiptRuleUpdate,
+		Read:   resourceReceiptRuleRead,
+		Delete: resourceReceiptRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSesReceiptRuleImport,
 		},
@@ -410,7 +410,7 @@ func resourceAwsSesReceiptRuleImport(d *schema.ResourceData, meta interface{}) (
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	createOpts := &ses.CreateReceiptRuleInput{
@@ -429,10 +429,10 @@ func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("name").(string))
 
-	return resourceAwsSesReceiptRuleRead(d, meta)
+	return resourceReceiptRuleRead(d, meta)
 }
 
-func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
@@ -458,10 +458,10 @@ func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsSesReceiptRuleRead(d, meta)
+	return resourceReceiptRuleRead(d, meta)
 }
 
-func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	ruleSetName := d.Get("rule_set_name").(string)
@@ -650,7 +650,7 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSesReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{

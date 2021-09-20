@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesEmailIdentity() *schema.Resource {
+func ResourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesEmailIdentityCreate,
-		Read:   resourceAwsSesEmailIdentityRead,
-		Delete: resourceAwsSesEmailIdentityDelete,
+		Create: resourceEmailIdentityCreate,
+		Read:   resourceEmailIdentityRead,
+		Delete: resourceEmailIdentityDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -38,7 +38,7 @@ func resourceAwsSesEmailIdentity() *schema.Resource {
 	}
 }
 
-func resourceAwsSesEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	email := d.Get("email").(string)
@@ -55,10 +55,10 @@ func resourceAwsSesEmailIdentityCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(email)
 
-	return resourceAwsSesEmailIdentityRead(d, meta)
+	return resourceEmailIdentityRead(d, meta)
 }
 
-func resourceAwsSesEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	email := d.Id()
@@ -94,7 +94,7 @@ func resourceAwsSesEmailIdentityRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSesEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	email := d.Get("email").(string)

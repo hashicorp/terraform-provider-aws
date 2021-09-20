@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesReceiptFilter() *schema.Resource {
+func ResourceReceiptFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesReceiptFilterCreate,
-		Read:   resourceAwsSesReceiptFilterRead,
-		Delete: resourceAwsSesReceiptFilterDelete,
+		Create: resourceReceiptFilterCreate,
+		Read:   resourceReceiptFilterRead,
+		Delete: resourceReceiptFilterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,7 +62,7 @@ func resourceAwsSesReceiptFilter() *schema.Resource {
 	}
 }
 
-func resourceAwsSesReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	name := d.Get("name").(string)
@@ -84,10 +84,10 @@ func resourceAwsSesReceiptFilterCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(name)
 
-	return resourceAwsSesReceiptFilterRead(d, meta)
+	return resourceReceiptFilterRead(d, meta)
 }
 
-func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	listOpts := &ses.ListReceiptFiltersInput{}
@@ -128,7 +128,7 @@ func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSesReceiptFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{

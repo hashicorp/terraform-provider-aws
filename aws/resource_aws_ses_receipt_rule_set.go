@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSesReceiptRuleSet() *schema.Resource {
+func ResourceReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesReceiptRuleSetCreate,
-		Read:   resourceAwsSesReceiptRuleSetRead,
-		Delete: resourceAwsSesReceiptRuleSetDelete,
+		Create: resourceReceiptRuleSetCreate,
+		Read:   resourceReceiptRuleSetRead,
+		Delete: resourceReceiptRuleSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,7 +36,7 @@ func resourceAwsSesReceiptRuleSet() *schema.Resource {
 	}
 }
 
-func resourceAwsSesReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	ruleSetName := d.Get("rule_set_name").(string)
@@ -52,10 +52,10 @@ func resourceAwsSesReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(ruleSetName)
 
-	return resourceAwsSesReceiptRuleSetRead(d, meta)
+	return resourceReceiptRuleSetRead(d, meta)
 }
 
-func resourceAwsSesReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	input := &ses.DescribeReceiptRuleSetInput{
@@ -94,7 +94,7 @@ func resourceAwsSesReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSesReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn
 
 	log.Printf("[DEBUG] SES Delete Receipt Rule Set: %s", d.Id())
