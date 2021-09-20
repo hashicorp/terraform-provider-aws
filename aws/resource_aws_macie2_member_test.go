@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -298,7 +299,7 @@ func testAccCheckAwsMacie2MemberExists(resourceName string, macie2Session *macie
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetMember(input)
@@ -318,7 +319,7 @@ func testAccCheckAwsMacie2MemberExists(resourceName string, macie2Session *macie
 }
 
 func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_member" {

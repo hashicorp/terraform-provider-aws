@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
@@ -217,7 +218,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 		input := &macie2.GetCustomDataIdentifierInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetCustomDataIdentifier(input)
@@ -237,7 +238,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2
 }
 
 func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_custom_data_identifier" {
