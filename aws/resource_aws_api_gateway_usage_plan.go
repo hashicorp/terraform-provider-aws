@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUsagePlan() *schema.Resource {
@@ -142,7 +143,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 		settings := v.([]interface{})
 		q, ok := settings[0].(map[string]interface{})
 
-		if errs := validateApiGatewayUsagePlanQuotaSettings(q); len(errs) > 0 {
+		if errs := validUsagePlanQuotaSettings(q); len(errs) > 0 {
 			return fmt.Errorf("error validating the quota settings: %v", errs)
 		}
 
@@ -382,7 +383,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(diff) > 0 {
 			d := diff[0].(map[string]interface{})
 
-			if errors := validateApiGatewayUsagePlanQuotaSettings(d); len(errors) > 0 {
+			if errors := validUsagePlanQuotaSettings(d); len(errors) > 0 {
 				return fmt.Errorf("Error validating the quota settings: %v", errors)
 			}
 

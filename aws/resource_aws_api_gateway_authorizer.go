@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const defaultAuthorizerTTL = 300
@@ -69,7 +70,7 @@ func ResourceAuthorizer() *schema.Resource {
 			"authorizer_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"authorizer_result_ttl_in_seconds": {
 				Type:         schema.TypeInt,
@@ -86,7 +87,7 @@ func ResourceAuthorizer() *schema.Resource {
 				Optional: true, // provider_arns is required for authorizer COGNITO_USER_POOLS.
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 		},

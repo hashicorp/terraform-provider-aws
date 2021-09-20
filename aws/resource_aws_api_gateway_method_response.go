@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var resourceAwsApiGatewayMethodResponseMutex = &sync.Mutex{}
@@ -58,7 +59,7 @@ func ResourceMethodResponse() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateHTTPMethod(),
+				ValidateFunc: validHTTPMethod(),
 			},
 
 			"status_code": {
@@ -103,7 +104,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 	resourceAwsApiGatewayMethodResponseMutex.Lock()
 	defer resourceAwsApiGatewayMethodResponseMutex.Unlock()
 
-	_, err := retryOnAwsCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
 		return conn.PutMethodResponse(&apigateway.PutMethodResponseInput{
 			HttpMethod:         aws.String(d.Get("http_method").(string)),
 			ResourceId:         aws.String(d.Get("resource_id").(string)),
