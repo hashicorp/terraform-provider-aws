@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsPricingProduct() *schema.Resource {
@@ -45,7 +46,7 @@ func dataSourceAwsPricingProduct() *schema.Resource {
 }
 
 func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pricingconn
+	conn := meta.(*conns.AWSClient).PricingConn
 
 	params := &pricing.GetProductsInput{
 		ServiceCode: aws.String(d.Get("service_code").(string)),
