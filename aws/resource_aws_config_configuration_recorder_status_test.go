@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	var crs configservice.ConfigurationRecorderStatus
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
@@ -40,12 +41,12 @@ func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
 func testAccConfigConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	var crs configservice.ConfigurationRecorderStatus
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
@@ -85,11 +86,11 @@ func testAccConfigConfigurationRecorderStatus_startEnabled(t *testing.T) {
 
 func testAccConfigConfigurationRecorderStatus_importBasic(t *testing.T) {
 	resourceName := "aws_config_configuration_recorder_status.foo"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{

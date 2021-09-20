@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
@@ -16,8 +17,8 @@ func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -113,5 +114,5 @@ resource "aws_xray_encryption_config" "test" {
   type   = "KMS"
   key_id = aws_kms_key.test.arn
 }
-`, acctest.RandString(8))
+`, sdkacctest.RandString(8))
 }

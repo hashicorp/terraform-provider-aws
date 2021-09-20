@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -61,12 +62,12 @@ func testSweepConfigConfigurationAggregators(region string) error {
 func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	//Name is upper case on purpose to test https://github.com/hashicorp/terraform-provider-aws/issues/8432
-	rName := acctest.RandomWithPrefix("Tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("Tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
@@ -76,10 +77,10 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
 					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(`config-aggregator/config-aggregator-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(`config-aggregator/config-aggregator-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
-					testAccCheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", "name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -96,12 +97,12 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 
 func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
@@ -126,12 +127,12 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 }
 
 func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
@@ -155,12 +156,12 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 
 func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
@@ -203,12 +204,12 @@ func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
 
 func TestAccAWSConfigConfigurationAggregator_disappears(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
@@ -216,7 +217,7 @@ func TestAccAWSConfigConfigurationAggregator_disappears(t *testing.T) {
 				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigConfigurationAggregator(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsConfigConfigurationAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
