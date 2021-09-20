@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -46,13 +47,13 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_enableRevocation(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -92,12 +93,12 @@ func TestAccAWSCognitoUserPoolClient_enableRevocation(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_refreshTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -127,12 +128,12 @@ func TestAccAWSCognitoUserPoolClient_refreshTokenValidity(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_accessTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -162,12 +163,12 @@ func TestAccAWSCognitoUserPoolClient_accessTokenValidity(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_idTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -197,12 +198,12 @@ func TestAccAWSCognitoUserPoolClient_idTokenValidity(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_tokenValidityUnits(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -238,12 +239,12 @@ func TestAccAWSCognitoUserPoolClient_tokenValidityUnits(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -281,12 +282,12 @@ func TestAccAWSCognitoUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing
 
 func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -316,12 +317,12 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -372,12 +373,12 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -431,17 +432,17 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 	pinpointResourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckAWSPinpointApp(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -484,16 +485,16 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckAWSPinpointApp(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -503,7 +504,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", "aws_pinpoint_app.test", "arn"),
-					testAccCheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 				),
 			},
@@ -519,12 +520,12 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -532,7 +533,7 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolClient(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolClient(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -542,12 +543,12 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -555,7 +556,7 @@ func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -870,3 +871,19 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 `, rName)
 }
+func testAccPreCheckAWSPinpointApp(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+
+	input := &pinpoint.GetAppsInput{}
+
+	_, err := conn.GetApps(input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+

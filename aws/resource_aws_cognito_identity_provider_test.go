@@ -6,19 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -75,11 +76,11 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 func TestAccAWSCognitoIdentityProvider_idpIdentifiers(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -111,11 +112,11 @@ func TestAccAWSCognitoIdentityProvider_idpIdentifiers(t *testing.T) {
 func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
 				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoIdentityProvider(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoIdentityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,11 +135,11 @@ func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
 func TestAccAWSCognitoIdentityProvider_disappears_userPool(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -146,7 +147,7 @@ func TestAccAWSCognitoIdentityProvider_disappears_userPool(t *testing.T) {
 				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
