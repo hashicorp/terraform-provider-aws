@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -694,7 +694,7 @@ func accessEndpointsHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(m["endpoint_type"].(string))
 	buf.WriteString(m["vpce_id"].(string))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func storageConnectorsHash(v interface{}) int {
@@ -703,7 +703,7 @@ func storageConnectorsHash(v interface{}) int {
 	buf.WriteString(m["connector_type"].(string))
 	buf.WriteString(fmt.Sprintf("%+v", m["domains"].([]interface{})))
 	buf.WriteString(m["resource_identifier"].(string))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func userSettingsHash(v interface{}) int {
@@ -711,5 +711,5 @@ func userSettingsHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(m["action"].(string))
 	buf.WriteString(m["permission"].(string))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
