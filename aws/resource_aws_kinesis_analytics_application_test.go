@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -89,11 +90,11 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -129,11 +130,11 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsApplication(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,11 +153,11 @@ func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 func TestAccAWSKinesisAnalyticsApplication_Tags(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -200,11 +201,11 @@ func TestAccAWSKinesisAnalyticsApplication_Tags(t *testing.T) {
 func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -212,7 +213,7 @@ func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigCode(rName, "SELECT 1;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 1;\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -232,7 +233,7 @@ func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigCode(rName, "SELECT 2;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 2;\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -262,11 +263,11 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Add(t *testi
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -274,7 +275,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Add(t *testi
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -294,7 +295,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Add(t *testi
 				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, "arn"),
@@ -326,11 +327,11 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Delete(t *te
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -338,7 +339,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Delete(t *te
 				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, "arn"),
@@ -360,7 +361,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Delete(t *te
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -392,11 +393,11 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Update(t *te
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	cloudWatchLogStream1ResourceName := "aws_cloudwatch_log_stream.test.0"
 	cloudWatchLogStream2ResourceName := "aws_cloudwatch_log_stream.test.1"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -404,7 +405,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Update(t *te
 				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream1ResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole1ResourceName, "arn"),
@@ -426,7 +427,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Update(t *te
 				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream2ResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
@@ -458,11 +459,11 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Add(t *testing.T) {
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -470,7 +471,7 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Add(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -490,7 +491,7 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Add(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -546,11 +547,11 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -558,7 +559,7 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -602,7 +603,7 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigInputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -660,11 +661,11 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *t
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -672,7 +673,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *t
 				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -716,7 +717,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *t
 				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -774,11 +775,11 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -786,7 +787,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t
 				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -833,7 +834,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t
 				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -890,11 +891,11 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t
 	lambda1ResourceName := "aws_lambda_function.test.0"
 	lambda2ResourceName := "aws_lambda_function.test.1"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -902,7 +903,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t
 				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -949,7 +950,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t
 				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1011,11 +1012,11 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1023,7 +1024,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigMultiple(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
@@ -1082,7 +1083,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1181,11 +1182,11 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 	lambdaResourceName := "aws_lambda_function.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1193,7 +1194,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1223,7 +1224,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationOutputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1268,7 +1269,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1293,11 +1294,11 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T)
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1305,7 +1306,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T)
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1325,7 +1326,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T)
 				Config: testAccKinesisAnalyticsApplicationReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1373,11 +1374,11 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Delete(t *testing
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1385,7 +1386,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Delete(t *testing
 				Config: testAccKinesisAnalyticsApplicationReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1423,7 +1424,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Delete(t *testing
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1454,11 +1455,11 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1466,7 +1467,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing
 				Config: testAccKinesisAnalyticsApplicationReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1504,7 +1505,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing
 				Config: testAccKinesisAnalyticsApplicationReferenceDataSourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1555,11 +1556,11 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnCreate(t *testing.
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1567,7 +1568,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnCreate(t *testing.
 				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1622,11 +1623,11 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnUpdate(t *testing.
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1634,7 +1635,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnUpdate(t *testing.
 				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1684,7 +1685,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnUpdate(t *testing.
 				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1728,7 +1729,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnUpdate(t *testing.
 				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -1782,11 +1783,11 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_Update(t *testing.T)
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	streamsResourceName := "aws_kinesis_stream.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1794,7 +1795,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_Update(t *testing.T)
 				Config: testAccKinesisAnalyticsApplicationConfigMultiple(rName, "true", "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
@@ -1854,7 +1855,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_Update(t *testing.T)
 				Config: testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, "true", "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "code", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
@@ -2002,7 +2003,7 @@ func testAccPreCheckAWSKinesisAnalytics(t *testing.T) {
 
 	_, err := conn.ListApplications(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -2138,7 +2139,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -2164,7 +2165,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationConfigInput(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2200,7 +2201,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationConfigInputUpdated(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2248,7 +2249,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName string, lambdaIndex int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2300,7 +2301,7 @@ func testAccKinesisAnalyticsApplicationConfigMultiple(rName, startApplication, s
 		startingPosition = strconv.Quote(startingPosition)
 	}
 
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2389,7 +2390,7 @@ func testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, startApplica
 		startingPosition = strconv.Quote(startingPosition)
 	}
 
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2500,7 +2501,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationOutput(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2524,7 +2525,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationOutputUpdated(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
@@ -2561,7 +2562,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationReferenceDataSource(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2601,7 +2602,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationReferenceDataSourceUpdated(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2649,7 +2650,7 @@ resource "aws_kinesis_analytics_application" "test" {
 }
 
 func testAccKinesisAnalyticsApplicationConfigStartApplication(rName string, start bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
 		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
 		fmt.Sprintf(`
