@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudHsmV2Hsm() *schema.Resource {
@@ -74,7 +75,7 @@ func resourceAwsCloudHsmV2Hsm() *schema.Resource {
 }
 
 func resourceAwsCloudHsmV2HsmCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	input := &cloudhsmv2.CreateHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
@@ -123,7 +124,7 @@ func resourceAwsCloudHsmV2HsmCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsCloudHsmV2HsmRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	hsm, err := finder.Hsm(conn, d.Id(), d.Get("hsm_eni_id").(string))
 
@@ -160,7 +161,7 @@ func resourceAwsCloudHsmV2HsmRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsCloudHsmV2HsmDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 	clusterId := d.Get("cluster_id").(string)
 
 	log.Printf("[DEBUG] CloudHSMv2 HSM delete %s %s", clusterId, d.Id())

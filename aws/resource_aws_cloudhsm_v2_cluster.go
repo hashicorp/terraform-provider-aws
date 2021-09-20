@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudHsmV2Cluster() *schema.Resource {
@@ -110,8 +111,8 @@ func resourceAwsCloudHsmV2Cluster() *schema.Resource {
 }
 
 func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &cloudhsmv2.CreateClusterInput{
@@ -153,9 +154,9 @@ func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster, err := finder.Cluster(conn, d.Id())
 
@@ -218,7 +219,7 @@ func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsCloudHsmV2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -231,7 +232,7 @@ func resourceAwsCloudHsmV2ClusterUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudHsmV2ClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 	input := &cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),
 	}
