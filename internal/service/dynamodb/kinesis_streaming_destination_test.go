@@ -16,7 +16,7 @@ import (
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
-func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
+func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
@@ -43,7 +43,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
+func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
@@ -65,7 +65,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamoDbKinesisStreamingDestination_disappears_DynamoDbTable(t *testing.T) {
+func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"

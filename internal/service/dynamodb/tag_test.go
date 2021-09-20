@@ -12,7 +12,7 @@ import (
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
-func TestAccAWSDynamodbTag_basic(t *testing.T) {
+func TestAccDynamoDBTag_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
@@ -39,7 +39,7 @@ func TestAccAWSDynamodbTag_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamodbTag_disappears(t *testing.T) {
+func TestAccDynamoDBTag_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
@@ -62,7 +62,7 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13725
-func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
+func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
@@ -92,7 +92,7 @@ func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamodbTag_Value(t *testing.T) {
+func TestAccDynamoDBTag_value(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
