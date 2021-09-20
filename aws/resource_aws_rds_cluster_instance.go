@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRDSClusterInstance() *schema.Resource {
@@ -226,8 +227,8 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 }
 
 func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &rds.CreateDBInstanceInput{
@@ -390,7 +391,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
+	db, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).RDSConn)
 	// Errors from this helper are always reportable
 	if err != nil {
 		return fmt.Errorf("Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
@@ -407,9 +408,9 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	// Retrieve DB Cluster information, to determine if this Instance is a writer
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
@@ -492,7 +493,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	requestUpdate := false
 
 	req := &rds.ModifyDBInstanceInput{
@@ -615,7 +616,7 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] RDS Cluster Instance destroy: %v", d.Id())
 

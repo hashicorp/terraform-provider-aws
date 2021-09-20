@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepDbEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&rds.DescribeEventSubscriptionsInput{}, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -264,7 +265,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 			return fmt.Errorf("No RDS Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
 
@@ -283,7 +284,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 }
 
 func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_event_subscription" {
@@ -310,7 +311,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 
 func testAccCheckAWSDBEventSubscriptionDisappears(eventSubscription *rds.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		input := &rds.DeleteEventSubscriptionInput{
 			SubscriptionName: eventSubscription.CustSubscriptionId,

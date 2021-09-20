@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -493,8 +494,8 @@ func resourceAwsDbInstance() *schema.Resource {
 }
 
 func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
@@ -1360,9 +1361,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
 
@@ -1501,7 +1502,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] DB Instance destroy: %v", d.Id())
 
@@ -1564,7 +1565,7 @@ func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Dura
 }
 
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	req := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),

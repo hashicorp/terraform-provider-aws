@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepRdsClusterParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBClusterParameterGroupsInput{}
 
@@ -481,7 +482,7 @@ func TestAccAWSDBClusterParameterGroup_caseParameters(t *testing.T) {
 }
 
 func testAccCheckAWSDBClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_parameter_group" {
@@ -525,7 +526,7 @@ func testAccCheckAWSRDSClusterParameterNotUserDefined(n, paramName string) resou
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
@@ -563,7 +564,7 @@ func testAccCheckAWSDBClusterParameterGroupAttributes(v *rds.DBClusterParameterG
 
 func testAccAWSDBClusterParameterGroupDisappears(v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 		opts := &rds.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: v.DBClusterParameterGroupName,
 		}
@@ -600,7 +601,7 @@ func testAccCheckAWSDBClusterParameterGroupExists(n string, v *rds.DBClusterPara
 			return errors.New("No DB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

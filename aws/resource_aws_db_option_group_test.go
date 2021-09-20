@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepDbOptionGroups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 
 	opts := rds.DescribeOptionGroupsInput{}
 	resp, err := conn.DescribeOptionGroups(&opts)
@@ -617,7 +618,7 @@ func testAccCheckAWSDBOptionGroupExists(n string, v *rds.OptionGroup) resource.T
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
@@ -641,7 +642,7 @@ func testAccCheckAWSDBOptionGroupExists(n string, v *rds.OptionGroup) resource.T
 }
 
 func testAccCheckAWSDBOptionGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_option_group" {

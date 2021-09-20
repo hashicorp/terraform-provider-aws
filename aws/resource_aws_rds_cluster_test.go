@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -47,7 +48,7 @@ func testSweepRdsClusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeDBClustersInput{}
 
 	err = conn.DescribeDBClustersPages(input, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
@@ -2351,7 +2352,7 @@ func testAccCheckAWSClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).rdsconn
+	conn := provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster" {
@@ -2395,8 +2396,8 @@ func testAccCheckAWSClusterSnapshot(rInt int) resource.TestCheckFunc {
 			// Try and delete the snapshot before we check for the cluster not found
 			snapshot_identifier := fmt.Sprintf("tf-acctest-rdscluster-snapshot-%d", rInt)
 
-			awsClient := acctest.Provider.Meta().(*AWSClient)
-			conn := awsClient.rdsconn
+			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+			conn := awsClient.RDSConn
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(
@@ -2451,7 +2452,7 @@ func testAccCheckAWSClusterExistsWithProvider(n string, v *rds.DBCluster, provid
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).rdsconn
+		conn := provider.Meta().(*conns.AWSClient).RDSConn
 		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})

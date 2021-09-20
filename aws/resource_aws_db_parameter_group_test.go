@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepRdsDbParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 
 	err = conn.DescribeDBParameterGroupsPages(&rds.DescribeDBParameterGroupsInput{}, func(out *rds.DescribeDBParameterGroupsOutput, lastPage bool) bool {
 		for _, dbpg := range out.DBParameterGroups {
@@ -1039,7 +1040,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 
 func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1055,7 +1056,7 @@ func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource
 }
 
 func testAccCheckAWSDBParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_parameter_group" {
@@ -1114,7 +1115,7 @@ func testAccCheckAWSDBParameterGroupExists(rName string, v *rds.DBParameterGroup
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeDBParameterGroupsInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),
@@ -1148,7 +1149,7 @@ func testAccCheckAWSDBParameterNotUserDefined(rName, paramName string) resource.
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeDBParametersInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),

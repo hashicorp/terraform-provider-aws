@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -89,8 +90,8 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 }
 
 func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -154,9 +155,9 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
 
@@ -249,7 +250,7 @@ func resourceAwsDbEventSubscriptionRetrieve(name string, conn *rds.RDS) (*rds.Ev
 }
 
 func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	requestUpdate := false
 
@@ -362,7 +363,7 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	deleteOpts := rds.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}

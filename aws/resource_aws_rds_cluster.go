@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -479,8 +480,8 @@ func resourceAwsRdsClusterImport(
 }
 
 func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
@@ -981,9 +982,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -1131,7 +1132,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	requestUpdate := false
 
 	req := &rds.ModifyDBClusterInput{
@@ -1332,7 +1333,7 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	log.Printf("[DEBUG] Destroying RDS Cluster (%s)", d.Id())
 
 	// Automatically remove from global cluster to bypass this error on deletion:

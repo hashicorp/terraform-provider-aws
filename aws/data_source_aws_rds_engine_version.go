@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRdsEngineVersion() *schema.Resource {
@@ -124,7 +125,7 @@ func dataSourceAwsRdsEngineVersion() *schema.Resource {
 }
 
 func dataSourceAwsRdsEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		ListSupportedCharacterSets: aws.Bool(true),

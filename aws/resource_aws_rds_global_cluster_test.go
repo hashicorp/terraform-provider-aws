@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepRdsGlobalClusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeGlobalClustersInput{}
 
 	err = conn.DescribeGlobalClustersPages(input, func(out *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
@@ -478,7 +479,7 @@ func testAccCheckAWSRdsGlobalClusterExists(resourceName string, globalCluster *r
 			return fmt.Errorf("No RDS Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		cluster, err := rdsDescribeGlobalCluster(conn, rs.Primary.ID)
 
@@ -501,7 +502,7 @@ func testAccCheckAWSRdsGlobalClusterExists(resourceName string, globalCluster *r
 }
 
 func testAccCheckAWSRdsGlobalClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_global_cluster" {
@@ -530,7 +531,7 @@ func testAccCheckAWSRdsGlobalClusterDestroy(s *terraform.State) error {
 
 func testAccCheckAWSRdsGlobalClusterDisappears(globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		input := &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
@@ -567,7 +568,7 @@ func testAccCheckAWSRdsGlobalClusterRecreated(i, j *rds.GlobalCluster) resource.
 }
 
 func testAccPreCheckAWSRdsGlobalCluster(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeGlobalClustersInput{}
 

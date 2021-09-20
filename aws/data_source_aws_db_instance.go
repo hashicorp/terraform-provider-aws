@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDbInstance() *schema.Resource {
@@ -216,8 +217,8 @@ func dataSourceAwsDbInstance() *schema.Resource {
 }
 
 func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	opts := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRDSCertificateDataSource_Id(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 }
 
 func testAccAWSRDSCertificatePreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeCertificatesInput{}
 

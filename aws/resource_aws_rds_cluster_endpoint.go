@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -81,8 +82,8 @@ func resourceAwsRDSClusterEndpoint() *schema.Resource {
 }
 
 func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterId := d.Get("cluster_identifier").(string)
@@ -119,9 +120,9 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClusterEndpointsInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
@@ -187,7 +188,7 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	input := &rds.ModifyDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
@@ -225,7 +226,7 @@ func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	input := &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
