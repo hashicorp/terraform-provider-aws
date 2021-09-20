@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMediaStoreContainer() *schema.Resource {
+func ResourceContainer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaStoreContainerCreate,
-		Read:   resourceAwsMediaStoreContainerRead,
-		Update: resourceAwsMediaStoreContainerUpdate,
-		Delete: resourceAwsMediaStoreContainerDelete,
+		Create: resourceContainerCreate,
+		Read:   resourceContainerRead,
+		Update: resourceContainerUpdate,
+		Delete: resourceContainerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 	}
 }
 
-func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -81,10 +81,10 @@ func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	return resourceAwsMediaStoreContainerRead(d, meta)
+	return resourceContainerRead(d, meta)
 }
 
-func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -127,7 +127,7 @@ func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	arn := d.Get("arn").(string)
@@ -139,10 +139,10 @@ func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsMediaStoreContainerRead(d, meta)
+	return resourceContainerRead(d, meta)
 }
 
-func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.DeleteContainerInput{
