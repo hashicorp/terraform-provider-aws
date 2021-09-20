@@ -1,4 +1,4 @@
-package aws
+package transfer
 
 import (
 	"fmt"
@@ -9,11 +9,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tftransfer "github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -134,7 +131,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	serverID := d.Get("server_id").(string)
 	userName := d.Get("user_name").(string)
-	id := tftransfer.UserCreateResourceID(serverID, userName)
+	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.CreateUserInput{
 		Role:     aws.String(d.Get("role").(string)),
 		ServerId: aws.String(serverID),
@@ -182,13 +179,13 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
+	serverID, userName, err := UserParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %w", err)
 	}
 
-	user, err := finder.FindUserByServerIDAndUserName(conn, serverID, userName)
+	user, err := FindUserByServerIDAndUserName(conn, serverID, userName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer User (%s) not found, removing from state", d.Id())
@@ -231,7 +228,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
+		serverID, userName, err := UserParseResourceID(d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer User ID: %w", err)
@@ -287,7 +284,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
-	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
+	serverID, userName, err := UserParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %w", err)
@@ -298,7 +295,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 // transferUserDelete attempts to delete a transfer user.
 func transferUserDelete(conn *transfer.Transfer, serverID, userName string) error {
-	id := tftransfer.UserCreateResourceID(serverID, userName)
+	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.DeleteUserInput{
 		ServerId: aws.String(serverID),
 		UserName: aws.String(userName),
@@ -315,7 +312,7 @@ func transferUserDelete(conn *transfer.Transfer, serverID, userName string) erro
 		return fmt.Errorf("error deleting Transfer User (%s): %w", id, err)
 	}
 
-	_, err = waiter.waitUserDeleted(conn, serverID, userName)
+	_, err = waitUserDeleted(conn, serverID, userName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Transfer User (%s) delete: %w", id, err)

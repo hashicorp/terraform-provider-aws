@@ -1,4 +1,4 @@
-package aws
+package transfer
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftransfer "github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -121,7 +119,7 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
-	id := tftransfer.AccessCreateResourceID(serverID, externalID)
+	id := AccessCreateResourceID(serverID, externalID)
 	input := &transfer.CreateAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
@@ -166,13 +164,13 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
-	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
+	serverID, externalID, err := AccessParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 	}
 
-	access, err := finder.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
+	access, err := FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
@@ -204,7 +202,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
-	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
+	serverID, externalID, err := AccessParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
@@ -252,7 +250,7 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
-	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
+	serverID, externalID, err := AccessParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer Access ID: %w", err)

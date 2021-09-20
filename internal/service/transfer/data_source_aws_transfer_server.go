@@ -1,11 +1,10 @@
-package aws
+package transfer
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -86,7 +85,7 @@ func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
 
 	serverID := d.Get("server_id").(string)
 
-	output, err := finder.FindServerByID(conn, serverID)
+	output, err := FindServerByID(conn, serverID)
 
 	if err != nil {
 		return fmt.Errorf("error reading Transfer Server (%s): %w", serverID, err)
