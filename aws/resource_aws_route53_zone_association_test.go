@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ZoneAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,7 +78,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpc(), vpcResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +102,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 				Config: testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53HostedZoneDnssec(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceHostedZoneDNSSEC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

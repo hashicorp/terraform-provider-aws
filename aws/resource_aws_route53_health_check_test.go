@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepRoute53Healthchecks(region string) error {
 
 			id := aws.StringValue(detail.Id)
 
-			r := resourceAwsRoute53HealthCheck()
+			r := ResourceHealthCheck()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -449,7 +450,7 @@ func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
 				Config: testAccRoute53HealthCheckConfigBasic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53HealthCheck(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceHealthCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

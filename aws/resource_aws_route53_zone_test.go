@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestCleanZoneID(t *testing.T) {
@@ -138,7 +139,7 @@ func testSweepRoute53Zones(region string) error {
 				}
 			}
 
-			r := resourceAwsRoute53Zone()
+			r := ResourceZone()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("force_destroy", true)

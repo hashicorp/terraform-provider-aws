@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53HostedZoneDnssec() *schema.Resource {
+func ResourceHostedZoneDNSSEC() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53HostedZoneDnssecCreate,
-		Read:   resourceAwsRoute53HostedZoneDnssecRead,
-		Update: resourceAwsRoute53HostedZoneDnssecUpdate,
-		Delete: resourceAwsRoute53HostedZoneDnssecDelete,
+		Create: resourceHostedZoneDNSSECCreate,
+		Read:   resourceHostedZoneDNSSECRead,
+		Update: resourceHostedZoneDNSSECUpdate,
+		Delete: resourceHostedZoneDNSSECDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -45,7 +45,7 @@ func resourceAwsRoute53HostedZoneDnssec() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53HostedZoneDnssecCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
@@ -70,10 +70,10 @@ func resourceAwsRoute53HostedZoneDnssecCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
 	}
 
-	return resourceAwsRoute53HostedZoneDnssecRead(d, meta)
+	return resourceHostedZoneDNSSECRead(d, meta)
 }
 
-func resourceAwsRoute53HostedZoneDnssecRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedZoneDNSSECRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, d.Id())
@@ -113,7 +113,7 @@ func resourceAwsRoute53HostedZoneDnssecRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsRoute53HostedZoneDnssecUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedZoneDNSSECUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.HasChange("signing_status") {
@@ -137,10 +137,10 @@ func resourceAwsRoute53HostedZoneDnssecUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsRoute53HostedZoneDnssecRead(d, meta)
+	return resourceHostedZoneDNSSECRead(d, meta)
 }
 
-func resourceAwsRoute53HostedZoneDnssecDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedZoneDNSSECDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.DisableHostedZoneDNSSECInput{

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepRoute53QueryLogs(region string) error {
 		for _, queryLoggingConfig := range page.QueryLoggingConfigs {
 			id := aws.StringValue(queryLoggingConfig.Id)
 
-			r := resourceAwsRoute53QueryLog()
+			r := ResourceQueryLog()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -117,7 +118,7 @@ func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53QueryLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,7 +144,7 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
