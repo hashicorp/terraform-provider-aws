@@ -52,7 +52,7 @@ func testSweepWafRegexPatternSet(region string) error {
 		}
 
 		for _, regexPatternSet := range page.RegexPatternSets {
-			r := ResourceRegexPatternSet()
+			r := tfwaf.ResourceRegexPatternSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(regexPatternSet.RegexPatternSetId)
@@ -250,7 +250,7 @@ func testAccCheckAWSWafRegexPatternSetDisappears(set *waf.RegexPatternSet) resou
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRegexPatternSetInput{
 				ChangeToken:       token,

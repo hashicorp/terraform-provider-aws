@@ -36,7 +36,7 @@ func ResourceRegexMatchSet() *schema.Resource {
 			"regex_match_tuple": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      resourceAwsWafRegexMatchSetTupleHash,
+				Set:      RegexMatchSetTupleHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
@@ -79,7 +79,7 @@ func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[INFO] Creating WAF Regex Match Set: %s", d.Get("name").(string))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateRegexMatchSetInput{
 			ChangeToken: token,
@@ -158,7 +158,7 @@ func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRegexMatchSetInput{
 			ChangeToken:     token,
@@ -175,7 +175,7 @@ func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func updateRegexMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,

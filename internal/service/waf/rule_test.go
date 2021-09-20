@@ -55,7 +55,7 @@ func testSweepWafRules(region string) error {
 				continue
 			}
 
-			r := ResourceRule()
+			r := tfwaf.ResourceRule()
 			d := r.Data(nil)
 
 			id := aws.StringValue(rule.RuleId)
@@ -186,7 +186,7 @@ func TestAccAWSWafRule_disappears(t *testing.T) {
 				Config: testAccAWSWafRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

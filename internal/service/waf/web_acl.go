@@ -154,7 +154,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
@@ -197,7 +197,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 
 	rules := d.Get("rules").(*schema.Set).List()
 	if len(rules) > 0 {
-		wr := newWafRetryer(conn)
+		wr := NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -304,7 +304,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("rules")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		wr := newWafRetryer(conn)
+		wr := NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -359,7 +359,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	// First, need to delete all rules
 	rules := d.Get("rules").(*schema.Set).List()
 	if len(rules) > 0 {
-		wr := newWafRetryer(conn)
+		wr := NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -374,7 +374,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteWebACLInput{
 			ChangeToken: token,
@@ -473,7 +473,7 @@ func flattenWAFRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} 
 	l := make([]interface{}, len(fieldToMatches))
 
 	for i, fieldToMatch := range fieldToMatches {
-		l[i] = flattenFieldToMatch(fieldToMatch)[0]
+		l[i] = FlattenFieldToMatch(fieldToMatch)[0]
 	}
 
 	m := map[string]interface{}{

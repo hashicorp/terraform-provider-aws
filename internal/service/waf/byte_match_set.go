@@ -83,7 +83,7 @@ func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateByteMatchSetInput{
 			ChangeToken: token,
@@ -154,7 +154,7 @@ func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteByteMatchSetInput{
 			ChangeToken:    token,
@@ -171,7 +171,7 @@ func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error 
 }
 
 func updateByteMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateByteMatchSetInput{
 			ChangeToken:    token,
@@ -194,7 +194,7 @@ func flattenWafByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
 		m := make(map[string]interface{})
 
 		if t.FieldToMatch != nil {
-			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
 		}
 		m["positional_constraint"] = aws.StringValue(t.PositionalConstraint)
 		m["target_string"] = string(t.TargetString)

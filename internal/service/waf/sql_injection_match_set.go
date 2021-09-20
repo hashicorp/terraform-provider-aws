@@ -65,7 +65,7 @@ func resourceSQLInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get("name").(string))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateSqlInjectionMatchSetInput{
 			ChangeToken: token,
@@ -139,7 +139,7 @@ func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteSqlInjectionMatchSetInput{
 			ChangeToken:            token,
@@ -156,7 +156,7 @@ func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}
 }
 
 func updateSqlInjectionMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
@@ -179,7 +179,7 @@ func flattenSQLInjectionMatchTuples(ts []*waf.SqlInjectionMatchTuple) []interfac
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["text_transformation"] = aws.StringValue(t.TextTransformation)
-		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
 		out[i] = m
 	}
 

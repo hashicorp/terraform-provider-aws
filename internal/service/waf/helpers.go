@@ -107,7 +107,7 @@ func flattenWafSizeConstraints(sc []*waf.SizeConstraint) []interface{} {
 		m := make(map[string]interface{})
 		m["comparison_operator"] = *c.ComparisonOperator
 		if c.FieldToMatch != nil {
-			m["field_to_match"] = flattenFieldToMatch(c.FieldToMatch)
+			m["field_to_match"] = FlattenFieldToMatch(c.FieldToMatch)
 		}
 		m["size"] = *c.Size
 		m["text_transformation"] = *c.TextTransformation
@@ -291,7 +291,7 @@ func flattenWafRegexMatchTuples(tuples []*waf.RegexMatchTuple) []interface{} {
 		m := make(map[string]interface{})
 
 		if t.FieldToMatch != nil {
-			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
 		}
 		m["regex_pattern_set_id"] = *t.RegexPatternSetId
 		m["text_transformation"] = *t.TextTransformation
@@ -338,7 +338,7 @@ func diffWafRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUp
 	return updates
 }
 
-func resourceAwsWafRegexMatchSetTupleHash(v interface{}) int {
+func RegexMatchSetTupleHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["field_to_match"]; ok {

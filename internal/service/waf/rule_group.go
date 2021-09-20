@@ -87,7 +87,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
@@ -220,7 +220,7 @@ func deleteWafRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error 
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRuleGroupInput{
 			ChangeToken: token,
@@ -236,7 +236,7 @@ func deleteWafRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error 
 }
 
 func updateWafRuleGroupResource(id string, oldRules, newRules []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,

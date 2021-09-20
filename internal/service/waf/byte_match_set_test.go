@@ -51,7 +51,7 @@ func testSweepWafByteMatchSet(region string) error {
 		}
 
 		for _, byteMatchSet := range page.ByteMatchSets {
-			r := ResourceByteMatchSet()
+			r := tfwaf.ResourceByteMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(byteMatchSet.ByteMatchSetId)
@@ -308,7 +308,7 @@ func testAccCheckAWSWafByteMatchSetDisappears(v *waf.ByteMatchSet) resource.Test
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateByteMatchSetInput{
 				ChangeToken:    token,

@@ -31,7 +31,7 @@ func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[INFO] Creating SizeConstraintSet: %s", d.Get("name").(string))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateSizeConstraintSetInput{
 			ChangeToken: token,
@@ -111,7 +111,7 @@ func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteSizeConstraintSetInput{
 			ChangeToken:         token,
@@ -127,7 +127,7 @@ func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) e
 }
 
 func updateSizeConstraintSetResource(id string, oldS, newS []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
