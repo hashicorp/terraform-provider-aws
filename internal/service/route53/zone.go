@@ -155,7 +155,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := tftags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, nil, tags); err != nil {
+	if err := UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, nil, tags); err != nil {
 		return fmt.Errorf("error setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
@@ -238,7 +238,7 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc: %s", err)
 	}
 
-	tags, err := tftags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHostedzone)
+	tags, err := ListTags(conn, d.Id(), route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Hosted Zone (%s): %s", d.Id(), err)
@@ -285,7 +285,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Zone (%s) tags: %s", d.Id(), err)
 		}
 	}
