@@ -457,7 +457,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.DescribeGatewayInformation(input)
 
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if IsErrGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -483,7 +483,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Storage Gateway SMB Settings: %s", smbSettingsInput)
 	smbSettingsOutput, err := conn.DescribeSMBSettings(smbSettingsInput)
 	if err != nil && !tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if IsErrGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -730,7 +730,7 @@ func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", input)
 	_, err := conn.DeleteGateway(input)
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if IsErrGatewayNotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Storage Gateway Gateway: %w", err)
@@ -791,7 +791,7 @@ func flattenStorageGatewayGatewayNetworkInterfaces(nis []*storagegateway.Network
 }
 
 // The API returns multiple responses for a missing gateway
-func isAWSErrStorageGatewayGatewayNotFound(err error) bool {
+func IsErrGatewayNotFound(err error) bool {
 	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
 		return true
 	}

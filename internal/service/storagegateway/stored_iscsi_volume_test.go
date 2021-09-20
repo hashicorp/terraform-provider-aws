@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
@@ -185,7 +186,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStorediSCSIVolume(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceStorediSCSIVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -237,7 +238,7 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy(s *terraform.State) e
 		output, err := conn.DescribeStorediSCSIVolumes(input)
 
 		if err != nil {
-			if isAWSErrStorageGatewayGatewayNotFound(err) {
+			if tfstoragegateway.IsErrGatewayNotFound(err) {
 				return nil
 			}
 			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {

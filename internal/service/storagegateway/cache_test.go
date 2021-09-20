@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
 func TestDecodeStorageGatewayCacheID(t *testing.T) {
@@ -53,7 +54,7 @@ func TestDecodeStorageGatewayCacheID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := decodeStorageGatewayCacheID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -138,7 +139,7 @@ func testAccCheckAWSStorageGatewayCacheExists(resourceName string) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
-		gatewayARN, diskID, err := decodeStorageGatewayCacheID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -241,7 +241,7 @@ func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	targetARN := aws.StringValue(attr.TargetARN)
 	d.Set("target_arn", targetARN)
 
-	gatewayARN, targetName, err := parseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(targetARN)
+	gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 	if err != nil {
 		return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %w", targetARN, err)
 	}

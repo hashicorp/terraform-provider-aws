@@ -230,7 +230,7 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 		targetARN := aws.StringValue(volume.VolumeiSCSIAttributes.TargetARN)
 		d.Set("target_arn", targetARN)
 
-		gatewayARN, targetName, err := parseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(targetARN)
+		gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 		if err != nil {
 			return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %s", targetARN, err)
 		}
@@ -277,7 +277,7 @@ func resourceCachediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func parseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(inputARN string) (string, string, error) {
+func ParseVolumeGatewayARNAndTargetNameFromARN(inputARN string) (string, string, error) {
 	// inputARN = arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:TargetName
 	targetARN, err := arn.Parse(inputARN)
 	if err != nil {

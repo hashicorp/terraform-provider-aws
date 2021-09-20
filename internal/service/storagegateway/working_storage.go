@@ -63,7 +63,7 @@ func resourceWorkingStorageCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
-	gatewayARN, diskID, err := decodeStorageGatewayWorkingStorageID(d.Id())
+	gatewayARN, diskID, err := DecodeWorkingStorageID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Reading Storage Gateway working storage: %s", input)
 	output, err := conn.DescribeWorkingStorage(input)
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if IsErrGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway working storage %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -109,7 +109,7 @@ func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func decodeStorageGatewayWorkingStorageID(id string) (string, string, error) {
+func DecodeWorkingStorageID(id string) (string, string, error) {
 	// id = arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 	idFormatErr := fmt.Errorf("expected ID in form of GatewayARN:DiskId, received: %s", id)
 	gatewayARNAndDisk, err := arn.Parse(id)

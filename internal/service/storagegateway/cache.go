@@ -91,7 +91,7 @@ func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
-	gatewayARN, diskID, err := decodeStorageGatewayCacheID(d.Id())
+	gatewayARN, diskID, err := DecodeCacheID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Storage Gateway cache: %s", input)
 	output, err := conn.DescribeCache(input)
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if IsErrGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -137,7 +137,7 @@ func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeStorageGatewayCacheID(id string) (string, string, error) {
+func DecodeCacheID(id string) (string, string, error) {
 	// id = arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 	idFormatErr := fmt.Errorf("expected ID in form of GatewayARN:DiskId, received: %s", id)
 	gatewayARNAndDisk, err := arn.Parse(id)

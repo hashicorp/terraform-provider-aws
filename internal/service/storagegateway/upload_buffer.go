@@ -99,14 +99,14 @@ func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
-	gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(d.Id())
+	gatewayARN, diskID, err := DecodeUploadBufferID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	foundDiskID, err := FindUploadBufferDisk(conn, gatewayARN, diskID)
 
-	if !d.IsNewResource() && isAWSErrStorageGatewayGatewayNotFound(err) {
+	if !d.IsNewResource() && IsErrGatewayNotFound(err) {
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -146,7 +146,7 @@ func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeStorageGatewayUploadBufferID(id string) (string, string, error) {
+func DecodeUploadBufferID(id string) (string, string, error) {
 	// id = arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 	idFormatErr := fmt.Errorf("expected ID in form of GatewayARN:DiskId, received: %s", id)
 	gatewayARNAndDisk, err := arn.Parse(id)
