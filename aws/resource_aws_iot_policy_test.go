@@ -26,14 +26,14 @@ func init() {
 }
 
 func testSweepIotPolicies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListPoliciesInput{}
@@ -49,7 +49,7 @@ func testSweepIotPolicies(region string) error {
 
 			d.SetId(aws.StringValue(policy.PolicyName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -59,11 +59,11 @@ func testSweepIotPolicies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Policy for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Policy sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -79,7 +79,7 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
@@ -109,14 +109,14 @@ func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTPolicyConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIotPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIotPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSIoTPolicyDestroy_basic(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy" {
@@ -168,7 +168,7 @@ func testAccCheckAWSIoTPolicyExists(n string, v *iot.GetPolicyOutput) resource.T
 			return fmt.Errorf("No IoT Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 		resp, err := conn.GetPolicy(&iot.GetPolicyInput{
 			PolicyName: aws.String(rs.Primary.ID),

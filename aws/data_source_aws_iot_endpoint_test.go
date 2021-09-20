@@ -16,7 +16,7 @@ func TestAccAWSIotEndpointDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIotEndpointConfig,
@@ -34,7 +34,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTCredentialProvider(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIotEndpointConfigEndpointType("iot:CredentialProvider"),
@@ -52,7 +52,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIotEndpointConfigEndpointType("iot:Data"),
@@ -70,7 +70,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTDataATS(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIotEndpointConfigEndpointType("iot:Data-ATS"),
@@ -88,7 +88,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTJobs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIotEndpointConfigEndpointType("iot:Jobs"),

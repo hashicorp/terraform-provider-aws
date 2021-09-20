@@ -26,14 +26,14 @@ func init() {
 }
 
 func testSweepIotCertifcates(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListCertificatesInput{}
@@ -49,7 +49,7 @@ func testSweepIotCertifcates(region string) error {
 
 			d.SetId(aws.StringValue(certificate.CertificateId))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -59,11 +59,11 @@ func testSweepIotCertifcates(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Certificate for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Certificate for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Certificate sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -75,7 +75,7 @@ func TestAccAWSIoTCertificate_csr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSIoTCertificate_keys_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
@@ -116,7 +116,7 @@ func TestAccAWSIoTCertificate_keys_certificate(t *testing.T) {
 }
 
 func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_certificate" {

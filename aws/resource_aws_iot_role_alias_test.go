@@ -23,14 +23,14 @@ func init() {
 }
 
 func testSweepIotRoleAliases(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListRoleAliasesInput{}
@@ -46,7 +46,7 @@ func testSweepIotRoleAliases(region string) error {
 
 			d.SetId(aws.StringValue(roleAlias))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -56,11 +56,11 @@ func testSweepIotRoleAliases(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Role Alias for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Role Alias for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Role Alias sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -78,7 +78,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotRoleAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_role_alias" {
 			continue
@@ -161,7 +161,7 @@ func testAccCheckAWSIotRoleAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 		role_arn := rs.Primary.Attributes["role_arn"]
 
 		roleAliasDescription, err := getIotRoleAliasDescription(conn, rs.Primary.ID)

@@ -23,14 +23,14 @@ func init() {
 }
 
 func testSweepIotThings(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingsInput{}
@@ -46,7 +46,7 @@ func testSweepIotThings(region string) error {
 
 			d.SetId(aws.StringValue(thing.ThingName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -56,11 +56,11 @@ func testSweepIotThings(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -77,7 +77,7 @@ func TestAccAWSIotThing_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +111,7 @@ func TestAccAWSIotThing_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -176,7 +176,7 @@ func testAccCheckIotThingExists(n string, thing *iot.DescribeThingOutput) resour
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 		params := &iot.DescribeThingInput{
 			ThingName: aws.String(rs.Primary.ID),
 		}
@@ -192,7 +192,7 @@ func testAccCheckIotThingExists(n string, thing *iot.DescribeThingOutput) resour
 }
 
 func testAccCheckAWSIotThingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing" {

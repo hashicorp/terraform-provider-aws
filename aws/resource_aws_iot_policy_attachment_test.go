@@ -22,14 +22,14 @@ func init() {
 }
 
 func testSweepIotPolicyAttachments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListPoliciesInput{}
@@ -57,7 +57,7 @@ func testSweepIotPolicyAttachments(region string) error {
 					d.Set("policy", policy.PolicyName)
 					d.Set("target", target)
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -75,11 +75,11 @@ func testSweepIotPolicyAttachments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Policy Attachment for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy Attachment for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Policy Attachment sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -94,7 +94,7 @@ func TestAccAWSIotPolicyAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotPolicyAttchmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +134,7 @@ func TestAccAWSIotPolicyAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotPolicyAttchmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy_attachment" {
 			continue
@@ -186,7 +186,7 @@ func testAccCheckAWSIotPolicyAttachmentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 		target := rs.Primary.Attributes["target"]
 		policyName := rs.Primary.Attributes["policy"]
 
@@ -206,7 +206,7 @@ func testAccCheckAWSIotPolicyAttachmentExists(n string) resource.TestCheckFunc {
 
 func testAccCheckAWSIotPolicyAttachmentCertStatus(n string, policies []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 		rs, ok := s.RootModule().Resources[n]
 

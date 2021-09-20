@@ -22,14 +22,14 @@ func init() {
 }
 
 func testSweepIotThingPrincipalAttachments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingsInput{}
@@ -57,7 +57,7 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 					d.Set("principal", principal)
 					d.Set("thing", thing.ThingName)
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -75,11 +75,11 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Principal Attachment for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Principal Attachment for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -94,7 +94,7 @@ func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +142,7 @@ func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotThingPrincipalAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_principal_attachment" {
@@ -179,7 +179,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 			return fmt.Errorf("No attachment")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 		thing := rs.Primary.Attributes["thing"]
 		principal := rs.Primary.Attributes["principal"]
 
@@ -199,7 +199,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 
 func testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 		principalARNs := make(map[string]string)
 
