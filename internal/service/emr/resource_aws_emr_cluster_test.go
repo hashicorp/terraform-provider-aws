@@ -1643,7 +1643,7 @@ func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 	}
 
 	for groupName := range managedSecurityGroups {
-		securityGroup, err := finder.SecurityGroupByNameAndVpcID(conn, groupName, aws.StringValue(vpc.VpcId))
+		securityGroup, err := finder.FindSecurityGroupByNameAndVPCID(conn, groupName, aws.StringValue(vpc.VpcId))
 
 		if err != nil {
 			return fmt.Errorf("error describing EMR Managed Security Group (%s): %w", groupName, err)
