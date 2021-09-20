@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePortfolio() *schema.Resource {
@@ -58,17 +59,17 @@ func ResourcePortfolio() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 func resourcePortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(tfservicecatalog.AcceptLanguageEnglish),
 		DisplayName:      aws.String(d.Get("name").(string)),
@@ -123,7 +124,7 @@ func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
-	tags := keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -167,8 +168,8 @@ func resourcePortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		input.AddTags = keyvaluetags.New(n).IgnoreAws().ServicecatalogTags()
-		input.RemoveTags = aws.StringSlice(keyvaluetags.New(o).IgnoreAws().Keys())
+		input.AddTags = tftags.New(n).IgnoreAws().ServicecatalogTags()
+		input.RemoveTags = aws.StringSlice(tftags.New(o).IgnoreAws().Keys())
 	}
 
 	log.Printf("[DEBUG] Update Service Catalog Portfolio: %#v", input)

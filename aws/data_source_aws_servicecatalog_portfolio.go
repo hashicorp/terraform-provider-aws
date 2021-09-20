@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePortfolio() *schema.Resource {
@@ -49,7 +50,7 @@ func DataSourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -89,7 +90,7 @@ func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags := keyvaluetags.ServicecatalogKeyValueTags(output.Tags)
+	tags := tftags.ServicecatalogKeyValueTags(output.Tags)
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
