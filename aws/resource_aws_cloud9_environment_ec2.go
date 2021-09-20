@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
@@ -72,8 +73,8 @@ func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 }
 
 func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Cloud9Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cloud9.CreateEnvironmentEC2Input{
@@ -153,9 +154,9 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Cloud9Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Cloud9 Environment EC2 %s", d.Id())
 
@@ -207,7 +208,7 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn
 
 	input := cloud9.UpdateEnvironmentInput{
 		Description:   aws.String(d.Get("description").(string)),
@@ -237,7 +238,7 @@ func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn
 
 	_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),

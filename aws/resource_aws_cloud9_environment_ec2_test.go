@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
@@ -189,7 +190,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Exists(n string, res *cloud9.Environment
 			return fmt.Errorf("No Cloud9 Environment EC2 ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloud9conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
 
 		out, err := conn.DescribeEnvironments(&cloud9.DescribeEnvironmentsInput{
 			EnvironmentIds: []*string{aws.String(rs.Primary.ID)},
@@ -213,7 +214,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Exists(n string, res *cloud9.Environment
 
 func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloud9conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
 
 		_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{
 			EnvironmentId: res.Id,
@@ -249,7 +250,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) reso
 }
 
 func testAccCheckAWSCloud9EnvironmentEc2Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloud9conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloud9_environment_ec2" {
