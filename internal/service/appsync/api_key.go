@@ -81,12 +81,12 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
+	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	key, err := getAppsyncApiKey(apiID, keyID, conn)
+	key, err := GetAPIKey(apiID, keyID, conn)
 	if err != nil {
 		return fmt.Errorf("error getting Appsync API Key %q: %s", d.Id(), err)
 	}
@@ -106,7 +106,7 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
+	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
+	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeAppSyncApiKeyId(id string) (string, string, error) {
+func DecodeAPIKeyID(id string) (string, string, error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected API-ID:API-KEY-ID", id)
@@ -163,7 +163,7 @@ func decodeAppSyncApiKeyId(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func getAppsyncApiKey(apiID, keyID string, conn *appsync.AppSync) (*appsync.ApiKey, error) {
+func GetAPIKey(apiID, keyID string, conn *appsync.AppSync) (*appsync.ApiKey, error) {
 	input := &appsync.ListApiKeysInput{
 		ApiId: aws.String(apiID),
 	}

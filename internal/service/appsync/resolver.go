@@ -163,7 +163,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, typeName, fieldName, err := decodeAppsyncResolverID(d.Id())
+	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
 	if err != nil {
 		return err
@@ -258,7 +258,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, typeName, fieldName, err := decodeAppsyncResolverID(d.Id())
+	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeAppsyncResolverID(id string) (string, string, string, error) {
+func DecodeResolverID(id string) (string, string, string, error) {
 	idParts := strings.SplitN(id, "-", 3)
 	if len(idParts) != 3 {
 		return "", "", "", fmt.Errorf("expected ID in format ApiID-TypeName-FieldName, received: %s", id)

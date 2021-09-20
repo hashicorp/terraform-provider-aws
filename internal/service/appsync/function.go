@@ -112,7 +112,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
+	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
+	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
+	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeAppsyncFunctionID(id string) (string, string, error) {
+func DecodeFunctionID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "-", 2)
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format ApiID-FunctionID, received: %s", id)
