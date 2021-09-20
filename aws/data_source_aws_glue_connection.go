@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsGlueConnection() *schema.Resource {
@@ -80,7 +81,7 @@ func dataSourceAwsGlueConnection() *schema.Resource {
 }
 
 func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 	id := d.Get("id").(string)
 	catalogID, connectionName, err := decodeGlueConnectionID(id)
 	if err != nil {
@@ -106,10 +107,10 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", connection.Description)
 
 	connectionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
 	d.Set("arn", connectionArn)

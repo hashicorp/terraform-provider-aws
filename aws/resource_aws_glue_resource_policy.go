@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueResourcePolicy() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceAwsGlueResourcePolicy() *schema.Resource {
 
 func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
 	return func(d *schema.ResourceData, meta interface{}) error {
-		conn := meta.(*AWSClient).glueconn
+		conn := meta.(*conns.AWSClient).GlueConn
 
 		_, err := conn.PutResourcePolicy(&glue.PutResourcePolicyInput{
 			PolicyInJson:          aws.String(d.Get("policy").(string)),
@@ -42,13 +43,13 @@ func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceD
 		if err != nil {
 			return fmt.Errorf("error putting policy request: %s", err)
 		}
-		d.SetId(meta.(*AWSClient).region)
+		d.SetId(meta.(*conns.AWSClient).Region)
 		return resourceAwsGlueResourcePolicyRead(d, meta)
 	}
 }
 
 func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
@@ -70,7 +71,7 @@ func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGlueResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})
 	if err != nil {

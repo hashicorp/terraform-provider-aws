@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueWorkflow() *schema.Resource {
@@ -55,8 +56,8 @@ func resourceAwsGlueWorkflow() *schema.Resource {
 }
 
 func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -88,9 +89,9 @@ func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetWorkflowInput{
 		Name: aws.String(d.Id()),
@@ -115,10 +116,10 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	workFlowArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("workflow/%s", d.Id()),
 	}.String()
 	d.Set("arn", workFlowArn)
@@ -151,7 +152,7 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
@@ -188,7 +189,7 @@ func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
 	err := deleteWorkflow(conn, d.Id())

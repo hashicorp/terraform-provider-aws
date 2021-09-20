@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -33,7 +34,7 @@ func testSweepGlueDevEndpoint(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetDevEndpointsInput{}
 	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
@@ -626,7 +627,7 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, v *glue.DevEndpoi
 			return fmt.Errorf("no Glue Dev Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := finder.DevEndpointByName(conn, rs.Primary.ID)
 
@@ -641,7 +642,7 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, v *glue.DevEndpoi
 }
 
 func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_dev_endpoint" {

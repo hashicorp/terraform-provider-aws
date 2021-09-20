@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepGlueCatalogDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetDatabasesInput{}
 	err = conn.GetDatabasesPages(input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
@@ -179,7 +180,7 @@ func TestAccAWSGlueCatalogDatabase_disappears(t *testing.T) {
 }
 
 func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_catalog_database" {
@@ -283,8 +284,8 @@ func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		glueconn := acctest.Provider.Meta().(*AWSClient).glueconn
-		out, err := glueconn.GetDatabase(&glue.GetDatabaseInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		out, err := conn.GetDatabase(&glue.GetDatabaseInput{
 			CatalogId: aws.String(catalogId),
 			Name:      aws.String(dbName),
 		})

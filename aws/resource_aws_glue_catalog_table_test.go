@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -1104,7 +1105,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 func testAccCheckGlueTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_catalog_table" {
@@ -1145,7 +1146,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		out, err := finder.TableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err

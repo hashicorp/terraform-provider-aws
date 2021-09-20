@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueCatalogTable() *schema.Resource {
@@ -353,8 +354,8 @@ func readAwsGlueTableID(id string) (catalogID string, dbName string, name string
 }
 
 func resourceAwsGlueCatalogTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
+	conn := meta.(*conns.AWSClient).GlueConn
+	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	name := d.Get("name").(string)
 
@@ -377,7 +378,7 @@ func resourceAwsGlueCatalogTableCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, name, err := readAwsGlueTableID(d.Id())
 	if err != nil {
@@ -398,10 +399,10 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 
 	table := out.Table
 	tableArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
 	}.String()
 	d.Set("arn", tableArn)
@@ -457,7 +458,7 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, _, err := readAwsGlueTableID(d.Id())
 	if err != nil {
@@ -478,7 +479,7 @@ func resourceAwsGlueCatalogTableUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGlueCatalogTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, name, tableIdErr := readAwsGlueTableID(d.Id())
 	if tableIdErr != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
@@ -84,7 +85,7 @@ func testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName string, set
 			return fmt.Errorf("No Glue Data Catalog Encryption Settings ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
 			CatalogId: aws.String(rs.Primary.ID),

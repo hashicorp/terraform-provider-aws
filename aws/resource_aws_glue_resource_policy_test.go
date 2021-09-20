@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func CreateTablePolicy(action string) string {
@@ -137,7 +138,7 @@ func testAccAWSGlueResourcePolicy(n string, action string) resource.TestCheckFun
 			return fmt.Errorf("No policy id set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 		if err != nil {
@@ -161,7 +162,7 @@ func testAccAWSGlueResourcePolicy(n string, action string) resource.TestCheckFun
 }
 
 func testAccCheckAWSGlueResourcePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 

@@ -13,6 +13,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueSchema() *schema.Resource {
@@ -93,8 +94,8 @@ func resourceAwsGlueSchema() *schema.Resource {
 }
 
 func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateSchemaInput{
@@ -132,9 +133,9 @@ func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.SchemaByID(conn, d.Id())
 	if err != nil {
@@ -192,7 +193,7 @@ func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: tfglue.CreateAwsGlueSchemaID(d.Id()),
@@ -253,7 +254,7 @@ func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{

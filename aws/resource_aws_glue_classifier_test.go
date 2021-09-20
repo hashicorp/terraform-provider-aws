@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepGlueClassifiers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetClassifiersInput{}
 	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
@@ -454,7 +455,7 @@ func testAccCheckAWSGlueClassifierExists(resourceName string, classifier *glue.C
 			return fmt.Errorf("No Glue Classifier ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetClassifier(&glue.GetClassifierInput{
 			Name: aws.String(rs.Primary.ID),
@@ -478,7 +479,7 @@ func testAccCheckAWSGlueClassifierDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetClassifier(&glue.GetClassifierInput{
 			Name: aws.String(rs.Primary.ID),

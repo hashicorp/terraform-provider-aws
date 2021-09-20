@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepGlueSchema(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
 	if err != nil {
@@ -294,7 +295,7 @@ func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
 }
 
 func testAccPreCheckAWSGlueSchema(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
@@ -319,7 +320,7 @@ func testAccCheckAWSGlueSchemaExists(resourceName string, schema *glue.GetSchema
 			return fmt.Errorf("No Glue Schema ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		output, err := finder.SchemaByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -344,7 +345,7 @@ func testAccCheckAWSGlueSchemaDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		output, err := finder.SchemaByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {

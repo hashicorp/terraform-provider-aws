@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepGlueTriggers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetTriggersInput{}
 	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
@@ -546,7 +547,7 @@ func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger
 			return fmt.Errorf("No Glue Trigger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := finder.TriggerByName(conn, rs.Primary.ID)
 		if err != nil {
@@ -572,7 +573,7 @@ func testAccCheckAWSGlueTriggerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := finder.TriggerByName(conn, rs.Primary.ID)
 
