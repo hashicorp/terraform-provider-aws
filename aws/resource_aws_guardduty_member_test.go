@@ -174,7 +174,7 @@ func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
 
 		gmo, err := conn.GetMembers(input)
 		if err != nil {
-			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 				return nil
 			}
 			return err

@@ -125,7 +125,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Reading GuardDuty Detector: %s", input)
 	gdo, err := conn.GetDetector(&input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -211,7 +211,7 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(waiter.MembershipPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteDetector(input)
 
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
 			return resource.RetryableError(err)
 		}
 
@@ -222,7 +222,7 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDetector(input)
 	}
 

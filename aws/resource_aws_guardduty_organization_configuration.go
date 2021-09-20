@@ -96,7 +96,7 @@ func resourceAwsGuardDutyOrganizationConfigurationRead(d *schema.ResourceData, m
 
 	output, err := conn.DescribeOrganizationConfiguration(input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 		log.Printf("[WARN] GuardDuty Organization Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

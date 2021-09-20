@@ -72,7 +72,7 @@ func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta inter
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		err = conn.ListInvitationsPages(listInvitationsInput, func(page *guardduty.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == masterAccountID {
@@ -116,7 +116,7 @@ func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Reading GuardDuty Master Account: %s", input)
 	output, err := conn.GetMasterAccount(input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 		log.Printf("[WARN] GuardDuty Detector %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -146,7 +146,7 @@ func resourceAwsGuardDutyInviteAccepterDelete(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Disassociating GuardDuty Detector (%s) from GuardDuty Master Account: %s", d.Id(), input)
 	_, err := conn.DisassociateFromMasterAccount(input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 		return nil
 	}
 

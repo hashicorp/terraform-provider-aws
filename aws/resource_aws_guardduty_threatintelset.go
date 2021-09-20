@@ -127,7 +127,7 @@ func resourceAwsGuardDutyThreatintelsetRead(d *schema.ResourceData, meta interfa
 
 	resp, err := conn.GetThreatIntelSet(input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty ThreatIntelSet %q not found, removing from state", threatIntelSetId)
 			d.SetId("")
 			return nil
