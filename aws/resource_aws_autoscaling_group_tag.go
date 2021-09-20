@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAutoscalingGroupTag() *schema.Resource {
+func ResourceGroupTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingGroupTagCreate,
-		Read:   resourceAwsAutoscalingGroupTagRead,
-		Update: resourceAwsAutoscalingGroupTagUpdate,
-		Delete: resourceAwsAutoscalingGroupTagDelete,
+		Create: resourceGroupTagCreate,
+		Read:   resourceGroupTagRead,
+		Update: resourceGroupTagUpdate,
+		Delete: resourceGroupTagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -54,7 +54,7 @@ func resourceAwsAutoscalingGroupTag() *schema.Resource {
 	}
 }
 
-func resourceAwsAutoscalingGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	identifier := d.Get("autoscaling_group_name").(string)
@@ -67,10 +67,10 @@ func resourceAwsAutoscalingGroupTagCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(tagresource.SetResourceID(identifier, key))
 
-	return resourceAwsAutoscalingGroupTagRead(d, meta)
+	return resourceGroupTagRead(d, meta)
 }
 
-func resourceAwsAutoscalingGroupTagRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
@@ -103,7 +103,7 @@ func resourceAwsAutoscalingGroupTagRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsAutoscalingGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
@@ -115,10 +115,10 @@ func resourceAwsAutoscalingGroupTagUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
-	return resourceAwsAutoscalingGroupTagRead(d, meta)
+	return resourceGroupTagRead(d, meta)
 }
 
-func resourceAwsAutoscalingGroupTagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupTagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 

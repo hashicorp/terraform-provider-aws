@@ -119,7 +119,7 @@ func TestCapacitySatisfiedCreate(t *testing.T) {
 		},
 	}
 
-	r := resourceAwsAutoscalingGroup()
+	r := ResourceGroup()
 	for tn, tc := range cases {
 		d := r.TestResourceData()
 		for k, v := range tc.Data {
@@ -201,7 +201,7 @@ func TestCapacitySatisfiedUpdate(t *testing.T) {
 		},
 	}
 
-	r := resourceAwsAutoscalingGroup()
+	r := ResourceGroup()
 	for tn, tc := range cases {
 		d := r.TestResourceData()
 		for k, v := range tc.Data {

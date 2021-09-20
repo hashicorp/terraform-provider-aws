@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAutoscalingGroups() *schema.Resource {
+func DataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAutoscalingGroupsRead,
+		Read: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"names": {
@@ -48,7 +48,7 @@ func dataSourceAwsAutoscalingGroups() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
 	log.Printf("[DEBUG] Reading Autoscaling Groups.")
