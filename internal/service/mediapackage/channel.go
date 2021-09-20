@@ -90,7 +90,7 @@ func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().MediapackageTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateChannel(input)
@@ -123,7 +123,7 @@ func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting hls_ingest: %s", err)
 	}
 
-	tags := tftags.MediapackageKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -154,7 +154,7 @@ func resourceChannelUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.MediapackageUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating MediaPackage Channel (%s) tags: %s", arn, err)
 		}
 	}
