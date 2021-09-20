@@ -2,6 +2,7 @@ package elasticbeanstalk
 
 import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func flattenAsg(list []*elasticbeanstalk.AutoScalingGroup) []string {
