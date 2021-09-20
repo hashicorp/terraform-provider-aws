@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -502,7 +502,7 @@ func networkFirewallSubnetMappingsHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func networkFirewallSubnetMappingsDiff(old, new *schema.Set) ([]string, []*networkfirewall.SubnetMapping) {
