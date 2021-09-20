@@ -48,6 +48,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"gopkg.in/yaml.v2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 

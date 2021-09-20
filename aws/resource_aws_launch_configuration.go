@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceLaunchConfiguration() *schema.Resource {

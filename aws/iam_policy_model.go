@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 type IAMPolicyDoc struct {

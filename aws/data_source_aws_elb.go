@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLoadBalancer() *schema.Resource {
@@ -187,7 +188,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"zone_id": {
 				Type:     schema.TypeString,
@@ -303,7 +304,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	tags, err := keyvaluetags.ElbListTags(conn, d.Id())
+	tags, err := tftags.ElbListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ELB (%s): %w", d.Id(), err)

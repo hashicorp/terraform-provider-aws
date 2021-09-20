@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceInstance() *schema.Resource {
@@ -22,8 +23,8 @@ func DataSourceInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter":        dataSourceFiltersSchema(),
-			"tags":          tagsSchemaComputed(),
-			"instance_tags": tagsSchemaComputed(),
+			"tags":          tftags.TagsSchemaComputed(),
+			"instance_tags": tftags.TagsSchemaComputed(),
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -215,7 +216,7 @@ func DataSourceInstance() *schema.Resource {
 							Computed: true,
 						},
 
-						"tags": tagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 
 						"throughput": {
 							Type:     schema.TypeInt,
@@ -277,7 +278,7 @@ func DataSourceInstance() *schema.Resource {
 							Computed: true,
 						},
 
-						"tags": tagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 
 						"throughput": {
 							Type:     schema.TypeInt,
@@ -441,7 +442,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
+func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
 	d.SetId(aws.StringValue(instance.InstanceId))
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
@@ -520,7 +521,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

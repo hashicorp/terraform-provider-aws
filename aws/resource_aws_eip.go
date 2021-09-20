@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -33,7 +34,7 @@ func ResourceEIP() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),
@@ -114,8 +115,8 @@ func ResourceEIP() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -129,7 +130,7 @@ func ResourceEIP() *schema.Resource {
 func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// By default, we're not in a VPC
 	domainOpt := ""
@@ -312,7 +313,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	tags := keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -415,7 +416,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceAMI() *schema.Resource {
@@ -194,7 +195,7 @@ func DataSourceAMI() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -314,7 +315,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	if err := d.Set("state_reason", amiStateReason(image.StateReason)); err != nil {
 		return err
 	}
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -1832,34 +1832,34 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandProviderDefaultTags(l []interface{}) *keyvaluetags.DefaultConfig {
+func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	defaultConfig := &keyvaluetags.DefaultConfig{}
+	defaultConfig := &tftags.DefaultConfig{}
 	m := l[0].(map[string]interface{})
 
 	if v, ok := m["tags"].(map[string]interface{}); ok {
-		defaultConfig.Tags = keyvaluetags.New(v)
+		defaultConfig.Tags = tftags.New(v)
 	}
 	return defaultConfig
 }
 
-func expandProviderIgnoreTags(l []interface{}) *keyvaluetags.IgnoreConfig {
+func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	ignoreConfig := &keyvaluetags.IgnoreConfig{}
+	ignoreConfig := &tftags.IgnoreConfig{}
 	m := l[0].(map[string]interface{})
 
 	if v, ok := m["keys"].(*schema.Set); ok {
-		ignoreConfig.Keys = keyvaluetags.New(v.List())
+		ignoreConfig.Keys = tftags.New(v.List())
 	}
 
 	if v, ok := m["key_prefixes"].(*schema.Set); ok {
-		ignoreConfig.KeyPrefixes = keyvaluetags.New(v.List())
+		ignoreConfig.KeyPrefixes = tftags.New(v.List())
 	}
 
 	return ignoreConfig

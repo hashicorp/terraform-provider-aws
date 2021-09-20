@@ -1,4 +1,4 @@
-package tagresource
+package tags
 
 import (
 	"testing"
@@ -100,46 +100,6 @@ func TestSetResourceId(t *testing.T) {
 
 			if got != testCase.ExpectedResourceIdentifier {
 				t.Errorf("got %s, expected %s", got, testCase.ExpectedResourceIdentifier)
-			}
-		})
-	}
-}
-
-func TestToSnakeCase(t *testing.T) {
-	testCases := []struct {
-		Input    string
-		Expected string
-	}{
-		{
-			Input:    "ARN",
-			Expected: "arn",
-		},
-		{
-			Input:    "LogGroupName",
-			Expected: "log_group_name",
-		},
-		{
-			Input:    "ResourceId",
-			Expected: "resource_id",
-		},
-		{
-			Input:    "ResourceArn",
-			Expected: "resource_arn",
-		},
-		{
-			Input:    "ResourceARN",
-			Expected: "resource_arn",
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-
-		t.Run(testCase.Input, func(t *testing.T) {
-			got := toSnakeCase(testCase.Input)
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
 			}
 		})
 	}

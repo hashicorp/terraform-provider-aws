@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 )
 
 var (
@@ -39,7 +39,7 @@ func main() {
 		ServiceName: *serviceName,
 	}
 	templateFuncMap := template.FuncMap{
-		"IdentifierAttributeName": tagresource.ServiceIdentifierAttributeName,
+		"IdentifierAttributeName": tftags.ServiceIdentifierAttributeName,
 		"Title":                   strings.Title,
 	}
 
@@ -101,8 +101,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/{{ .ServiceName }}"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -143,27 +143,27 @@ func resourceAws{{ .ServiceName | Title }}TagCreate(d *schema.ResourceData, meta
 	value := d.Get("value").(string)
 
 	{{ if eq .ServiceName "ec2" }}
-	if err := keyvaluetags.{{ .ServiceName | Title }}CreateTags(conn, identifier, map[string]string{key: value}); err != nil {
+	if err := tftags.{{ .ServiceName | Title }}CreateTags(conn, identifier, map[string]string{key: value}); err != nil {
 	{{- else }}
-	if err := keyvaluetags.{{ .ServiceName | Title }}UpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
+	if err := tftags.{{ .ServiceName | Title }}UpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
 	{{- end }}
 		return fmt.Errorf("error creating %s resource (%s) tag (%s): %w", {{ .ServiceName }}.ServiceID, identifier, key, err)
 	}
 
-	d.SetId(tagresource.SetResourceID(identifier, key))
+	d.SetId(tftags.SetResourceID(identifier, key))
 
 	return resourceAws{{ .ServiceName | Title }}TagRead(d, meta)
 }
 
 func resourceAws{{ .ServiceName | Title }}TagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).{{ .ServiceName }}conn
-	identifier, key, err := tagresource.GetResourceID(d.Id())
+	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	value, err := keyvaluetags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
+	value, err := tftags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", {{ .ServiceName }}.ServiceID, identifier, key)
@@ -184,13 +184,13 @@ func resourceAws{{ .ServiceName | Title }}TagRead(d *schema.ResourceData, meta i
 
 func resourceAws{{ .ServiceName | Title }}TagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).{{ .ServiceName }}conn
-	identifier, key, err := tagresource.GetResourceID(d.Id())
+	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if err := keyvaluetags.{{ .ServiceName | Title }}UpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := tftags.{{ .ServiceName | Title }}UpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", {{ .ServiceName }}.ServiceID, identifier, key, err)
 	}
 
@@ -199,13 +199,13 @@ func resourceAws{{ .ServiceName | Title }}TagUpdate(d *schema.ResourceData, meta
 
 func resourceAws{{ .ServiceName | Title }}TagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).{{ .ServiceName }}conn
-	identifier, key, err := tagresource.GetResourceID(d.Id())
+	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	if err := keyvaluetags.{{ .ServiceName | Title }}UpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := tftags.{{ .ServiceName | Title }}UpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return fmt.Errorf("error deleting %s resource (%s) tag (%s): %w", {{ .ServiceName }}.ServiceID, identifier, key, err)
 	}
 
@@ -223,8 +223,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/{{ .ServiceName }}"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -236,13 +236,13 @@ func testAccCheck{{ .ServiceName | Title }}TagDestroy(s *terraform.State) error 
 			continue
 		}
 
-		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
+		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = keyvaluetags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
+		_, err = tftags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -269,7 +269,7 @@ func testAccCheck{{ .ServiceName | Title }}TagExists(resourceName string) resour
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
-		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
+		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -277,7 +277,7 @@ func testAccCheck{{ .ServiceName | Title }}TagExists(resourceName string) resour
 
 		conn := testAccProvider.Meta().(*AWSClient).{{ .ServiceName }}conn
 
-		_, err = keyvaluetags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
+		_, err = tftags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
 
 		if err != nil {
 			return err

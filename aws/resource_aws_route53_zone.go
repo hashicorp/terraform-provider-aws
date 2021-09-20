@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceZone() *schema.Resource {
@@ -99,8 +100,8 @@ func ResourceZone() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"force_destroy": {
 				Type:     schema.TypeBool,
@@ -109,14 +110,14 @@ func ResourceZone() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
 
 	input := &route53.CreateHostedZoneInput{
@@ -155,7 +156,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, nil, tags); err != nil {
+	if err := tftags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, nil, tags); err != nil {
 		return fmt.Errorf("error setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
@@ -238,7 +239,7 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc: %s", err)
 	}
 
-	tags, err := keyvaluetags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHostedzone)
+	tags, err := tftags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Hosted Zone (%s): %s", d.Id(), err)
@@ -285,7 +286,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
+		if err := tftags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Zone (%s) tags: %s", d.Id(), err)
 		}
 	}

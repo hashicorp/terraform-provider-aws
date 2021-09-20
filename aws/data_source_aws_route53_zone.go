@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceZone() *schema.Resource {
@@ -49,7 +50,7 @@ func DataSourceZone() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"resource_record_set_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -80,7 +81,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
 	vpcId, vpcIdExists := d.GetOk("vpc_id")
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws()
+	tags := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAws()
 
 	if nameExists && idExists {
 		return fmt.Errorf("zone_id and name arguments can't be used together")
@@ -134,7 +135,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 				// we check if tags match
 				matchingTags := true
 				if len(tags) > 0 {
-					listTags, err := keyvaluetags.Route53ListTags(conn, hostedZoneId, route53.TagResourceTypeHostedzone)
+					listTags, err := tftags.Route53ListTags(conn, hostedZoneId, route53.TagResourceTypeHostedzone)
 
 					if err != nil {
 						return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", err)
@@ -186,7 +187,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting name_servers: %w", err)
 	}
 
-	tags, err = keyvaluetags.Route53ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
+	tags, err = tftags.Route53ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return fmt.Errorf("error listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)

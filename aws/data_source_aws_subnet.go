@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSubnet() *schema.Resource {
@@ -89,7 +90,7 @@ func DataSourceSubnet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -139,7 +140,7 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
@@ -189,7 +190,7 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", subnet.OwnerId)
 	d.Set("state", subnet.State)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

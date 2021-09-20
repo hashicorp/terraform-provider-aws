@@ -33,6 +33,7 @@ import (
 	stsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sts/finder"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (

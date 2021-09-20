@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -543,8 +544,8 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"tenancy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -597,7 +598,7 @@ func ResourceInstance() *schema.Resource {
 					return
 				},
 			},
-			"volume_tags": tagsSchema(),
+			"volume_tags": tftags.TagsSchema(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -639,7 +640,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			SetTagsDiff,
+			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				_, ok := diff.GetOk("launch_template")
 
@@ -715,7 +716,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
 	if err != nil {
@@ -874,7 +875,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := keyvaluetags.Ec2CreateTags(conn, vol, blockDeviceTags); err != nil {
+		if err := tftags.Ec2CreateTags(conn, vol, blockDeviceTags); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -1073,7 +1074,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	tags := keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1090,7 +1091,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		if err := d.Set("volume_tags", keyvaluetags.Ec2KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
+		if err := d.Set("volume_tags", tftags.Ec2KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
 			return fmt.Errorf("error setting volume_tags: %s", err)
 		}
 	}
@@ -1195,7 +1196,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -1209,7 +1210,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("volume_tags")
 
 		for _, volumeId := range volumeIds {
-			if err := keyvaluetags.Ec2UpdateTags(conn, volumeId, o, n); err != nil {
+			if err := tftags.Ec2UpdateTags(conn, volumeId, o, n); err != nil {
 				return fmt.Errorf("error updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
@@ -1685,7 +1686,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := keyvaluetags.Ec2UpdateTags(conn, volumeID, o, n); err != nil {
+			if err := tftags.Ec2UpdateTags(conn, volumeID, o, n); err != nil {
 				return fmt.Errorf("error updating tags for volume (%s): %s", volumeID, err)
 			}
 		}
@@ -2020,7 +2021,7 @@ func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
-			bd["tags"] = keyvaluetags.Ec2KeyValueTags(vol.Tags).IgnoreAws().Map()
+			bd["tags"] = tftags.Ec2KeyValueTags(vol.Tags).IgnoreAws().Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {

@@ -1,8 +1,7 @@
-package tagresource
+package tags
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
@@ -28,14 +27,4 @@ func SetResourceID(identifier string, key string) string {
 	resourceID := strings.Join(parts, resourceIDSeparator)
 
 	return resourceID
-}
-
-// toSnakeCase converts a string to snake case.
-//
-// For example, AWS Go SDK field names are in PascalCase,
-// while Terraform schema attribute names are in snake_case.
-func toSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
-	return strings.ToLower(result)
 }

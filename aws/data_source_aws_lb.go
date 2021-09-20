@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLoadBalancer() *schema.Resource {
@@ -151,7 +152,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -160,7 +161,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elbv2.DescribeLoadBalancersInput{}
 
@@ -191,7 +192,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := keyvaluetags.Elbv2ListTags(conn, arn)
+			tags, err := tftags.Elbv2ListTags(conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
@@ -239,7 +240,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
-	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
+	tags, err := tftags.Elbv2ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)

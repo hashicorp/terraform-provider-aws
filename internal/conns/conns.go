@@ -176,7 +176,7 @@ import (
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
@@ -201,9 +201,9 @@ type Config struct {
 	AllowedAccountIds   []string
 	ForbiddenAccountIds []string
 
-	DefaultTagsConfig *keyvaluetags.DefaultConfig
+	DefaultTagsConfig *tftags.DefaultConfig
 	Endpoints         map[string]string
-	IgnoreTagsConfig  *keyvaluetags.IgnoreConfig
+	IgnoreTagsConfig  *tftags.IgnoreConfig
 	Insecure          bool
 
 	SkipCredsValidation     bool
@@ -264,7 +264,7 @@ type AWSClient struct {
 	DataPipelineConn                 *datapipeline.DataPipeline
 	DataSyncConn                     *datasync.DataSync
 	DAXConn                          *dax.DAX
-	DefaultTagsConfig                *keyvaluetags.DefaultConfig
+	DefaultTagsConfig                *tftags.DefaultConfig
 	DetectiveConn                    *detective.Detective
 	DeviceFarmConn                   *devicefarm.DeviceFarm
 	DLMConn                          *dlm.DLM
@@ -300,7 +300,7 @@ type AWSClient struct {
 	GreengrassConn                   *greengrass.Greengrass
 	IAMConn                          *iam.IAM
 	IdentityStoreConn                *identitystore.IdentityStore
-	IgnoreTagsConfig                 *keyvaluetags.IgnoreConfig
+	IgnoreTagsConfig                 *tftags.IgnoreConfig
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
 	IoTConn                          *iot.IoT

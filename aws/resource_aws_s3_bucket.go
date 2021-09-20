@@ -25,11 +25,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceBucket() *schema.Resource {
@@ -281,7 +282,7 @@ func ResourceBucket() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"tags": tagsSchema(),
+						"tags": tftags.TagsSchema(),
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -509,7 +510,7 @@ func ResourceBucket() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 1024),
 												},
-												"tags": tagsSchema(),
+												"tags": tftags.TagsSchema(),
 											},
 										},
 									},
@@ -619,11 +620,11 @@ func ResourceBucket() *schema.Resource {
 				},
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -708,7 +709,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Retry due to S3 eventual consistency
 		_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			terr := keyvaluetags.S3BucketUpdateTags(conn, d.Id(), o, n)
+			terr := bucketUpdateTags(conn, d.Id(), o, n)
 			return nil, terr
 		})
 		if err != nil {
@@ -1119,7 +1120,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 					// Tag
 					if len(filter.And.Tags) > 0 {
-						rule["tags"] = keyvaluetags.S3KeyValueTags(filter.And.Tags).IgnoreAws().Map()
+						rule["tags"] = tftags.S3KeyValueTags(filter.And.Tags).IgnoreAws().Map()
 					}
 				} else {
 					// Prefix
@@ -1128,7 +1129,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 					// Tag
 					if filter.Tag != nil {
-						rule["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAws().Map()
+						rule["tags"] = tftags.S3KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAws().Map()
 					}
 				}
 			} else {
@@ -1319,14 +1320,14 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return keyvaluetags.S3BucketListTags(conn, d.Id())
+		return bucketListTags(conn, d.Id())
 	})
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	tags, ok := tagsRaw.(keyvaluetags.KeyValueTags)
+	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
 	if !ok {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
@@ -2098,7 +2099,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Re
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 			filter := f[0].(map[string]interface{})
-			tags := keyvaluetags.New(filter["tags"]).IgnoreAws().S3Tags()
+			tags := tftags.New(filter["tags"]).IgnoreAws().S3Tags()
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
 					Prefix: aws.String(filter["prefix"].(string)),
@@ -2177,7 +2178,7 @@ func resourceAwsS3BucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) err
 		rule := &s3.LifecycleRule{}
 
 		// Filter
-		tags := keyvaluetags.New(r["tags"]).IgnoreAws().S3Tags()
+		tags := tftags.New(r["tags"]).IgnoreAws().S3Tags()
 		filter := &s3.LifecycleRuleFilter{}
 		if len(tags) > 0 {
 			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
@@ -2405,11 +2406,11 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["prefix"] = aws.StringValue(f.Prefix)
 			}
 			if t := f.Tag; t != nil {
-				m["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
+				m["tags"] = tftags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
 			}
 			if a := f.And; a != nil {
 				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
+				m["tags"] = tftags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
 			}
 			t["filter"] = []interface{}{m}
 
@@ -2605,7 +2606,7 @@ func replicationRuleFilterHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["tags"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(v).Hash()))
+		buf.WriteString(fmt.Sprintf("%d-", tftags.New(v).Hash()))
 	}
 	return create.StringHashcode(buf.String())
 }

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (

@@ -15,8 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -231,8 +232,8 @@ func ResourceAMI() *schema.Resource {
 				ForceNew: true,
 				Default:  "simple",
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -246,14 +247,14 @@ func ResourceAMI() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.RegisterImageInput{
 		Architecture:       aws.String(d.Get("architecture").(string)),
@@ -314,7 +315,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(id)
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(client, id, tags); err != nil {
+		if err := tftags.Ec2CreateTags(client, id, tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
@@ -440,7 +441,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ephemeral_block_device: %w", err)
 	}
 
-	tags := keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -460,7 +461,7 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Ec2UpdateTags(client, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(client, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating AMI (%s) tags: %s", d.Id(), err)
 		}
 	}

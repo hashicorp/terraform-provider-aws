@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVPCs() *schema.Resource {
@@ -17,7 +18,7 @@ func DataSourceVPCs() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"ids": {
 				Type:     schema.TypeSet,
@@ -36,7 +37,7 @@ func dataSourceVPCsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 

@@ -4,7 +4,7 @@
 //go:generate go run -tags generate generators/createtags/main.go
 //go:generate go run -tags generate generators/updatetags/main.go
 
-package keyvaluetags
+package tags
 
 import (
 	"fmt"
