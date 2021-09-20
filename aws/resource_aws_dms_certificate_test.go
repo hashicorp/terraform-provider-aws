@@ -20,7 +20,7 @@ func TestAccAWSDmsCertificate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,14 +46,14 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDmsCertificateConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSDmsCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDmsCertificate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDmsCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,7 +68,7 @@ func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +94,7 @@ func TestAccAWSDmsCertificate_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +137,7 @@ func testAccCheckAWSDmsCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
@@ -175,7 +175,7 @@ func testAccAWSDmsCertificateExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{

@@ -29,7 +29,7 @@ func TestAccAWSDmsReplicationTask_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: dmsReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +70,7 @@ func checkDmsReplicationTaskExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 		resp, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 			Filters: []*dms.Filter{
 				{
@@ -97,7 +97,7 @@ func dmsReplicationTaskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
 		resp, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 			Filters: []*dms.Filter{
 				{
