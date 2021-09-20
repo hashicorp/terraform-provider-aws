@@ -136,10 +136,10 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 		var err error
 		output, err = conn.PutDataLakeSettings(input)
 		if err != nil {
-			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeConcurrentModificationException, "") {
 				return resource.RetryableError(err)
 			}
 
@@ -148,7 +148,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.PutDataLakeSettings(input)
 	}
 
