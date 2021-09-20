@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDaxSubnetGroup() *schema.Resource {
+func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDaxSubnetGroupCreate,
-		Read:   resourceAwsDaxSubnetGroupRead,
-		Update: resourceAwsDaxSubnetGroupUpdate,
-		Delete: resourceAwsDaxSubnetGroupDelete,
+		Create: resourceSubnetGroupCreate,
+		Read:   resourceSubnetGroupRead,
+		Update: resourceSubnetGroupUpdate,
+		Delete: resourceSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -44,7 +44,7 @@ func resourceAwsDaxSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDaxSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.CreateSubnetGroupInput{
@@ -61,10 +61,10 @@ func resourceAwsDaxSubnetGroupCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(d.Get("name").(string))
-	return resourceAwsDaxSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDaxSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	resp, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
@@ -91,7 +91,7 @@ func resourceAwsDaxSubnetGroupRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsDaxSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.UpdateSubnetGroupInput{
@@ -111,10 +111,10 @@ func resourceAwsDaxSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	return resourceAwsDaxSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDaxSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.DeleteSubnetGroupInput{

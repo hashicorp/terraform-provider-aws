@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDaxCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDaxClusterCreate,
-		Read:   resourceAwsDaxClusterRead,
-		Update: resourceAwsDaxClusterUpdate,
-		Delete: resourceAwsDaxClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -176,7 +176,7 @@ func resourceAwsDaxCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -271,10 +271,10 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error waiting for DAX cluster (%s) to be created: %s", d.Id(), sterr)
 	}
 
-	return resourceAwsDaxClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -357,7 +357,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	if d.HasChange("tags_all") {
@@ -461,7 +461,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsDaxClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
 func setDaxClusterNodeData(d *schema.ResourceData, c *dax.Cluster) error {
@@ -495,7 +495,7 @@ func (b byNodeId) Less(i, j int) bool {
 		*b[i].NodeId < *b[j].NodeId
 }
 
-func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DAXConn
 
 	req := &dax.DeleteClusterInput{
