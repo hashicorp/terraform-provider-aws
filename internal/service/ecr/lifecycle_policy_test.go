@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
+func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 	randString := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
 	resourceName := "aws_ecr_lifecycle_policy.test"

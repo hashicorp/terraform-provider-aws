@@ -16,7 +16,7 @@ import (
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
-func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
+func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
@@ -54,7 +54,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
+func TestAccECRRepositoryPolicy_iam(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
@@ -81,7 +81,7 @@ func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
+func TestAccECRRepositoryPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 
@@ -103,7 +103,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
+func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository_policy.test"
 

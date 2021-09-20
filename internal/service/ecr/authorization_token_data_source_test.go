@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEcrAuthorizationTokenDataSource_basic(t *testing.T) {
+func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ecr_authorization_token.repo"
 

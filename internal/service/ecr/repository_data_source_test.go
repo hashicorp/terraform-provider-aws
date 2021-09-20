@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEcrRepositoryDataSource_basic(t *testing.T) {
+func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 	dataSourceName := "data.aws_ecr_repository.test"
@@ -37,7 +37,7 @@ func TestAccAWSEcrRepositoryDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepositoryDataSource_encryption(t *testing.T) {
+func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecr_repository.test"
 	dataSourceName := "data.aws_ecr_repository.test"
@@ -65,7 +65,7 @@ func TestAccAWSEcrRepositoryDataSource_encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepositoryDataSource_nonExistent(t *testing.T) {
+func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
