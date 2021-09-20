@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppRunnerConnection() *schema.Resource {
@@ -61,8 +62,8 @@ func resourceAwsAppRunnerConnection() *schema.Resource {
 }
 
 func resourceAwsAppRunnerConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppRunnerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("connection_name").(string)
@@ -92,9 +93,9 @@ func resourceAwsAppRunnerConnectionCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsAppRunnerConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppRunnerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	c, err := finder.ConnectionSummaryByName(ctx, conn, d.Id())
 
@@ -145,7 +146,7 @@ func resourceAwsAppRunnerConnectionRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAwsAppRunnerConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -159,7 +160,7 @@ func resourceAwsAppRunnerConnectionUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsAppRunnerConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Get("arn").(string)),

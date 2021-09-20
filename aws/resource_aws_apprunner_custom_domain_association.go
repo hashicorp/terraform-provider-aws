@@ -14,6 +14,7 @@ import (
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppRunnerCustomDomainAssociation() *schema.Resource {
@@ -82,7 +83,7 @@ func resourceAwsAppRunnerCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceAwsAppRunnerCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	domainName := d.Get("domain_name").(string)
 	serviceArn := d.Get("service_arn").(string)
@@ -114,7 +115,7 @@ func resourceAwsAppRunnerCustomDomainAssociationCreate(ctx context.Context, d *s
 }
 
 func resourceAwsAppRunnerCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(d.Id())
 
@@ -152,7 +153,7 @@ func resourceAwsAppRunnerCustomDomainAssociationRead(ctx context.Context, d *sch
 }
 
 func resourceAwsAppRunnerCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(d.Id())
 

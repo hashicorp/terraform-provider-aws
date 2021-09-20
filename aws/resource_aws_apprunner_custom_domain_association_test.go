@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
@@ -88,7 +89,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationDestroy(s *terraform.State) 
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
 
@@ -131,7 +132,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.Te
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		customDomain, err := finder.CustomDomain(context.Background(), conn, domainName, serviceArn)
 
