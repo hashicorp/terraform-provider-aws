@@ -3,7 +3,6 @@ package sagemaker
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
