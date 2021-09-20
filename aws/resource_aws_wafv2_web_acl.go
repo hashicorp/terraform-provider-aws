@@ -168,7 +168,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -176,7 +176,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreateWebACL(params)
 	}
 
@@ -206,7 +206,7 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -277,7 +277,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateWebACL(u)
 			if err != nil {
-				if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+				if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -285,12 +285,12 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateWebACL(u)
 		}
 
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
 				return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
 			}
 			return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
@@ -333,7 +333,7 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteWebACL(r)
 	}
 

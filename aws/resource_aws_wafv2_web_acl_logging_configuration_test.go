@@ -612,7 +612,7 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy(s *terraform.State) e
 
 		if err != nil {
 			// Continue checking resources in state if a WebACL Logging Configuration is already destroyed
-			if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 				continue
 			}
 			return err
