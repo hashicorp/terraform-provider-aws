@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
@@ -25,7 +26,7 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", "10"),
@@ -52,21 +53,21 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedPriority := acctest.RandIntRange(0, 9999)
-	updatedReservoirSize := acctest.RandIntRange(0, 2147483647)
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	updatedPriority := sdkacctest.RandIntRange(0, 9999)
+	updatedReservoirSize := sdkacctest.RandIntRange(0, 2147483647)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfig_update(rName, acctest.RandIntRange(0, 9999), acctest.RandIntRange(0, 2147483647)),
+				Config: testAccAWSXraySamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "priority"),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -84,7 +85,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -110,11 +111,11 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
@@ -155,11 +156,11 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
@@ -167,7 +168,7 @@ func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsXraySamplingRule(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsXraySamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,7 +229,7 @@ func testAccPreCheckAWSXray(t *testing.T) {
 
 	_, err := conn.GetSamplingRules(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
