@@ -16,12 +16,12 @@ import (
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 const ipSetUpdatesLimit = 1000
 
-func resourceAwsWafRegionalIPSet() *schema.Resource {
+func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalIPSetCreate,
-		Read:   resourceAwsWafRegionalIPSetRead,
-		Update: resourceAwsWafRegionalIPSetUpdate,
-		Delete: resourceAwsWafRegionalIPSetDelete,
+		Create: resourceIPSetCreate,
+		Read:   resourceIPSetRead,
+		Update: resourceIPSetUpdate,
+		Delete: resourceIPSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsWafRegionalIPSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalIPSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -73,10 +73,10 @@ func resourceAwsWafRegionalIPSetCreate(d *schema.ResourceData, meta interface{})
 	}
 	resp := out.(*waf.CreateIPSetOutput)
 	d.SetId(aws.StringValue(resp.IPSet.IPSetId))
-	return resourceAwsWafRegionalIPSetUpdate(d, meta)
+	return resourceIPSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegionalIPSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	params := &waf.GetIPSetInput{
@@ -123,7 +123,7 @@ func flattenWafIpSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 	return descriptors
 }
 
-func resourceAwsWafRegionalIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -136,10 +136,10 @@ func resourceAwsWafRegionalIPSetUpdate(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
 		}
 	}
-	return resourceAwsWafRegionalIPSetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalIPSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
+func ResourceByteMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalByteMatchSetCreate,
-		Read:   resourceAwsWafRegionalByteMatchSetRead,
-		Update: resourceAwsWafRegionalByteMatchSetUpdate,
-		Delete: resourceAwsWafRegionalByteMatchSetDelete,
+		Create: resourceByteMatchSetCreate,
+		Read:   resourceByteMatchSetRead,
+		Update: resourceByteMatchSetUpdate,
+		Delete: resourceByteMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +68,7 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -90,10 +90,10 @@ func resourceAwsWafRegionalByteMatchSetCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(resp.ByteMatchSet.ByteMatchSetId))
 
-	return resourceAwsWafRegionalByteMatchSetUpdate(d, meta)
+	return resourceByteMatchSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegionalByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
@@ -150,7 +150,7 @@ func flattenWafByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 	return tuples
 }
 
-func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
@@ -164,10 +164,10 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 		}
 	}
-	return resourceAwsWafRegionalByteMatchSetRead(d, meta)
+	return resourceByteMatchSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

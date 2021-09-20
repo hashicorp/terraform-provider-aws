@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalRegexPatternSet() *schema.Resource {
+func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalRegexPatternSetCreate,
-		Read:   resourceAwsWafRegionalRegexPatternSetRead,
-		Update: resourceAwsWafRegionalRegexPatternSetUpdate,
-		Delete: resourceAwsWafRegionalRegexPatternSetDelete,
+		Create: resourceRegexPatternSetCreate,
+		Read:   resourceRegexPatternSetRead,
+		Update: resourceRegexPatternSetUpdate,
+		Delete: resourceRegexPatternSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,7 +36,7 @@ func resourceAwsWafRegionalRegexPatternSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -57,10 +57,10 @@ func resourceAwsWafRegionalRegexPatternSetCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(resp.RegexPatternSet.RegexPatternSetId))
 
-	return resourceAwsWafRegionalRegexPatternSetUpdate(d, meta)
+	return resourceRegexPatternSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegionalRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional Regex Pattern Set: %s", d.Get("name").(string))
@@ -85,7 +85,7 @@ func resourceAwsWafRegionalRegexPatternSetRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsWafRegionalRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -105,10 +105,10 @@ func resourceAwsWafRegionalRegexPatternSetUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsWafRegionalRegexPatternSetRead(d, meta)
+	return resourceRegexPatternSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

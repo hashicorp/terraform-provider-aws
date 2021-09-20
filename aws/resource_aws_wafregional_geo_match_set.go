@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalGeoMatchSet() *schema.Resource {
+func ResourceGeoMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalGeoMatchSetCreate,
-		Read:   resourceAwsWafRegionalGeoMatchSetRead,
-		Update: resourceAwsWafRegionalGeoMatchSetUpdate,
-		Delete: resourceAwsWafRegionalGeoMatchSetDelete,
+		Create: resourceGeoMatchSetCreate,
+		Read:   resourceGeoMatchSetRead,
+		Update: resourceGeoMatchSetUpdate,
+		Delete: resourceGeoMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsWafRegionalGeoMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -69,10 +69,10 @@ func resourceAwsWafRegionalGeoMatchSetCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.GeoMatchSet.GeoMatchSetId))
 
-	return resourceAwsWafRegionalGeoMatchSetUpdate(d, meta)
+	return resourceGeoMatchSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegionalGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading WAF Regional Geo Match Set: %s", d.Get("name").(string))
 	params := &waf.GetGeoMatchSetInput{
@@ -96,7 +96,7 @@ func resourceAwsWafRegionalGeoMatchSetRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsWafRegionalGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -115,10 +115,10 @@ func resourceAwsWafRegionalGeoMatchSetUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsWafRegionalGeoMatchSetRead(d, meta)
+	return resourceGeoMatchSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

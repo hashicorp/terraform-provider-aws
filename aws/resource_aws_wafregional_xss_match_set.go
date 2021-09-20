@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
+func ResourceXSSMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalXssMatchSetCreate,
-		Read:   resourceAwsWafRegionalXssMatchSetRead,
-		Update: resourceAwsWafRegionalXssMatchSetUpdate,
-		Delete: resourceAwsWafRegionalXssMatchSetDelete,
+		Create: resourceXSSMatchSetCreate,
+		Read:   resourceXSSMatchSetRead,
+		Update: resourceXSSMatchSetUpdate,
+		Delete: resourceXSSMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -64,7 +64,7 @@ func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalXssMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -93,10 +93,10 @@ func resourceAwsWafRegionalXssMatchSetCreate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsWafRegionalXssMatchSetRead(d, meta)
+	return resourceXSSMatchSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading regional WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
@@ -124,7 +124,7 @@ func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsWafRegionalXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -138,10 +138,10 @@ func resourceAwsWafRegionalXssMatchSetUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsWafRegionalXssMatchSetRead(d, meta)
+	return resourceXSSMatchSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalXssMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

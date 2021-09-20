@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
+func ResourceSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalSizeConstraintSetCreate,
-		Read:   resourceAwsWafRegionalSizeConstraintSetRead,
-		Update: resourceAwsWafRegionalSizeConstraintSetUpdate,
-		Delete: resourceAwsWafRegionalSizeConstraintSetDelete,
+		Create: resourceSizeConstraintSetCreate,
+		Read:   resourceSizeConstraintSetRead,
+		Update: resourceSizeConstraintSetUpdate,
+		Delete: resourceSizeConstraintSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -25,7 +25,7 @@ func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -49,10 +49,10 @@ func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(resp.SizeConstraintSet.SizeConstraintSetId))
 
-	return resourceAwsWafRegionalSizeConstraintSetUpdate(d, meta)
+	return resourceSizeConstraintSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
@@ -76,7 +76,7 @@ func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient)
 
 	if d.HasChange("size_constraints") {
@@ -94,10 +94,10 @@ func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsWafRegionalSizeConstraintSetRead(d, meta)
+	return resourceSizeConstraintSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
