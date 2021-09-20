@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsChimeVoiceConnector() *schema.Resource {
+func ResourceVoiceConnector() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsChimeVoiceConnectorCreate,
-		ReadContext:   resourceAwsChimeVoiceConnectorRead,
-		UpdateContext: resourceAwsChimeVoiceConnectorUpdate,
-		DeleteContext: resourceAwsChimeVoiceConnectorDelete,
+		CreateContext: resourceVoiceConnectorCreate,
+		ReadContext:   resourceVoiceConnectorRead,
+		UpdateContext: resourceVoiceConnectorUpdate,
+		DeleteContext: resourceVoiceConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -48,7 +48,7 @@ func resourceAwsChimeVoiceConnector() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	createInput := &chime.CreateVoiceConnectorInput{
@@ -67,10 +67,10 @@ func resourceAwsChimeVoiceConnectorCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(aws.StringValue(resp.VoiceConnector.VoiceConnectorId))
 
-	return resourceAwsChimeVoiceConnectorRead(ctx, d, meta)
+	return resourceVoiceConnectorRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	getInput := &chime.GetVoiceConnectorInput{
@@ -96,7 +96,7 @@ func resourceAwsChimeVoiceConnectorRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsChimeVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChanges("name", "require_encryption") {
@@ -115,10 +115,10 @@ func resourceAwsChimeVoiceConnectorUpdate(ctx context.Context, d *schema.Resourc
 			return diag.Errorf("Error updating Voice connector (%s): %s", d.Id(), err)
 		}
 	}
-	return resourceAwsChimeVoiceConnectorRead(ctx, d, meta)
+	return resourceVoiceConnectorRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorInput{

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsChimeVoiceConnectorOrigination() *schema.Resource {
+func ResourceVoiceConnectorOrigination() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsChimeVoiceConnectorOriginationCreate,
-		ReadWithoutTimeout:   resourceAwsChimeVoiceConnectorOriginationRead,
-		UpdateWithoutTimeout: resourceAwsChimeVoiceConnectorOriginationUpdate,
-		DeleteWithoutTimeout: resourceAwsChimeVoiceConnectorOriginationDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorOriginationCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorOriginationRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorOriginationUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorOriginationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +73,7 @@ func resourceAwsChimeVoiceConnectorOrigination() *schema.Resource {
 	}
 }
 
-func resourceAwsChimeVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -95,10 +95,10 @@ func resourceAwsChimeVoiceConnectorOriginationCreate(ctx context.Context, d *sch
 
 	d.SetId(vcId)
 
-	return resourceAwsChimeVoiceConnectorOriginationRead(ctx, d, meta)
+	return resourceVoiceConnectorOriginationRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.GetVoiceConnectorOriginationInput{
@@ -131,7 +131,7 @@ func resourceAwsChimeVoiceConnectorOriginationRead(ctx context.Context, d *schem
 	return nil
 }
 
-func resourceAwsChimeVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChanges("route", "disabled") {
@@ -153,10 +153,10 @@ func resourceAwsChimeVoiceConnectorOriginationUpdate(ctx context.Context, d *sch
 		}
 	}
 
-	return resourceAwsChimeVoiceConnectorOriginationRead(ctx, d, meta)
+	return resourceVoiceConnectorOriginationRead(ctx, d, meta)
 }
 
-func resourceAwsChimeVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorOriginationInput{
