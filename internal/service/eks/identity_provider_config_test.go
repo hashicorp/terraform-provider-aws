@@ -53,7 +53,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 				}
 
 				for _, identityProviderConfig := range page.IdentityProviderConfigs {
-					r := ResourceIdentityProviderConfig()
+					r := tfeks.ResourceIdentityProviderConfig()
 					d := r.Data(nil)
 					d.SetId(tfeks.IdentityProviderConfigCreateResourceID(aws.StringValue(cluster), aws.StringValue(identityProviderConfig.Name)))
 
@@ -153,7 +153,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 				Config: testAccAWSEksIdentityProviderConfigConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIdentityProviderConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

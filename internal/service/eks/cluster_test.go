@@ -46,7 +46,7 @@ func testSweepEksClusters(region string) error {
 		}
 
 		for _, cluster := range page.Clusters {
-			r := ResourceCluster()
+			r := tfeks.ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster))
 
@@ -136,7 +136,7 @@ func TestAccAWSEksCluster_disappears(t *testing.T) {
 				Config: testAccAWSEksClusterConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
