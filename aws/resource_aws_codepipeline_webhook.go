@@ -239,7 +239,7 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 	arn := d.Id()
 	webhook, err := getCodePipelineWebhook(conn, arn)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Webhook (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
