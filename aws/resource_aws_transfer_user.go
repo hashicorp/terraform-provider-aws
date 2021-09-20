@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
