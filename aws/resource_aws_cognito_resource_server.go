@@ -84,7 +84,7 @@ func resourceAwsCognitoResourceServerCreate(d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("scope"); ok {
 		configs := v.(*schema.Set).List()
-		params.Scopes = expandCognitoResourceServerScope(configs)
+		params.Scopes = expandServerScope(configs)
 	}
 
 	log.Printf("[DEBUG] Creating Cognito Resource Server: %s", params)
@@ -136,7 +136,7 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 	d.Set("name", resp.ResourceServer.Name)
 	d.Set("user_pool_id", resp.ResourceServer.UserPoolId)
 
-	scopes := flattenCognitoResourceServerScope(resp.ResourceServer.Scopes)
+	scopes := flattenServerScope(resp.ResourceServer.Scopes)
 	if err := d.Set("scope", scopes); err != nil {
 		return fmt.Errorf("Failed setting schema: %s", err)
 	}
@@ -164,7 +164,7 @@ func resourceAwsCognitoResourceServerUpdate(d *schema.ResourceData, meta interfa
 	params := &cognitoidentityprovider.UpdateResourceServerInput{
 		Identifier: aws.String(identifier),
 		Name:       aws.String(d.Get("name").(string)),
-		Scopes:     expandCognitoResourceServerScope(d.Get("scope").(*schema.Set).List()),
+		Scopes:     expandServerScope(d.Get("scope").(*schema.Set).List()),
 		UserPoolId: aws.String(userPoolID),
 	}
 
