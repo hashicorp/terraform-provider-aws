@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProxyTarget() *schema.Resource {
@@ -28,13 +29,13 @@ func ResourceProxyTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"target_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"db_instance_identifier": {
 				Type:     schema.TypeString,
@@ -44,7 +45,7 @@ func ResourceProxyTarget() *schema.Resource {
 					"db_instance_identifier",
 					"db_cluster_identifier",
 				},
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"db_cluster_identifier": {
 				Type:     schema.TypeString,
@@ -54,7 +55,7 @@ func ResourceProxyTarget() *schema.Resource {
 					"db_instance_identifier",
 					"db_cluster_identifier",
 				},
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,

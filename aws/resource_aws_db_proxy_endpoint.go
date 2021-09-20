@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProxyEndpoint() *schema.Resource {
@@ -43,13 +44,13 @@ func ResourceProxyEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"db_proxy_endpoint_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifier,
+				ValidateFunc: validIdentifier,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
