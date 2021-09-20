@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

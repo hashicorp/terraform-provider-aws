@@ -8,11 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
-	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsAlias() *schema.Resource {

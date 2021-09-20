@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsKey() *schema.Resource {

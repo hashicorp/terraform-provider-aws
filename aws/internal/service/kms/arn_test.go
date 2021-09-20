@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {
