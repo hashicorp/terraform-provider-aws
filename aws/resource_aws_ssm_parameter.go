@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -96,8 +97,8 @@ func ResourceParameter() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -108,7 +109,7 @@ func ResourceParameter() *schema.Resource {
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
 			}),
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -116,7 +117,7 @@ func ResourceParameter() *schema.Resource {
 func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -165,7 +166,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && paramInput.Tags == nil {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+		if err := tftags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
 		}
 	}
@@ -252,7 +253,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
 
-	tags, err := keyvaluetags.SsmListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
+	tags, err := tftags.SsmListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Parameter (%s): %w", name, err)
@@ -314,7 +315,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+		if err := tftags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", d.Id(), err)
 		}
 	}

@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceMaintenanceWindow() *schema.Resource {
@@ -76,22 +77,22 @@ func ResourceMaintenanceWindow() *schema.Resource {
 				Optional: true,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &ssm.CreateMaintenanceWindowInput{
 		AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
@@ -196,7 +197,7 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
+		if err := tftags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -235,7 +236,7 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("start_date", resp.StartDate)
 	d.Set("description", resp.Description)
 
-	tags, err := keyvaluetags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
+	tags, err := tftags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", d.Id(), err)
