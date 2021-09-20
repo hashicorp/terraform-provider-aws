@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEventSubscription() *schema.Resource {
@@ -40,7 +41,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateNeptuneEventSubscriptionName,
+				ValidateFunc:  validEventSubscriptionName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -48,12 +49,12 @@ func ResourceEventSubscription() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateNeptuneEventSubscriptionNamePrefix,
+				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"event_categories": {
 				Type:     schema.TypeSet,

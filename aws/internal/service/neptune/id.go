@@ -3,6 +3,7 @@ package glue
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ReadAwsNeptuneClusterEndpointId(id string) (clusterIdentifier string, endpointIndetifer string, err error) {

@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
@@ -38,7 +39,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateNeptuneParamGroupName,
+				ValidateFunc:  validParamGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -46,7 +47,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateNeptuneParamGroupNamePrefix,
+				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"family": {
 				Type:     schema.TypeString,

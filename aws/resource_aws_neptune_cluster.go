@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -82,7 +83,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cluster_identifier_prefix"},
-				ValidateFunc:  validateNeptuneIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 
 			"cluster_identifier_prefix": {
@@ -90,7 +91,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateNeptuneIdentifierPrefix,
+				ValidateFunc: validIdentifierPrefix,
 			},
 
 			"cluster_members": {
@@ -132,7 +133,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Default:      "neptune",
 				ForceNew:     true,
-				ValidateFunc: validateNeptuneEngine(),
+				ValidateFunc: validEngine(),
 			},
 
 			"engine_version": {
@@ -171,7 +172,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 				Set: schema.HashString,
 			},
@@ -186,7 +187,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"neptune_subnet_group_name": {
@@ -213,7 +214,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 
 			"preferred_maintenance_window": {
@@ -226,7 +227,7 @@ func ResourceCluster() *schema.Resource {
 					}
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 
 			"reader_endpoint": {
