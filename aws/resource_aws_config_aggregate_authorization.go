@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAggregateAuthorization() *schema.Resource {
@@ -33,7 +34,7 @@ func ResourceAggregateAuthorization() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"region": {
 				Type:     schema.TypeString,

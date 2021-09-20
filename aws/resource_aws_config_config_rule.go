@@ -17,6 +17,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceConfigRule() *schema.Resource {
@@ -57,7 +58,7 @@ func ResourceConfigRule() *schema.Resource {
 			"maximum_execution_frequency": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateConfigExecutionFrequency(),
+				ValidateFunc: validExecutionFrequency(),
 			},
 			"scope": {
 				Type:     schema.TypeList,
@@ -122,7 +123,7 @@ func ResourceConfigRule() *schema.Resource {
 									"maximum_execution_frequency": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateConfigExecutionFrequency(),
+										ValidateFunc: validExecutionFrequency(),
 									},
 									"message_type": {
 										Type:     schema.TypeString,

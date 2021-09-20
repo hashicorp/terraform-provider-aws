@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceConfigurationAggregator() *schema.Resource {
@@ -62,7 +63,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateAwsAccountId,
+								ValidateFunc: verify.ValidAccountID,
 							},
 						},
 						"all_regions": {
@@ -104,7 +105,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
