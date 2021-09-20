@@ -104,7 +104,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	connection, err := finder.ConnectionByArn(conn, d.Id())
+	connection, err := finder.findConnectionByARN(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
 		d.SetId("")

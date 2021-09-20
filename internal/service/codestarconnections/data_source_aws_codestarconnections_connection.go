@@ -54,7 +54,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
 
 	log.Printf("[DEBUG] Getting CodeStar Connection")
-	connection, err := finder.ConnectionByArn(conn, arn)
+	connection, err := finder.findConnectionByARN(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error getting CodeStar Connection (%s): %w", arn, err)
 	}

@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// HostStatus fetches the Host and its Status
-func HostStatus(conn *codestarconnections.CodeStarConnections, hostARN string) resource.StateRefreshFunc {
+// statusHost fetches the Host and its Status
+func statusHost(conn *codestarconnections.CodeStarConnections, hostARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &codestarconnections.GetHostInput{
 			HostArn: aws.String(hostARN),
