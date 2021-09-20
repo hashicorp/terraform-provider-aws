@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMskConfiguration() *schema.Resource {
@@ -56,7 +57,7 @@ func resourceAwsMskConfiguration() *schema.Resource {
 }
 
 func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	input := &kafka.CreateConfigurationInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -83,7 +84,7 @@ func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	configurationInput := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(d.Id()),
@@ -140,7 +141,7 @@ func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsMskConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	input := &kafka.UpdateConfigurationInput{
 		Arn:              aws.String(d.Id()),
@@ -161,7 +162,7 @@ func resourceAwsMskConfigurationUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsMskConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	input := &kafka.DeleteConfigurationInput{
 		Arn: aws.String(d.Id()),

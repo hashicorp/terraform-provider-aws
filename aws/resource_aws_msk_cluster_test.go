@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepMskClusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).kafkaconn
+	conn := client.(*conns.AWSClient).KafkaConn
 
 	out, err := conn.ListClusters(&kafka.ListClustersInput{})
 	if err != nil {
@@ -887,7 +888,7 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 		opts := &kafka.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
@@ -914,7 +915,7 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 			return fmt.Errorf("No Cluster arn is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 		resp, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		})
@@ -949,7 +950,7 @@ func testAccCheckMskClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 
 func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 		tagOut, err := conn.ListTagsForResource(&kafka.ListTagsForResourceInput{
 			ResourceArn: cluster.ClusterArn,
@@ -985,7 +986,7 @@ func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string,
 }
 
 func testAccPreCheckAWSMsk(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
 	input := &kafka.ListClustersInput{}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/msk/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
@@ -142,7 +143,7 @@ func testAccCheckMskScramSecretAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 		input := &kafka.ListScramSecretsInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
@@ -169,7 +170,7 @@ func testAccCheckMskScramSecretAssociationExists(resourceName string) resource.T
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 		_, err := finder.ScramSecrets(conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsMskBrokerNodes() *schema.Resource {
@@ -58,7 +59,7 @@ func dataSourceAwsMskBrokerNodes() *schema.Resource {
 }
 
 func dataSourceAwsMskBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*conns.AWSClient).KafkaConn
 
 	clusterARN := d.Get("cluster_arn").(string)
 	input := &kafka.ListNodesInput{
