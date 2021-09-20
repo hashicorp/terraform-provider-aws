@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepCodepipelinePipelines(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).codepipelineconn
+	conn := client.(*conns.AWSClient).CodePipelineConn
 	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
@@ -113,7 +114,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "stage.0.action.0.configuration.ConnectionArn", codestarConnectionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.run_order", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.region", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.Region", ""),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
@@ -129,7 +130,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.configuration.ProjectName", "test"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.run_order", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", ""),
 				),
 			},
 			{
@@ -362,9 +363,9 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", acctest.AlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.Region", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -404,9 +405,9 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", acctest.AlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.Region", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -418,9 +419,9 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "BuildUpdated"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-BuildUpdated", acctest.AlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.Region", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -460,7 +461,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", ""),
 				),
 			},
 			{
@@ -472,9 +473,9 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", acctest.AlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.Region", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -486,7 +487,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.Region", acctest.Region()),
 				),
 			},
 			{
@@ -618,7 +619,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
 		out, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
 			Name: aws.String(rs.Primary.ID),
@@ -634,7 +635,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 }
 
 func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codepipeline" {
@@ -660,14 +661,14 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 func testAccPreCheckAWSCodePipelineSupported(t *testing.T, regions ...string) {
 	regions = append(regions, acctest.Region())
 	for _, region := range regions {
-		conf := &Config{
+		conf := &conns.Config{
 			Region: region,
 		}
 		client, err := conf.Client()
 		if err != nil {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.(*AWSClient).codepipelineconn
+		conn := client.(*conns.AWSClient).CodePipelineConn
 
 		input := &codepipeline.ListPipelinesInput{}
 		_, err = conn.ListPipelines(input)

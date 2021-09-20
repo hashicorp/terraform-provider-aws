@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
@@ -239,7 +240,7 @@ func testAccCheckAWSCodePipelineWebhookExists(n string, webhook *codepipeline.Li
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
 		resp, err := getCodePipelineWebhook(conn, rs.Primary.ID)
 
