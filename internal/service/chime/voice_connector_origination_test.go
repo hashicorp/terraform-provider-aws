@@ -15,7 +15,7 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccAWSChimeVoiceConnectorOrigination_basic(t *testing.T) {
+func TestAccChimeVoiceConnectorOrigination_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_chime_voice_connector_origination.test"
 
@@ -45,7 +45,7 @@ func TestAccAWSChimeVoiceConnectorOrigination_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorOrigination_disappears(t *testing.T) {
+func TestAccChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_chime_voice_connector_origination.test"
 
@@ -67,7 +67,7 @@ func TestAccAWSChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorOrigination_update(t *testing.T) {
+func TestAccChimeVoiceConnectorOrigination_update(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_chime_voice_connector_origination.test"
 

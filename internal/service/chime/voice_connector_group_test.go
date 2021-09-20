@@ -14,7 +14,7 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccAWSChimeVoiceConnectorGroup_basic(t *testing.T) {
+func TestAccChimeVoiceConnectorGroup_basic(t *testing.T) {
 	var voiceConnectorGroup *chime.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -44,7 +44,7 @@ func TestAccAWSChimeVoiceConnectorGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorGroup_disappears(t *testing.T) {
+func TestAccChimeVoiceConnectorGroup_disappears(t *testing.T) {
 	var voiceConnectorGroup *chime.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -68,7 +68,7 @@ func TestAccAWSChimeVoiceConnectorGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorGroup_update(t *testing.T) {
+func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
 	var voiceConnectorGroup *chime.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix("tf-acc-test")
