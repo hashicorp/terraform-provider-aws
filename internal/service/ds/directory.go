@@ -244,7 +244,7 @@ func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     tags.IgnoreAws().DirectoryserviceTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -282,7 +282,7 @@ func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     tags.IgnoreAws().DirectoryserviceTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -320,7 +320,7 @@ func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     tags.IgnoreAws().DirectoryserviceTags(),
+		Tags:     Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -432,7 +432,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DirectoryserviceUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -490,7 +490,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
 
-	tags, err := tftags.DirectoryserviceListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
