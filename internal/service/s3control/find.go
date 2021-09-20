@@ -1,4 +1,4 @@
-package finder
+package s3control
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
