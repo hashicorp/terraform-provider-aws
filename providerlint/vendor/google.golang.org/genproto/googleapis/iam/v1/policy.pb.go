@@ -30,6 +30,7 @@ import (
 	expr "google.golang.org/genproto/googleapis/type/expr"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

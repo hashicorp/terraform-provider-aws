@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Set at init time by appengine_gen1.go. If nil, we're not on App Engine standard first generation (<= Go 1.9) or App Engine flexible.

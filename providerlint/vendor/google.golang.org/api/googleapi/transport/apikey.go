@@ -13,6 +13,7 @@ package transport
 import (
 	"errors"
 	"net/http"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // APIKey is an HTTP Transport which wraps an underlying transport and

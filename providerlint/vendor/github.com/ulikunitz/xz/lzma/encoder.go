@@ -7,6 +7,7 @@ package lzma
 import (
 	"fmt"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // opLenMargin provides the upper limit of the number of bytes required

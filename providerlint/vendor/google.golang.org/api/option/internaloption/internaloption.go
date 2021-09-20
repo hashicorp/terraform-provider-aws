@@ -8,6 +8,7 @@ package internaloption
 import (
 	"google.golang.org/api/internal"
 	"google.golang.org/api/option"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type defaultEndpointOption string

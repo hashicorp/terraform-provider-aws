@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // operation represents an operation on the dictionary during encoding or

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TimeFormat to use for logging. This is a version of RFC3339 that contains

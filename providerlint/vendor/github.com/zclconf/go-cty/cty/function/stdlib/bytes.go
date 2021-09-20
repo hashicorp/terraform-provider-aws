@@ -7,6 +7,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Bytes is a capsule type that can be used with the binary functions to

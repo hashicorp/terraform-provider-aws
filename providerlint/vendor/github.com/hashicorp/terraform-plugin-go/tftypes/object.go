@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Object is a Terraform type representing an unordered collection of

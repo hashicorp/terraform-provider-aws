@@ -34,6 +34,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/stats"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // dialOptions configure a Dial call. dialOptions are set by the DialOption

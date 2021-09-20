@@ -9,6 +9,7 @@ import (
 	duration "github.com/golang/protobuf/ptypes/duration"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	math "math"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

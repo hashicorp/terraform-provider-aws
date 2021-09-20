@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Validate represents the validate subcommand to the Terraform CLI. The -json

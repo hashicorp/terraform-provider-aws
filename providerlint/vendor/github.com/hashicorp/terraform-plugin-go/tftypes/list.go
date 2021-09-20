@@ -2,6 +2,7 @@ package tftypes
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // List is a Terraform type representing an ordered collection of elements, all

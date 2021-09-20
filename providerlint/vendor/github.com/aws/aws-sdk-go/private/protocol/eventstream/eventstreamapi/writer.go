@@ -3,6 +3,7 @@ package eventstreamapi
 import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Marshaler provides a marshaling interface for event types to event stream

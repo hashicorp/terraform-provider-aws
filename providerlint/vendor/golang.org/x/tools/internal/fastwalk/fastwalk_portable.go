@@ -9,6 +9,7 @@ package fastwalk
 import (
 	"io/ioutil"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // readDir calls fn for each directory entry in dirName.

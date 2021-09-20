@@ -2,6 +2,7 @@ package cty
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TypeList instances represent specific list types. Each distinct ElementType

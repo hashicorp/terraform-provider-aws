@@ -10,6 +10,7 @@ import (
 
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/testaccfuncdecl"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for acceptance test function names including the word import

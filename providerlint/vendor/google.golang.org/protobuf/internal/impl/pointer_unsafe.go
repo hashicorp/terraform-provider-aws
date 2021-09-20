@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"sync/atomic"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const UnsafeEnabled = true

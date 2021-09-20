@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	"google.golang.org/protobuf/internal/pragma"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type (

@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/internal/errors"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CheckInitialized returns an error if any required fields in m are not set.

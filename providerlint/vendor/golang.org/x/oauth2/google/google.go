@@ -16,6 +16,7 @@ import (
 	"cloud.google.com/go/compute/metadata"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/jwt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Endpoint is Google's OAuth 2.0 endpoint.

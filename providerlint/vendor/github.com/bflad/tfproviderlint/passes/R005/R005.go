@@ -13,6 +13,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for ResourceData.HasChange() calls that can be combined into a single HasChanges() call

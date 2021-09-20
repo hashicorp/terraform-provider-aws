@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"golang.org/x/oauth2/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NoContext is the default context you should supply if not using

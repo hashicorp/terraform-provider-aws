@@ -3,6 +3,7 @@ package plugin
 import (
 	"io"
 	"log"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func copyStream(name string, dst io.Writer, src io.Reader) {

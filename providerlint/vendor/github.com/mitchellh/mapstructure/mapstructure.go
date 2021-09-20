@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DecodeHookFunc is the callback function that can be used for

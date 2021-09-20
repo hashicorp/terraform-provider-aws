@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc/internal"
 	"google.golang.org/grpc/internal/backoff"
 	"google.golang.org/grpc/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

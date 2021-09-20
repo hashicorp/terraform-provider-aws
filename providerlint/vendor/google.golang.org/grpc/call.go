@@ -20,6 +20,7 @@ package grpc
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Invoke sends the RPC request on the wire and returns after response is

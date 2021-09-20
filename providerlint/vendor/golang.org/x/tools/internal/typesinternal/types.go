@@ -8,6 +8,7 @@ import (
 	"go/types"
 	"reflect"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func SetUsesCgo(conf *types.Config) bool {

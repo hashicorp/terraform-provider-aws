@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	preg "google.golang.org/protobuf/reflect/protoregistry"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Builder construct a protoreflect.FileDescriptor from the raw descriptor.

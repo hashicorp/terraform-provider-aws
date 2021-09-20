@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Done is returned by an iterator's Next method when the iteration is

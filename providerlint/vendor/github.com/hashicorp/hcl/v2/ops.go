@@ -6,6 +6,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Index is a helper function that performs the same operation as the index

@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/klauspost/compress/huff0"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type dict struct {

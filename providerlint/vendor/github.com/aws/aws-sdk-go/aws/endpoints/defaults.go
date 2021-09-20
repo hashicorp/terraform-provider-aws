@@ -4,6 +4,7 @@ package endpoints
 
 import (
 	"regexp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Partition identifiers

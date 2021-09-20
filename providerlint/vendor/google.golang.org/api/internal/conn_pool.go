@@ -6,6 +6,7 @@ package internal
 
 import (
 	"google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ConnPool is a pool of grpc.ClientConns.

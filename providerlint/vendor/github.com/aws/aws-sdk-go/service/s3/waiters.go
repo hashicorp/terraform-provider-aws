@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WaitUntilBucketExists uses the Amazon S3 API operation

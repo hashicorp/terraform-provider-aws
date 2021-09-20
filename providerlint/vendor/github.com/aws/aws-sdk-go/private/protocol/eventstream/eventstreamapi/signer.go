@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var timeNow = time.Now

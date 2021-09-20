@@ -12,6 +12,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // line 21 "format_fsm.go"

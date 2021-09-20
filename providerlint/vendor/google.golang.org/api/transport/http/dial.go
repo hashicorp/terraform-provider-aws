@@ -23,6 +23,7 @@ import (
 	"google.golang.org/api/transport/cert"
 	"google.golang.org/api/transport/http/internal/propagation"
 	"google.golang.org/api/transport/internal/dca"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NewClient returns an HTTP client for use communicating with a Google cloud

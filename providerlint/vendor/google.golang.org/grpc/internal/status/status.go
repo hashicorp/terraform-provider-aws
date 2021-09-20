@@ -35,6 +35,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Status represents an RPC status code, message, and details.  It is immutable

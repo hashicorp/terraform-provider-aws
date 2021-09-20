@@ -8,6 +8,7 @@ package fse
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Compress the input bytes. Input must be < 2GB.

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"go.opencensus.io/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

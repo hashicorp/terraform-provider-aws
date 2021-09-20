@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"io"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config collects a number of parameters along with sensible defaults.

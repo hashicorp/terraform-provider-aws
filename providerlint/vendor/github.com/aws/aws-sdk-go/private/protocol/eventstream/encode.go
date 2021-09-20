@@ -11,6 +11,7 @@ import (
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Encoder provides EventStream message encoding.

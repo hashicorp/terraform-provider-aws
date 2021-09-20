@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // an operationBlacklist is a list of operation names that should a

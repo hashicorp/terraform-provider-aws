@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/query"
 	"github.com/aws/aws-sdk-go/private/protocol/rest"
 	"github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BuildHandler is a named request handler for building restxml protocol requests

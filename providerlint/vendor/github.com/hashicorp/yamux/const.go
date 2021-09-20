@@ -3,6 +3,7 @@ package yamux
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

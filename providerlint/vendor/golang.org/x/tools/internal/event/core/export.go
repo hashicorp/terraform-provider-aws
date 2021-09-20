@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"golang.org/x/tools/internal/event/label"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Exporter is a function that handles events.

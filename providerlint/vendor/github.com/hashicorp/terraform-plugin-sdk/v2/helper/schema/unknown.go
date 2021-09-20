@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SetUnknowns takes a cty.Value, and compares it to the schema setting any null

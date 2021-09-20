@@ -14,6 +14,7 @@ import (
 	"io"
 
 	"github.com/ulikunitz/xz/lzma"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // allZeros checks whether a given byte slice has only zeros.

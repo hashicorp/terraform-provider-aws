@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"google.golang.org/protobuf/types/descriptorpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validateEnumDeclarations(es []filedesc.Enum, eds []*descriptorpb.EnumDescriptorProto) error {

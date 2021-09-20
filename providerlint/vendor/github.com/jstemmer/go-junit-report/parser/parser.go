@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Result represents a test result.

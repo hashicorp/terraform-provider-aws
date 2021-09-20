@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/vmihailenco/msgpack"
 	msgpackcodes "github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ImpliedType returns the cty Type implied by the structure of the given

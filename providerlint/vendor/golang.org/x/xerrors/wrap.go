@@ -6,6 +6,7 @@ package xerrors
 
 import (
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Wrapper provides context around another error.

@@ -27,6 +27,7 @@ import (
 	"github.com/golang/protobuf/internal/gengogrpc"
 	gengo "google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo"
 	"google.golang.org/protobuf/compiler/protogen"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func main() {

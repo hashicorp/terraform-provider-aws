@@ -11,6 +11,7 @@ package unix
 import (
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 //sys	dup2(oldfd int, newfd int) (err error)

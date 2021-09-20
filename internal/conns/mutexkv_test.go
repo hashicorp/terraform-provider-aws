@@ -3,6 +3,7 @@ package conns
 import (
 	"testing"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestMutexKVLock(t *testing.T) {

@@ -3,6 +3,7 @@ package awserr
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SprintError returns a string of the formatted error code.

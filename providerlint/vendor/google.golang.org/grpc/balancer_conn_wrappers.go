@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc/internal/channelz"
 	"google.golang.org/grpc/internal/grpcsync"
 	"google.golang.org/grpc/resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // scStateUpdate contains the subConn and the new state it changed to.

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/internal/flags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Kind represents a token kind expressible in the textproto format.

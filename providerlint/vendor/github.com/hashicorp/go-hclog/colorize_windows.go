@@ -7,6 +7,7 @@ import (
 
 	colorable "github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // setColorization will mutate the values of this logger

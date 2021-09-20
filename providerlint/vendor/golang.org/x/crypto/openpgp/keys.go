@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/openpgp/armor"
 	"golang.org/x/crypto/openpgp/errors"
 	"golang.org/x/crypto/openpgp/packet"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PublicKeyType is the armor type for a PGP public key.

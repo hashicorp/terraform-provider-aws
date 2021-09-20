@@ -3,6 +3,7 @@ package getter
 import (
 	"net/url"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FileGetter is a Getter implementation that will download a module from

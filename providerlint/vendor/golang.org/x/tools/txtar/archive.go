@@ -36,6 +36,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An Archive is a collection of files.

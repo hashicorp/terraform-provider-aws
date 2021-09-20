@@ -5,6 +5,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"os"
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ZstdDecompressor is an implementation of Decompressor that

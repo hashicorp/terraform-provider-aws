@@ -2,6 +2,7 @@ package tfdiags
 
 import (
 	"encoding/gob"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type rpcFriendlyDiag struct {

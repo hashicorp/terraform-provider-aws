@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go/internal/sdkio"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReadSeekCloser wraps a io.Reader returning a ReaderSeekerCloser. Allows the

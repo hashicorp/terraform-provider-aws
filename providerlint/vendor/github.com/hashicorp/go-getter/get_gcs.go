@@ -11,6 +11,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GCSGetter is a Getter implementation that will download a module from

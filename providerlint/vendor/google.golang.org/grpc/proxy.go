@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const proxyAuthHeaderKey = "Proxy-Authorization"

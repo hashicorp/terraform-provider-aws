@@ -8,6 +8,7 @@ import (
 	"hash"
 	"hash/crc32"
 	"hash/crc64"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // crc32Hash implements the hash.Hash32 interface with Sum returning the

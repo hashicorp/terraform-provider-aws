@@ -13,6 +13,7 @@ import (
 	"errors"
 	"io"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	urlhelper "github.com/hashicorp/go-getter/helper/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FileChecksum helps verifying the checksum for a file.

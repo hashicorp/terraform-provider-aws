@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // pipe is a goroutine-safe io.Reader/io.Writer pair. It's like

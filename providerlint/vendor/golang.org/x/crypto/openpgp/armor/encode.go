@@ -7,6 +7,7 @@ package armor
 import (
 	"encoding/base64"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var armorHeaderSep = []byte(": ")

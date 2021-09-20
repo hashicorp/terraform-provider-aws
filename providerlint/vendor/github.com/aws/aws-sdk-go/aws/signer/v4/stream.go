@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type credentialValueProvider interface {

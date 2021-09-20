@@ -14,6 +14,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	cloudpb "google.golang.org/appengine/datastore/internal/cloudpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 /////////////////////////////////////////////////////////////////////

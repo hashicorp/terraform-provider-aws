@@ -39,6 +39,7 @@ import (
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/tap"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const logLevel = 2

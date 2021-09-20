@@ -3,6 +3,7 @@ package conns
 import (
 	"log"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MutexKV is a simple key/value store for arbitrary mutexes. It can be used to

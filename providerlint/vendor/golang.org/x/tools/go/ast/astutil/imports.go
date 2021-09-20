@@ -11,6 +11,7 @@ import (
 	"go/token"
 	"strconv"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AddImport adds the import path to the file f, if absent.

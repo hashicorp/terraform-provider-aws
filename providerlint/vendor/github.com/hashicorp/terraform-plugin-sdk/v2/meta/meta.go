@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // The main version number that is being run at the moment.

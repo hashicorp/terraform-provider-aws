@@ -3,6 +3,7 @@ package multierror
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ErrorFormatFunc is a function callback that is called by Error to

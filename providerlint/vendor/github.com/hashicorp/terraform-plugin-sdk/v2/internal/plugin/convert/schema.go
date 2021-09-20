@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func tftypeFromCtyType(in cty.Type) (tftypes.Type, error) {

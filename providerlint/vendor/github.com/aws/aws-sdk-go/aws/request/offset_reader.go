@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go/internal/sdkio"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // offsetReader is a thread-safe io.ReadCloser to prevent racing

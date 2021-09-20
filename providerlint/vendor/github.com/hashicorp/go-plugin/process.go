@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // pidAlive checks whether a pid is alive.

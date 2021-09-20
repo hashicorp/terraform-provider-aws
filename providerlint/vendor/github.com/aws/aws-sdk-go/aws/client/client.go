@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client/metadata"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Config provides configuration to a service client instance.

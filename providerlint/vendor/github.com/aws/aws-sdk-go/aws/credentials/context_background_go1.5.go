@@ -5,6 +5,7 @@ package credentials
 
 import (
 	"github.com/aws/aws-sdk-go/internal/context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // backgroundContext returns a context that will never be canceled, has no

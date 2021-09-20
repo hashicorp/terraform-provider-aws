@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/vmihailenco/msgpack"
 	msgpackCodes "github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Unmarshal interprets the given bytes as a msgpack-encoded cty Value of

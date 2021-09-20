@@ -7,6 +7,7 @@ package unix
 import (
 	"runtime"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IoctlRetInt performs an ioctl operation specified by req on a device

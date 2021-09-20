@@ -16,6 +16,7 @@ package internal
 
 import (
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Trace allows internal access to some trace functionality.

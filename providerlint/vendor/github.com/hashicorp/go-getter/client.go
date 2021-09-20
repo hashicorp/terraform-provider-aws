@@ -11,6 +11,7 @@ import (
 
 	urlhelper "github.com/hashicorp/go-getter/helper/url"
 	safetemp "github.com/hashicorp/go-safetemp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Client is a client for downloading things.

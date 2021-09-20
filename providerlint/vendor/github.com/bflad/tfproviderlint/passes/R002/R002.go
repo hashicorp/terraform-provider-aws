@@ -9,6 +9,7 @@ import (
 
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for ResourceData.Set() calls using * dereferences

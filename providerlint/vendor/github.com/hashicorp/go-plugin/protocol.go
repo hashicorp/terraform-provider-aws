@@ -3,6 +3,7 @@ package plugin
 import (
 	"io"
 	"net"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Protocol is an enum representing the types of protocols.

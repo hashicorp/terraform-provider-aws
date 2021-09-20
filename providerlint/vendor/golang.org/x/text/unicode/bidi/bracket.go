@@ -8,6 +8,7 @@ import (
 	"container/list"
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This file contains a port of the reference implementation of the

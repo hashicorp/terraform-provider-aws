@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // conversion is an internal variant of Conversion that carries around

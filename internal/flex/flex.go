@@ -3,6 +3,7 @@ package flex
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Takes the result of flatmap.Expand for an array of strings

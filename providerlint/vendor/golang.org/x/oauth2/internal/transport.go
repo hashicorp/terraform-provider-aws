@@ -7,6 +7,7 @@ package internal
 import (
 	"context"
 	"net/http"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HTTPClient is the context key to use with golang.org/x/net/context's

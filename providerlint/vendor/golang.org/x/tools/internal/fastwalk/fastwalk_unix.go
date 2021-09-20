@@ -12,6 +12,7 @@ import (
 	"os"
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const blockSize = 8 << 10

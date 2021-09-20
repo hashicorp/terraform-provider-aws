@@ -3,6 +3,7 @@ package cty
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // marker is an internal wrapper type used to add special "marks" to values.

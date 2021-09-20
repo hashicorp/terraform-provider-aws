@@ -29,6 +29,7 @@ import (
 	basepb "google.golang.org/appengine/internal/base"
 	logpb "google.golang.org/appengine/internal/log"
 	remotepb "google.golang.org/appengine/internal/remote_api"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

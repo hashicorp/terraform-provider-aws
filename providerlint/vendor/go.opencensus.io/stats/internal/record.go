@@ -16,6 +16,7 @@ package internal
 
 import (
 	"go.opencensus.io/tag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DefaultRecorder will be called for each Record call.

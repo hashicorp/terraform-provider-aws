@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Span represents a source code range in standardized form.

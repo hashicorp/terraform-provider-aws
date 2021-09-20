@@ -26,6 +26,7 @@ import (
 
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SupportedFeatures reports the set of supported protobuf language features.

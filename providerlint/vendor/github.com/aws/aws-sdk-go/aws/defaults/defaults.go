@@ -25,6 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/shareddefaults"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Defaults provides a collection of default values for SDK clients.

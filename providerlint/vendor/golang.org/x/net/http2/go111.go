@@ -10,6 +10,7 @@ package http2
 import (
 	"net/http/httptrace"
 	"net/textproto"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func traceHasWroteHeaderField(trace *httptrace.ClientTrace) bool {

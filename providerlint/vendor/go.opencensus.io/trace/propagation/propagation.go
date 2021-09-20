@@ -49,6 +49,7 @@ import (
 	"net/http"
 
 	"go.opencensus.io/trace"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Binary returns the binary format representation of a SpanContext.

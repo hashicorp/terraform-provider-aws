@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GoVersion checks the go version by running "go list" with modules off.

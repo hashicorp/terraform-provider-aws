@@ -28,6 +28,7 @@ import (
 
 	"golang.org/x/sys/unix"
 	"google.golang.org/grpc/grpclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var logger = grpclog.Component("core")

@@ -6,6 +6,7 @@ import (
 	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourceinforesourceonly"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for Resource that should implement Importer

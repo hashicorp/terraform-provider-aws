@@ -26,6 +26,7 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	raw "google.golang.org/api/storage/v1"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BucketHandle provides operations on a Google Cloud Storage bucket.

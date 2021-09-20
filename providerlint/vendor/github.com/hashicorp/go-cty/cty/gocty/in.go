@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-cty/cty/convert"
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ToCtyValue produces a cty.Value from a Go value. The result will conform

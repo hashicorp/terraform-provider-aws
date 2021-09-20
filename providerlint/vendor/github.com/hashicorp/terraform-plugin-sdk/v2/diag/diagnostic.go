@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Diagnostics is a collection of Diagnostic.

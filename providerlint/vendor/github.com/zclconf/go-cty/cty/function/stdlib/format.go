@@ -12,6 +12,7 @@ import (
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 //go:generate ragel -Z format_fsm.rl

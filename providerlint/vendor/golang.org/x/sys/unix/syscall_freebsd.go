@@ -15,6 +15,7 @@ package unix
 import (
 	"sync"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

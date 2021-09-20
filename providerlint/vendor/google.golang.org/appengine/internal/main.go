@@ -8,6 +8,7 @@ package internal
 
 import (
 	"appengine_internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Main() {

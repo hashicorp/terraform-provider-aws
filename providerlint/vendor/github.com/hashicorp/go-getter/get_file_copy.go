@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // readerFunc is syntactic sugar for read interface.

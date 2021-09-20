@@ -21,6 +21,7 @@ import (
 
 	"cloud.google.com/go/internal/trace"
 	raw "google.golang.org/api/storage/v1"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CopierFrom creates a Copier that can copy src to dst.

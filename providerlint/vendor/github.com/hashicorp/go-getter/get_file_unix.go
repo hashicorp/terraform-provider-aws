@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (g *FileGetter) Get(dst string, u *url.URL) error {

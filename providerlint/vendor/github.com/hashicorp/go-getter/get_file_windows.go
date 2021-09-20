@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (g *FileGetter) Get(dst string, u *url.URL) error {

@@ -6,6 +6,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/crudfuncinfo"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for CreateFunc, CreateContextFunc, DeleteFunc, DeleteContextFunc, ReadFunc, ReadContextFunc, UpdateFunc, and UpdateContextFunc parameter naming

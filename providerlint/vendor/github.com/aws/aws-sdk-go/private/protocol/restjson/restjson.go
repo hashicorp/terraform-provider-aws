@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 	"github.com/aws/aws-sdk-go/private/protocol/rest"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BuildHandler is a named request handler for building restjson protocol

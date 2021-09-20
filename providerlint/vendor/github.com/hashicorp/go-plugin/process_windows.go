@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"syscall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

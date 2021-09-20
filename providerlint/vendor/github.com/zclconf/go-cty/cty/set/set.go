@@ -2,6 +2,7 @@ package set
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Set is an implementation of the concept of a set: a collection where all

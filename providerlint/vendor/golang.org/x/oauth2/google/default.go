@@ -16,6 +16,7 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 	"golang.org/x/oauth2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Credentials holds Google credentials, including "Application Default Credentials".

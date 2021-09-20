@@ -9,6 +9,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for Schema that attribute names are in alphabetical order

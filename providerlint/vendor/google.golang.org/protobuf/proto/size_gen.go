@@ -9,6 +9,7 @@ package proto
 import (
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (o MarshalOptions) sizeSingular(num protowire.Number, kind protoreflect.Kind, v protoreflect.Value) int {

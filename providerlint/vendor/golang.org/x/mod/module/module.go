@@ -104,6 +104,7 @@ import (
 
 	"golang.org/x/mod/semver"
 	errors "golang.org/x/xerrors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Version (for clients, a module.Version) is defined by a module path and version pair.

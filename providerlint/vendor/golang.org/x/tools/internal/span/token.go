@@ -7,6 +7,7 @@ package span
 import (
 	"fmt"
 	"go/token"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Range represents a source code range in token.Pos form.

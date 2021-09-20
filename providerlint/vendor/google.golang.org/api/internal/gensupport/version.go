@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GoVersion returns the Go runtime version. The returned string

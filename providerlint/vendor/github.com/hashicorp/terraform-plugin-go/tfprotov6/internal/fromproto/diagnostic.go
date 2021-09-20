@@ -3,6 +3,7 @@ package fromproto
 import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Diagnostic(in *tfplugin6.Diagnostic) (*tfprotov6.Diagnostic, error) {

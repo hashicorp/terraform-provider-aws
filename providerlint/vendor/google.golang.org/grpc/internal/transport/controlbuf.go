@@ -27,6 +27,7 @@ import (
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var updateHeaderTblSize = func(e *hpack.Encoder, v uint32) {

@@ -2,6 +2,7 @@ package addrs
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // resource is an address for a resource block within configuration, which

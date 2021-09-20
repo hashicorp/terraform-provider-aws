@@ -7,6 +7,7 @@ package bidi
 import (
 	"fmt"
 	"log"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This implementation is a port based on the reference implementation found at:

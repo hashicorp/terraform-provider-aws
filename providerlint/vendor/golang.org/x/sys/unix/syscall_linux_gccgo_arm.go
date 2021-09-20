@@ -10,6 +10,7 @@ package unix
 import (
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func seek(fd int, offset int64, whence int) (int64, syscall.Errno) {

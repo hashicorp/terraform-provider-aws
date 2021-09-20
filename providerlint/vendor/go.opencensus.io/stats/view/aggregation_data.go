@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"go.opencensus.io/metric/metricdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AggregationData represents an aggregated value from a collection.

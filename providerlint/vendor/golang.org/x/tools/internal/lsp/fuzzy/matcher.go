@@ -8,6 +8,7 @@ package fuzzy
 import (
 	"bytes"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

@@ -47,6 +47,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type FieldDescriptorProto_Type int32

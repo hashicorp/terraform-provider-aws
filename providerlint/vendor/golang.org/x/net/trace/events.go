@@ -19,6 +19,7 @@ import (
 	"sync/atomic"
 	"text/tabwriter"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const maxEventsPerLog = 100

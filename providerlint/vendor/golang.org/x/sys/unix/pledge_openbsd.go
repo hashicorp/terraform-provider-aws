@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Pledge implements the pledge syscall.

@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"github.com/ulikunitz/xz/lzma"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WriterConfig describe the parameters for an xz writer.

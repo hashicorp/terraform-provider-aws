@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Int64s is a slice of int64s that marshal as quoted strings in JSON.

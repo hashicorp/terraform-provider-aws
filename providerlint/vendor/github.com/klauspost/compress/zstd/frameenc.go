@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"math/bits"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type frameHeader struct {

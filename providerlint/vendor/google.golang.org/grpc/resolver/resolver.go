@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/serviceconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

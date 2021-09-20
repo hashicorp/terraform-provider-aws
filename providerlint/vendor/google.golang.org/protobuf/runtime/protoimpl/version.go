@@ -6,6 +6,7 @@ package protoimpl
 
 import (
 	"google.golang.org/protobuf/internal/version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

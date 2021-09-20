@@ -2,6 +2,7 @@ package configschema
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EmptyValue returns the "empty value" for the recieving block, which for

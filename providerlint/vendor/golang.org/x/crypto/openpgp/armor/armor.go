@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"golang.org/x/crypto/openpgp/errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Block represents an OpenPGP armored structure.

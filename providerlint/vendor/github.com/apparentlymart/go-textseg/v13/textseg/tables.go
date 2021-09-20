@@ -6,6 +6,7 @@ package textseg
 
 import (
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var _GraphemeCR = &unicode.RangeTable{

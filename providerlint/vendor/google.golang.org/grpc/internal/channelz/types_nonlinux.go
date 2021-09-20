@@ -22,6 +22,7 @@ package channelz
 
 import (
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var once sync.Once

@@ -7,6 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DiffFieldReader reads fields out of a diff structures.

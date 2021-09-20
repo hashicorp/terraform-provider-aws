@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-exec/internal/version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

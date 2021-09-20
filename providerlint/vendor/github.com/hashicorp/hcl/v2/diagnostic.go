@@ -2,6 +2,7 @@ package hcl
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DiagnosticSeverity represents the severity of a diagnostic.

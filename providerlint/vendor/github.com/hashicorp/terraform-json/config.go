@@ -3,6 +3,7 @@ package tfjson
 import (
 	"encoding/json"
 	"errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config represents the complete configuration source.

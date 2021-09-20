@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/internal/strs"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // legacyEnumName returns the name of enums used in legacy code.

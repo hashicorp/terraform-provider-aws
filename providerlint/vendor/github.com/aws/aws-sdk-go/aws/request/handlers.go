@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Handlers provides a collection of request handlers for various

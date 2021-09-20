@@ -3,6 +3,7 @@ package yamux
 import (
 	"fmt"
 	"net"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // hasAddr is used to get the address from the underlying connection

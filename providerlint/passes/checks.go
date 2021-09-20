@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/awsproviderlint/passes/AWSR002"
 	"github.com/hashicorp/terraform-provider-aws/awsproviderlint/passes/AWSV001"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var AllChecks = []*analysis.Analyzer{

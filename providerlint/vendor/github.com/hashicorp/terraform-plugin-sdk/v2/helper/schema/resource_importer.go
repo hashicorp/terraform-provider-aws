@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ResourceImporter defines how a resource is imported in Terraform. This

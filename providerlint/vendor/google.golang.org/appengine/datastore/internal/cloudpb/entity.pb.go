@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A partition ID identifies a grouping of entities. The grouping is always

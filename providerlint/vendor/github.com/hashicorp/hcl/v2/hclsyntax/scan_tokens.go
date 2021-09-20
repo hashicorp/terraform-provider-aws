@@ -6,6 +6,7 @@ import (
 	"bytes"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This file is generated from scan_tokens.rl. DO NOT EDIT.

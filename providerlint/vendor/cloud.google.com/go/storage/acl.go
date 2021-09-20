@@ -22,6 +22,7 @@ import (
 	"cloud.google.com/go/internal/trace"
 	"google.golang.org/api/googleapi"
 	raw "google.golang.org/api/storage/v1"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ACLRole is the level of access to grant.

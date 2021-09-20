@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TarGzipDecompressor is an implementation of Decompressor that can

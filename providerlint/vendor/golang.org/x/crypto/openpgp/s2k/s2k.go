@@ -13,6 +13,7 @@ import (
 	"strconv"
 
 	"golang.org/x/crypto/openpgp/errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config collects configuration parameters for s2k key-stretching

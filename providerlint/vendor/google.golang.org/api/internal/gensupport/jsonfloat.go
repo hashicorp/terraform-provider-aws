@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // JSONFloat64 is a float64 that supports proper unmarshaling of special float

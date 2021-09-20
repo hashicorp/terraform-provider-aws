@@ -3,6 +3,7 @@ package hclog
 import (
 	"regexp"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ExcludeByMessage provides a simple way to build a list of log messages that

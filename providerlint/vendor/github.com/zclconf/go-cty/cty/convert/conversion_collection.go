@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // conversionCollectionToList returns a conversion that will apply the given

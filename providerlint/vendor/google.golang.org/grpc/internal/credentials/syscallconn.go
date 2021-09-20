@@ -21,6 +21,7 @@ package credentials
 import (
 	"net"
 	"syscall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type sysConn = syscall.Conn

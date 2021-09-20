@@ -10,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty/gocty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfdiags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ModuleInstance is an address for a particular module instance within the

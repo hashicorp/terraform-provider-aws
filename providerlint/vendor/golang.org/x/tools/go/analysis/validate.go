@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Validate reports an error if any of the analyzers are misconfigured.

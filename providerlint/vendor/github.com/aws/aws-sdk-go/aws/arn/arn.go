@@ -4,6 +4,7 @@ package arn
 import (
 	"errors"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

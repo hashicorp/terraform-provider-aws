@@ -21,6 +21,7 @@ import (
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/stats/internal"
 	"go.opencensus.io/tag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

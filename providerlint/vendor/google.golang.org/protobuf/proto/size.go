@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/internal/encoding/messageset"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Size returns the size in bytes of the wire-format encoding of m.

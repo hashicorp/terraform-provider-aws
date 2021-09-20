@@ -2,6 +2,7 @@ package ini
 
 import (
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // isWhitespace will return whether or not the character is

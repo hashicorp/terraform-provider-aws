@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"golang.org/x/tools/internal/event"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An Runner will run go command invocations and serialize

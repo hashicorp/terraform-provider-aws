@@ -3,6 +3,7 @@ package schema
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func unmarshalJSON(data []byte, v interface{}) error {

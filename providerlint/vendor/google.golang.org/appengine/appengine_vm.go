@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BackgroundContext returns a context not associated with a request.

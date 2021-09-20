@@ -3,6 +3,7 @@ package packagesinternal
 
 import (
 	"golang.org/x/tools/internal/gocommand"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var GetForTest = func(p interface{}) string { return "" }

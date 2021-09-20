@@ -19,6 +19,7 @@ import (
 	"golang.org/x/tools/go/analysis/internal/analysisflags"
 	"golang.org/x/tools/go/analysis/internal/checker"
 	"golang.org/x/tools/go/analysis/unitchecker"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Main(analyzers ...*analysis.Analyzer) {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // untar is a shared helper for untarring an archive. The reader should provide

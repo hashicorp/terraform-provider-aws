@@ -28,6 +28,7 @@ import (
 	"net/url"
 
 	credinternal "google.golang.org/grpc/internal/credentials"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TLSInfo contains the auth information for a TLS authenticated connection.

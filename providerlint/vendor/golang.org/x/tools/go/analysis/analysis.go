@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An Analyzer describes an analysis function and its options.

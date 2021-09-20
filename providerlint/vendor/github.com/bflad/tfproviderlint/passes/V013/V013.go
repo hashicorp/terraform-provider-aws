@@ -9,6 +9,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/schemavalidatefuncinfo"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for custom SchemaValidateFunc that implement validation.StringInSlice() or validation.StringNotInSlice()

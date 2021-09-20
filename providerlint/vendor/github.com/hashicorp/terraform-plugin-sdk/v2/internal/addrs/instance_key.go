@@ -2,6 +2,7 @@ package addrs
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // instanceKey represents the key of an instance within an object that

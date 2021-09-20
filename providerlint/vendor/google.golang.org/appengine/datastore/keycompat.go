@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/appengine/datastore/internal/cloudkey"
 	"google.golang.org/appengine/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var keyConversion struct {

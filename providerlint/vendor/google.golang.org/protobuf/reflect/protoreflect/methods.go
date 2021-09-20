@@ -6,6 +6,7 @@ package protoreflect
 
 import (
 	"google.golang.org/protobuf/internal/pragma"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // The following types are used by the fast-path Message.ProtoMethods method.

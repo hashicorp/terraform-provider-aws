@@ -34,6 +34,7 @@ import (
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/internal/analysisinternal"
 	"golang.org/x/tools/internal/span"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

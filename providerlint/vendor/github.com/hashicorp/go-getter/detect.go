@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-getter/helper/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Detector defines the interface that an invalid URL or a URL with a blank

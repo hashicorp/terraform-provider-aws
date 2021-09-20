@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Main() {

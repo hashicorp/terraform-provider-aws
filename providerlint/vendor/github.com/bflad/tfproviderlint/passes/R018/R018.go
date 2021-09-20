@@ -7,6 +7,7 @@ import (
 
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/stdlib/timesleepcallexpr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for time.Sleep() function usage

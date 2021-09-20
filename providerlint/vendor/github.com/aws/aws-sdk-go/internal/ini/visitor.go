@@ -3,6 +3,7 @@ package ini
 import (
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Visitor is an interface used by walkers that will

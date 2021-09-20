@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os/exec"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type outputConfig struct {

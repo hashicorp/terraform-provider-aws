@@ -2,6 +2,7 @@ package json
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MarshalType returns a JSON serialization of the given type.

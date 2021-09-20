@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type byteBuffer interface {

@@ -3,6 +3,7 @@ package wordwrap
 import (
 	"bytes"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WrapString wraps the given string within lim width in characters.

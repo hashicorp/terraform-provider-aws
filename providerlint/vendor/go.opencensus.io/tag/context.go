@@ -17,6 +17,7 @@ package tag
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FromContext returns the tag map stored in the context.

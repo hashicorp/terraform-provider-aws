@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Options is golang.org/x/tools/imports.Options with extra internal-only options.

@@ -6,6 +6,7 @@ import (
 	_ "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/awsproviderlint/passes/AWSAT001"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAWSAT001(t *testing.T) {

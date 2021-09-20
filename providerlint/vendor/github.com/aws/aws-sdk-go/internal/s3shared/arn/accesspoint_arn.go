@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AccessPointARN provides representation

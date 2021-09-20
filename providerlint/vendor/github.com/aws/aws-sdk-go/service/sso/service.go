@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SSO provides the API operation methods for making requests to

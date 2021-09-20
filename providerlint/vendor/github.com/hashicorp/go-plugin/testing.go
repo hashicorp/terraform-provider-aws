@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/go-plugin/internal/plugin"
 	"github.com/mitchellh/go-testing-interface"
 	"google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TestOptions allows specifying options that can affect the behavior of the

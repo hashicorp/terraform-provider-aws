@@ -38,6 +38,7 @@ import (
 	"google.golang.org/grpc/internal/grpcrand"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/serviceconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EnableSRVLookups controls whether the DNS resolver attempts to fetch gRPCLB

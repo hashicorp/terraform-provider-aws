@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/text/transform"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Reset implements the Reset method of the transform.Transformer interface.

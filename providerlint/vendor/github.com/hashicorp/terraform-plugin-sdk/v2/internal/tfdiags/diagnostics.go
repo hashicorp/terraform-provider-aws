@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Diagnostics is a list of diagnostics. Diagnostics is intended to be used

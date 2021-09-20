@@ -9,6 +9,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WalkFunc is the callback called for Walk.

@@ -3,6 +3,7 @@ package cty
 import (
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type typeObject struct {

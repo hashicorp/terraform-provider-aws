@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"google.golang.org/protobuf/types/descriptorpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // resolver is a wrapper around a local registry of declarations within the file

@@ -21,6 +21,7 @@ package grpclog
 
 import (
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Logger is the logger used for the non-depth log functions.

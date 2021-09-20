@@ -6,6 +6,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReplaceFunc is a function that searches a given string for another given

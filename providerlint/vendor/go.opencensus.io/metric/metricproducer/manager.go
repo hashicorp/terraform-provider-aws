@@ -16,6 +16,7 @@ package metricproducer
 
 import (
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Manager maintains a list of active producers. Producers can register

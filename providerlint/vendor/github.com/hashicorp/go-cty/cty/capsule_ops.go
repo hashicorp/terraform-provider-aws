@@ -2,6 +2,7 @@ package cty
 
 import (
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CapsuleOps represents a set of overloaded operations for a capsule type.

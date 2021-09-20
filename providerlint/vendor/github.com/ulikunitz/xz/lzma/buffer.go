@@ -6,6 +6,7 @@ package lzma
 
 import (
 	"errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // buffer provides a circular buffer of bytes. If the front index equals

@@ -3,6 +3,7 @@ package cty
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Path is a sequence of operations to locate a nested value within a

@@ -10,6 +10,7 @@ import (
 	"golang.org/x/tools/internal/event/core"
 	"golang.org/x/tools/internal/event/keys"
 	"golang.org/x/tools/internal/event/label"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Exporter is a function that handles events.

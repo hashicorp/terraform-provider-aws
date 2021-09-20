@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FileDetector implements Detector to detect file paths.

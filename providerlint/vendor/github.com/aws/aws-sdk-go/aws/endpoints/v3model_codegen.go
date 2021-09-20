@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A CodeGenOptions are the options for code generating the endpoints into

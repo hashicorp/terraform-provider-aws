@@ -22,6 +22,7 @@ package tap
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Info defines the relevant information needed by the handles.

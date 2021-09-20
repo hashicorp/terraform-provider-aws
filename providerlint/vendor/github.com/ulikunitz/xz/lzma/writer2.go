@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Writer2Config is used to create a Writer2 using parameters.

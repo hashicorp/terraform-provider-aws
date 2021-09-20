@@ -5,6 +5,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfo"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for Resource that implements Timeouts for missing Create, Delete, Read, or Update implementation

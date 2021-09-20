@@ -2,6 +2,7 @@ package tfprotov6
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DataSourceServer is an interface containing the methods a data source

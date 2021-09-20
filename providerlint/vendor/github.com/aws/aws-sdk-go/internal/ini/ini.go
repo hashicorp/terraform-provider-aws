@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // OpenFile takes a path to a given file, and will open  and parse

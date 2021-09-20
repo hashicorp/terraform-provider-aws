@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jmespath/go-jmespath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var indexRe = regexp.MustCompile(`(.+)\[(-?\d+)?\]$`)

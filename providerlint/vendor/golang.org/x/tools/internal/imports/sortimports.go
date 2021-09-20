@@ -11,6 +11,7 @@ import (
 	"go/token"
 	"sort"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // sortImports sorts runs of consecutive import lines in import blocks in f.

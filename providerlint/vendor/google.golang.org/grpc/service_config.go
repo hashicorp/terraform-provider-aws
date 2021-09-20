@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc/internal"
 	internalserviceconfig "google.golang.org/grpc/internal/serviceconfig"
 	"google.golang.org/grpc/serviceconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const maxInt = int(^uint(0) >> 1)

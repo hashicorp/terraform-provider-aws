@@ -9,6 +9,7 @@ package customdecode
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type customDecoderImpl int

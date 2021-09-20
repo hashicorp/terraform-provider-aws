@@ -3,6 +3,7 @@ package yamux
 import (
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

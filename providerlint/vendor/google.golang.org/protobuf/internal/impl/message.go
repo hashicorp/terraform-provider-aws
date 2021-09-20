@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/internal/genid"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MessageInfo provides protobuf related functionality for a given Go type

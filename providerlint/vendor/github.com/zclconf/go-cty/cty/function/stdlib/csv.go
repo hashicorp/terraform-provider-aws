@@ -8,6 +8,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var CSVDecodeFunc = function.New(&function.Spec{

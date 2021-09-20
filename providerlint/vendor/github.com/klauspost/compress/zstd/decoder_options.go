@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DOption is an option for creating a decoder.

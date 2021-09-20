@@ -7,6 +7,7 @@ package zstd
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // InternalTypesToRegister is a slice of values that covers all of the

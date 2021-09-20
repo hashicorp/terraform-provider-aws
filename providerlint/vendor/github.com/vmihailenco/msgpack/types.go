@@ -3,6 +3,7 @@ package msgpack
 import (
 	"reflect"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var errorType = reflect.TypeOf((*error)(nil)).Elem()

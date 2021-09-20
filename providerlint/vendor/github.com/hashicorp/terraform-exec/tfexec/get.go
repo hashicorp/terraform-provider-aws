@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type getCmdConfig struct {

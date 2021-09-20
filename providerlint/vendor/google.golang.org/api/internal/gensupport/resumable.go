@@ -14,6 +14,7 @@ import (
 	"time"
 
 	gax "github.com/googleapis/gax-go/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Backoff is an interface around gax.Backoff's Pause method, allowing tests to provide their

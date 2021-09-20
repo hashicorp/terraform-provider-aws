@@ -8,6 +8,7 @@ package unix
 
 import (
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 //go:cgo_import_dynamic libc_readv readv "libc.so"

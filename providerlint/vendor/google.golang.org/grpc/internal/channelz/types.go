@@ -26,6 +26,7 @@ import (
 
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // entry represents a node in the channelz database.

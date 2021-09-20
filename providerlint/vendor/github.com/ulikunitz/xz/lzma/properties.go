@@ -7,6 +7,7 @@ package lzma
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // maximum and minimum values for the LZMA properties.

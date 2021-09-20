@@ -7,6 +7,7 @@ package packet
 import (
 	"encoding/binary"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // LiteralData represents an encrypted file. See RFC 4880, section 5.9.

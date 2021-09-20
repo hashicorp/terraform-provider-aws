@@ -2,6 +2,7 @@ package multierror
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Error is an error type to track multiple errors. This is used to

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ErrUnknownDynamicValueType is returned when a DynamicValue has no MsgPack or

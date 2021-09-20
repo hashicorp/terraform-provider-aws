@@ -9,6 +9,7 @@ package unix
 import (
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 //go:cgo_import_dynamic libc_pipe pipe "libc.so"

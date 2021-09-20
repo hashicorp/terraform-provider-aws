@@ -2,6 +2,7 @@ package csm
 
 import (
 	"sync/atomic"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

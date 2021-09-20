@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UnmarshalDiscardBodyHandler is a named request handler to empty and close a response's body

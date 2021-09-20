@@ -9,6 +9,7 @@ import (
 
 	"github.com/vmihailenco/msgpack"
 	msgpackCodes "github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type msgPackUnknownType struct{}

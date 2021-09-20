@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/klauspost/compress/zstd/internal/xxhash"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Encoder provides encoding to Zstandard.

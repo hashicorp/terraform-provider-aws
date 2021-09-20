@@ -6,6 +6,7 @@ package hpack
 
 import (
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

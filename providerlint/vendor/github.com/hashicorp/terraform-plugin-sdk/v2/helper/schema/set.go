@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HashString hashes strings. If you want a Set of strings, this is the

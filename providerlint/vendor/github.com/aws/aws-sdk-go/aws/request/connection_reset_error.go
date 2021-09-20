@@ -2,6 +2,7 @@ package request
 
 import (
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func isErrConnectionReset(err error) bool {

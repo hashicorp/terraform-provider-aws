@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/runtime/protoimpl"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type (

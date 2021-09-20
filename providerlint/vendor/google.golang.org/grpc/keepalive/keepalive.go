@@ -22,6 +22,7 @@ package keepalive
 
 import (
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ClientParameters is used to set keepalive parameters on the client-side.

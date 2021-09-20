@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type (

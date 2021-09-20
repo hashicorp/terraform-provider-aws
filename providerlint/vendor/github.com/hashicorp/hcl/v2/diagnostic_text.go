@@ -10,6 +10,7 @@ import (
 
 	wordwrap "github.com/mitchellh/go-wordwrap"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type diagnosticTextWriter struct {

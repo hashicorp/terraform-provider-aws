@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (tf *Terraform) runTerraformCmd(ctx context.Context, cmd *exec.Cmd) error {

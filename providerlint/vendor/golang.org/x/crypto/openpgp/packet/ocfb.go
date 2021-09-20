@@ -8,6 +8,7 @@ package packet
 
 import (
 	"crypto/cipher"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type ocfbEncrypter struct {

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SharedCredentialsFilename returns the SDK's default file path

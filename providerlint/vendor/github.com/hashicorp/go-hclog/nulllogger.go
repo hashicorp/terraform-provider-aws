@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NewNullLogger instantiates a Logger for which all calls

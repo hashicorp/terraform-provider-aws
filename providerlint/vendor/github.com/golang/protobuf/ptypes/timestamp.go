@@ -10,6 +10,7 @@ import (
 	"time"
 
 	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Range of google.protobuf.Duration as specified in timestamp.proto.

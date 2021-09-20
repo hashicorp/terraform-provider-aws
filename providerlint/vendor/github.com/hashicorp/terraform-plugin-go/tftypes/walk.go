@@ -25,6 +25,7 @@ package tftypes
 
 import (
 	"errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Walk traverses a Value, calling the passed function for every element and

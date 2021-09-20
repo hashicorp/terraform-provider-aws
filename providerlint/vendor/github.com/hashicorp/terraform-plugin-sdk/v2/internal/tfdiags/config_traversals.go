@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FormatCtyPath is a helper function to produce a user-friendly string

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Prefix is a helper function that will prefix some text

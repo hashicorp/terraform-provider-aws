@@ -58,7 +58,8 @@ The driver program must import the list of Analyzers it needs.
 Typically each Analyzer resides in a separate package.
 To add a new Analyzer to an existing driver, add another item to the list:
 
-	import ( "unusedresult"; "nilness"; "printf" )
+	import ( "unusedresult"; "nilness"; "printf" 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
 
 	var analyses = []*analysis.Analyzer{
 		unusedresult.Analyzer,

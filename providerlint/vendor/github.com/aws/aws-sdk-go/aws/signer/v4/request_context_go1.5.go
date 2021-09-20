@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func requestContext(r *http.Request) aws.Context {

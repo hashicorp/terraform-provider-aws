@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RandReader is the random reader the protocol package will use to read

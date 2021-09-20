@@ -7,6 +7,7 @@ package norm
 import (
 	"fmt"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MaxSegmentSize is the maximum size of a byte buffer needed to consider any

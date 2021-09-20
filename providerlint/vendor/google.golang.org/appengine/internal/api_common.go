@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	netcontext "golang.org/x/net/context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var errNotAppEngineContext = errors.New("not an App Engine context")

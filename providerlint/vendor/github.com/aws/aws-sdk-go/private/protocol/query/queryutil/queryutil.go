@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Parse parses an object i and fills a url.Values object. The isEC2 flag

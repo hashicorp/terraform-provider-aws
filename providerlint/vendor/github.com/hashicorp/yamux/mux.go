@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config is used to tune the Yamux session

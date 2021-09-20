@@ -8,6 +8,7 @@ package version
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // These constants determine the current version of this module.

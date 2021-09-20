@@ -5,6 +5,7 @@ package aws
 
 import (
 	"github.com/aws/aws-sdk-go/internal/context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BackgroundContext returns a context that will never be canceled, has no

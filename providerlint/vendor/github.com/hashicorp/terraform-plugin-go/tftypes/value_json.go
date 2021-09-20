@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math/big"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValueFromJSON returns a Value from the JSON-encoded bytes, using the

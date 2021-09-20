@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FieldReaders are responsible for decoding fields out of data into

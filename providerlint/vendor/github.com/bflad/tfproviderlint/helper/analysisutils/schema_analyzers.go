@@ -6,6 +6,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/schemainfo"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SchemaAttributeReferencesAnalyzer returns an Analyzer for fields that use schema attribute references

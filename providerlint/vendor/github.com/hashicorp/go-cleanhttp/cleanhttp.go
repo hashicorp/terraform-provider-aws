@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DefaultTransport returns a new http.Transport with similar default values to

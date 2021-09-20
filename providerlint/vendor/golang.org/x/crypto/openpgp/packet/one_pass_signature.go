@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/openpgp/s2k"
 	"io"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // OnePassSignature represents a one-pass signature packet. See RFC 4880,

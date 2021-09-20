@@ -150,6 +150,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Provider returns a *schema.Provider.
@@ -1780,14 +1781,14 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 					Elem: &schema.Schema{
 						Type:         schema.TypeString,
-						ValidateFunc: validateArn,
+						ValidateFunc: verify.ValidARN,
 					},
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Description:  "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 				"session_name": {
 					Type:        schema.TypeString,

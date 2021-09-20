@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Reset clears every field in the message.

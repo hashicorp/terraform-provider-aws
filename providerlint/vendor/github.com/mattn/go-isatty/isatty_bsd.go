@@ -6,6 +6,7 @@ package isatty
 import (
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const ioctlReadTermios = syscall.TIOCGETA

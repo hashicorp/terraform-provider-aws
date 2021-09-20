@@ -4,6 +4,7 @@ package sso
 
 import (
 	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

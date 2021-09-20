@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var logger = grpclog.Component("balancer")

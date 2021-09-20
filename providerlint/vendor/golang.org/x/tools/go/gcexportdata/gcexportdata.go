@@ -30,6 +30,7 @@ import (
 	"io/ioutil"
 
 	"golang.org/x/tools/go/internal/gcimporter"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Find returns the name of an object (.o) or archive (.a) file

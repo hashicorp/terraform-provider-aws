@@ -18,6 +18,7 @@ package stats
 import (
 	"sync"
 	"sync/atomic"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Measure represents a single numeric value to be tracked and recorded.

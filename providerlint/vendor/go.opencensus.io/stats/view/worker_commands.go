@@ -24,6 +24,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/internal"
 	"go.opencensus.io/tag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type command interface {

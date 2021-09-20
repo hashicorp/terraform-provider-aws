@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func direntNamlen(dirent *syscall.Dirent) uint64 {

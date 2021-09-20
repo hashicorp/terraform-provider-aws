@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/fromproto"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/toproto"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ServeOpt is an interface for defining options that can be passed to the

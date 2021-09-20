@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var DebugGoroutines = os.Getenv("DEBUG_HTTP2_GOROUTINES") == "1"

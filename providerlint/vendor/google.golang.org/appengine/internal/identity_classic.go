@@ -10,6 +10,7 @@ import (
 	"appengine"
 
 	netcontext "golang.org/x/net/context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

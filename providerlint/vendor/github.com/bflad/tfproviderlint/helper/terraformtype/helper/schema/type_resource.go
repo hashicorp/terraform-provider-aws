@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bflad/tfproviderlint/helper/astutils"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

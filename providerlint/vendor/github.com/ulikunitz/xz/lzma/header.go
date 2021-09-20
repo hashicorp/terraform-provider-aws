@@ -7,6 +7,7 @@ package lzma
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // uint32LE reads an uint32 integer from a byte slice

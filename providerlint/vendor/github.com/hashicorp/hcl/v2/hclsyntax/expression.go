@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Expression is the abstract type for nodes that behave as HCL expressions.

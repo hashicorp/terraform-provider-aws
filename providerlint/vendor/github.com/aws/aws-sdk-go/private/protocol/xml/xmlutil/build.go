@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BuildXML will serialize params into an xml.Encoder. Error will be returned

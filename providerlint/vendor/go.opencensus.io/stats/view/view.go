@@ -27,6 +27,7 @@ import (
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // View allows users to aggregate the recorded stats.Measurements.

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"golang.org/x/tools/internal/event/label"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Event holds the information about an event of note that ocurred.

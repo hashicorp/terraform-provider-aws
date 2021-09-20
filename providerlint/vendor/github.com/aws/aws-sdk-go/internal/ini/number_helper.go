@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

@@ -7,6 +7,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/acctest/randstringfromcharsetcallexpr"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for acctest.RandStringFromCharSet() calls that can be acctest.RandString()

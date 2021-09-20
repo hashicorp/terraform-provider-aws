@@ -22,6 +22,7 @@ import (
 	raw "google.golang.org/api/storage/v1"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 	"google.golang.org/genproto/googleapis/type/expr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IAM provides access to IAM access control for the bucket.

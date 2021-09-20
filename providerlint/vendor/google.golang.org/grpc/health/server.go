@@ -28,6 +28,7 @@ import (
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Server implements `service Health`.

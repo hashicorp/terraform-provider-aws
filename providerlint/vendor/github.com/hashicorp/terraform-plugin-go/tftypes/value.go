@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/vmihailenco/msgpack"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValueConverter is an interface that provider-defined types can implement to

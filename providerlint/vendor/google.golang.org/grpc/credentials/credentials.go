@@ -31,6 +31,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PerRPCCredentials defines the common interface for the credentials which need to

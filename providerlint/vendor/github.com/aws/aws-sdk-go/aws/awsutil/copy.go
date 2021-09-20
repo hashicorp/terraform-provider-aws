@@ -4,6 +4,7 @@ import (
 	"io"
 	"reflect"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Copy deeply copies a src structure to dst. Useful for copying request and

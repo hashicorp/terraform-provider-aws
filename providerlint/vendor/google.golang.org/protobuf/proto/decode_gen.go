@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/internal/errors"
 	"google.golang.org/protobuf/internal/strs"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // unmarshalScalar decodes a value of the given kind.

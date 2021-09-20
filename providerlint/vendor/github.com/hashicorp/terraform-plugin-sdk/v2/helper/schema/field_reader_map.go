@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MapFieldReader reads fields out of an untyped map[string]string to

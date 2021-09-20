@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config for generating impersonated credentials.

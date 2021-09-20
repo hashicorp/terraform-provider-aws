@@ -19,6 +19,7 @@ import (
 
 	"google.golang.org/api/googleapi"
 	"google.golang.org/grpc/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Annotate prepends msg to the error message in err, attempting

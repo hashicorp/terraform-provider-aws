@@ -6,6 +6,7 @@ import (
 
 	"github.com/apparentlymart/go-textseg/v12/textseg"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Token represents a sequence of bytes from some HCL code that has been

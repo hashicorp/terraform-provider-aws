@@ -6,6 +6,7 @@ package internal
 
 import (
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func parseFullAppID(appid string) (partition, domain, displayID string) {

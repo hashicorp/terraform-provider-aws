@@ -25,6 +25,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc/credentials"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Peer contains the information of the peer for an RPC, such as the address

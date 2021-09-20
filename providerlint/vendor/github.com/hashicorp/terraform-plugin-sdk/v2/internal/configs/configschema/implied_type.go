@@ -2,6 +2,7 @@ package configschema
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ImpliedType returns the cty.Type that would result from decoding a

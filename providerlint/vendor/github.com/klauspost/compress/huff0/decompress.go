@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/klauspost/compress/fse"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type dTable struct {

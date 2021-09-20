@@ -81,6 +81,7 @@ import (
 	reflect "reflect"
 	sync "sync"
 	time "time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Timestamp represents a point in time independent of any time zone or local

@@ -15,6 +15,7 @@ import (
 	fdesc "google.golang.org/protobuf/internal/filedesc"
 	"google.golang.org/protobuf/internal/strs"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var byteType = reflect.TypeOf(byte(0))

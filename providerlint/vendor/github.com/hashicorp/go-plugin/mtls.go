@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"math/big"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // generateCert generates a temporary certificate for plugin authentication. The

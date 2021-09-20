@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ProvidersSchema represents the terraform providers schema -json subcommand.

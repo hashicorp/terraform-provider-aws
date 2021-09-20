@@ -10,6 +10,7 @@ import (
 	"math/bits"
 
 	"github.com/klauspost/compress/fse"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

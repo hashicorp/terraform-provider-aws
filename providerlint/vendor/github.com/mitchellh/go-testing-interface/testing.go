@@ -5,6 +5,7 @@ package testing
 import (
 	"fmt"
 	"log"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // T is the interface that mimics the standard library *testing.T.

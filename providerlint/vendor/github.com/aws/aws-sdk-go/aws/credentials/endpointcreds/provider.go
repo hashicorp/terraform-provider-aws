@@ -40,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ProviderName is the name of the credentials provider.

@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // conversionObjectToObject returns a conversion that will make the input

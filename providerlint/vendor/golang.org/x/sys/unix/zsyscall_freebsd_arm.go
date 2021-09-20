@@ -9,6 +9,7 @@ package unix
 import (
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var _ syscall.Errno

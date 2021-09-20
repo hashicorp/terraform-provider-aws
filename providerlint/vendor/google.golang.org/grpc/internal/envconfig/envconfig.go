@@ -22,6 +22,7 @@ package envconfig
 import (
 	"os"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

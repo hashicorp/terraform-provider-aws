@@ -2,6 +2,7 @@ package hclog
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WithContext inserts a logger into the context and is retrievable

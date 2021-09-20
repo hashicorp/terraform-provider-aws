@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValidateEndpointHostHandler is a request handler that will validate the

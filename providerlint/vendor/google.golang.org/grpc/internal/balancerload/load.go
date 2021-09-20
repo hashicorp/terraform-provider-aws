@@ -20,6 +20,7 @@ package balancerload
 
 import (
 	"google.golang.org/grpc/metadata"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Parser converts loads from metadata into a concrete type.

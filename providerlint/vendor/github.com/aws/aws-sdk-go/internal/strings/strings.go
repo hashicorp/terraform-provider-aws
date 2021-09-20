@@ -2,6 +2,7 @@ package strings
 
 import (
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HasPrefixFold tests whether the string s begins with prefix, interpreted as UTF-8 strings,

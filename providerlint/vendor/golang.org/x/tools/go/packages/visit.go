@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Visit visits all the packages in the import graph whose roots are

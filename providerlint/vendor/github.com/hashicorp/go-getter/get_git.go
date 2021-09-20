@@ -18,6 +18,7 @@ import (
 	urlhelper "github.com/hashicorp/go-getter/helper/url"
 	safetemp "github.com/hashicorp/go-safetemp"
 	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GitGetter is a Getter implementation that will download a module from

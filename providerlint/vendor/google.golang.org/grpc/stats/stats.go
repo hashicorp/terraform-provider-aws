@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc/metadata"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RPCStats contains stats information about RPCs.

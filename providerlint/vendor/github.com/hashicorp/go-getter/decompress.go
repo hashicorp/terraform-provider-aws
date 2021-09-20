@@ -3,6 +3,7 @@ package getter
 import (
 	"os"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Decompressor defines the interface that must be implemented to add

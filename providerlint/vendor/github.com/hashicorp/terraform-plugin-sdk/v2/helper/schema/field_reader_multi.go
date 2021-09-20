@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MultiLevelFieldReader reads from other field readers,

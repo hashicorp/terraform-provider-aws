@@ -19,6 +19,7 @@ package trace
 import (
 	"context"
 	t "runtime/trace"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func startExecutionTracerTask(ctx context.Context, name string) (context.Context, func()) {

@@ -2,6 +2,7 @@ package hcl
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MergeFiles combines the given files to produce a single body that contains

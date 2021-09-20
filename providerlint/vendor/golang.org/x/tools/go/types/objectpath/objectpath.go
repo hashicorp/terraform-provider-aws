@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"go/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Path is an opaque name that identifies a types.Object

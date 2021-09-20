@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var millisecondsFloat = new(big.Float).SetInt64(1e3)

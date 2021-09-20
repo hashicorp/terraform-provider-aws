@@ -4,6 +4,7 @@ import (
 	"compress/bzip2"
 	"os"
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TarBzip2Decompressor is an implementation of Decompressor that can

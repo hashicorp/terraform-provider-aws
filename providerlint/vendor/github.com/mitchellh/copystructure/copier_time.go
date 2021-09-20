@@ -3,6 +3,7 @@ package copystructure
 import (
 	"reflect"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

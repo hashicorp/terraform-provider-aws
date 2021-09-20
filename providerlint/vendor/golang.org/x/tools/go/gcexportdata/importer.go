@@ -9,6 +9,7 @@ import (
 	"go/token"
 	"go/types"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NewImporter returns a new instance of the types.Importer interface

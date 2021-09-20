@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Options provide the configuration needed to direct how the

@@ -15,6 +15,7 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/internal/unsafeheader"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

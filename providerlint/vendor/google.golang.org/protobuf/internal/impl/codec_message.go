@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/internal/fieldsort"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	piface "google.golang.org/protobuf/runtime/protoiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // coderMessageInfo contains per-message information used by the fast-path functions.

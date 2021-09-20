@@ -21,6 +21,7 @@ package grpc
 import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PreparedMsg is responsible for creating a Marshalled and Compressed object.

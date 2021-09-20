@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"google.golang.org/api/googleapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func shouldRetry(err error) bool {

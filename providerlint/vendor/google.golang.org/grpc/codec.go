@@ -21,6 +21,7 @@ package grpc
 import (
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/proto" // to register the Codec for "proto"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // baseCodec contains the functionality of both Codec and encoding.Codec, but

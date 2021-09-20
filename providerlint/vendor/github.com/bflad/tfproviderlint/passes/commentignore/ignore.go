@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const commentIgnorePrefix = "lintignore:"

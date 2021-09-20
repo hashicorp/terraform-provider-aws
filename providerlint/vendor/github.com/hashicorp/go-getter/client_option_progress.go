@@ -2,6 +2,7 @@ package getter
 
 import (
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WithProgress allows for a user to track

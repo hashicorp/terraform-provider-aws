@@ -33,6 +33,7 @@ import (
 	"context"
 	"strings"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // APICall is a user defined call stub.

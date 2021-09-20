@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-cty/cty/convert"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func unmarshal(buf []byte, t cty.Type, path cty.Path) (cty.Value, error) {

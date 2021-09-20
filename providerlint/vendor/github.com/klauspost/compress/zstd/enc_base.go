@@ -5,6 +5,7 @@ import (
 	"math/bits"
 
 	"github.com/klauspost/compress/zstd/internal/xxhash"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type fastBase struct {

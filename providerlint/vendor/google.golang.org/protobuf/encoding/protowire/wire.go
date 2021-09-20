@@ -15,6 +15,7 @@ import (
 	"math/bits"
 
 	"google.golang.org/protobuf/internal/errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Number represents the field number.

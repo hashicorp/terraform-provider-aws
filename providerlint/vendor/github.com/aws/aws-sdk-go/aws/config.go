@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UseServiceDefaultRetries instructs the config to use the service's own

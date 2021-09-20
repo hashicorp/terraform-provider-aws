@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	awsStrings "github.com/aws/aws-sdk-go/internal/strings"
 	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UnmarshalHandler is a named request handler for unmarshaling rest protocol requests

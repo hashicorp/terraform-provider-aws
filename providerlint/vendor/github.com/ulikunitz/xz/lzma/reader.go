@@ -13,6 +13,7 @@ package lzma
 import (
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReaderConfig stores the parameters for the reader of the classic LZMA

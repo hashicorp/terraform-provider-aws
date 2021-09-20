@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Function represents a function. This is the main type in this package.

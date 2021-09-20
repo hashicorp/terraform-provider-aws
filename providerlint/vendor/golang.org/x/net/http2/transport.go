@@ -34,6 +34,7 @@ import (
 	"golang.org/x/net/http/httpguts"
 	"golang.org/x/net/http2/hpack"
 	"golang.org/x/net/idna"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

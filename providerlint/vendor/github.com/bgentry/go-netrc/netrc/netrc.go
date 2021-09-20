@@ -11,6 +11,7 @@ import (
 	"sync"
 	"unicode"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type tkType int

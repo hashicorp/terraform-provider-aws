@@ -28,6 +28,7 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/internal/gocommand"
 	"golang.org/x/tools/internal/gopathwalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // importToGroup is a list of functions which map from an import path to

@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"google.golang.org/protobuf/encoding/protowire"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func sizeEnum(p pointer, f *coderFieldInfo, _ marshalOptions) (size int) {

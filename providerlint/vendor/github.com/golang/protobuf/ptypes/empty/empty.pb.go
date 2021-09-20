@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Symbols defined in public import of google/protobuf/empty.proto.

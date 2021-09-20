@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PostPolicyV4Options are used to construct a signed post policy.

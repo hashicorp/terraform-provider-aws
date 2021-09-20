@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"google.golang.org/grpc/resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // split2 returns the values from strings.SplitN(s, sep, 2).

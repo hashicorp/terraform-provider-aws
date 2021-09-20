@@ -20,6 +20,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Unmarshal reads the given []byte into the given proto.Message.

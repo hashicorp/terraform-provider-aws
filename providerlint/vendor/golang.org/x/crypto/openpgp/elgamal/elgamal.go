@@ -18,6 +18,7 @@ import (
 	"errors"
 	"io"
 	"math/big"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PublicKey represents an ElGamal public key.

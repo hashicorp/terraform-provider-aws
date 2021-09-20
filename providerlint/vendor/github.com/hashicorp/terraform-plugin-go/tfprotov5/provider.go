@@ -2,6 +2,7 @@ package tfprotov5
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ProviderServer is an interface that reflects that Terraform protocol.

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var timeoutErr = awserr.New(

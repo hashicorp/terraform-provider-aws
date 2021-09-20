@@ -30,6 +30,7 @@ import (
 
 	"cloud.google.com/go/internal/trace"
 	"google.golang.org/api/googleapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var crc32cTable = crc32.MakeTable(crc32.Castagnoli)

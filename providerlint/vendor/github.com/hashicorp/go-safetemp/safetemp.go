@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Dir creates a new temporary directory that isn't yet created. This

@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // StdlibFunctionCallExprAnalyzer returns an Analyzer for standard library function *ast.CallExpr

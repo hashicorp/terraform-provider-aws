@@ -9,6 +9,7 @@ import (
 
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // weakFields adds methods to the exported WeakFields type for internal use.

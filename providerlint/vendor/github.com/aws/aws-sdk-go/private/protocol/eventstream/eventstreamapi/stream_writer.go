@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // StreamWriter provides concurrent safe writing to an event stream.

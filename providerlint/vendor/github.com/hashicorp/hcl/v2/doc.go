@@ -11,7 +11,8 @@
 //     import (
 //     	"log"
 //     	"github.com/hashicorp/hcl/v2/hclsimple"
-//     )
+//     	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
 //
 //     type Config struct {
 //     	LogLevel string `hcl:"log_level"`

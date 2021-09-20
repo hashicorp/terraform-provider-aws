@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"golang.org/x/mod/semver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ModuleJSON holds information about a module.

@@ -16,6 +16,7 @@ package metricproducer
 
 import (
 	"go.opencensus.io/metric/metricdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Producer is a source of metrics.

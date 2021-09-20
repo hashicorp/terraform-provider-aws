@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RFC 7540, Section 5.3.5: the default weight is 16.

@@ -3,6 +3,7 @@ package plugin
 import (
 	"encoding/json"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // logEntry is the JSON payload that gets sent to Stderr from the plugin to the host

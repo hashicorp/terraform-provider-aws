@@ -39,6 +39,7 @@ import (
 
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const goPackageDocURL = "https://developers.google.com/protocol-buffers/docs/reference/go-generated#package"

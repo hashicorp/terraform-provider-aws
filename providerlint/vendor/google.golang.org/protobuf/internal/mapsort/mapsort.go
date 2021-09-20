@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Range iterates over every map entry in sorted key order,

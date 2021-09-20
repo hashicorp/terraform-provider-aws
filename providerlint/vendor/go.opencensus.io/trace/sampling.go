@@ -16,6 +16,7 @@ package trace
 
 import (
 	"encoding/binary"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const defaultSamplingProbability = 1e-4

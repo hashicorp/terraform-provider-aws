@@ -2,6 +2,7 @@ package cty
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // anyUnknown is a helper to easily check if a set of values contains any

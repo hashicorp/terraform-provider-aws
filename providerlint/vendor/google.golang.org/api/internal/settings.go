@@ -14,6 +14,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/internal/impersonate"
 	"google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DialSettings holds information needed to establish a connection with a

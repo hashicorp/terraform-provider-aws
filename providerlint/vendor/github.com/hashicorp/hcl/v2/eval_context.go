@@ -3,6 +3,7 @@ package hcl
 import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An EvalContext provides the variables and functions that should be used

@@ -10,6 +10,7 @@ package unix
 import (
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func setTimespec(sec, nsec int64) Timespec {

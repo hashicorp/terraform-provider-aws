@@ -14,6 +14,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func readGopackHeader(r *bufio.Reader) (name string, size int, err error) {

@@ -5,6 +5,7 @@ import (
 	"hash/crc64"
 
 	"github.com/zclconf/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PathSet represents a set of Path objects. This can be used, for example,

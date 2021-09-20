@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"google.golang.org/appengine/urlfetch"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

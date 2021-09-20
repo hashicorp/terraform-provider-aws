@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GoString is an implementation of fmt.GoStringer that produces concise

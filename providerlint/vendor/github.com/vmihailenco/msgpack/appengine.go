@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	ds "google.golang.org/appengine/datastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/ulikunitz/xz/internal/hash"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 /* For compression we need to find byte sequences that match the byte

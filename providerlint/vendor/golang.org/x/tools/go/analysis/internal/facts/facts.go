@@ -49,6 +49,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/types/objectpath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const debug = false

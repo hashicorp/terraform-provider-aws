@@ -21,6 +21,7 @@ package stats
 import (
 	"context"
 	"net"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ConnTagInfo defines the relevant information needed by connection context tagger.

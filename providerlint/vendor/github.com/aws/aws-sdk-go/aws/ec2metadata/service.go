@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client/metadata"
 	"github.com/aws/aws-sdk-go/aws/corehandlers"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

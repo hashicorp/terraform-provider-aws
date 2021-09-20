@@ -2,6 +2,7 @@ package ini
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // getStringValue will return a quoted string and the amount

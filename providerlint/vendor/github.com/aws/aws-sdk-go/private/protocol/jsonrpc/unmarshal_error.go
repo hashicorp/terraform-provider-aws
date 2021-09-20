@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UnmarshalTypedError provides unmarshaling errors API response errors

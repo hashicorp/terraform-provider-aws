@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

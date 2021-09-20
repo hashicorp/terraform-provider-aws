@@ -21,6 +21,7 @@ package grpcutil
 import (
 	"strconv"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const maxTimeoutValue int64 = 100000000 - 1

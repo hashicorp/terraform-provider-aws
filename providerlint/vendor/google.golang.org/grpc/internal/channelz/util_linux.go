@@ -22,6 +22,7 @@ package channelz
 
 import (
 	"syscall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GetSocketOption gets the socket option info of the conn.

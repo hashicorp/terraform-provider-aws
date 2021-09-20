@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

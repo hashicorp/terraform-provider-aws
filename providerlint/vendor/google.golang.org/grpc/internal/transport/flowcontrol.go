@@ -23,6 +23,7 @@ import (
 	"math"
 	"sync"
 	"sync/atomic"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // writeQuota is a soft limit on the amount of data a stream can

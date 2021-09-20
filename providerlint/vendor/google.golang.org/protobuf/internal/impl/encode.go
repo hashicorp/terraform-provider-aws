@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/internal/flags"
 	proto "google.golang.org/protobuf/proto"
 	piface "google.golang.org/protobuf/runtime/protoiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type marshalOptions struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/jstemmer/go-junit-report/formatter"
 	"github.com/jstemmer/go-junit-report/parser"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

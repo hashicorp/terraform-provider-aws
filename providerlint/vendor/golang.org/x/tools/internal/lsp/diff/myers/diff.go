@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/tools/internal/lsp/diff"
 	"golang.org/x/tools/internal/span"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Sources:

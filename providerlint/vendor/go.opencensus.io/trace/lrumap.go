@@ -16,6 +16,7 @@ package trace
 
 import (
 	"github.com/golang/groupcache/lru"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A simple lru.Cache wrapper that tracks the keys of the current contents and

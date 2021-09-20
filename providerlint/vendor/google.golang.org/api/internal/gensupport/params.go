@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"google.golang.org/api/googleapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // URLParams is a simplified replacement for url.Values

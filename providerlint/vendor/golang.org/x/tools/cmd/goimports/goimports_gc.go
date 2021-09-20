@@ -9,6 +9,7 @@ package main
 import (
 	"flag"
 	"runtime/trace"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var traceProfile = flag.String("trace", "", "trace profile output")

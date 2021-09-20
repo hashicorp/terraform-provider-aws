@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GobEncode is an implementation of the gob.GobEncoder interface, which

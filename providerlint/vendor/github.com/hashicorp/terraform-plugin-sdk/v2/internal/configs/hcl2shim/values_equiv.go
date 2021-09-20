@@ -2,6 +2,7 @@ package hcl2shim
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValuesSDKEquivalent returns true if both of the given values seem equivalent

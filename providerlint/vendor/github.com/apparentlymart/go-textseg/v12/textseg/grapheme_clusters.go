@@ -4,6 +4,7 @@ package textseg
 import (
 	"errors"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Generated from grapheme_clusters.rl. DO NOT EDIT

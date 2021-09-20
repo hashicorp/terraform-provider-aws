@@ -19,6 +19,7 @@ package spew
 import (
 	"fmt"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Errorf is a wrapper for fmt.Errorf that treats each argument as if it were

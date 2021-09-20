@@ -17,6 +17,7 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/tools/internal/gocommand"
 	"golang.org/x/tools/internal/gopathwalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ModuleResolver implements resolver for modules using the go command as little

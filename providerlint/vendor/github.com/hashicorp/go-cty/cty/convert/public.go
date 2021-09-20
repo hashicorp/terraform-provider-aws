@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This file contains the public interface of this package, which is intended

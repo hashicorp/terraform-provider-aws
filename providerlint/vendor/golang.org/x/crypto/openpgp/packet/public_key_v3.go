@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/openpgp/errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PublicKeyV3 represents older, version 3 public keys. These keys are less secure and

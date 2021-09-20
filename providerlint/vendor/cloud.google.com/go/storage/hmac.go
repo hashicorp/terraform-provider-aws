@@ -22,6 +22,7 @@ import (
 
 	"google.golang.org/api/iterator"
 	raw "google.golang.org/api/storage/v1"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HMACState is the state of the HMAC key.

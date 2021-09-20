@@ -22,6 +22,7 @@ import (
 	"syscall"
 
 	"golang.org/x/sys/unix"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SocketOptionData defines the struct to hold socket option data, and related

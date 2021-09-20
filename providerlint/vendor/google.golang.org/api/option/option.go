@@ -13,6 +13,7 @@ import (
 	"google.golang.org/api/internal"
 	"google.golang.org/api/internal/impersonate"
 	"google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A ClientOption is an option for a Google API client.

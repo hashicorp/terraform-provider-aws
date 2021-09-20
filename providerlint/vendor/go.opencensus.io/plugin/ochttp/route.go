@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"go.opencensus.io/tag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SetRoute sets the http_server_route tag to the given value.

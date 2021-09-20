@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ConfigState houses the configuration options used by spew to format and

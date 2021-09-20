@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/internal/sdkmath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Names of time formats supported by the SDK

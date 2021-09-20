@@ -24,6 +24,7 @@ import (
 
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/connectivity"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PickFirstBalancerName is the name of the pick_first balancer.

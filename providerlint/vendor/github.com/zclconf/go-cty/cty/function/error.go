@@ -3,6 +3,7 @@ package function
 import (
 	"fmt"
 	"runtime/debug"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ArgError represents an error with one of the arguments in a call. The

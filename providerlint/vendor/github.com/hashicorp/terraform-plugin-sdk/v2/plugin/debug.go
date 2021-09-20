@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReattachConfig holds the information Terraform needs to be able to attach

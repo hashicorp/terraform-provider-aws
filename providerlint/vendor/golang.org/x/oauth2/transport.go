@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Transport is an http.RoundTripper that makes OAuth 2.0 HTTP requests,

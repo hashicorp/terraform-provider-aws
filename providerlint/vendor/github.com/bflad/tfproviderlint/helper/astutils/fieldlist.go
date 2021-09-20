@@ -3,6 +3,7 @@ package astutils
 import (
 	"go/ast"
 	"go/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FieldListName returns field name at field position and name position if found

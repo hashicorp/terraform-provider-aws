@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HandlerInput provides input options to cleanhttp's handlers

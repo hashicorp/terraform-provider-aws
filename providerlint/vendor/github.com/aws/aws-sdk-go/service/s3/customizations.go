@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/s3shared/arn"
 	"github.com/aws/aws-sdk-go/internal/s3shared/s3err"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

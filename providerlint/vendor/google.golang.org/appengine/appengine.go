@@ -15,6 +15,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // The gophers party all night; the rabbits provide the beats.

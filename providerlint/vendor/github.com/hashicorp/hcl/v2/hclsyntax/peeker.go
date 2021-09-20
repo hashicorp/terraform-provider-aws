@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This is set to true at init() time in tests, to enable more useful output

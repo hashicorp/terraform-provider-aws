@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/go-cleanhttp"
 	uuid "github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReportParams are the parameters for configuring a telemetry report.

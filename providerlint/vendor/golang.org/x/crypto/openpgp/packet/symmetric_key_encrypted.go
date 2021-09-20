@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/crypto/openpgp/errors"
 	"golang.org/x/crypto/openpgp/s2k"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This is the largest session key that we'll support. Since no 512-bit cipher

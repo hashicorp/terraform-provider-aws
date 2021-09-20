@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/ulikunitz/xz"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TarXzDecompressor is an implementation of Decompressor that can

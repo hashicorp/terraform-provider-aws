@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream/eventstreamapi"
 	"github.com/aws/aws-sdk-go/private/protocol/rest"
 	"github.com/aws/aws-sdk-go/private/protocol/restxml"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const opAbortMultipartUpload = "AbortMultipartUpload"

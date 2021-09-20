@@ -3,6 +3,7 @@ package terraform
 import (
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // stateFilter is responsible for filtering and searching a state.

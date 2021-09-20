@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"math/bits"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // bitReader reads a bitstream in reverse.

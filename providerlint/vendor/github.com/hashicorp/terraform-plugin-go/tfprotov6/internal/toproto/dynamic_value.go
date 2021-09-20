@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DynamicValue(in *tfprotov6.DynamicValue) *tfplugin6.DynamicValue {

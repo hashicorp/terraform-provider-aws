@@ -20,6 +20,7 @@ package grpclog
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PrefixLogger does logging with a prefix.

@@ -11,6 +11,7 @@ import (
 
 	urlhelper "github.com/hashicorp/go-getter/helper/url"
 	safetemp "github.com/hashicorp/go-safetemp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HgGetter is a Getter implementation that will download a module from

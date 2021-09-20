@@ -27,6 +27,7 @@ import (
 
 	grpcbackoff "google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/internal/grpcrand"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Strategy defines the methodology for backing off after a grpc connection

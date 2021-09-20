@@ -7,6 +7,7 @@ import (
 	"os/exec"
 
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type showConfig struct {

@@ -18,6 +18,7 @@ package tag
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // KeyType defines the types of keys allowed. Currently only keyTypeString is

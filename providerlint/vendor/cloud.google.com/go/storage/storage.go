@@ -45,6 +45,7 @@ import (
 	"google.golang.org/api/option"
 	raw "google.golang.org/api/storage/v1"
 	htransport "google.golang.org/api/transport/http"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Methods which can be used in signed URLs.

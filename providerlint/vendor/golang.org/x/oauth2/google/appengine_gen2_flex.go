@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"golang.org/x/oauth2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var logOnce sync.Once // only spam about deprecation once

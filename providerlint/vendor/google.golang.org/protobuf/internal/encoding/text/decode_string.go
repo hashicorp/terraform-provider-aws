@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"google.golang.org/protobuf/internal/strs"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // parseStringValue parses string field token.

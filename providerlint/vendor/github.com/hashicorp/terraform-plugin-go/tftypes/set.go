@@ -2,6 +2,7 @@ package tftypes
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Set is a Terraform type representing an unordered collection of unique

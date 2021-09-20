@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type queryResult struct {

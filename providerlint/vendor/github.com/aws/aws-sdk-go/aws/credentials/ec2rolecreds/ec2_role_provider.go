@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/sdkuri"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ProviderName provides a name of EC2Role provider

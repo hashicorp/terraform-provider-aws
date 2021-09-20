@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/openpgp/errors"
 	"io"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Compressed represents a compressed OpenPGP packet. The decompressed contents

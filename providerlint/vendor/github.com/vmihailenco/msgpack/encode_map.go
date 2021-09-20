@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func encodeMapValue(e *Encoder, v reflect.Value) error {

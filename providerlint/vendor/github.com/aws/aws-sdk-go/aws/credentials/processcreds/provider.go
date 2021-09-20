@@ -91,6 +91,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/internal/sdkio"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

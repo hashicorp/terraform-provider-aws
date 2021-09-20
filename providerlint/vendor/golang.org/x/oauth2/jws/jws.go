@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ClaimSet contains information about the JWT signature including the

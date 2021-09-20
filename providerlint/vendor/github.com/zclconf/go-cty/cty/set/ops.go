@@ -2,6 +2,7 @@ package set
 
 import (
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Add inserts the given value into the receiving Set.

@@ -30,6 +30,7 @@ import (
 	"google.golang.org/grpc/internal/grpcsync"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/serviceconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ccResolverWrapper is a wrapper on top of cc for resolvers.

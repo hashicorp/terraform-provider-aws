@@ -2,6 +2,7 @@ package getter
 
 import (
 	"io/ioutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func tmpFile(dir, pattern string) (string, error) {

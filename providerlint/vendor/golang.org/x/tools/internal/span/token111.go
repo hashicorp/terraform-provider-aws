@@ -8,6 +8,7 @@ package span
 
 import (
 	"go/token"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // lineStart is the pre-Go 1.12 version of (*token.File).LineStart. For Go

@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-cty/cty/convert"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Marshal produces a JSON representation of the given value that can later

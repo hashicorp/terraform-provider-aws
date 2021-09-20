@@ -7,6 +7,7 @@ import (
 	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/s3shared/arn"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ResourceRequest represents the request and arn resource

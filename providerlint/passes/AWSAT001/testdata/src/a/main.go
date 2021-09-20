@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const resourceName = `aws_example_thing.test`

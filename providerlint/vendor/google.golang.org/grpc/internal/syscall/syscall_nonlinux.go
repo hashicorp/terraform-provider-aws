@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc/grpclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var once sync.Once

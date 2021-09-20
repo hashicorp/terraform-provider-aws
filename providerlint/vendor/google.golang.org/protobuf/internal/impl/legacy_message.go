@@ -19,6 +19,7 @@ import (
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
 	piface "google.golang.org/protobuf/runtime/protoiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // legacyWrapMessage wraps v as a protoreflect.Message,

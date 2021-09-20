@@ -7,6 +7,7 @@ package xz
 import (
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // putUint32LE puts the little-endian representation of x into the first

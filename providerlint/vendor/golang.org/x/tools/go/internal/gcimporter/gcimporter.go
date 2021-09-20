@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"text/scanner"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // debugging/development support

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/mitchellh/reflectwalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const tagKey = "copy"

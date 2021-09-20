@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var interfaceType = reflect.TypeOf((*interface{})(nil)).Elem()

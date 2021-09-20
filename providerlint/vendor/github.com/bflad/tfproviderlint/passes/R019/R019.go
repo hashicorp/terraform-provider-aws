@@ -8,6 +8,7 @@ import (
 
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatahaschangescallexpr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for (*schema.ResourceData).HasChanges() calls with many arguments

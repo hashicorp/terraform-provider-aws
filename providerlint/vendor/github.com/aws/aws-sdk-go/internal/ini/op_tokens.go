@@ -2,6 +2,7 @@ package ini
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

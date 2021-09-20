@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An emptyCtx is never canceled, has no values, and has no deadline. It is not

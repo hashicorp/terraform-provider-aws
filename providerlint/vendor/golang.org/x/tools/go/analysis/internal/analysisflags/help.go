@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const help = `PROGNAME is a tool for static analysis of Go programs.

@@ -9,6 +9,7 @@ package unix
 
 import (
 	"runtime"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Round the length of a raw sockaddr up to align it properly.

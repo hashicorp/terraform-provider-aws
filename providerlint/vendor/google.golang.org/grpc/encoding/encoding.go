@@ -25,6 +25,7 @@ package encoding
 import (
 	"io"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Identity specifies the optional encoding for uncompressed streams.

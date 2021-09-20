@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"google.golang.org/api/internal/third_party/uritemplates"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ContentTyper is an interface for Readers which know (or would like

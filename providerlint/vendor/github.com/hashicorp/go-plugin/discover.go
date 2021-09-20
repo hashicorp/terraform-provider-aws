@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Discover discovers plugins that are in a given directory.

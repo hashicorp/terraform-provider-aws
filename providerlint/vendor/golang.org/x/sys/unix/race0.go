@@ -9,6 +9,7 @@ package unix
 
 import (
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const raceenabled = false

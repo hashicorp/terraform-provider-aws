@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/internal/flags"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	preg "google.golang.org/protobuf/reflect/protoregistry"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type fieldInfo struct {

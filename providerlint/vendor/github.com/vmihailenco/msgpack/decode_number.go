@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (d *Decoder) skipN(n int) error {

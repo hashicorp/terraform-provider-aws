@@ -10,6 +10,7 @@ package unix
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Go implementation of C mostly found in /usr/src/sys/kern/subr_capability.c

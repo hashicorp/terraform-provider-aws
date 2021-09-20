@@ -2,6 +2,7 @@ package hclsyntax
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ParseConfig parses the given buffer as a whole HCL config file, returning

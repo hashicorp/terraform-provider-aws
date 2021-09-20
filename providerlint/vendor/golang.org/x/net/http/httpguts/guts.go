@@ -12,6 +12,7 @@ package httpguts
 import (
 	"net/textproto"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValidTrailerHeader reports whether name is a valid header field name to appear

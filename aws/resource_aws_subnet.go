@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSubnet() *schema.Resource {
@@ -50,13 +51,13 @@ func ResourceSubnet() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateIpv4CIDRNetworkAddress,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
 
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateIpv6CIDRNetworkAddress,
+				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 			},
 
 			"availability_zone": {
@@ -97,7 +98,7 @@ func ResourceSubnet() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"assign_ipv6_address_on_creation": {

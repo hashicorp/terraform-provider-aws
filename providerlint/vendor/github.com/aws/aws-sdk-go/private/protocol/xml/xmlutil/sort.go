@@ -3,6 +3,7 @@ package xmlutil
 import (
 	"encoding/xml"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type xmlAttrSlice []xml.Attr

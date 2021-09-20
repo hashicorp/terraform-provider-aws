@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // analysistest testing with the actual keyvaluetags internal package requires

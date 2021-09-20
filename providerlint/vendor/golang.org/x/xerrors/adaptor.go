@@ -10,6 +10,7 @@ import (
 	"io"
 	"reflect"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FormatError calls the FormatError method of f with an errors.Printer

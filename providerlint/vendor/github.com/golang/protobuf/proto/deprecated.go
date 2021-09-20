@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	protoV2 "google.golang.org/protobuf/proto"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

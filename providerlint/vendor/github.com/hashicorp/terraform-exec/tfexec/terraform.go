@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type printfer interface {

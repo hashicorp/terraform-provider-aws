@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RetryFuncInfo represents all gathered RetryFunc data for easier access

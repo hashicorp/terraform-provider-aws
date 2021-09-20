@@ -17,6 +17,7 @@ package internal
 import (
 	"strings"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const labelKeySizeLimit = 100

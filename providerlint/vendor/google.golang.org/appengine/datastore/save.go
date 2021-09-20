@@ -15,6 +15,7 @@ import (
 
 	"google.golang.org/appengine"
 	pb "google.golang.org/appengine/internal/datastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func toUnixMicro(t time.Time) int64 {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type navigation struct {

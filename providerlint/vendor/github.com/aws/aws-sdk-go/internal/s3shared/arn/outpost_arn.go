@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // OutpostARN interface that should be satisfied by outpost ARNs

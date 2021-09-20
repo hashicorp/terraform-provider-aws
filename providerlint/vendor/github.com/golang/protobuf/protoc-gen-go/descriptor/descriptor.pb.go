@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Symbols defined in public import of google/protobuf/descriptor.proto.

@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // deduplicate a slice of strings

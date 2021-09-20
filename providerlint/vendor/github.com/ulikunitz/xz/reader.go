@@ -16,6 +16,7 @@ import (
 
 	"github.com/ulikunitz/xz/internal/xlog"
 	"github.com/ulikunitz/xz/lzma"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ReaderConfig defines the parameters for the xz reader. The

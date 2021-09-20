@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/appengine"
 	pb "google.golang.org/appengine/internal/datastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

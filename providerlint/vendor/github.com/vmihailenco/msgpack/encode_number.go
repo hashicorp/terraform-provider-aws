@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EncodeUint8 encodes an uint8 in 2 bytes preserving type of the number.

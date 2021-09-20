@@ -10,6 +10,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Hook is the type of a function that is called once before each HTTP request

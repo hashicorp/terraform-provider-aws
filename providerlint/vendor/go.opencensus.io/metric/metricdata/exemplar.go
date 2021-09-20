@@ -16,6 +16,7 @@ package metricdata
 
 import (
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Exemplars keys.

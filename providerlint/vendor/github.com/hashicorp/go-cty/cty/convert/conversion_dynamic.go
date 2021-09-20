@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // dynamicFixup deals with just-in-time conversions of values that were

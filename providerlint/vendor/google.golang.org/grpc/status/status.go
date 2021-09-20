@@ -35,6 +35,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/internal/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Status references google.golang.org/grpc/internal/status. It represents an

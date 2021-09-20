@@ -3,6 +3,7 @@ package ini
 import (
 	"fmt"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ParseState represents the current state of the parser.

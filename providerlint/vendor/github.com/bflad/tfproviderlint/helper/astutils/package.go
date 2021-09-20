@@ -6,6 +6,7 @@ import (
 	"go/types"
 	"regexp"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsModulePackageReceiverMethod returns true if the module and package suffix (for vendoring), receiver name, and method name match

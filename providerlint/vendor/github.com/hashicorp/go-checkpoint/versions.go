@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // VersionsParams are the parameters for a versions request.

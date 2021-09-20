@@ -13,6 +13,7 @@ import (
 	"github.com/bflad/tfproviderlint/xpasses/XS001"
 	"github.com/bflad/tfproviderlint/xpasses/XS002"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AllChecks contains all Analyzers that report issues

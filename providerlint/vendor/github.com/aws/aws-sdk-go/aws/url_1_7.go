@@ -6,6 +6,7 @@ package aws
 import (
 	"net/url"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // URLHostname will extract the Hostname without port from the URL value.

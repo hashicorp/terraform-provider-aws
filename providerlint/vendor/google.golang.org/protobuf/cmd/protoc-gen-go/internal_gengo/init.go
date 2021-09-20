@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 
 	"google.golang.org/protobuf/types/descriptorpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type fileInfo struct {

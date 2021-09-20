@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/jstemmer/go-junit-report/parser"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // JUnitTestSuites is a collection of JUnit test suites.

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"unicode"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 /* This is a tree based interpreter.  It walks the AST and directly

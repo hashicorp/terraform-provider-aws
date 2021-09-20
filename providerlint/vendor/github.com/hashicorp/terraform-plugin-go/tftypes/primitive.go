@@ -3,6 +3,7 @@ package tftypes
 import (
 	"fmt"
 	"math/big"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

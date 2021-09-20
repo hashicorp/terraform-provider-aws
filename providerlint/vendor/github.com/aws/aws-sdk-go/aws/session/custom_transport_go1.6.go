@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Transport that should be used when a custom CA bundle is specified with the

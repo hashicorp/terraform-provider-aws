@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"hash/crc32"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const preludeLen = 8

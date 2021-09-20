@@ -6,6 +6,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetchangeassignstmt"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for (schema.ResourceData).GetChange() usage that should prefer (schema.ResourceData).Get()

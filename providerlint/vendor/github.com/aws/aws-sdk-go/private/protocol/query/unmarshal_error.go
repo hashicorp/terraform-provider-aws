@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UnmarshalErrorHandler is a name request handler to unmarshal request errors

@@ -14,6 +14,7 @@ import (
 	"net/rpc"
 
 	"google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Plugin is the interface that is implemented to serve/connect to an

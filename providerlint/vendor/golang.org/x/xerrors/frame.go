@@ -6,6 +6,7 @@ package xerrors
 
 import (
 	"runtime"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Frame contains part of a call stack.

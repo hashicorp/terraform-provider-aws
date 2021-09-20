@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc/balancer/base"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/internal/grpcrand"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Name is the name of round_robin balancer.

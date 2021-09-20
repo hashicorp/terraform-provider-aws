@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 
 	"golang.org/x/crypto/openpgp/errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // OpaquePacket represents an OpenPGP packet as raw, unparsed data. This is

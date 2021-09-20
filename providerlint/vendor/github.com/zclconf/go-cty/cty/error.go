@@ -2,6 +2,7 @@ package cty
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PathError is a specialization of error that represents where in a

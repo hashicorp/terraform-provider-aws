@@ -1,7 +1,8 @@
-package net
+package verify
 
 import (
 	"net"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CIDRBlocksEqual returns whether or not two CIDR blocks are equal:

@@ -7,6 +7,7 @@ package lzma
 import (
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ErrLimit indicates that the limit of the LimitedByteWriter has been

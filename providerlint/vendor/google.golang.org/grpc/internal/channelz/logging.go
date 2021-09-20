@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/grpclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var logger = grpclog.Component("channelz")

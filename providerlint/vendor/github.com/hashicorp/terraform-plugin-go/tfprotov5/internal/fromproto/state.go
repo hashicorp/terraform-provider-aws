@@ -3,6 +3,7 @@ package fromproto
 import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func RawState(in *tfplugin5.RawState) *tfprotov5.RawState {

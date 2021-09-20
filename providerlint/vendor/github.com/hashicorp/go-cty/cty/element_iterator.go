@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ElementIterator is the interface type returned by Value.ElementIterator to

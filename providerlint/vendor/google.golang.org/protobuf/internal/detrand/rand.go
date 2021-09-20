@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Disable disables detrand such that all functions returns the zero value.

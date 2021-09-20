@@ -19,6 +19,7 @@ import (
 
 	hclog "github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CoreProtocolVersion is the ProtocolVersion of the plugin system itself.

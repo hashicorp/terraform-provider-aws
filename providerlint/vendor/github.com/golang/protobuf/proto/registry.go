@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoimpl"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // filePath is the path to the proto source file.

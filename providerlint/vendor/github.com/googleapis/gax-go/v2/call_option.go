@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CallOption is an option used by Invoke to control behaviors of RPC calls.

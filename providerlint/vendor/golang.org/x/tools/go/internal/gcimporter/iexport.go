@@ -19,6 +19,7 @@ import (
 	"math/big"
 	"reflect"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Current indexed export format version. Increase with each format change.

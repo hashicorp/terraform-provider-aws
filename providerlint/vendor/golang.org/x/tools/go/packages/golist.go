@@ -26,6 +26,7 @@ import (
 	"golang.org/x/tools/go/internal/packagesdriver"
 	"golang.org/x/tools/internal/gocommand"
 	"golang.org/x/xerrors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // debug controls verbose logging.

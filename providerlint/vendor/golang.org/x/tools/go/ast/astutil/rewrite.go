@@ -9,6 +9,7 @@ import (
 	"go/ast"
 	"reflect"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An ApplyFunc is invoked by Apply for each node n, even if n is nil,

@@ -19,6 +19,7 @@ package tag
 import (
 	"context"
 	"runtime/pprof"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func do(ctx context.Context, f func(ctx context.Context)) {

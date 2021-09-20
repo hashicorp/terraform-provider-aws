@@ -5,6 +5,7 @@ import (
 	"bytes"
 
 	"github.com/apparentlymart/go-textseg/v12/textseg"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RangeScanner is a helper that will scan over a buffer using a bufio.SplitFunc

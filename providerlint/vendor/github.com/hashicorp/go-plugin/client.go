@@ -23,6 +23,7 @@ import (
 	"time"
 
 	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // If this is 1, then we've called CleanupClients. This can be used

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Tag is a key value pair that can be propagated on wire.

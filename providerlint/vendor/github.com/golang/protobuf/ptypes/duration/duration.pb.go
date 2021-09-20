@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Symbols defined in public import of google/protobuf/duration.proto.

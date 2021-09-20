@@ -10,6 +10,7 @@ package context
 import (
 	"context" // standard library's context, as of Go 1.7
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

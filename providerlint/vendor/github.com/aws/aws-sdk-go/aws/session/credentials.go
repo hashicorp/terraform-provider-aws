@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/defaults"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/shareddefaults"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func resolveCredentials(cfg *aws.Config,

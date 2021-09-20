@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Unmarshaler provides the interface for unmarshaling a EventStream

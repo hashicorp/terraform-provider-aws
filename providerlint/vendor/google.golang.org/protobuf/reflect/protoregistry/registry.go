@@ -23,6 +23,7 @@ import (
 
 	"google.golang.org/protobuf/internal/errors"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ignoreConflict reports whether to ignore a registration conflict

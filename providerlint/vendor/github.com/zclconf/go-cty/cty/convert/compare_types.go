@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // compareTypes implements a preference order for unification.

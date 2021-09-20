@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

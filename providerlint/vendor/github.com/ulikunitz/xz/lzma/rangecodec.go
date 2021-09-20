@@ -7,6 +7,7 @@ package lzma
 import (
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // rangeEncoder implements range encoding of single bits. The low value can

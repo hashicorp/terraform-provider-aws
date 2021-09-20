@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Provides a io.Writer to shim the data out of *log.Logger

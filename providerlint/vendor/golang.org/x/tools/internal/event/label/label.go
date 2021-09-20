@@ -9,6 +9,7 @@ import (
 	"io"
 	"reflect"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Key is used as the identity of a Label.

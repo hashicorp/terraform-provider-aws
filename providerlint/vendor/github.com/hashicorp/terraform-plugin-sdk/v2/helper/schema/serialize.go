@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func SerializeValueForHash(buf *bytes.Buffer, val interface{}, schema *Schema) {

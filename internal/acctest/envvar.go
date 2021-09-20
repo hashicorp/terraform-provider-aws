@@ -7,6 +7,7 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Standard AWS environment variables used in the Terraform AWS Provider testing.

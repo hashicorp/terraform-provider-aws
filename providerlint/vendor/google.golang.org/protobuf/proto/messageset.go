@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/internal/flags"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (o MarshalOptions) sizeMessageSet(m protoreflect.Message) (size int) {

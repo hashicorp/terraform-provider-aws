@@ -16,6 +16,7 @@ import (
 	"sort"
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SockaddrDatalink implements the Sockaddr interface for AF_LINK type sockets.

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"hash/crc32"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // String hashes a string to a unique hashcode.

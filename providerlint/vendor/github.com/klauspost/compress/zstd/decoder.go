@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Decoder provides decoding of zstandard streams.

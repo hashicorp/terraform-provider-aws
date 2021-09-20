@@ -32,6 +32,7 @@ import (
 
 	"google.golang.org/api/internal"
 	"google.golang.org/api/transport/cert"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

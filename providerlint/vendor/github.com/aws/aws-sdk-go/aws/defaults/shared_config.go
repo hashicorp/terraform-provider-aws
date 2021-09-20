@@ -2,6 +2,7 @@ package defaults
 
 import (
 	"github.com/aws/aws-sdk-go/internal/shareddefaults"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SharedCredentialsFilename returns the SDK's default file path

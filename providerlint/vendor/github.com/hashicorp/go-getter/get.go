@@ -20,6 +20,7 @@ import (
 	"syscall"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Getter defines the interface that schemes must implement to download

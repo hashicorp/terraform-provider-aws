@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"golang.org/x/net/context/ctxhttp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Token represents the credentials used to authorize

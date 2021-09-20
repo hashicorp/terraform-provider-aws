@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/logutils"
 	testing "github.com/mitchellh/go-testing-interface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // These are the environmental variables that determine if we log, and if

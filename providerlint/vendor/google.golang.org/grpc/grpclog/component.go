@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/internal/grpclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // componentData records the settings for a component.

@@ -7,6 +7,7 @@ package lzma
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // decoderDict provides the dictionary for the decoder. The whole

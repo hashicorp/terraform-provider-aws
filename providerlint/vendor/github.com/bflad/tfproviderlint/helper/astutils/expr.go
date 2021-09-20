@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"go/ast"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsExprTypeArrayString returns true if the expression matches []string

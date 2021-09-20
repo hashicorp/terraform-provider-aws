@@ -6,6 +6,7 @@ package proto
 
 import (
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HasExtension reports whether an extension field is populated.

@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	anypb "github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const urlPrefix = "type.googleapis.com/"

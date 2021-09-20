@@ -7,6 +7,7 @@ import (
 
 	"github.com/bflad/tfproviderlint/helper/astutils"
 	"github.com/bflad/tfproviderlint/helper/terraformtype/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsFuncTypeCRUDFunc returns true if the FuncType matches expected parameters and results types

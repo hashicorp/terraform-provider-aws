@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

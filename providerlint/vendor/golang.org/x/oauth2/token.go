@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // expiryDelta determines how earlier a token should be considered

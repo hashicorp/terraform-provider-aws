@@ -5,6 +5,7 @@ package isatty
 
 import (
 	"golang.org/x/sys/unix"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsTerminal returns true if the given file descriptor is a terminal.

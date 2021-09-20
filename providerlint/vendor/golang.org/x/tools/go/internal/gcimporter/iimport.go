@@ -18,6 +18,7 @@ import (
 	"go/types"
 	"io"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type intReader struct {

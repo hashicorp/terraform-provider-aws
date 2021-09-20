@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // S3Getter is a Getter implementation that will download a module from

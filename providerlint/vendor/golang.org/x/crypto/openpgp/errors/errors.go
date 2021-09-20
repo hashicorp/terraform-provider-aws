@@ -7,6 +7,7 @@ package errors // import "golang.org/x/crypto/openpgp/errors"
 
 import (
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A StructuralError is returned when OpenPGP data is found to be syntactically

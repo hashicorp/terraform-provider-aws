@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	netcontext "golang.org/x/net/context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // These functions are implementations of the wrapper functions

@@ -14,6 +14,7 @@ import (
 	"sync"
 	"syscall"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

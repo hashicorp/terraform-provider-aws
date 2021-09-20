@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"golang.org/x/tools/internal/gocommand"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var debug = false

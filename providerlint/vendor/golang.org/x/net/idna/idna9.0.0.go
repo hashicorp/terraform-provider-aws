@@ -25,6 +25,7 @@ import (
 
 	"golang.org/x/text/secure/bidirule"
 	"golang.org/x/text/unicode/norm"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NOTE: Unlike common practice in Go APIs, the functions will return a

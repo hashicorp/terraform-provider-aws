@@ -13,6 +13,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoimpl"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // StructProperties represents protocol buffer type information for a

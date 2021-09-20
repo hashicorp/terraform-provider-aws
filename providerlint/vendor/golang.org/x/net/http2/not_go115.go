@@ -10,6 +10,7 @@ package http2
 import (
 	"context"
 	"crypto/tls"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // dialTLSWithContext opens a TLS connection.

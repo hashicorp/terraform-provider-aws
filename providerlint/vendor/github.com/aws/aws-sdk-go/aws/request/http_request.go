@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func copyHTTPRequest(r *http.Request, body io.ReadCloser) *http.Request {

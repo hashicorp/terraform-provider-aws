@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ImpliedType returns the cty Type implied by the structure of the given

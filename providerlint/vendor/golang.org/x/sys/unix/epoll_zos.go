@@ -9,6 +9,7 @@ package unix
 
 import (
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This file simulates epoll on z/OS using poll.

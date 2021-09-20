@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/crypto/openpgp/elgamal"
 	"golang.org/x/crypto/openpgp/errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const encryptedKeyVersion = 3

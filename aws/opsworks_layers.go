@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
@@ -63,7 +64,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		"custom_instance_profile_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			ValidateFunc: validateArn,
+			ValidateFunc: verify.ValidARN,
 		},
 
 		"elastic_load_balancer": {

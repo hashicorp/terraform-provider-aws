@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (d *Decoder) bytesLen(c codes.Code) (int, error) {

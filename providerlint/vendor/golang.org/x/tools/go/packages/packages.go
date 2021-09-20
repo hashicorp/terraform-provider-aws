@@ -27,6 +27,7 @@ import (
 	"golang.org/x/tools/internal/gocommand"
 	"golang.org/x/tools/internal/packagesinternal"
 	"golang.org/x/tools/internal/typesinternal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A LoadMode controls the amount of detail to return when loading.

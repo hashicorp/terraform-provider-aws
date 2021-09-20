@@ -13,6 +13,7 @@ import (
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -98,7 +99,7 @@ func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.R
 
 	var validator schema.SchemaValidateFunc
 	if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineMemcached {
-		validator = validateVersionString
+		validator = validVersionString
 	} else {
 		validator = ValidateElastiCacheRedisVersionString
 	}

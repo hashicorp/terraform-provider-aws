@@ -3,6 +3,7 @@ package hclog
 import (
 	"bytes"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type writer struct {

@@ -2,6 +2,7 @@ package hclsyntax
 
 import (
 	"github.com/agext/levenshtein"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // nameSuggestion tries to find a name from the given slice of suggested names

@@ -9,6 +9,7 @@ package unix
 
 import (
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This file simulates fstatfs on z/OS using fstatvfs and w_getmntent.

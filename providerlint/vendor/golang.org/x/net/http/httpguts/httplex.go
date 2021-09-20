@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/net/idna"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var isTokenTable = [127]bool{

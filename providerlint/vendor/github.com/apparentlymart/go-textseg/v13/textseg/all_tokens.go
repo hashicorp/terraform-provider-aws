@@ -3,6 +3,7 @@ package textseg
 import (
 	"bufio"
 	"bytes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AllTokens is a utility that uses a bufio.SplitFunc to produce a slice of

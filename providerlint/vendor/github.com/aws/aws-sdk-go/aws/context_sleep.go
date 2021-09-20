@@ -2,6 +2,7 @@ package aws
 
 import (
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SleepWithContext will wait for the timer duration to expire, or the context

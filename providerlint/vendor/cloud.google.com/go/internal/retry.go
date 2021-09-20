@@ -19,6 +19,7 @@ import (
 	"time"
 
 	gax "github.com/googleapis/gax-go/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Retry calls the supplied function f repeatedly according to the provided

@@ -22,6 +22,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"google.golang.org/protobuf/types/descriptorpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Resolver is the resolver used by NewFile to resolve dependencies.

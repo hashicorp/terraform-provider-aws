@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"runtime"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func bytes2iovec(bs [][]byte) []Iovec {

@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"google.golang.org/api/googleapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const sniffBuffSize = 512

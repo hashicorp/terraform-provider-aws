@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // unwrapper unwraps the value to the underlying value.

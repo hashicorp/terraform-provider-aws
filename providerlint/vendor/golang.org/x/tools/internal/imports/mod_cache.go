@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"golang.org/x/tools/internal/gopathwalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // To find packages to import, the resolver needs to know about all of the

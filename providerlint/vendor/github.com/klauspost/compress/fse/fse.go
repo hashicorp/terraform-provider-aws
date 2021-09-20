@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"math/bits"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

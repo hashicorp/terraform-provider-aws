@@ -5,6 +5,7 @@ import (
 	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialcallexpr"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialselectorexpr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var Analyzer = analysisutils.DeprecatedReceiverMethodSelectorExprAnalyzer(

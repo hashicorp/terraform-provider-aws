@@ -14,6 +14,7 @@ import (
 	pimpl "google.golang.org/protobuf/internal/impl"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
 	preg "google.golang.org/protobuf/reflect/protoregistry"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Builder constructs type descriptors from a raw file descriptor

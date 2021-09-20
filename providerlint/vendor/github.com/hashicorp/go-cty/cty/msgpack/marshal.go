@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-cty/cty/convert"
 	"github.com/vmihailenco/msgpack"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Marshal produces a msgpack serialization of the given value that

@@ -7,6 +7,7 @@ package lzma
 import (
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // breader provides the ReadByte function for a Reader. It doesn't read

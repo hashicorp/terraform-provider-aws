@@ -9,6 +9,7 @@ import (
 	"github.com/bflad/gopaniccheck/passes/paniccallexpr"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for Go panic usage

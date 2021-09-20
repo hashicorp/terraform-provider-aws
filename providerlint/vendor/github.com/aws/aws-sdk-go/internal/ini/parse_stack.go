@@ -3,6 +3,7 @@ package ini
 import (
 	"bytes"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ParseStack is a stack that contains a container, the stack portion,

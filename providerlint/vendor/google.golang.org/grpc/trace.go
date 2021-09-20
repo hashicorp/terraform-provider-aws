@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"golang.org/x/net/trace"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EnableTracing controls whether to trace RPCs using the golang.org/x/net/trace package.

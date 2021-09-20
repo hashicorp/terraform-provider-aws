@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"unicode/utf16"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ToUTF16Column calculates the utf16 column expressed by the point given the

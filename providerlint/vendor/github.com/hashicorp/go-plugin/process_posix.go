@@ -5,6 +5,7 @@ package plugin
 import (
 	"os"
 	"syscall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // _pidAlive tests whether a process is alive or not by sending it Signal 0,

@@ -7,6 +7,7 @@ package proto
 import (
 	protoV2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Size returns the size in bytes of the wire-format encoding of m.

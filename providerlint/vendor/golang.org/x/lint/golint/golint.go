@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"golang.org/x/lint"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

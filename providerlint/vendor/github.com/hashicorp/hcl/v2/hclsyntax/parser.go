@@ -9,6 +9,7 @@ import (
 	"github.com/apparentlymart/go-textseg/v12/textseg"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type parser struct {

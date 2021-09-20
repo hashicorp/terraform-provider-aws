@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var magicBytes = [4]byte{0x35, 0x77, 0x69, 0xFB}

@@ -15,6 +15,7 @@ import (
 	"sync"
 
 	"golang.org/x/net/internal/timeseries"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

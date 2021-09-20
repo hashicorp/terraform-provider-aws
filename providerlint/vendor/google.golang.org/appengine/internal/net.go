@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var limitSem = make(chan int, 100) // TODO(dsymonds): Use environment variable.

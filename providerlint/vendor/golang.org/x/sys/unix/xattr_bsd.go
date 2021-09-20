@@ -10,6 +10,7 @@ package unix
 import (
 	"strings"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Derive extattr namespace and attribute name

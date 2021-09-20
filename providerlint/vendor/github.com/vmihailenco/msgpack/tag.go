@@ -2,6 +2,7 @@ package msgpack
 
 import (
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type tagOptions string

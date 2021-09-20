@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var stringTrue = cty.StringVal("true")

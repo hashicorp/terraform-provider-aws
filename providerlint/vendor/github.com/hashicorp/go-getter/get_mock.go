@@ -2,6 +2,7 @@ package getter
 
 import (
 	"net/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MockGetter is an implementation of Getter that can be used for tests.

@@ -19,6 +19,7 @@ import (
 
 	"golang.org/x/crypto/openpgp/errors"
 	"golang.org/x/crypto/openpgp/s2k"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

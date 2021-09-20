@@ -3,6 +3,7 @@ package jmespath
 import (
 	"errors"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsFalse determines if an object is false based on the JMESPath spec.

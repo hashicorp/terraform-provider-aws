@@ -14,6 +14,7 @@ import (
 	"google.golang.org/api/internal/impersonate"
 
 	"golang.org/x/oauth2/google"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Creds returns credential information obtained from DialSettings, or if none, then

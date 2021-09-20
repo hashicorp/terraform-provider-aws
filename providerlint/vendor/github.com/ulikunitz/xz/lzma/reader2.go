@@ -9,6 +9,7 @@ import (
 	"io"
 
 	"github.com/ulikunitz/xz/internal/xlog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Reader2Config stores the parameters for the LZMA2 reader.

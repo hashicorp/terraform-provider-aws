@@ -60,6 +60,7 @@ import (
 	option "google.golang.org/api/option"
 	internaloption "google.golang.org/api/option/internaloption"
 	htransport "google.golang.org/api/transport/http"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Always reference these packages, just in case the auto-generated code

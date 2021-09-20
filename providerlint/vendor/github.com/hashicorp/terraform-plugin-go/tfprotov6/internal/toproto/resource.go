@@ -3,6 +3,7 @@ package toproto
 import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ValidateResourceConfig_Request(in *tfprotov6.ValidateResourceConfigRequest) (*tfplugin6.ValidateResourceConfig_Request, error) {

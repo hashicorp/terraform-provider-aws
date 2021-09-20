@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	remotepb "google.golang.org/appengine/internal/remote_api"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // errorCodeMaps is a map of service name to the error code map for the service.

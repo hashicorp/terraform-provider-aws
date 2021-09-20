@@ -13,6 +13,7 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EcsContainerDefinitionsAreEquivalent determines equality between two ECS container definition JSON strings

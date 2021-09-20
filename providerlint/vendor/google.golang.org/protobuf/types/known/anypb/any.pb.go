@@ -126,6 +126,7 @@ import (
 	reflect "reflect"
 	strings "strings"
 	sync "sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // `Any` contains an arbitrary serialized protocol buffer message along with a

@@ -20,6 +20,7 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // If debugFormat is set, each integer and string value is preceded by a marker

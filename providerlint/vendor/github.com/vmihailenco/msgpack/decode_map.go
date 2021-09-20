@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const mapElemsAllocLimit = 1e4

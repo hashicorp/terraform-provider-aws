@@ -11,6 +11,7 @@ import empty "github.com/golang/protobuf/ptypes/empty"
 import (
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

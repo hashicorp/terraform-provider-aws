@@ -9,6 +9,7 @@ import (
 	"exampleresource/cmd/resource"
 	"github.com/aws-cloudformation/cloudformation-cli-go-plugin/cfn"
 	"github.com/aws-cloudformation/cloudformation-cli-go-plugin/cfn/handler"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Handler is a container for the CRUDL actions exported by resources

@@ -90,6 +90,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/sdkrand"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // StdinTokenProvider will prompt on stderr and read from stdin for a string value.

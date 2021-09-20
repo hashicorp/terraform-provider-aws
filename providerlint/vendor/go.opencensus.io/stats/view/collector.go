@@ -21,6 +21,7 @@ import (
 
 	"go.opencensus.io/internal/tagencoding"
 	"go.opencensus.io/tag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type collector struct {

@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/bidi"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This file contains an implementation of RFC 5893: Right-to-Left Scripts for

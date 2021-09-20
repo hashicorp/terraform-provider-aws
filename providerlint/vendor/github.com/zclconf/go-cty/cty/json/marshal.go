@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func marshal(val cty.Value, t cty.Type, path cty.Path, b *bytes.Buffer) error {

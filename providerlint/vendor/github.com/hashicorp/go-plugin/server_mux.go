@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ServeMuxMap is the type that is used to configure ServeMux

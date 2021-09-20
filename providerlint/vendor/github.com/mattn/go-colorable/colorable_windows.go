@@ -14,6 +14,7 @@ import (
 	"unsafe"
 
 	"github.com/mattn/go-isatty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

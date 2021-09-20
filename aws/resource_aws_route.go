@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var routeValidDestinations = []string{
@@ -70,7 +71,7 @@ func ResourceRoute() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
-					validateIpv4CIDRNetworkAddress,
+					verify.ValidIPv4CIDRNetworkAddress,
 				),
 			},
 			"destination_ipv6_cidr_block": {
@@ -79,7 +80,7 @@ func ResourceRoute() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
-					validateIpv6CIDRNetworkAddress,
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
 			},

@@ -5,6 +5,7 @@ package ini
 
 import (
 	"bytes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Fuzz(data []byte) int {

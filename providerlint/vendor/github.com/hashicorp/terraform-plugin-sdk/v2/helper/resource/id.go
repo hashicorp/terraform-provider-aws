@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const UniqueIdPrefix = `terraform-`

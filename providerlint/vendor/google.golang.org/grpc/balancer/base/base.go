@@ -33,6 +33,7 @@ package base
 import (
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PickerBuilder creates balancer.Picker.

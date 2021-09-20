@@ -8,6 +8,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BoolVal returns a Value of type Number whose internal value is the given

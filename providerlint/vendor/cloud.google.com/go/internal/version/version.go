@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"strings"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Repo is the current version of the client libraries in this

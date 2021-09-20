@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"golang.org/x/tools/internal/span"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TextEdit represents a change to a section of a document.

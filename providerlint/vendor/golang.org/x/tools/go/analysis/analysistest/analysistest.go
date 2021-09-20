@@ -25,6 +25,7 @@ import (
 	"golang.org/x/tools/internal/span"
 	"golang.org/x/tools/internal/testenv"
 	"golang.org/x/tools/txtar"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WriteFiles is a helper function that creates a temporary directory

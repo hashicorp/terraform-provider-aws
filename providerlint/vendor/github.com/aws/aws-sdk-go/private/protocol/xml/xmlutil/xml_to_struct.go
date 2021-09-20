@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A XMLNode contains the values to be encoded or decoded.

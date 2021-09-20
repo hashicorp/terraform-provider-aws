@@ -13,6 +13,7 @@ import (
 
 	"google.golang.org/protobuf/internal/flags"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EnforceUTF8 reports whether to enforce strict UTF-8 validation.

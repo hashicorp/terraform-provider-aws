@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/internal/sdkuri"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // getToken uses the duration to return a token for EC2 metadata service,

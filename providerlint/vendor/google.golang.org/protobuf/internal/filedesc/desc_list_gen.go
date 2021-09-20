@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/internal/descfmt"
 	"google.golang.org/protobuf/internal/pragma"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type Enums struct {

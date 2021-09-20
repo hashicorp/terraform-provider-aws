@@ -12,6 +12,7 @@ import (
 	"math"
 	"strings"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // These parameter values are specified in section 5.

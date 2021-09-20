@@ -23,6 +23,7 @@ package credentials
 import (
 	"crypto/tls"
 	"net/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SPIFFEIDFromState is a no-op for appengine builds.

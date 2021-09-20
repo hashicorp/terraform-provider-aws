@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-getter"
 	"golang.org/x/crypto/openpgp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ensureInstallDir(installDir string) (string, error) {

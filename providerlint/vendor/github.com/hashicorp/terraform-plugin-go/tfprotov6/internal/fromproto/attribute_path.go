@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var ErrUnknownAttributePathStepType = errors.New("unknown type of AttributePath_Step")

@@ -80,6 +80,7 @@ import (
 	"time"
 
 	"golang.org/x/net/internal/timeseries"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DebugUseAfterFinish controls whether to debug uses of Trace values after finishing.

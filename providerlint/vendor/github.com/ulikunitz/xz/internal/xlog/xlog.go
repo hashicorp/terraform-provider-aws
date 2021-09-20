@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // The flags define what information is prefixed to each log entry

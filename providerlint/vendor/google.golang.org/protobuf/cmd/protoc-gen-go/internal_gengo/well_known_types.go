@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/internal/genid"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Specialized support for well-known types are hard-coded into the generator

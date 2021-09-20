@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-cty/cty/convert"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FlatmapValueFromHCL2 converts a value from HCL2 (really, from the cty dynamic

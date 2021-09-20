@@ -6,7 +6,8 @@
 
 package impl
 
-import ()
+import (	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
 
 func mergeBool(dst, src pointer, _ *coderFieldInfo, _ mergeOptions) {
 	*dst.Bool() = *src.Bool()

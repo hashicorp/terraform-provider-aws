@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc/internal/channelz"
 	"google.golang.org/grpc/internal/transport"
 	"google.golang.org/grpc/status"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // pickerWrapper is a wrapper of balancer.Picker. It blocks on certain pick

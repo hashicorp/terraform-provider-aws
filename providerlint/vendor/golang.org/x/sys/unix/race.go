@@ -10,6 +10,7 @@ package unix
 import (
 	"runtime"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const raceenabled = true

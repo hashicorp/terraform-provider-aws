@@ -16,6 +16,7 @@ import (
 
 	"golang.org/x/oauth2"
 	"google.golang.org/appengine"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

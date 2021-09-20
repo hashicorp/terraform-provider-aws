@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 
 	"github.com/hashicorp/yamux"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RPCClient connects to an RPCServer over net/rpc to dispense plugin types.

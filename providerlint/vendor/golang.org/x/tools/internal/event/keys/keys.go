@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"golang.org/x/tools/internal/event/label"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Value represents a key for untyped values.

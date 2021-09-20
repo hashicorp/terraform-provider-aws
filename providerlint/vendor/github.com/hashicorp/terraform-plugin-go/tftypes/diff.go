@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValueDiff expresses a subset of a Value that is different between two

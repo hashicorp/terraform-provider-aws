@@ -8,6 +8,7 @@ import (
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type Operation struct {

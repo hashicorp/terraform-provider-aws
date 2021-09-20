@@ -3,6 +3,7 @@ package tftypes
 import (
 	"fmt"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Map is a Terraform type representing an unordered collection of elements,

@@ -15,6 +15,7 @@ import (
 
 	basepb "google.golang.org/appengine/internal/base"
 	pb "google.golang.org/appengine/internal/datastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var transactionSetters = make(map[reflect.Type]reflect.Value)

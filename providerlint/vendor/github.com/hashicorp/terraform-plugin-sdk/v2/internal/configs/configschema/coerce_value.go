@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-cty/cty/convert"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CoerceValue attempts to force the given value to conform to the type

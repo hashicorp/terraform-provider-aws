@@ -17,6 +17,7 @@ import (
 	ptext "google.golang.org/protobuf/internal/encoding/text"
 	errors "google.golang.org/protobuf/internal/errors"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Format is the serialization format used to represent the default value.

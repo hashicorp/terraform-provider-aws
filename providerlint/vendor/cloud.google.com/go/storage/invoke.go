@@ -19,6 +19,7 @@ import (
 
 	"cloud.google.com/go/internal"
 	gax "github.com/googleapis/gax-go/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // runWithRetry calls the function until it returns nil or a non-retryable error, or

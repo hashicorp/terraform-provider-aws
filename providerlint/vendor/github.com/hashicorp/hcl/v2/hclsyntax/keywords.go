@@ -2,6 +2,7 @@ package hclsyntax
 
 import (
 	"bytes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type Keyword []byte

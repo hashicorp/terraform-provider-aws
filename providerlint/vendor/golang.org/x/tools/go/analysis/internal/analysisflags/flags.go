@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // flags common to all {single,multi,unit}checkers.

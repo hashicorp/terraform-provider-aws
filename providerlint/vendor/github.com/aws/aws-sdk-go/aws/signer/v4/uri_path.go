@@ -6,6 +6,7 @@ package v4
 import (
 	"net/url"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func getURIPath(u *url.URL) string {

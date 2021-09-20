@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"go.opencensus.io/trace"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type spanAnnotator struct {

@@ -31,6 +31,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -330,7 +331,7 @@ func ResourceInstance() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							ExactlyOneOf: []string{"launch_template.0.name", "launch_template.0.id"},
-							ValidateFunc: validateLaunchTemplateId,
+							ValidateFunc: verify.ValidLaunchTemplateID,
 						},
 						"name": {
 							Type:         schema.TypeString,
@@ -338,7 +339,7 @@ func ResourceInstance() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							ExactlyOneOf: []string{"launch_template.0.name", "launch_template.0.id"},
-							ValidateFunc: validateLaunchTemplateName,
+							ValidateFunc: verify.ValidLaunchTemplateName,
 						},
 						"version": {
 							Type:         schema.TypeString,
@@ -590,7 +591,7 @@ func ResourceInstance() *schema.Resource {
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
 					s := v.(string)
-					if !isBase64Encoded([]byte(s)) {
+					if !verify.IsBase64Encoded([]byte(s)) {
 						errs = append(errs, fmt.Errorf(
 							"%s: must be base64-encoded", name,
 						))
@@ -2625,7 +2626,7 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 	userDataBase64 := d.Get("user_data_base64").(string)
 
 	if userData != "" {
-		opts.UserData64 = aws.String(base64Encode([]byte(userData)))
+		opts.UserData64 = aws.String(verify.Base64Encode([]byte(userData)))
 	} else if userDataBase64 != "" {
 		opts.UserData64 = aws.String(userDataBase64)
 	}

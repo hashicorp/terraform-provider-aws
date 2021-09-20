@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-plugin/internal/plugin"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GRPCControllerServer handles shutdown calls to terminate the server when the

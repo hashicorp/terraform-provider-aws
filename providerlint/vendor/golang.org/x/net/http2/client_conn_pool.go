@@ -12,6 +12,7 @@ import (
 	"errors"
 	"net/http"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ClientConnPool manages a pool of HTTP/2 client connections.

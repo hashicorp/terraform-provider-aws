@@ -2,6 +2,7 @@ package awsutil
 
 import (
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DeepEqual returns if the two values are deeply equal like reflect.DeepEqual.

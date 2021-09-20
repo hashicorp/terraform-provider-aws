@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type modelDefinition map[string]json.RawMessage

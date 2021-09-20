@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WorkspaceList represents the workspace list subcommand to the Terraform CLI.

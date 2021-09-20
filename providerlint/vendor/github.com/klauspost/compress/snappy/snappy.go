@@ -21,6 +21,7 @@ package snappy
 
 import (
 	"hash/crc32"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 /*

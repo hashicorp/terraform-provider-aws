@@ -8,6 +8,7 @@ import (
 
 	"github.com/bgentry/go-netrc/netrc"
 	"github.com/mitchellh/go-homedir"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // addAuthFromNetrc adds auth information to the URL from the user's

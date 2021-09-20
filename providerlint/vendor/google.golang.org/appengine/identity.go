@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine/internal"
 	pb "google.golang.org/appengine/internal/app_identity"
 	modpb "google.golang.org/appengine/internal/modules"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AppID returns the application ID for the current application.

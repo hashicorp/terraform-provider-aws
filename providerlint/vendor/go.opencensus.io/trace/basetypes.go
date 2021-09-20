@@ -17,6 +17,7 @@ package trace
 import (
 	"fmt"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type (

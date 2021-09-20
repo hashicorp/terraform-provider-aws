@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const subprocessCurrentSigil = "4acd63807899403ca4859f5bb948d2c6"

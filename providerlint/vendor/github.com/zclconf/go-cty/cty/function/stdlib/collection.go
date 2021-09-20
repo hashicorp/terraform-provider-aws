@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var HasIndexFunc = function.New(&function.Spec{

@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/zclconf/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // setRules provides a Rules implementation for the ./set package that

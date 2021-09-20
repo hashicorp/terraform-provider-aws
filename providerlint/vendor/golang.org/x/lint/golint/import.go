@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

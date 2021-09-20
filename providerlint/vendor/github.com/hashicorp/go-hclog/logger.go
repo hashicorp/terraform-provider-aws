@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

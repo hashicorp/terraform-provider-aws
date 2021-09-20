@@ -2,6 +2,7 @@ package cty
 
 import (
 	"errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type collectionTypeImpl interface {

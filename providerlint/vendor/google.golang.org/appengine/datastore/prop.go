@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Entities with more than this many indexed properties will not be saved.

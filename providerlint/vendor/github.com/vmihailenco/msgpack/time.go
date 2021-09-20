@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vmihailenco/msgpack/codes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var timeExtId int8 = -1

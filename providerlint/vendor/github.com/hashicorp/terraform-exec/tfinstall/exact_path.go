@@ -3,6 +3,7 @@ package tfinstall
 import (
 	"context"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type ExactPathOption struct {

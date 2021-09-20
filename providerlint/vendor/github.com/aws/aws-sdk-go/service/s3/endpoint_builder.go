@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/internal/s3shared"
 	"github.com/aws/aws-sdk-go/internal/s3shared/arn"
 	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

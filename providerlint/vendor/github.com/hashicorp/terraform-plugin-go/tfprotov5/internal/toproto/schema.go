@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Schema(in *tfprotov5.Schema) (*tfplugin5.Schema, error) {

@@ -3,6 +3,7 @@ package hclsyntax
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ParseTraversalAbs parses an absolute traversal that is assumed to consume

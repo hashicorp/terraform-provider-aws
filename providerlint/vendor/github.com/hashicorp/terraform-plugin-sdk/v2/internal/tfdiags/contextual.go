@@ -2,6 +2,7 @@ package tfdiags
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AttributeValue returns a diagnostic about an attribute value in an implied current

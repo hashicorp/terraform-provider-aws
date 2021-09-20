@@ -2,6 +2,7 @@ package tfexec
 
 import (
 	"encoding/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AllowMissingConfigOption represents the -allow-missing-config flag.

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	_ "github.com/mattn/go-isatty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NewColorable returns new instance of Writer which handles escape sequence.

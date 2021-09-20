@@ -22,6 +22,7 @@ import (
 
 	"google.golang.org/appengine/internal"
 	pb "google.golang.org/appengine/internal/urlfetch"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Transport is an implementation of http.RoundTripper for

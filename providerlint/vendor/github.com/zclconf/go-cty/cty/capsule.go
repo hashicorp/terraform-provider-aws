@@ -3,6 +3,7 @@ package cty
 import (
 	"fmt"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type capsuleType struct {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func GetProviderSchema_Request(in *tfprotov5.GetProviderSchemaRequest) (*tfplugin5.GetProviderSchema_Request, error) {

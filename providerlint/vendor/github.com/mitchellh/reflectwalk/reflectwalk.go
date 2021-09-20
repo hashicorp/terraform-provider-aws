@@ -7,6 +7,7 @@ package reflectwalk
 import (
 	"errors"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PrimitiveWalker implementations are able to handle primitive values

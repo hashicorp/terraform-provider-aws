@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/private/protocol/rest"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var emptyJSON = []byte("{}")

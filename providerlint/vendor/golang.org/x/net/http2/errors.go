@@ -7,6 +7,7 @@ package http2
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // An ErrCode is an unsigned 32-bit error code as defined in the HTTP/2 spec.

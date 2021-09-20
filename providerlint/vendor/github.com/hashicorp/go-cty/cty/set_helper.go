@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-cty/cty/set"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ValueSet is to cty.Set what []cty.Value is to cty.List and

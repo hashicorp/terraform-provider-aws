@@ -9,6 +9,7 @@ package unix
 
 import (
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const _SYS_GETDIRENTRIES64 = 344

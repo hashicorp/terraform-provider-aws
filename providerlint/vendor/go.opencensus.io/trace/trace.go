@@ -26,6 +26,7 @@ import (
 
 	"go.opencensus.io/internal"
 	"go.opencensus.io/trace/tracestate"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Span represents a span of a trace.  It has an associated SpanContext, and

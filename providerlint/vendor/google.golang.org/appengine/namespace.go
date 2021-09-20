@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Namespace returns a replacement context that operates within the given namespace.

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AvoidSelectorExprRunner returns an Analyzer runner for *ast.SelectorExpr to avoid

@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/yamux"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RPCServer listens for network connections and then dispenses interface

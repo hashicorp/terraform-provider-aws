@@ -2,6 +2,7 @@ package a
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func f() {

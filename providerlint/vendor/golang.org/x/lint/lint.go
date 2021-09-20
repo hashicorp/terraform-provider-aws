@@ -25,6 +25,7 @@ import (
 
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/gcexportdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const styleGuideBase = "https://golang.org/wiki/CodeReviewComments"

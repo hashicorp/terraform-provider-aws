@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MinDictCap and MaxDictCap provide the range of supported dictionary

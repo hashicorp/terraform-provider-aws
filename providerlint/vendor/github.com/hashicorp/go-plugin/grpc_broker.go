@@ -16,6 +16,7 @@ import (
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // streamer interface is used in the broker to send/receive connection

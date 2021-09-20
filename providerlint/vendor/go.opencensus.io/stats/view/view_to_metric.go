@@ -22,6 +22,7 @@ import (
 
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/stats"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func getUnit(unit string) metricdata.Unit {

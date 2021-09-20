@@ -9,6 +9,7 @@ import (
 	"io"
 
 	"google.golang.org/api/googleapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MediaBuffer buffers data from an io.Reader to support uploading media in

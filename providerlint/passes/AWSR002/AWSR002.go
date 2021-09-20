@@ -8,6 +8,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr"
 	"github.com/hashicorp/terraform-provider-aws/awsproviderlint/helper/awsprovidertype/keyvaluetags"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for d.Set() of tags attribute that should include IgnoreConfig()

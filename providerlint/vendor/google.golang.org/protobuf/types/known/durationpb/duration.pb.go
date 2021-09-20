@@ -83,6 +83,7 @@ import (
 	reflect "reflect"
 	sync "sync"
 	time "time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Duration represents a signed, fixed-length span of time represented

@@ -9,6 +9,7 @@ package unix
 import (
 	"math/bits"
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const cpuSetSize = _CPU_SETSIZE / _NCPUBITS

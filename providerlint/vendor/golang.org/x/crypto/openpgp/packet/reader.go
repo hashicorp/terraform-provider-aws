@@ -7,6 +7,7 @@ package packet
 import (
 	"golang.org/x/crypto/openpgp/errors"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Reader reads packets from an io.Reader and allows packets to be 'unread' so

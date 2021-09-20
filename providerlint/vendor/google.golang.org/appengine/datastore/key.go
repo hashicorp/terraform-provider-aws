@@ -18,6 +18,7 @@ import (
 
 	"google.golang.org/appengine/internal"
 	pb "google.golang.org/appengine/internal/datastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type KeyRangeCollisionError struct {

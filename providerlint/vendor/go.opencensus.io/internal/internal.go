@@ -19,6 +19,7 @@ import (
 	"time"
 
 	opencensus "go.opencensus.io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UserAgent is the user agent to be added to the outgoing

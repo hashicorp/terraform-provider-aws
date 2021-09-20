@@ -6,6 +6,7 @@ package hpack
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // headerFieldTable implements a list of HeaderFields.

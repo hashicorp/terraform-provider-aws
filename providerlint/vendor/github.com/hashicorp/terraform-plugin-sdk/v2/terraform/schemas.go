@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ProviderSchema represents the schema for a provider's own configuration

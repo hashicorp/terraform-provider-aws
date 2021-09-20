@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // WaiterResourceNotReadyErrorCode is the error code returned by a waiter when

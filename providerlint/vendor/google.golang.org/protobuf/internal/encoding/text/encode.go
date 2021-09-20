@@ -13,6 +13,7 @@ import (
 
 	"google.golang.org/protobuf/internal/detrand"
 	"google.golang.org/protobuf/internal/errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // encType represents an encoding type.

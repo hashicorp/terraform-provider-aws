@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const fileScheme = "file"

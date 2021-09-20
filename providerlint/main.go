@@ -7,6 +7,7 @@ import (
 	awspasses "github.com/hashicorp/terraform-provider-aws/awsproviderlint/passes"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/multichecker"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func main() {

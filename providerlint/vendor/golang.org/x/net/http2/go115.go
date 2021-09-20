@@ -10,6 +10,7 @@ package http2
 import (
 	"context"
 	"crypto/tls"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // dialTLSWithContext uses tls.Dialer, added in Go 1.15, to open a TLS

@@ -3,6 +3,7 @@ package plugintest
 import (
 	"os"
 	"path/filepath"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func symlinkFile(src string, dest string) (err error) {

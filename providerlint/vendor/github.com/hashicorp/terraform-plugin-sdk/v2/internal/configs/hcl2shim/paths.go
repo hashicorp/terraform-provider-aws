@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RequiresReplace takes a list of flatmapped paths from a

@@ -7,6 +7,7 @@ package http2
 import (
 	"net/http"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

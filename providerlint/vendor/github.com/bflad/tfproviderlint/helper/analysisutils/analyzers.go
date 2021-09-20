@@ -9,6 +9,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AvoidSelectorExprAnalyzer returns an Analyzer for *ast.SelectorExpr to avoid

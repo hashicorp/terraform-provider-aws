@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/text/transform"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Form denotes a canonical representation of Unicode code points.

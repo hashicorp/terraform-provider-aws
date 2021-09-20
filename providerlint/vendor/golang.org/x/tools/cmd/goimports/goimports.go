@@ -23,6 +23,7 @@ import (
 
 	"golang.org/x/tools/internal/gocommand"
 	"golang.org/x/tools/internal/imports"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

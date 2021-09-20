@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	safetemp "github.com/hashicorp/go-safetemp"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // HttpGetter is a Getter implementation that will download from an HTTP

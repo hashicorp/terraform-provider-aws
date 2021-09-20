@@ -6,6 +6,7 @@ package s3
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func platformRequestHandlers(r *request.Request) {

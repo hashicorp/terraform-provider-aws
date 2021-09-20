@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/internal/descopts"
 	"google.golang.org/protobuf/internal/pragma"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsURLWithHTTPS is a SchemaValidateFunc which tests if the provided value is of type string and a valid HTTPS URL

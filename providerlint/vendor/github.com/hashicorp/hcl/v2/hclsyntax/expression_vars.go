@@ -5,6 +5,7 @@ package hclsyntax
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func (e *AnonSymbolExpr) Variables() []hcl.Traversal {

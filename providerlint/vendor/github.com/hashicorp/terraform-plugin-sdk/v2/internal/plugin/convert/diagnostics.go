@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AppendProtoDiag appends a new diagnostic from a warning string or an error.

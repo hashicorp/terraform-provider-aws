@@ -2,6 +2,7 @@ package function
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Parameter represents a parameter to a function.

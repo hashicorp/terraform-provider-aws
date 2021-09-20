@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/internal/detrand"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Error is a sentinel matching all errors produced by this package.

@@ -55,6 +55,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/internal/sync/singleflight"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AnonymousCredentials is an empty Credential object that can be used as

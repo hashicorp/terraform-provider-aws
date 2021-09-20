@@ -7,6 +7,7 @@ import (
 
 	"github.com/bflad/tfproviderlint/passes/testfuncdecl"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var Analyzer = &analysis.Analyzer{

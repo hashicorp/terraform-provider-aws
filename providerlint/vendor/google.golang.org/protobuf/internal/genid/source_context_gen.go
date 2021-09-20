@@ -8,6 +8,7 @@ package genid
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const File_google_protobuf_source_context_proto = "google/protobuf/source_context.proto"

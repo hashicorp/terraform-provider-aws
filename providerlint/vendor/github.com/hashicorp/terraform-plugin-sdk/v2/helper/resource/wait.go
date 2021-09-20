@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RetryContext is a basic wrapper around StateChangeConf that will just retry

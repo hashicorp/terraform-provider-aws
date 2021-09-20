@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // GRPCServiceName is the name of the service that the health check should

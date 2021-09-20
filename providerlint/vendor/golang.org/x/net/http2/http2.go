@@ -29,6 +29,7 @@ import (
 	"sync"
 
 	"golang.org/x/net/http/httpguts"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

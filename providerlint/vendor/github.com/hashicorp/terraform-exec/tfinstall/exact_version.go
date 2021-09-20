@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type ExactVersionOption struct {

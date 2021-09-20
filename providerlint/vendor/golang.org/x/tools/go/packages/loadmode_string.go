@@ -7,6 +7,7 @@ package packages
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var allModes = []LoadMode{

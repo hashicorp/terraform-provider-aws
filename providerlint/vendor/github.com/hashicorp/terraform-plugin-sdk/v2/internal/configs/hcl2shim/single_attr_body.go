@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	hcl2 "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SingleAttrBody is a weird implementation of hcl2.Body that acts as if

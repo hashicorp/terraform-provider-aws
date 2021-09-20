@@ -16,6 +16,7 @@ package ochttp
 
 import (
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // wrappedBody returns a wrapped version of the original

@@ -11,6 +11,7 @@ package unix
 
 import (
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CmsgLen returns the value to store in the Len field of the Cmsghdr

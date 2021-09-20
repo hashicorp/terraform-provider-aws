@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type (

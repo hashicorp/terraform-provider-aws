@@ -2,6 +2,7 @@ package tftypes
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AttributePathError represents an error associated with part of a

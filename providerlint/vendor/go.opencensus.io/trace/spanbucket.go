@@ -16,6 +16,7 @@ package trace
 
 import (
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // samplePeriod is the minimum time between accepting spans in a single bucket.

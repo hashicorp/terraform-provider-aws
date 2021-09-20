@@ -2,6 +2,7 @@ package hclsyntax
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // File is the top-level object resulting from parsing a configuration file.

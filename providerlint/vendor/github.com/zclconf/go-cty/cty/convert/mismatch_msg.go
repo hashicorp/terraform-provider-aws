@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MismatchMessage is a helper to return an English-language description of

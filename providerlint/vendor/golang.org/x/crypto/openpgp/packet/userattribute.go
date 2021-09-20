@@ -10,6 +10,7 @@ import (
 	"image/jpeg"
 	"io"
 	"io/ioutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const UserAttrImageSubpacket = 1

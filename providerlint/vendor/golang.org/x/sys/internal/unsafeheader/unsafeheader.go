@@ -12,6 +12,7 @@ package unsafeheader
 
 import (
 	"unsafe"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Slice is the runtime representation of a slice.

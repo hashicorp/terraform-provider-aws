@@ -23,6 +23,7 @@ package grpcsync
 import (
 	"sync"
 	"sync/atomic"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Event represents a one-time event that may occur in the future.

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-exec/tfinstall"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config is used to configure the test helper. In most normal test programs

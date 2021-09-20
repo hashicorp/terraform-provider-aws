@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"golang.org/x/tools/internal/fastwalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Options controls the behavior of a Walk call.

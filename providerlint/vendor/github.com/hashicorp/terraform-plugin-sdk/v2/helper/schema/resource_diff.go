@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // newValueWriter is a minor re-implementation of MapFieldWriter to include

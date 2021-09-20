@@ -7,6 +7,7 @@ package diff
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Unified represents a set of edits as a unified diff.

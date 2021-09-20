@@ -6,6 +6,7 @@ package zstd
 
 import (
 	"github.com/klauspost/compress/huff0"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // history contains the information transferred between blocks.

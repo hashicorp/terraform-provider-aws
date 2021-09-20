@@ -3,6 +3,7 @@ package colorable
 import (
 	"bytes"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NonColorable holds writer but removes escape sequence.

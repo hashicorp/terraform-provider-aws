@@ -2,6 +2,7 @@ package json
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SimpleJSONValue is a wrapper around cty.Value that adds implementations of

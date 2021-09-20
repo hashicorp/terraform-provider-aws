@@ -10,4 +10,5 @@ import (
 	_ "github.com/katbyte/terrafmt"
 	_ "github.com/pavius/impi/cmd/impi"
 	_ "github.com/terraform-linters/tflint"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )

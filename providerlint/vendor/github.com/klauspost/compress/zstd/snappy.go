@@ -12,6 +12,7 @@ import (
 
 	"github.com/klauspost/compress/huff0"
 	"github.com/klauspost/compress/snappy"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

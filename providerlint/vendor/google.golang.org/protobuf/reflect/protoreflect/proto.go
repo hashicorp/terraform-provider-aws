@@ -132,6 +132,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/internal/pragma"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type doNotImplement pragma.DoNotImplement

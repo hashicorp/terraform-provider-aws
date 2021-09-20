@@ -3,6 +3,7 @@ package eventstreamapi
 import (
 	"fmt"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // InputWriterCloseErrorCode is used to denote an error occurred

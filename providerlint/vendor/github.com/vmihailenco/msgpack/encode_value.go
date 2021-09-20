@@ -3,6 +3,7 @@ package msgpack
 import (
 	"fmt"
 	"reflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var valueEncoders []encoderFunc

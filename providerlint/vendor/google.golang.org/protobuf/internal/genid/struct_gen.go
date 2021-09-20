@@ -8,6 +8,7 @@ package genid
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const File_google_protobuf_struct_proto = "google/protobuf/struct.proto"

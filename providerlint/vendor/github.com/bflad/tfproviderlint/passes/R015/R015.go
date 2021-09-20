@@ -8,6 +8,7 @@ import (
 	"github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetidcallexpr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const Doc = `check for (*schema.ResourceData).SetId() usage with unstable resource.UniqueId() value

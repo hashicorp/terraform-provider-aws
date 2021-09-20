@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os/exec"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type LookPathOption struct {

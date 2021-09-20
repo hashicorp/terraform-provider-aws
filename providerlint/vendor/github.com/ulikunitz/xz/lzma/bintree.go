@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // node represents a node in the binary tree.

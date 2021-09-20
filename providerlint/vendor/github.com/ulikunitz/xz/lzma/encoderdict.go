@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // matcher is an interface that supports the identification of the next

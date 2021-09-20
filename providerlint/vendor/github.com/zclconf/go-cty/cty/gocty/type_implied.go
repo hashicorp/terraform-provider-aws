@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ImpliedType takes an arbitrary Go value (as an interface{}) and attempts

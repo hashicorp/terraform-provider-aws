@@ -18,6 +18,7 @@ package bidi // import "golang.org/x/text/unicode/bidi"
 
 import (
 	"bytes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // This API tries to avoid dealing with embedding levels for now. Under the hood

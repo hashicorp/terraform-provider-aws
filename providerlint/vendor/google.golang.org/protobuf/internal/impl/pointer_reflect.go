@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const UnsafeEnabled = false

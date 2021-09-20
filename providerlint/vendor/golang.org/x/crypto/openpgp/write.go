@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/openpgp/errors"
 	"golang.org/x/crypto/openpgp/packet"
 	"golang.org/x/crypto/openpgp/s2k"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DetachSign signs message with the private key from signer (which must

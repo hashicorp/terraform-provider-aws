@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"go.opencensus.io/trace/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Config represents the global tracing configuration.

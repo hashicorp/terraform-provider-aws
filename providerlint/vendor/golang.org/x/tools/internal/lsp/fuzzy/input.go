@@ -6,6 +6,7 @@ package fuzzy
 
 import (
 	"unicode"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // RuneRole specifies the role of a rune in the context of an input.

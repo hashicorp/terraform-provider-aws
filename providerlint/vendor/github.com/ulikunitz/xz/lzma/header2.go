@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

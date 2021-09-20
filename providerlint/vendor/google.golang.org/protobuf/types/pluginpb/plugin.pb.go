@@ -55,6 +55,7 @@ import (
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Sync with code_generator.h.

@@ -26,6 +26,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/internal/grpcutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Logger is the global binary logger. It can be used to get binary logger for

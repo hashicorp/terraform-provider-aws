@@ -6,6 +6,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Prettify returns the string representation of a value.

@@ -6,6 +6,7 @@ package proto
 
 import (
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DiscardUnknown recursively discards all unknown fields from this message

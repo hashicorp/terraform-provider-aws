@@ -21,6 +21,7 @@ package grpcutil
 import (
 	"errors"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ParseMethod splits service and method from the input. It expects format

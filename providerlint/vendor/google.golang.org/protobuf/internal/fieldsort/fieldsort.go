@@ -14,6 +14,7 @@ package fieldsort
 
 import (
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Less returns true if field a comes before field j in ordered wire marshal output.

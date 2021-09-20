@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-checkpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type LatestVersionOption struct {

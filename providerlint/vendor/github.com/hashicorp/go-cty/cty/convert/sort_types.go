@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // sortTypes produces an ordering of the given types that serves as a

@@ -84,6 +84,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/V013"
 	"github.com/bflad/tfproviderlint/passes/V014"
 	"golang.org/x/tools/go/analysis"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AllChecks contains all Analyzers that report issues

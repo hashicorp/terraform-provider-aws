@@ -8,6 +8,7 @@ package span
 
 import (
 	"go/token"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TODO(rstambler): Delete this file when we no longer support Go 1.11.

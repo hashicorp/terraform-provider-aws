@@ -30,6 +30,7 @@ import (
 	"os"
 
 	"google.golang.org/grpc/internal/grpclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {

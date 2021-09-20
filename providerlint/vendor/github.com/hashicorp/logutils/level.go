@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type LogLevel string

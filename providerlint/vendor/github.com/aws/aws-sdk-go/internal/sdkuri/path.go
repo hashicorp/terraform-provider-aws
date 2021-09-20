@@ -3,6 +3,7 @@ package sdkuri
 import (
 	"path"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PathJoin will join the elements of the path delimited by the "/"

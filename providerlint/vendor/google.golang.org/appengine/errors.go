@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"google.golang.org/appengine/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsOverQuota reports whether err represents an API call failure

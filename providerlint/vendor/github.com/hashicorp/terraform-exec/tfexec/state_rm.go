@@ -4,6 +4,7 @@ import (
 	"context"
 	"os/exec"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type stateRmConfig struct {

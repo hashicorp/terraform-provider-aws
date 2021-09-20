@@ -2,6 +2,7 @@ package url
 
 import (
 	"net/url"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Parse parses rawURL into a URL structure.

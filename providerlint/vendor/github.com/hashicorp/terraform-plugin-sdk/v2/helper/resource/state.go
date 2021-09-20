@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var refreshGracePeriod = 30 * time.Second

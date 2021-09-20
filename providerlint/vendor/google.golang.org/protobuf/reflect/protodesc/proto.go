@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"google.golang.org/protobuf/types/descriptorpb"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ToFileDescriptorProto copies a protoreflect.FileDescriptor into a

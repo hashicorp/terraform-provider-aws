@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // NoBody is a http.NoBody reader instructing Go HTTP client to not include

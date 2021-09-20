@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"go.opencensus.io/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Descriptor holds metadata about a metric.

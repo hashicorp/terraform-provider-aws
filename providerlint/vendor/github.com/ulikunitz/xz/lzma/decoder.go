@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // decoder decodes a raw LZMA stream without any header.

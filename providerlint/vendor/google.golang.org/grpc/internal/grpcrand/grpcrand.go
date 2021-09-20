@@ -24,6 +24,7 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

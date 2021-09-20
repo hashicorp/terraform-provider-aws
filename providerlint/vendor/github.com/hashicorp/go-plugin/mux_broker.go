@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/yamux"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MuxBroker is responsible for brokering multiplexed connections by unique ID.

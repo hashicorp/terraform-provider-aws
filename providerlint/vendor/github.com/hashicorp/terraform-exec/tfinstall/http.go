@@ -9,6 +9,7 @@ import (
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 
 	intversion "github.com/hashicorp/terraform-exec/internal/version"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type userAgentRoundTripper struct {

@@ -7,6 +7,7 @@ package protoreflect
 import (
 	"fmt"
 	"math"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Value is a union where only one Go type may be set at a time.

@@ -2,6 +2,7 @@ package convert
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // The current unify implementation is somewhat inefficient, but we accept this

@@ -22,6 +22,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc/metadata"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type mdExtraKey struct{}

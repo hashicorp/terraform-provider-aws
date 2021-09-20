@@ -20,6 +20,7 @@ package grpc
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UnaryInvoker is called by UnaryClientInterceptor to complete RPCs.

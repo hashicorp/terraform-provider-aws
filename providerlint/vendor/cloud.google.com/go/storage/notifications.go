@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/internal/trace"
 	raw "google.golang.org/api/storage/v1"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Notification describes how to send Cloud PubSub messages when certain

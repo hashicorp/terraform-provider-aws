@@ -23,6 +23,7 @@ package codes // import "google.golang.org/grpc/codes"
 import (
 	"fmt"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A Code is an unsigned 32-bit error code as defined in the gRPC spec.

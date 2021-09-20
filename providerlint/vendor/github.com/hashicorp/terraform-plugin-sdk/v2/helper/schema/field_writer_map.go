@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // MapFieldWriter writes data into a single map[string]string structure.

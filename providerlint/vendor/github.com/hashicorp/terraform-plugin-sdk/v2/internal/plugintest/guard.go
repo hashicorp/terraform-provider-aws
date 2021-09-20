@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AcceptanceTest is a test guard that will produce a log and call SkipNow on

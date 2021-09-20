@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ValidateResourceConfigRequest(in *tfplugin6.ValidateResourceConfig_Request) (*tfprotov6.ValidateResourceConfigRequest, error) {

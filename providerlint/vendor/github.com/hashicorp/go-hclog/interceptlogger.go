@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 	"sync/atomic"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var _ Logger = &interceptLogger{}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // UserId contains text that is intended to represent the name and email

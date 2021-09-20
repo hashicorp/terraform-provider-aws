@@ -2,6 +2,7 @@ package tags
 
 import (
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestGetResourceID(t *testing.T) {

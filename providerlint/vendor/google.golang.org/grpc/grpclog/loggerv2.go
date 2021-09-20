@@ -26,6 +26,7 @@ import (
 	"strconv"
 
 	"google.golang.org/grpc/internal/grpclog"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // LoggerV2 does underlying logging work for grpclog.

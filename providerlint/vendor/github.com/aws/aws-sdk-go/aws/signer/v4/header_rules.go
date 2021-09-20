@@ -2,6 +2,7 @@ package v4
 
 import (
 	"github.com/aws/aws-sdk-go/internal/strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // validator houses a set of rule needed for validation of a

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/sso"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SSOAPI provides an interface to enable mocking the

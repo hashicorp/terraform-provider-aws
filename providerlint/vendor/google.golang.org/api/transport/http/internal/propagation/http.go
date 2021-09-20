@@ -18,6 +18,7 @@ import (
 
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/propagation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

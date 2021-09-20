@@ -4,6 +4,7 @@ package namevaluesfilters
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Custom EC2 filter functions.

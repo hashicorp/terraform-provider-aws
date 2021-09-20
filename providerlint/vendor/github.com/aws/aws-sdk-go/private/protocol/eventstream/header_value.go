@@ -7,6 +7,7 @@ import (
 	"io"
 	"strconv"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const maxHeaderValueLen = 1<<15 - 1 // 2^15-1 or 32KB - 1

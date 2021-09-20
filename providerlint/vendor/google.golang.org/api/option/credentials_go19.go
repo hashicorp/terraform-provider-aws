@@ -9,6 +9,7 @@ package option
 import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/internal"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type withCreds google.Credentials

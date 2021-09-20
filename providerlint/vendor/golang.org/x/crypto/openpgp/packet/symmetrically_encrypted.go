@@ -12,6 +12,7 @@ import (
 	"hash"
 	"io"
 	"strconv"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // SymmetricallyEncrypted represents a symmetrically encrypted byte string. The

@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/internal/lsp/fuzzy"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (

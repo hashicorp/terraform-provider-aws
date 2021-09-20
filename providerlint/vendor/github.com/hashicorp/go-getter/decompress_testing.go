@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/go-testing-interface"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TestDecompressCase is a single test case for testing decompressors

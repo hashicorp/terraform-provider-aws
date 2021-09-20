@@ -21,6 +21,7 @@ package transport
 import (
 	"sync"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

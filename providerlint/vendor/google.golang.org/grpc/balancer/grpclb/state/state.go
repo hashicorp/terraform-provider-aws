@@ -22,6 +22,7 @@ package state
 
 import (
 	"google.golang.org/grpc/resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // keyType is the key to use for storing State in Attributes.

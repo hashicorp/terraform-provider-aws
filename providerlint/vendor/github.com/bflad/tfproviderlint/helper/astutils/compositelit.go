@@ -2,6 +2,7 @@ package astutils
 
 import (
 	"go/ast"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func CompositeLitField(cl *ast.CompositeLit, fieldName string) *ast.KeyValueExpr {

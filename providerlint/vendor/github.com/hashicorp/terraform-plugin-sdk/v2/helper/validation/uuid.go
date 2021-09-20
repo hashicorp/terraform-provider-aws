@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // IsUUID is a ValidateFunc that ensures a string can be parsed as UUID

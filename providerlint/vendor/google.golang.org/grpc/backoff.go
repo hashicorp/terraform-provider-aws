@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // DefaultBackoffConfig uses values specified for backoff in

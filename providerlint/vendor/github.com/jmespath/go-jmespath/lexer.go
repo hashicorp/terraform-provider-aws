@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type token struct {

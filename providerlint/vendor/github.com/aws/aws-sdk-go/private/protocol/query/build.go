@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol/query/queryutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // BuildHandler is a named request handler for building query protocol requests

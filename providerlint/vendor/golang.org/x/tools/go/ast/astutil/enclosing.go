@@ -11,6 +11,7 @@ import (
 	"go/ast"
 	"go/token"
 	"sort"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // PathEnclosingInterval returns the node that encloses the source

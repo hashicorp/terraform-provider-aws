@@ -23,6 +23,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

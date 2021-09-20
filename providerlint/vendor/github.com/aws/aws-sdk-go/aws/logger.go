@@ -3,6 +3,7 @@ package aws
 import (
 	"log"
 	"os"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // A LogLevelType defines the level logging should be performed at. Used to instruct
