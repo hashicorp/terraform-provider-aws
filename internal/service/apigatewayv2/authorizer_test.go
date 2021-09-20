@@ -15,7 +15,7 @@ import (
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
-func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
+func TestAccAPIGatewayV2Authorizer_basic(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
@@ -53,7 +53,7 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Authorizer_disappears(t *testing.T) {
+func TestAccAPIGatewayV2Authorizer_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
@@ -77,7 +77,7 @@ func TestAccAWSAPIGatewayV2Authorizer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
+func TestAccAPIGatewayV2Authorizer_credentials(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
@@ -149,7 +149,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
+func TestAccAPIGatewayV2Authorizer_jwt(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
@@ -208,7 +208,7 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMissingCacheTTL(t *testing.T) {
+func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissingCacheTTL(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
@@ -281,7 +281,7 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMiss
 	})
 }
 
-func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZeroCacheTTL(t *testing.T) {
+func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCacheTTL(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"

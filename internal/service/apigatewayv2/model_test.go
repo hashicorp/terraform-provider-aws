@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
+func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
 	resourceName := "aws_apigatewayv2_model.test"
@@ -60,7 +60,7 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
+func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
 	resourceName := "aws_apigatewayv2_model.test"
@@ -97,7 +97,7 @@ func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
+func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetModelOutput
 	resourceName := "aws_apigatewayv2_model.test"

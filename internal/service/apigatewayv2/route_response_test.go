@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
+func TestAccAPIGatewayV2RouteResponse_basic(t *testing.T) {
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
@@ -48,7 +48,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2RouteResponse_disappears(t *testing.T) {
+func TestAccAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
@@ -72,7 +72,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
+func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"

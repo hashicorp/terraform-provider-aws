@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
+func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetDeploymentOutput
 	resourceName := "aws_apigatewayv2_deployment.test"
@@ -52,7 +52,7 @@ func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Deployment_disappears(t *testing.T) {
+func TestAccAPIGatewayV2Deployment_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetDeploymentOutput
 	resourceName := "aws_apigatewayv2_deployment.test"
@@ -76,7 +76,7 @@ func TestAccAWSAPIGatewayV2Deployment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Deployment_Triggers(t *testing.T) {
+func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 	var apiId string
 	var deployment1, deployment2, deployment3, deployment4 apigatewayv2.GetDeploymentOutput
 	resourceName := "aws_apigatewayv2_deployment.test"

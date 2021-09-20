@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
+func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -33,7 +33,7 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2ApisDataSource_ProtocolType(t *testing.T) {
+func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -56,7 +56,7 @@ func TestAccAWSAPIGatewayV2ApisDataSource_ProtocolType(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2ApisDataSource_Tags(t *testing.T) {
+func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	dataSource3Name := "data.aws_apigatewayv2_apis.test3"

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -60,7 +60,7 @@ func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
+func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -106,7 +106,7 @@ func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_disappears(t *testing.T) {
+func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -130,7 +130,7 @@ func TestAccAWSAPIGatewayV2Integration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_DataMappingHttp(t *testing.T) {
+func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -221,7 +221,7 @@ func TestAccAWSAPIGatewayV2Integration_DataMappingHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
+func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -297,7 +297,7 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -343,7 +343,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
+func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -389,7 +389,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_VpcLinkWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -436,7 +436,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
+func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -516,7 +516,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
+func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"

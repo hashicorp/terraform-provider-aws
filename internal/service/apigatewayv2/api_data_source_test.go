@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSAPIGatewayV2ApiDataSource_Http(t *testing.T) {
+func TestAccAPIGatewayV2APIDataSource_http(t *testing.T) {
 	dataSourceName := "data.aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -50,7 +50,7 @@ func TestAccAWSAPIGatewayV2ApiDataSource_Http(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2ApiDataSource_WebSocket(t *testing.T) {
+func TestAccAPIGatewayV2APIDataSource_webSocket(t *testing.T) {
 	dataSourceName := "data.aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

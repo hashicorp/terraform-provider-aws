@@ -67,7 +67,7 @@ func testSweepAPIGatewayV2DomainNames(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAPIGatewayV2DomainName_basic(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_basic(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test.0"
@@ -107,7 +107,7 @@ func TestAccAWSAPIGatewayV2DomainName_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_disappears(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -133,7 +133,7 @@ func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2DomainName_Tags(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_tags(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test.0"
@@ -191,7 +191,7 @@ func TestAccAWSAPIGatewayV2DomainName_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_updateCertificate(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName0 := "aws_acm_certificate.test.0"
@@ -266,7 +266,7 @@ func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_mutualTLSAuthentication(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
