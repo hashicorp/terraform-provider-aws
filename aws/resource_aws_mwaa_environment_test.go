@@ -21,7 +21,7 @@ func init() {
 }
 
 func testSweepMwaaEnvironment(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -29,7 +29,7 @@ func testSweepMwaaEnvironment(region string) error {
 
 	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if acctest.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
 			return nil
 		}
@@ -58,7 +58,7 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,14 +120,14 @@ func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMwaaEnvironmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMwaaEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMwaaEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,7 +275,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -350,7 +350,7 @@ func TestAccAWSMwaaEnvironment_PluginsS3ObjectVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -392,7 +392,7 @@ func testAccCheckAWSMwaaEnvironmentExists(resourceName string, environment *mwaa
 			return fmt.Errorf("No MWAA Environment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mwaaconn
+		conn := acctest.Provider.Meta().(*AWSClient).mwaaconn
 		resp, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -408,7 +408,7 @@ func testAccCheckAWSMwaaEnvironmentExists(resourceName string, environment *mwaa
 }
 
 func testAccCheckAWSMwaaEnvironmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mwaaconn
+	conn := acctest.Provider.Meta().(*AWSClient).mwaaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mwaa_environment" {
