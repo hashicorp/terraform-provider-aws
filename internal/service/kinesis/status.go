@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesis/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -16,7 +15,7 @@ const (
 // statusStreamConsumer fetches the StreamConsumer and its Status
 func statusStreamConsumer(conn *kinesis.Kinesis, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		consumer, err := finder.FindStreamConsumerByARN(conn, arn)
+		consumer, err := FindStreamConsumerByARN(conn, arn)
 
 		if err != nil {
 			return nil, streamConsumerStatusUnknown, err
