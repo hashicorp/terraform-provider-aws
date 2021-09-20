@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsPricingProduct() *schema.Resource {
+func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsPricingProductRead,
+		Read: dataSourceProductRead,
 		Schema: map[string]*schema.Schema{
 			"service_code": {
 				Type:     schema.TypeString,
@@ -45,7 +45,7 @@ func dataSourceAwsPricingProduct() *schema.Resource {
 	}
 }
 
-func dataSourceAwsPricingProductRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PricingConn
 
 	params := &pricing.GetProductsInput{
