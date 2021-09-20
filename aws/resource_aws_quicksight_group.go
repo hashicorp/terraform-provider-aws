@@ -104,7 +104,7 @@ func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.DescribeGroup(descOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -141,7 +141,7 @@ func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err = conn.UpdateGroup(updateOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -168,7 +168,7 @@ func resourceAwsQuickSightGroupDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := conn.DeleteGroup(deleteOpts); err != nil {
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight Group %s: %s", d.Id(), err)

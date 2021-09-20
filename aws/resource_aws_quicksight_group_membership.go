@@ -140,7 +140,7 @@ func resourceAwsQuickSightGroupMembershipDelete(ctx context.Context, d *schema.R
 	}
 
 	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return diag.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)

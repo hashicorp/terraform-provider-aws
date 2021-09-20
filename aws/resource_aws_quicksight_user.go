@@ -145,7 +145,7 @@ func resourceAwsQuickSightUserRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	resp, err := conn.DescribeUser(descOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return nil
@@ -181,7 +181,7 @@ func resourceAwsQuickSightUserUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	_, err = conn.UpdateUser(updateOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return nil
@@ -208,7 +208,7 @@ func resourceAwsQuickSightUserDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, err := conn.DeleteUser(deleteOpts); err != nil {
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight User %s: %s", d.Id(), err)
