@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWorkspacesDirectory() *schema.Resource {
@@ -203,8 +204,8 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 }
 
 func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	directoryID := d.Get("directory_id").(string)
 
@@ -295,9 +296,9 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directory, err := finder.DirectoryByID(conn, d.Id())
 
@@ -362,7 +363,7 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	if d.HasChange("self_service_permissions") {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", d.Id())
@@ -445,7 +446,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(

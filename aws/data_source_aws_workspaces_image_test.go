@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func testAccCheckWorkspacesImageExists(n string, image *workspaces.WorkspaceImag
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeWorkspaceImages(&workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
 		})
