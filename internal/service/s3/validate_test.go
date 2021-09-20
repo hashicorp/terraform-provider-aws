@@ -2,7 +2,6 @@ package s3
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidBucketLifecycleTimestamp(t *testing.T) {

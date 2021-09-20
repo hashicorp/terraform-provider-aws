@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validBucketLifecycleTimestamp(v interface{}, k string) (ws []string, errors []error) {
