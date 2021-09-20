@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceBucketLifecycleConfiguration() *schema.Resource {
@@ -95,7 +96,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"tags": tagsSchema(),
+									"tags": tftags.TagsSchema(),
 								},
 							},
 						},
@@ -406,11 +407,11 @@ func expandS3controlLifecycleRuleFilter(tfList []interface{}) *s3control.Lifecyc
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
-			apiObject.Tag = keyvaluetags.New(v).S3controlTags()[0]
+			apiObject.Tag = tftags.New(v).S3controlTags()[0]
 		} else {
 			apiObject.And = &s3control.LifecycleRuleAndOperator{
 				Prefix: apiObject.Prefix,
-				Tags:   keyvaluetags.New(v).S3controlTags(),
+				Tags:   tftags.New(v).S3controlTags(),
 			}
 			apiObject.Prefix = nil
 		}
@@ -512,7 +513,7 @@ func flattenS3controlLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilte
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap["tags"] = keyvaluetags.S3controlKeyValueTags(v).IgnoreAws().Map()
+			tfMap["tags"] = tftags.S3controlKeyValueTags(v).IgnoreAws().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
@@ -520,7 +521,7 @@ func flattenS3controlLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilte
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = keyvaluetags.S3controlKeyValueTags([]*s3control.S3Tag{v}).IgnoreAws().Map()
+			tfMap["tags"] = tftags.S3controlKeyValueTags([]*s3control.S3Tag{v}).IgnoreAws().Map()
 		}
 	}
 
