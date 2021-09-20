@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
@@ -14,12 +15,12 @@ func TestAccAWSServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 	resourceNameProduct := "aws_servicecatalog_product.test"
 	resourceNamePortfolio := "aws_servicecatalog_portfolio.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +129,7 @@ resource "aws_servicecatalog_principal_portfolio_association" "test" {
 }
 
 func testAccAWSServiceCatalogLaunchPathsDataSourceConfig_basic(rName, domain, email string) string {
-	return composeConfig(testAccAWSServiceCatalogLaunchPathsDataSourceConfig_base(rName, domain, email), `
+	return acctest.ConfigCompose(testAccAWSServiceCatalogLaunchPathsDataSourceConfig_base(rName, domain, email), `
 data "aws_servicecatalog_launch_paths" "test" {
   product_id = aws_servicecatalog_product_portfolio_association.test.product_id
 }

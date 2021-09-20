@@ -6,12 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
@@ -19,16 +20,16 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	dataSourceName := "data.aws_caller_identity.alternate"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsServiceCatalogPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,16 +59,16 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsEnabledPreCheck(t)
-			testAccOrganizationManagementAccountPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
 		Steps: []resource.TestStep{
@@ -156,7 +157,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 }
 
 func testAccAWSServiceCatalogPortfolioShareConfig_basic(rName string) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
 }

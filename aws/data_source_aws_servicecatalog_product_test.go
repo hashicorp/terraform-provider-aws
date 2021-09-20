@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
@@ -49,12 +50,12 @@ func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 }
 
 func testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, description, supportDescription, domain, email string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription, domain, email), `
+	return acctest.ConfigCompose(testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription, domain, email), `
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }
@@ -90,7 +91,7 @@ data "aws_servicecatalog_product" "test" {
 }
 
 func testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName, domain, email string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfig_physicalID(rName, domain, email), `
+	return acctest.ConfigCompose(testAccAWSServiceCatalogProductConfig_physicalID(rName, domain, email), `
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }

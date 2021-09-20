@@ -8,12 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test servicecat tag option resource associations
@@ -94,11 +95,11 @@ func testSweepServiceCatalogTagOptionResourceAssociations(region string) error {
 
 func TestAccAWSServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -121,11 +122,11 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -133,7 +134,7 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.
 				Config: testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogTagOptionResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogTagOptionResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,7 +212,7 @@ resource "aws_servicecatalog_tag_option" "test" {
 }
 
 func testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogTagOptionResourceAssociationConfig_base(rName), `
+	return acctest.ConfigCompose(testAccAWSServiceCatalogTagOptionResourceAssociationConfig_base(rName), `
 resource "aws_servicecatalog_tag_option_resource_association" "test" {
   resource_id   = aws_servicecatalog_portfolio.test.id
   tag_option_id = aws_servicecatalog_tag_option.test.id
