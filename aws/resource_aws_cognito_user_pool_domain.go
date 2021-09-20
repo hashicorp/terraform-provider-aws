@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoUserPoolDomain() *schema.Resource {
+func ResourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolDomainCreate,
-		Read:   resourceAwsCognitoUserPoolDomainRead,
-		Delete: resourceAwsCognitoUserPoolDomainDelete,
+		Create: resourceUserPoolDomainCreate,
+		Read:   resourceUserPoolDomainRead,
+		Delete: resourceUserPoolDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	domain := d.Get("domain").(string)
@@ -93,10 +93,10 @@ func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for User Pool Domain (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsCognitoUserPoolDomainRead(d, meta)
+	return resourceUserPoolDomainRead(d, meta)
 }
 
-func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Reading Cognito User Pool Domain: %s", d.Id())
 
@@ -134,7 +134,7 @@ func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsCognitoUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
 

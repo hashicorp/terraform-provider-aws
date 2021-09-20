@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoUserPool() *schema.Resource {
+func ResourceUserPool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolCreate,
-		Read:   resourceAwsCognitoUserPoolRead,
-		Update: resourceAwsCognitoUserPoolUpdate,
-		Delete: resourceAwsCognitoUserPoolDelete,
+		Create: resourceUserPoolCreate,
+		Read:   resourceUserPoolRead,
+		Update: resourceUserPoolUpdate,
+		Delete: resourceUserPoolDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -579,7 +579,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -798,10 +798,10 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsCognitoUserPoolRead(d, meta)
+	return resourceUserPoolRead(d, meta)
 }
 
-func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -941,7 +941,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -1191,10 +1191,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsCognitoUserPoolRead(d, meta)
+	return resourceUserPoolRead(d, meta)
 }
 
-func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.DeleteUserPoolInput{

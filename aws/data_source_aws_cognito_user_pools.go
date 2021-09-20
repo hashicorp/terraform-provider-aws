@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCognitoUserPools() *schema.Resource {
+func DataSourceUserPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCognitoUserPoolsRead,
+		Read: dataSourceUserPoolsRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -32,7 +32,7 @@ func dataSourceAwsCognitoUserPools() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	name := d.Get("name").(string)
 	var ids []string

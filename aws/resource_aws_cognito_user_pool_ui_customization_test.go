@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
@@ -83,7 +84,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -279,7 +280,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

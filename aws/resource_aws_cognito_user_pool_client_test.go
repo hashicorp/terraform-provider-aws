@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
@@ -536,7 +537,7 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPoolClient(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPoolClient(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -559,7 +560,7 @@ func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
