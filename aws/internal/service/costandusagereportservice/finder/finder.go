@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ReportDefinitionByName(conn *costandusagereportservice.CostandUsageReportService, name string) (*costandusagereportservice.ReportDefinition, error) {
