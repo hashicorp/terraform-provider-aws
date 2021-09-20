@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceOpenIDConnectProvider() *schema.Resource {
@@ -51,18 +52,18 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &iam.CreateOpenIDConnectProviderInput{
 		Url:            aws.String(d.Get("url").(string)),
@@ -104,7 +105,7 @@ func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{})
 	d.Set("client_id_list", flex.FlattenStringList(out.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(out.ThumbprintList))
 
-	tags := keyvaluetags.IamKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.IamKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -136,7 +137,7 @@ func resourceOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.IamOpenIDConnectProviderUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := openIDConnectProviderUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for IAM OIDC Provider (%s): %w", d.Id(), err)
 		}
 	}
