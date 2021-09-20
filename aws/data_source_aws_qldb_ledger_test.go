@@ -5,16 +5,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsQLDBLedger_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7)) // QLDB name cannot be longer than 32 characters
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7)) // QLDB name cannot be longer than 32 characters
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, qldb.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
