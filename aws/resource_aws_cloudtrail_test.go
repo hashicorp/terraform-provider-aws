@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepCloudTrails(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -80,7 +80,7 @@ func testSweepCloudTrails(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudTrail sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -131,7 +131,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -207,7 +207,7 @@ func testAccAWSCloudTrail_enableLogging(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -256,7 +256,7 @@ func testAccAWSCloudTrail_multiRegion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,7 +303,7 @@ func testAccAWSCloudTrail_organization(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -341,7 +341,7 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -383,7 +383,7 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -415,7 +415,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -470,7 +470,7 @@ func testAccAWSCloudTrail_globalServiceEvents(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -496,7 +496,7 @@ func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -565,7 +565,7 @@ func testAccAWSCloudTrail_eventSelectorDynamoDB(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -591,7 +591,7 @@ func testAccAWSCloudTrail_insightSelector(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -617,7 +617,7 @@ func testAccAWSCloudTrail_advanced_event_selector(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -715,7 +715,7 @@ func testAccCheckCloudTrailExists(n string, trail *cloudtrail.Trail) resource.Te
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
 		params := cloudtrail.DescribeTrailsInput{
 			TrailNameList: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -739,7 +739,7 @@ func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
 		params := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
@@ -788,7 +788,7 @@ func testAccCheckCloudTrailLogValidationEnabled(n string, desired bool, trail *c
 }
 
 func testAccCheckAWSCloudTrailDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudtrail" {
@@ -814,7 +814,7 @@ func testAccCheckAWSCloudTrailDestroy(s *terraform.State) error {
 
 func testAccCheckCloudTrailLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
 		input := cloudtrail.ListTagsInput{
 			ResourceIdList: []*string{trail.TrailARN},
 		}
