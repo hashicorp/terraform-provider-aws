@@ -1,4 +1,4 @@
-package aws
+package rds
 
 import (
 	"fmt"
@@ -8,10 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -66,9 +63,9 @@ func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error creating RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	d.SetId(tfrds.ClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
+	d.SetId(ClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
 
-	_, err = waiter.WaitDBClusterRoleAssociationCreated(conn, dbClusterID, roleARN)
+	_, err = WaitDBClusterRoleAssociationCreated(conn, dbClusterID, roleARN)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to create: %w", dbClusterID, roleARN, err)
@@ -80,13 +77,13 @@ func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface
 func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
+	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
 
-	output, err := finder.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+	output, err := FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
@@ -108,7 +105,7 @@ func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}
 func resourceClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
+	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)
@@ -131,7 +128,7 @@ func resourceClusterRoleAssociationDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	_, err = waiter.WaitDBClusterRoleAssociationDeleted(conn, dbClusterID, roleARN)
+	_, err = WaitDBClusterRoleAssociationDeleted(conn, dbClusterID, roleARN)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to delete: %w", dbClusterID, roleARN, err)

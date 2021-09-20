@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -77,8 +76,8 @@ func WaitDBProxyEndpointDeleted(conn *rds.RDS, id string, timeout time.Duration)
 
 func WaitDBClusterRoleAssociationCreated(conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfrds.DBClusterRoleStatusPending},
-		Target:  []string{tfrds.DBClusterRoleStatusActive},
+		Pending: []string{DBClusterRoleStatusPending},
+		Target:  []string{DBClusterRoleStatusActive},
 		Refresh: StatusDBClusterRole(conn, dbClusterID, roleARN),
 		Timeout: DBClusterRoleAssociationCreatedTimeout,
 	}
@@ -94,7 +93,7 @@ func WaitDBClusterRoleAssociationCreated(conn *rds.RDS, dbClusterID, roleARN str
 
 func WaitDBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfrds.DBClusterRoleStatusActive, tfrds.DBClusterRoleStatusPending},
+		Pending: []string{DBClusterRoleStatusActive, DBClusterRoleStatusPending},
 		Target:  []string{},
 		Refresh: StatusDBClusterRole(conn, dbClusterID, roleARN),
 		Timeout: DBClusterRoleAssociationDeletedTimeout,

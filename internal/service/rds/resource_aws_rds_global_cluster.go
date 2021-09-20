@@ -1,4 +1,4 @@
-package aws
+package rds
 
 import (
 	"fmt"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -529,7 +528,7 @@ func resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(clusterId string, engi
 	}
 	input.AllowMajorVersionUpgrade = aws.Bool(true)
 	input.EngineVersion = aws.String(engineVersion)
-	err := resource.Retry(waiter.RDSClusterInitiateUpgradeTimeout, func() *resource.RetryError {
+	err := resource.Retry(RDSClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 		_, err := conn.ModifyGlobalCluster(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
@@ -559,7 +558,7 @@ func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema
 				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
 				EngineVersion:       aws.String(engineVersion),
 			}
-			err := resource.Retry(waiter.RDSClusterInitiateUpgradeTimeout, func() *resource.RetryError {
+			err := resource.Retry(RDSClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyDBCluster(modInput)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {

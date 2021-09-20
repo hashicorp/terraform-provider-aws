@@ -1,4 +1,4 @@
-package aws
+package rds_test
 
 import (
 	"regexp"
