@@ -1,4 +1,4 @@
-package aws
+package lambda
 
 import (
 	"context"
@@ -20,9 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	homedir "github.com/mitchellh/go-homedir"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lambda/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -517,7 +516,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = tags.IgnoreAws().LambdaTags()
 	}
 
-	err := resource.Retry(waiter.lambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(lambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -556,7 +555,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating Lambda Function (1): %w", err)
 		}
 
-		err := resource.Retry(waiter.lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
+		err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -595,7 +594,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		err := resource.Retry(waiter.lambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
+		err := resource.Retry(lambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
 			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 
 			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
@@ -1055,7 +1054,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(waiter.lambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(lambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1095,7 +1094,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// Allow more time for EC2 throttling
-			err := resource.Retry(waiter.lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+			err := resource.Retry(lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -1202,7 +1201,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(waiter.lambdaFunctionPublishTimeout, func() *resource.RetryError {
+		err := resource.Retry(lambdaFunctionPublishTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 

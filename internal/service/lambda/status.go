@@ -4,8 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lambda/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -21,7 +20,7 @@ const (
 
 func statusEventSourceMappingState(conn *lambda.Lambda, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		eventSourceMappingConfiguration, err := finder.FindEventSourceMappingConfigurationByID(conn, id)
+		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
