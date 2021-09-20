@@ -11,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceBackup() *schema.Resource {
@@ -51,8 +52,8 @@ func ResourceBackup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchemaComputed(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -60,7 +61,7 @@ func ResourceBackup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -68,7 +69,7 @@ func ResourceBackup() *schema.Resource {
 func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FSxConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateBackupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -100,7 +101,7 @@ func resourceBackupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating FSx Backup (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
@@ -134,7 +135,7 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("owner_id", backup.OwnerId)
 
-	tags := keyvaluetags.FsxKeyValueTags(backup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.FsxKeyValueTags(backup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
