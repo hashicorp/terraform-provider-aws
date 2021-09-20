@@ -77,7 +77,7 @@ func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(resource.UniqueId()),
-		Tags:         tags.IgnoreAws().AccessanalyzerTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -137,7 +137,7 @@ func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("analyzer_name", output.Analyzer.Name)
 	d.Set("arn", output.Analyzer.Arn)
 
-	tags := tftags.AccessanalyzerKeyValueTags(output.Analyzer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Analyzer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -158,7 +158,7 @@ func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AccessanalyzerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Access Analyzer Analyzer (%s) tags: %s", d.Id(), err)
 		}
 	}
