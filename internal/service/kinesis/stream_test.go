@@ -70,7 +70,7 @@ func testSweepKinesisStreams(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSKinesisStream_basic(t *testing.T) {
+func TestAccKinesisStream_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
 	rInt := sdkacctest.RandInt()
@@ -100,7 +100,7 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
+func TestAccKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
 	rInt := sdkacctest.RandInt()
@@ -148,7 +148,7 @@ func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
+func TestAccKinesisStream_encryptionWithoutKMSKeyThrowsError(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -165,7 +165,7 @@ func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_encryption(t *testing.T) {
+func TestAccKinesisStream_encryption(t *testing.T) {
 	var stream kinesis.StreamDescription
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"
@@ -212,7 +212,7 @@ func TestAccAWSKinesisStream_encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_shardCount(t *testing.T) {
+func TestAccKinesisStream_shardCount(t *testing.T) {
 	var stream kinesis.StreamDescription
 	var updatedStream kinesis.StreamDescription
 
@@ -265,7 +265,7 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
+func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
 	rInt := sdkacctest.RandInt()
@@ -316,7 +316,7 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
+func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
 	rInt := sdkacctest.RandInt()
@@ -367,7 +367,7 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
+func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
 	rInt := sdkacctest.RandInt()
@@ -398,7 +398,7 @@ func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStream_Tags(t *testing.T) {
+func TestAccKinesisStream_tags(t *testing.T) {
 	var stream kinesis.StreamDescription
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"
@@ -552,7 +552,7 @@ func testAccCheckKinesisStreamTags(n string, tagCount int) resource.TestCheckFun
 	}
 }
 
-func TestAccAWSKinesisStream_UpdateKmsKeyId(t *testing.T) {
+func TestAccKinesisStream_updateKMSKeyID(t *testing.T) {
 	var stream kinesis.StreamDescription
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_kinesis_stream.test"

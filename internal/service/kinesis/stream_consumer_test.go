@@ -15,7 +15,7 @@ import (
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
-func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
+func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -45,7 +45,7 @@ func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
+func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -67,7 +67,7 @@ func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
+func TestAccKinesisStreamConsumer_maxConcurrentConsumers(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -92,7 +92,7 @@ func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) {
+func TestAccKinesisStreamConsumer_exceedMaxConcurrentConsumers(t *testing.T) {
 	resourceName := "aws_kinesis_stream_consumer.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

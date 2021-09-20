@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
+func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
@@ -36,7 +36,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
+func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
@@ -62,7 +62,7 @@ func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisStreamConsumerDataSource_Arn(t *testing.T) {
+func TestAccKinesisStreamConsumerDataSource_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
