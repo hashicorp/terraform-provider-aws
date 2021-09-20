@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
+func TestAccSESDomainMailFrom_basic(t *testing.T) {
 	dn := acctest.RandomDomain()
 	domain := dn.String()
 	mailFromDomain1 := dn.Subdomain("bounce1").String()
@@ -52,7 +52,7 @@ func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
+func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 	dn := acctest.RandomDomain()
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
@@ -76,7 +76,7 @@ func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
+func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 	dn := acctest.RandomDomain()
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
@@ -100,7 +100,7 @@ func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
+func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	resourceName := "aws_ses_domain_mail_from.test"
 

@@ -14,7 +14,7 @@ import (
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
-func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
+func TestAccSESReceiptFilter_basic(t *testing.T) {
 	resourceName := "aws_ses_receipt_filter.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -43,7 +43,7 @@ func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
+func TestAccSESReceiptFilter_disappears(t *testing.T) {
 	resourceName := "aws_ses_receipt_filter.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

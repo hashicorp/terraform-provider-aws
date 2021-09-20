@@ -16,7 +16,7 @@ import (
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
-func TestAccAWSSesTemplate_basic(t *testing.T) {
+func TestAccSESTemplate_basic(t *testing.T) {
 	resourceName := "aws_ses_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	var template ses.Template
@@ -46,7 +46,7 @@ func TestAccAWSSesTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSesTemplate_Update(t *testing.T) {
+func TestAccSESTemplate_update(t *testing.T) {
 	acctest.Skip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_template.test"
@@ -98,7 +98,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSesTemplate_disappears(t *testing.T) {
+func TestAccSESTemplate_disappears(t *testing.T) {
 	resourceName := "aws_ses_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	var template ses.Template

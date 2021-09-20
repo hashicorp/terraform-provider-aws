@@ -14,7 +14,7 @@ import (
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
-func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
+func TestAccSESIdentityPolicy_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
@@ -39,7 +39,7 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
+func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 	emailPrefix := sdkacctest.RandomWithPrefix("tf-acc-test")
 	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
@@ -65,7 +65,7 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
+func TestAccSESIdentityPolicy_policy(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 

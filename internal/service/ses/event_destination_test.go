@@ -14,7 +14,7 @@ import (
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
-func TestAccAWSSESEventDestination_basic(t *testing.T) {
+func TestAccSESEventDestination_basic(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
 	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
@@ -68,7 +68,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESEventDestination_disappears(t *testing.T) {
+func TestAccSESEventDestination_disappears(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
 	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")

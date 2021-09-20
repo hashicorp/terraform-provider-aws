@@ -71,7 +71,7 @@ func testSweepSesConfigurationSets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
+func TestAccSESConfigurationSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -105,7 +105,7 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
+func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -151,7 +151,7 @@ func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
+func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -194,7 +194,7 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
+func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -224,7 +224,7 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
+func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -280,7 +280,7 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
+func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -310,7 +310,7 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
+func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
@@ -359,7 +359,7 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
+func TestAccSESConfigurationSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
