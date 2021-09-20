@@ -17,7 +17,7 @@ import (
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 )
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -50,7 +50,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -72,7 +72,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipartUpload_DaysAfterInitiation(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUpload_daysAfterInitiation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -113,7 +113,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_AbortIncompleteMultipa
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 	date1 := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
@@ -156,7 +156,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Date(t *tes
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -197,7 +197,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_Days(t *tes
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObjectDeleteMarker(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDeleteMarker(t *testing.T) {
 	acctest.Skip(t, "S3 on Outposts does not error or save it in the API when receiving this parameter")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
@@ -239,7 +239,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Expiration_ExpiredObje
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -280,7 +280,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Prefix(t *testi
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -339,7 +339,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags(t *testing
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -378,7 +378,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Id(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Status(t *testing.T) {
+func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
@@ -671,7 +671,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-// See TestAccAWSS3ControlBucketLifecycleConfiguration_Rule_Filter_Tags note about XML handling bug.
+// See TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags note about XML handling bug.
 // func testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Filter_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 // 	return fmt.Sprintf(`
 // data "aws_outposts_outposts" "test" {}

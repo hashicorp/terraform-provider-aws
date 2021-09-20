@@ -17,7 +17,7 @@ import (
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 )
 
-func TestAccAWSS3ControlBucket_basic(t *testing.T) {
+func TestAccS3ControlBucket_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket.test"
 
@@ -48,7 +48,7 @@ func TestAccAWSS3ControlBucket_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
+func TestAccS3ControlBucket_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket.test"
 
@@ -70,7 +70,7 @@ func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
+func TestAccS3ControlBucket_tags(t *testing.T) {
 	acctest.Skip(t, "S3 Control Bucket resource tagging requires additional eventual consistency handling, see also: https://github.com/hashicorp/terraform-provider-aws/issues/15572")
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

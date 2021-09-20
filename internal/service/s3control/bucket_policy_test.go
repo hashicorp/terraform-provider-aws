@@ -17,7 +17,7 @@ import (
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 )
 
-func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
+func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
 
@@ -44,7 +44,7 @@ func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
+func TestAccS3ControlBucketPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
 
@@ -66,7 +66,7 @@ func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
+func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
 
