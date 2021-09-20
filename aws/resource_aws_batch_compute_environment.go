@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceComputeEnvironment() *schema.Resource {
@@ -31,7 +32,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsBatchComputeEnvironmentCustomizeDiff,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -151,7 +152,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"tags": tagsSchemaForceNew(),
+						"tags": tftags.TagsSchemaForceNew(),
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -179,8 +180,8 @@ func ResourceComputeEnvironment() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(batch.CEState_Values(), true),
 				Default:      batch.CEStateEnabled,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -213,7 +214,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
@@ -296,7 +297,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	tags := keyvaluetags.BatchKeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.BatchKeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -365,7 +366,7 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.BatchUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.BatchUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -504,7 +505,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Tags = keyvaluetags.New(v).IgnoreAws().BatchTags()
+		apiObject.Tags = tftags.New(v).IgnoreAws().BatchTags()
 	}
 
 	if computeResourceType != "" {
@@ -596,7 +597,7 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap["tags"] = keyvaluetags.BatchKeyValueTags(v).IgnoreAws().Map()
+		tfMap["tags"] = tftags.BatchKeyValueTags(v).IgnoreAws().Map()
 	}
 
 	if v := apiObject.Type; v != nil {

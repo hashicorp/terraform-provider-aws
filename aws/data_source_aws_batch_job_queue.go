@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceJobQueue() *schema.Resource {
@@ -41,7 +42,7 @@ func DataSourceJobQueue() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"priority": {
 				Type:     schema.TypeInt,
@@ -110,7 +111,7 @@ func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting compute_environment_order: %w", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.BatchKeyValueTags(jobQueue.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.BatchKeyValueTags(jobQueue.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
