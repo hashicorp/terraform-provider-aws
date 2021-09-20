@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -150,7 +151,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsMountTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

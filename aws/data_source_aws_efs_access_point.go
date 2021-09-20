@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEfsAccessPoint() *schema.Resource {
+func DataSourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsAccessPointRead,
+		Read: dataSourceAccessPointRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {
@@ -96,7 +96,7 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

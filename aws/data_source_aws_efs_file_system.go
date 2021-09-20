@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEfsFileSystem() *schema.Resource {
+func DataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsFileSystemRead,
+		Read: dataSourceFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -87,7 +87,7 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

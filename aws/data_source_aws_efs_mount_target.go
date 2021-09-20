@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEfsMountTarget() *schema.Resource {
+func DataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsMountTargetRead,
+		Read: dataSourceMountTargetRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {
@@ -75,7 +75,7 @@ func dataSourceAwsEfsMountTarget() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	input := &efs.DescribeMountTargetsInput{}

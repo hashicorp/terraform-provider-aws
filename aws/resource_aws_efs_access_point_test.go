@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -57,7 +58,7 @@ func testSweepEfsAccessPoints(region string) error {
 					id := aws.StringValue(AccessPoint.AccessPointId)
 
 					log.Printf("[INFO] Deleting EFS access point: %s", id)
-					r := resourceAwsEfsAccessPoint()
+					r := ResourceAccessPoint()
 					d := r.Data(nil)
 					d.SetId(id)
 					err := r.Delete(d, client)
@@ -299,7 +300,7 @@ func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
 				Config: testAccAWSEFSAccessPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsAccessPoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
