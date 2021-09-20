@@ -7,21 +7,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/msk/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	clusterResourceName := "aws_msk_cluster.test"
 	secretResourceName := "aws_secretsmanager_secret.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -44,15 +45,15 @@ func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsMskScramSecretAssociation_update(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	secretResourceName := "aws_secretsmanager_secret.test.0"
 	secretResourceName2 := "aws_secretsmanager_secret.test.1"
 	secretResourceName3 := "aws_secretsmanager_secret.test.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -91,12 +92,12 @@ func TestAccAwsMskScramSecretAssociation_update(t *testing.T) {
 }
 
 func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -104,7 +105,7 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 				Config: testAccMskScramSecretAssociation_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskScramSecretAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMskScramSecretAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMskScramSecretAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,13 +114,13 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 }
 
 func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	clusterResourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskScramSecretAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +128,7 @@ func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
 				Config: testAccMskScramSecretAssociation_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskScramSecretAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMskCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMskCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -239,7 +240,7 @@ POLICY
 }
 
 func testAccMskScramSecretAssociation_basic(rName string, count int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccMskClusterBaseConfig(rName),
 		testAccMskScramSecretAssociationBaseConfig(rName, count), `
 resource "aws_msk_scram_secret_association" "test" {
