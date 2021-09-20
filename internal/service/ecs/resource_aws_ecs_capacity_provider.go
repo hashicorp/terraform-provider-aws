@@ -1,4 +1,4 @@
-package aws
+package ecs
 
 import (
 	"fmt"
@@ -11,10 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -142,7 +140,7 @@ func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.FindCapacityProviderByARN(conn, d.Id())
+	output, err := FindCapacityProviderByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
@@ -186,7 +184,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
-		err := resource.Retry(waiter.capacityProviderUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(capacityProviderUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateCapacityProvider(input)
 
 			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
@@ -208,7 +206,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating ECS Capacity Provider (%s): %w", d.Id(), err)
 		}
 
-		if _, err = waiter.waitCapacityProviderUpdated(conn, d.Id()); err != nil {
+		if _, err = waitCapacityProviderUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to update: %w", d.Id(), err)
 		}
 	}
@@ -240,7 +238,7 @@ func resourceCapacityProviderDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting ECS Capacity Provider (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.waitCapacityProviderDeleted(conn, d.Id()); err != nil {
+	if _, err := waitCapacityProviderDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to delete: %w", d.Id(), err)
 	}
 

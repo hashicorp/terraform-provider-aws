@@ -1,4 +1,4 @@
-package aws
+package ecs
 
 import (
 	"bytes"
@@ -16,13 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceService() *schema.Resource {
@@ -530,7 +529,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating ECS service: %s", input)
 
 	// Retry due to AWS IAM & ECS eventual consistency
-	err := resource.Retry(iamwaiter.PropagationTimeout+waiter.serviceCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
 		output, err := conn.CreateService(&input)
 
 		if err != nil {
@@ -584,7 +583,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 			cluster = v.(string)
 		}
 
-		if err := waiter.waitServiceStable(conn, d.Id(), cluster); err != nil {
+		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
 		}
 	}
@@ -613,7 +612,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		output, err = waiter.waitServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
+		output, err = waitServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
 	}
 
 	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
@@ -1126,7 +1125,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if updateService {
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
-		err := resource.Retry(iamwaiter.PropagationTimeout+waiter.serviceUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfiam.PropagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(&input)
 
 			if err != nil {
@@ -1158,7 +1157,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			cluster = v.(string)
 		}
 
-		if err := waiter.waitServiceStable(conn, d.Id(), cluster); err != nil {
+		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
 		}
 	}
@@ -1246,7 +1245,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.waitServiceInactive(conn, d.Id(), d.Get("cluster").(string)); err != nil {
+	if err := waitServiceInactive(conn, d.Id(), d.Get("cluster").(string)); err != nil {
 		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
 	}
 

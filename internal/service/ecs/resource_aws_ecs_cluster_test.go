@@ -1,4 +1,4 @@
-package aws
+package ecs_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func init() {
@@ -397,7 +397,7 @@ func testAccCheckAWSEcsClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := finder.FindClusterByARN(conn, rs.Primary.ID)
+		out, err := tfecs.FindClusterByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -421,7 +421,7 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
-		output, err := finder.FindClusterByARN(conn, rs.Primary.ID)
+		output, err := tfecs.FindClusterByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ECS Cluster (%s): %w", rs.Primary.ID, err)
