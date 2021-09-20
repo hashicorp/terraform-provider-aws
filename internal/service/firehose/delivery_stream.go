@@ -2524,7 +2524,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		createInput.Tags = tags.IgnoreAws().FirehoseTags()
+		createInput.Tags = Tags(tags.IgnoreAws())
 	}
 
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
@@ -2717,7 +2717,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
+		if err := UpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
 		}
 	}
@@ -2783,7 +2783,7 @@ func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	tags, err := tftags.FirehoseListTags(conn, sn)
+	tags, err := ListTags(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
