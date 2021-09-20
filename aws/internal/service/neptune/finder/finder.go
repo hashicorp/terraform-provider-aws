@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func EndpointById(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
-	clusterId, endpointId, err := tfneptune.ReadAwsNeptuneClusterEndpointId(id)
+func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+	clusterId, endpointId, err := tfneptune.readAwsClusterEndpointID(id)
 	if err != nil {
 		return nil, err
 	}

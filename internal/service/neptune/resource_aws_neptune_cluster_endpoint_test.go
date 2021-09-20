@@ -159,7 +159,7 @@ func testAccCheckAWSNeptuneClusterEndpointDestroyWithProvider(s *terraform.State
 			continue
 		}
 
-		_, err := finder.EndpointById(conn, rs.Primary.ID)
+		_, err := finder.FindEndpointByID(conn, rs.Primary.ID)
 		// Return nil if the cluster is already destroyed
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
@@ -190,7 +190,7 @@ func testAccCheckAWSNeptuneClusterEndpointExistsWithProvider(n string, v *neptun
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).NeptuneConn
-		resp, err := finder.EndpointById(conn, rs.Primary.ID)
+		resp, err := finder.FindEndpointByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Neptune Cluster Endpoint (%s) not found: %w", rs.Primary.ID, err)
 		}

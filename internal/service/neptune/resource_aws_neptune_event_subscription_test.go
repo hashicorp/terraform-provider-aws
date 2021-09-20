@@ -57,7 +57,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 				continue
 			}
 
-			_, err = waiter.EventSubscriptionDeleted(conn, name)
+			_, err = waiter.WaitEventSubscriptionDeleted(conn, name)
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}

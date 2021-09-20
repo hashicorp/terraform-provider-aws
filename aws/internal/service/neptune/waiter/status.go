@@ -26,8 +26,8 @@ const (
 	DBClusterEndpointStatusUnknown = "Unknown"
 )
 
-// EventSubscriptionStatus fetches the EventSubscription and its Status
-func EventSubscriptionStatus(conn *neptune.Neptune, subscriptionName string) resource.StateRefreshFunc {
+// StatusEventSubscription fetches the EventSubscription and its Status
+func StatusEventSubscription(conn *neptune.Neptune, subscriptionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(subscriptionName),
@@ -47,8 +47,8 @@ func EventSubscriptionStatus(conn *neptune.Neptune, subscriptionName string) res
 	}
 }
 
-// ClusterStatus fetches the Cluster and its Status
-func ClusterStatus(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+// StatusCluster fetches the Cluster and its Status
+func StatusCluster(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &neptune.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(id),
@@ -70,10 +70,10 @@ func ClusterStatus(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
 	}
 }
 
-// DBClusterEndpointStatus fetches the DBClusterEndpoint and its Status
-func DBClusterEndpointStatus(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+// StatusDBClusterEndpoint fetches the DBClusterEndpoint and its Status
+func StatusDBClusterEndpoint(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.EndpointById(conn, id)
+		output, err := finder.FindEndpointByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
