@@ -17,7 +17,7 @@ import (
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 )
 
-func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
+func TestAccDeviceFarmProject_basic(t *testing.T) {
 	var proj devicefarm.Project
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -61,7 +61,7 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
+func TestAccDeviceFarmProject_timeout(t *testing.T) {
 	var proj devicefarm.Project
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_devicefarm_project.test"
@@ -103,7 +103,7 @@ func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmProject_tags(t *testing.T) {
+func TestAccDeviceFarmProject_tags(t *testing.T) {
 	var proj devicefarm.Project
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_devicefarm_project.test"
@@ -154,7 +154,7 @@ func TestAccAWSDeviceFarmProject_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
+func TestAccDeviceFarmProject_disappears(t *testing.T) {
 	var proj devicefarm.Project
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_devicefarm_project.test"
