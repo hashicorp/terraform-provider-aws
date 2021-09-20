@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
+func TestAccCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
@@ -31,7 +31,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
+func TestAccCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
@@ -52,7 +52,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
+func TestAccCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 

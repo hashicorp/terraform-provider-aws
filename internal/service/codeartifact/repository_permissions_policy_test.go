@@ -16,7 +16,7 @@ import (
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
-func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
+func TestAccCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
@@ -56,7 +56,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_owner(t *testing.T) {
+func TestAccCodeArtifactRepositoryPermissionsPolicy_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
@@ -85,7 +85,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_owner(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears(t *testing.T) {
+func TestAccCodeArtifactRepositoryPermissionsPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
@@ -107,7 +107,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears(t *testing.T) 
 	})
 }
 
-func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears_domain(t *testing.T) {
+func TestAccCodeArtifactRepositoryPermissionsPolicy_Disappears_domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 

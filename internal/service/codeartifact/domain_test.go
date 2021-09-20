@@ -71,7 +71,7 @@ func testSweepCodeArtifactDomains(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
+func TestAccCodeArtifactDomain_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -136,7 +136,7 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
+func TestAccCodeArtifactDomain_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -179,7 +179,7 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
+func TestAccCodeArtifactDomain_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
+func TestAccCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
@@ -51,7 +51,7 @@ func TestAccAWSCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepositoryEndpointDataSource_owner(t *testing.T) {
+func TestAccCodeArtifactRepositoryEndpointDataSource_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
