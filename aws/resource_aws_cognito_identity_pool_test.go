@@ -23,7 +23,7 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +58,7 @@ func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,7 +143,7 @@ func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +186,7 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,7 +241,7 @@ func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -286,7 +286,7 @@ func TestAccAWSCognitoIdentityPool_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -334,7 +334,7 @@ func testAccCheckAWSCognitoIdentityPoolExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito Identity Pool ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoconn
+		conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
 
 		_, err := conn.DescribeIdentityPool(&cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
@@ -345,7 +345,7 @@ func testAccCheckAWSCognitoIdentityPoolExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSCognitoIdentityPoolDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoconn
+	conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool" {
@@ -368,7 +368,7 @@ func testAccCheckAWSCognitoIdentityPoolDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSCognitoIdentity(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoconn
+	conn := acctest.Provider.Meta().(*AWSClient).cognitoconn
 
 	input := &cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int64(int64(1)),
