@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsS3ControlBucketLifecycleConfiguration() *schema.Resource {
+func ResourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ControlBucketLifecycleConfigurationCreate,
-		Read:   resourceAwsS3ControlBucketLifecycleConfigurationRead,
-		Update: resourceAwsS3ControlBucketLifecycleConfigurationUpdate,
-		Delete: resourceAwsS3ControlBucketLifecycleConfigurationDelete,
+		Create: resourceBucketLifecycleConfigurationCreate,
+		Read:   resourceBucketLifecycleConfigurationRead,
+		Update: resourceBucketLifecycleConfigurationUpdate,
+		Delete: resourceBucketLifecycleConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -116,7 +116,7 @@ func resourceAwsS3ControlBucketLifecycleConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsS3ControlBucketLifecycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketLifecycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	bucket := d.Get("bucket").(string)
@@ -147,10 +147,10 @@ func resourceAwsS3ControlBucketLifecycleConfigurationCreate(d *schema.ResourceDa
 
 	d.SetId(bucket)
 
-	return resourceAwsS3ControlBucketLifecycleConfigurationRead(d, meta)
+	return resourceBucketLifecycleConfigurationRead(d, meta)
 }
 
-func resourceAwsS3ControlBucketLifecycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketLifecycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
@@ -205,7 +205,7 @@ func resourceAwsS3ControlBucketLifecycleConfigurationRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsS3ControlBucketLifecycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketLifecycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
@@ -232,10 +232,10 @@ func resourceAwsS3ControlBucketLifecycleConfigurationUpdate(d *schema.ResourceDa
 		return fmt.Errorf("error updating S3 Control Lifecycle Configuration (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsS3ControlBucketLifecycleConfigurationRead(d, meta)
+	return resourceBucketLifecycleConfigurationRead(d, meta)
 }
 
-func resourceAwsS3ControlBucketLifecycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketLifecycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())

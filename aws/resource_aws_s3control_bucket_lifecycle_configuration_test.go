@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAccAWSS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 				Config: testAccAWSS3ControlBucketLifecycleConfigurationConfig_Rule_Id(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketLifecycleConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsS3ControlBucketLifecycleConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBucketLifecycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

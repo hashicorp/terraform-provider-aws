@@ -24,12 +24,12 @@ const (
 	s3controlBucketStatePropagationTimeout = 5 * time.Minute
 )
 
-func resourceAwsS3ControlBucket() *schema.Resource {
+func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ControlBucketCreate,
-		Read:   resourceAwsS3ControlBucketRead,
-		Update: resourceAwsS3ControlBucketUpdate,
-		Delete: resourceAwsS3ControlBucketDelete,
+		Create: resourceBucketCreate,
+		Read:   resourceBucketRead,
+		Update: resourceBucketUpdate,
+		Delete: resourceBucketDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -73,7 +73,7 @@ func resourceAwsS3ControlBucket() *schema.Resource {
 	}
 }
 
-func resourceAwsS3ControlBucketCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -103,10 +103,10 @@ func resourceAwsS3ControlBucketCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsS3ControlBucketRead(d, meta)
+	return resourceBucketRead(d, meta)
 }
 
-func resourceAwsS3ControlBucketRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -181,7 +181,7 @@ func resourceAwsS3ControlBucketRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsS3ControlBucketUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	if d.HasChange("tags_all") {
@@ -192,10 +192,10 @@ func resourceAwsS3ControlBucketUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsS3ControlBucketRead(d, meta)
+	return resourceBucketRead(d, meta)
 }
 
-func resourceAwsS3ControlBucketDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
