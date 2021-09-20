@@ -148,7 +148,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	var err error
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		out, err = conn.DescribeRepositories(input)
-		if d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if d.IsNewResource() && tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -157,11 +157,11 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeRepositories(input)
 	}
 
-	if !d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -231,7 +231,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteRepository(deleteInput)
 
 	if err != nil {
-		if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting ECR Public repository: %s", err)
@@ -244,7 +244,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -252,11 +252,11 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 
 		return resource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 		return nil
 	}
 
