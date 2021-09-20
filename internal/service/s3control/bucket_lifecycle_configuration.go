@@ -407,11 +407,11 @@ func expandS3controlLifecycleRuleFilter(tfList []interface{}) *s3control.Lifecyc
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
-			apiObject.Tag = tftags.New(v).S3controlTags()[0]
+			apiObject.Tag = Tags(tftags.New(v))[0]
 		} else {
 			apiObject.And = &s3control.LifecycleRuleAndOperator{
 				Prefix: apiObject.Prefix,
-				Tags:   tftags.New(v).S3controlTags(),
+				Tags:   Tags(tftags.New(v)),
 			}
 			apiObject.Prefix = nil
 		}
@@ -513,7 +513,7 @@ func flattenS3controlLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilte
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap["tags"] = tftags.S3controlKeyValueTags(v).IgnoreAws().Map()
+			tfMap["tags"] = KeyValueTags(v).IgnoreAws().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
@@ -521,7 +521,7 @@ func flattenS3controlLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilte
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = tftags.S3controlKeyValueTags([]*s3control.S3Tag{v}).IgnoreAws().Map()
+			tfMap["tags"] = KeyValueTags([]*s3control.S3Tag{v}).IgnoreAws().Map()
 		}
 	}
 
