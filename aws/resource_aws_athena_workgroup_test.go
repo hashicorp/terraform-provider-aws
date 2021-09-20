@@ -6,19 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "true"),
@@ -49,12 +50,12 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -72,12 +73,12 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -109,12 +110,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 
 func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -146,12 +147,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 
 func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -183,12 +184,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_SseS3(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -214,14 +215,14 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_Kms(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 	rEncryption := athena.EncryptionOptionSseKms
 	rEncryption2 := athena.EncryptionOptionCseKms
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -257,14 +258,14 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
 	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -298,12 +299,12 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 
 func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -311,7 +312,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 				Config: testAccAthenaWorkGroupConfigConfigurationRequesterPaysEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", "true"),
 				),
@@ -326,7 +327,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", "false"),
 				),
@@ -337,14 +338,14 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_ForceDestroy(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
 	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -378,14 +379,14 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 
 func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
-	rDescription := acctest.RandString(20)
-	rDescriptionUpdate := acctest.RandString(20)
+	rDescription := sdkacctest.RandString(20)
+	rDescriptionUpdate := sdkacctest.RandString(20)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -415,12 +416,12 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -457,15 +458,15 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 	var workgroup athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dbName := acctest.RandString(5)
-	queryName1 := acctest.RandomWithPrefix("tf-athena-named-query-")
-	queryName2 := acctest.RandomWithPrefix("tf-athena-named-query-")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	dbName := sdkacctest.RandString(5)
+	queryName1 := sdkacctest.RandomWithPrefix("tf-athena-named-query-")
+	queryName2 := sdkacctest.RandomWithPrefix("tf-athena-named-query-")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -489,12 +490,12 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{

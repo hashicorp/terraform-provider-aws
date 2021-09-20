@@ -8,17 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAthenaDatabase_basic(t *testing.T) {
-	rInt := acctest.RandInt()
-	dbName := acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -33,11 +34,11 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 }
 
 func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
-	rInt := acctest.RandInt()
-	dbName := acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -53,11 +54,11 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 }
 
 func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
-	rInt := acctest.RandInt()
-	dbName := "_" + acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	dbName := "_" + sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -73,11 +74,11 @@ func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 }
 
 func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
-	rInt := acctest.RandInt()
-	dbName := "A" + acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	dbName := "A" + sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -90,11 +91,11 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 }
 
 func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
-	rInt := acctest.RandInt()
-	dbName := acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -112,11 +113,11 @@ func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 }
 
 func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
-	rInt := acctest.RandInt()
-	dbName := acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			continue
 		}
 
-		rInt := acctest.RandInt()
+		rInt := sdkacctest.RandInt()
 		bucketName := fmt.Sprintf("tf-test-athena-db-%d", rInt)
 		_, err := s3conn.CreateBucket(&s3.CreateBucketInput{
 			Bucket: aws.String(bucketName),
