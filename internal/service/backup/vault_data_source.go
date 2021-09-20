@@ -56,7 +56,7 @@ func dataSourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := tftags.BackupListTags(conn, aws.StringValue(resp.BackupVaultArn))
+	tags, err := ListTags(conn, aws.StringValue(resp.BackupVaultArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Vault (%s): %w", name, err)
 	}
