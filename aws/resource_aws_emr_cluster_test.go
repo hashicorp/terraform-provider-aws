@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepEmrClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).emrconn
+	conn := client.(*conns.AWSClient).EMRConn
 
 	input := &emr.ListClustersInput{
 		ClusterStates: []*string{
@@ -534,7 +535,7 @@ func TestAccAWSEMRCluster_Ec2Attributes_DefaultManagedSecurityGroups(t *testing.
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 					err := testAccEmrDeleteManagedSecurityGroups(conn, &vpc)
 
@@ -1489,7 +1490,7 @@ func TestAccAWSEMRCluster_InstanceFleet_master_only(t *testing.T) {
 }
 
 func testAccCheckAWSEmrDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).emrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -1528,7 +1529,7 @@ func testAccCheckAWSEmrClusterExists(n string, v *emr.Cluster) resource.TestChec
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No cluster id set")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).emrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 		describe, err := conn.DescribeCluster(&emr.DescribeClusterInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
@@ -1555,7 +1556,7 @@ func testAccCheckAWSEmrClusterExists(n string, v *emr.Cluster) resource.TestChec
 
 func testAccCheckAWSEmrClusterDisappears(cluster *emr.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).emrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 		id := aws.StringValue(cluster.Id)
 
 		terminateJobFlowsInput := &emr.TerminateJobFlowsInput{

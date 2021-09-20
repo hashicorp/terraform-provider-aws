@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
@@ -66,7 +67,7 @@ func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
 }
 
 func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
 		cl := l[0].(map[string]interface{})
@@ -101,7 +102,7 @@ func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	input := &emr.GetManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Id()),
@@ -140,7 +141,7 @@ func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsEMRManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	input := &emr.RemoveManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),

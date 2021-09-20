@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -700,8 +701,8 @@ func InstanceFleetConfigSchema() *schema.Resource {
 }
 
 func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EMRConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	log.Printf("[DEBUG] Creating EMR cluster")
@@ -989,15 +990,15 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
-	emrconn := meta.(*AWSClient).emrconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EMRConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &emr.DescribeClusterInput{
 		ClusterId: aws.String(d.Id()),
 	}
 
-	resp, err := emrconn.DescribeCluster(req)
+	resp, err := conn.DescribeCluster(req)
 	if err != nil {
 		// After a Cluster has been terminated for an indeterminate period of time,
 		// the EMR API will return this type of error:
@@ -1036,7 +1037,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("arn", cluster.ClusterArn)
 	}
 
-	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
+	instanceGroups, err := fetchAllEMRInstanceGroups(conn, d.Id())
 
 	if err == nil { // find instance group
 
@@ -1058,7 +1059,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	instanceFleets, err := fetchAllEMRInstanceFleets(emrconn, d.Id())
+	instanceFleets, err := fetchAllEMRInstanceFleets(conn, d.Id())
 
 	if err == nil { // find instance fleets
 
@@ -1127,7 +1128,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting kerberos_attributes: %s", err)
 	}
 
-	respBootstraps, err := emrconn.ListBootstrapActions(&emr.ListBootstrapActionsInput{
+	respBootstraps, err := conn.ListBootstrapActions(&emr.ListBootstrapActionsInput{
 		ClusterId: cluster.Id,
 	})
 	if err != nil {
@@ -1142,7 +1143,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	listStepsInput := &emr.ListStepsInput{
 		ClusterId: aws.String(d.Id()),
 	}
-	err = emrconn.ListStepsPages(listStepsInput, func(page *emr.ListStepsOutput, lastPage bool) bool {
+	err = conn.ListStepsPages(listStepsInput, func(page *emr.ListStepsOutput, lastPage bool) bool {
 		// ListSteps returns steps in reverse order (newest first)
 		for _, step := range page.Steps {
 			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
@@ -1169,7 +1170,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	if d.HasChange("visible_to_all_users") {
 		_, errModify := conn.SetVisibleToAllUsers(&emr.SetVisibleToAllUsersInput{
@@ -1356,7 +1357,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	req := &emr.TerminateJobFlowsInput{
 		JobFlowIds: []*string{
@@ -1920,7 +1921,7 @@ func readBodyJson(body string, target interface{}) error {
 
 func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).emrconn
+		conn := meta.(*conns.AWSClient).EMRConn
 
 		log.Printf("[INFO] Reading EMR Cluster Information: %s", d.Id())
 		params := &emr.DescribeClusterInput{
