@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalytics/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceApplication() *schema.Resource {
@@ -30,7 +31,7 @@ func ResourceApplication() *schema.Resource {
 		Delete: resourceApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
-			SetTagsDiff,
+			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("inputs", func(_ context.Context, old, new, meta interface{}) bool {
 				// An existing input configuration cannot be deleted.
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
@@ -603,9 +604,9 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"version": {
 				Type:     schema.TypeInt,
@@ -618,7 +619,7 @@ func ResourceApplication() *schema.Resource {
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	applicationName := d.Get("name").(string)
 
 	input := &kinesisanalytics.CreateApplicationInput{
@@ -743,7 +744,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting reference_data_sources: %w", err)
 	}
 
-	tags, err := keyvaluetags.KinesisanalyticsListTags(conn, arn)
+	tags, err := tftags.KinesisanalyticsListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Analytics Application (%s): %w", arn, err)
@@ -1112,7 +1113,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.KinesisanalyticsUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.KinesisanalyticsUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
 		}
 	}
