@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sfn/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
@@ -313,7 +314,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 			return fmt.Errorf("No Step Function State Machine ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sfnconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
 		output, err := finder.StateMachineByARN(conn, rs.Primary.ID)
 
@@ -328,7 +329,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 }
 
 func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sfnconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_state_machine" {
