@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchEventArchive() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input, err := buildCreateArchiveInputStruct(d)
 
@@ -85,7 +86,7 @@ func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	input := &events.DescribeArchiveInput{
 		ArchiveName: aws.String(d.Id()),
 	}
@@ -115,7 +116,7 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloudWatchEventArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input, err := buildUpdateArchiveInputStruct(d)
 
@@ -133,7 +134,7 @@ func resourceAwsCloudWatchEventArchiveUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudWatchEventArchiveDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.DeleteArchiveInput{
 		ArchiveName: aws.String(d.Get("name").(string)),

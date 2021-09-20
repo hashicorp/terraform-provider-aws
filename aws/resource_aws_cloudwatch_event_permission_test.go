@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepCloudWatchEventPermissions(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
 	output, err := conn.DescribeEventBus(&events.DescribeEventBusInput{})
 	if err != nil {
@@ -316,7 +317,7 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -354,7 +355,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 }
 
 func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_permission" {

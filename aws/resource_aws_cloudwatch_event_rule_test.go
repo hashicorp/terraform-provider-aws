@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -37,7 +38,7 @@ func testSweepCloudWatchEventRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*conns.AWSClient).CloudWatchEventsConn
 
 	var sweeperErrs *multierror.Error
 	var count int
@@ -579,7 +580,7 @@ func testAccCheckCloudWatchEventRuleExists(n string, rule *events.DescribeRuleOu
 			return fmt.Errorf("No CloudWatch Events Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 		resp, err := finder.RuleByResourceID(conn, rs.Primary.ID)
 
@@ -600,7 +601,7 @@ func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.T
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 		resp, err := finder.RuleByResourceID(conn, rs.Primary.ID)
 
@@ -617,7 +618,7 @@ func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.T
 }
 
 func testAccCheckAWSCloudWatchEventRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_rule" {

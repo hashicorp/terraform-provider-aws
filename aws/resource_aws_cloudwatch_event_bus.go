@@ -8,6 +8,7 @@ import (
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
@@ -46,8 +47,8 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	eventBusName := d.Get("name").(string)
@@ -78,9 +79,9 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &events.DescribeEventBusInput{
 		Name: aws.String(d.Id()),
@@ -121,7 +122,7 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -136,7 +137,7 @@ func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudWatchEventBusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", d.Id())
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),

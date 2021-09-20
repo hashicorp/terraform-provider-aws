@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Get("event_bus_name").(string)
 	policy := d.Get("policy").(string)
@@ -68,7 +69,7 @@ func resourceAwsCloudWatchEventBusPolicyCreate(d *schema.ResourceData, meta inte
 
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
 func resourceAwsCloudWatchEventBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Id()
 
@@ -133,7 +134,7 @@ func getEventBusPolicy(output *events.DescribeEventBusOutput) (*string, error) {
 }
 
 func resourceAwsCloudWatchEventBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Id()
 
@@ -157,7 +158,7 @@ func resourceAwsCloudWatchEventBusPolicyUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsCloudWatchEventBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Id()
 	removeAllPermissions := true

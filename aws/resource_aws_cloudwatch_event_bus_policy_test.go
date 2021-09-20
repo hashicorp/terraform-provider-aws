@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
@@ -86,7 +87,7 @@ func testAccCheckAWSCloudwatchEventBusPolicyExists(pr string) resource.TestCheck
 			Name: aws.String(eventBusName),
 		}
 
-		cloudWatchEventsConnection := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		cloudWatchEventsConnection := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 
 		if err != nil {
@@ -123,7 +124,7 @@ func testAccAWSCloudwatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 			Name: aws.String(eventBusName),
 		}
 
-		cloudWatchEventsConnection := acctest.Provider.Meta().(*AWSClient).cloudwatcheventsconn
+		cloudWatchEventsConnection := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 		if err != nil {
 			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
