@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
+func ResourceRoutingControl() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryControlConfigRoutingControlCreate,
-		Read:   resourceAwsRoute53RecoveryControlConfigRoutingControlRead,
-		Update: resourceAwsRoute53RecoveryControlConfigRoutingControlUpdate,
-		Delete: resourceAwsRoute53RecoveryControlConfigRoutingControlDelete,
+		Create: resourceRoutingControlCreate,
+		Read:   resourceRoutingControlRead,
+		Update: resourceRoutingControlUpdate,
+		Delete: resourceRoutingControlDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,7 +49,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryControlConfigRoutingControlCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoutingControlCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.CreateRoutingControlInput{
@@ -79,10 +79,10 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlCreate(d *schema.Resou
 		return fmt.Errorf("error waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d, meta)
+	return resourceRoutingControlRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRoutingControlRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeRoutingControlInput{
@@ -114,7 +114,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d *schema.Resourc
 	return nil
 }
 
-func resourceAwsRoute53RecoveryControlConfigRoutingControlUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoutingControlUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.UpdateRoutingControlInput{
@@ -128,10 +128,10 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlUpdate(d *schema.Resou
 		return fmt.Errorf("error updating Route53 Recovery Control Config Routing Control: %s", err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d, meta)
+	return resourceRoutingControlRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryControlConfigRoutingControlDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteRoutingControlInput{
