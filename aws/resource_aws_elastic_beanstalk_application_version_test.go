@@ -20,7 +20,7 @@ func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,7 +40,7 @@ func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -61,7 +61,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 }
 
 func testAccCheckApplicationVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_application_version" {
@@ -148,7 +148,7 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := acctest.Provider.Meta().(*AWSClient).elasticbeanstalkconn
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
 			VersionLabels:   []*string{aws.String(rs.Primary.ID)},

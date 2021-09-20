@@ -7,6 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -18,7 +21,7 @@ func TestAccAwsElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,13 +49,14 @@ data "aws_elastic_beanstalk_application" "test" {
 }
 `, testAccBeanstalkAppConfigWithMaxAge(rName))
 }
+
 func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_cluster" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*AWSClient).eksconn
 
 		_, err := finder.ClusterByName(conn, rs.Primary.ID)
 
@@ -69,4 +73,3 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 
 	return nil
 }
-
