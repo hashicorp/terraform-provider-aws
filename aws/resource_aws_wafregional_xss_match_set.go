@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -115,7 +116,7 @@ func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interfac
 
 	set := resp.XssMatchSet
 
-	if err := d.Set("xss_match_tuple", flattenWafXssMatchTuples(set.XssMatchTuples)); err != nil {
+	if err := d.Set("xss_match_tuple", flattenXSSMatchTuples(set.XssMatchTuples)); err != nil {
 		return fmt.Errorf("error setting xss_match_tuple: %w", err)
 	}
 	d.Set("name", set.Name)
@@ -188,4 +189,15 @@ func updateXssMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafr
 	}
 
 	return nil
+}
+
+func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
+	out := make([]interface{}, len(ts))
+	for i, t := range ts {
+		m := make(map[string]interface{})
+		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+		m["text_transformation"] = aws.StringValue(t.TextTransformation)
+		out[i] = m
+	}
+	return out
 }

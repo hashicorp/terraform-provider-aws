@@ -184,7 +184,7 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
+			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
@@ -232,8 +232,8 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
-				Updates:       diffWafWebAclRules([]interface{}{}, rules),
+				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWebACLRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
 			return conn.UpdateWebACL(req)
@@ -285,12 +285,12 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Set("arn", webACLARN)
 
-	if err := d.Set("default_action", flattenWafAction(resp.WebACL.DefaultAction)); err != nil {
+	if err := d.Set("default_action", flattenAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("error setting default_action: %s", err)
 	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
-	if err := d.Set("rule", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
+	if err := d.Set("rule", flattenWebACLRules(resp.WebACL.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %s", err)
 	}
 
@@ -345,8 +345,8 @@ func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
-				Updates:       diffWafWebAclRules(oldR, newR),
+				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
 			return conn.UpdateWebACL(req)
@@ -402,8 +402,8 @@ func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
-				Updates:       diffWafWebAclRules(rules, []interface{}{}),
+				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
 			return conn.UpdateWebACL(req)
@@ -517,3 +517,23 @@ func flattenWAFRegionalRedactedFields(fieldToMatches []*waf.FieldToMatch) []inte
 
 	return []interface{}{m}
 }
+func diffWebACLRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
+	updates := make([]*waf.WebACLUpdate, 0)
+
+	for _, or := range oldR {
+		aclRule := or.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newR, aclRule); contains {
+			newR = append(newR[:idx], newR[idx+1:]...)
+			continue
+		}
+		updates = append(updates, expandWebACLUpdate(waf.ChangeActionDelete, aclRule))
+	}
+
+	for _, nr := range newR {
+		aclRule := nr.(map[string]interface{})
+		updates = append(updates, expandWebACLUpdate(waf.ChangeActionInsert, aclRule))
+	}
+	return updates
+}
+
