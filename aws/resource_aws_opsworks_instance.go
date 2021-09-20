@@ -585,7 +585,7 @@ func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{})
 		EbsOptimized:         aws.Bool(d.Get("ebs_optimized").(bool)),
 		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
 		InstanceType:         aws.String(d.Get("instance_type").(string)),
-		LayerIds:             expandStringList(d.Get("layer_ids").([]interface{})),
+		LayerIds:             flex.ExpandStringList(d.Get("layer_ids").([]interface{})),
 		StackId:              aws.String(d.Get("stack_id").(string)),
 	}
 
@@ -767,7 +767,7 @@ func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("layer_ids"); ok {
-		req.LayerIds = expandStringList(v.([]interface{}))
+		req.LayerIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("os"); ok {
