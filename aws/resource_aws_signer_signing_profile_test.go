@@ -8,21 +8,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
 	resourceName := "aws_signer_signing_profile.test_sp"
-	rString := acctest.RandString(48)
+	rString := sdkacctest.RandString(48)
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
 
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -52,8 +53,8 @@ func TestAccAWSSignerSigningProfile_GenerateNameWithNamePrefix(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -74,8 +75,8 @@ func TestAccAWSSignerSigningProfile_GenerateName(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -97,8 +98,8 @@ func TestAccAWSSignerSigningProfile_tags(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -128,8 +129,8 @@ func TestAccAWSSignerSigningProfile_SignatureValidityPeriod(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -160,7 +161,7 @@ func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
 
 	output, err := conn.ListSigningPlatforms(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

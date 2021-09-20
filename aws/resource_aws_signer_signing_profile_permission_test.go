@@ -6,24 +6,25 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 	resourceName := "aws_signer_signing_profile_permission.test_sp_permission"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
-	rString := acctest.RandString(53)
+	rString := sdkacctest.RandString(53)
 	profileName := fmt.Sprintf("tf_acc_spp_%s", rString)
 
 	var conf signer.GetSigningProfileOutput
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -49,15 +50,15 @@ func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 	resourceName := "aws_signer_signing_profile_permission.test_sp_permission"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
-	rString := acctest.RandString(53)
+	rString := sdkacctest.RandString(53)
 	profileName := fmt.Sprintf("tf_acc_spp_%s", rString)
 
 	var conf signer.GetSigningProfileOutput
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -91,15 +92,15 @@ func TestAccAWSSignerSigningProfilePermission_StartSigningJob_GetSP(t *testing.T
 	resourceName1 := "aws_signer_signing_profile_permission.sp1_perm"
 	resourceName2 := "aws_signer_signing_profile_permission.sp2_perm"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
-	rString := acctest.RandString(53)
+	rString := sdkacctest.RandString(53)
 	profileName := fmt.Sprintf("tf_acc_spp_%s", rString)
 
 	var conf signer.GetSigningProfileOutput
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -124,7 +125,7 @@ func TestAccAWSSignerSigningProfilePermission_StartSigningJob_GetSP(t *testing.T
 func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
 	resourceName := "aws_signer_signing_profile_permission.sp1_perm"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
-	rString := acctest.RandString(53)
+	rString := sdkacctest.RandString(53)
 	profileName := fmt.Sprintf("tf_acc_spp_%s", rString)
 	statementNamePrefix := "tf_acc_spp_statement_"
 
@@ -132,8 +133,8 @@ func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
