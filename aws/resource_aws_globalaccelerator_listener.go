@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlobalAcceleratorListener() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 }
 
 func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	opts := &globalaccelerator.CreateListenerInput{
@@ -105,7 +106,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	listener, err := finder.ListenerByARN(conn, d.Id())
 
@@ -136,7 +137,7 @@ func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.UpdateListenerInput{
@@ -160,7 +161,7 @@ func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsGlobalAcceleratorListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.DeleteListenerInput{

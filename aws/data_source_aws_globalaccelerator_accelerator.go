@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
@@ -85,8 +86,8 @@ func dataSourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 }
 
 func dataSourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
 

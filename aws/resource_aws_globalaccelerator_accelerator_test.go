@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepGlobalAcceleratorAccelerators(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).globalacceleratorconn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
@@ -78,7 +79,7 @@ func testSweepGlobalAcceleratorAccelerators(region string) error {
 }
 
 func sweepGlobalAcceleratorListeners(client interface{}, acceleratorArn *string) *multierror.Error {
-	conn := client.(*AWSClient).globalacceleratorconn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
 	var sweeperErrs *multierror.Error
 
 	log.Printf("[INFO] deleting Listeners for Accelerator %s", *acceleratorArn)
@@ -117,7 +118,7 @@ func sweepGlobalAcceleratorListeners(client interface{}, acceleratorArn *string)
 }
 
 func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *string) *multierror.Error {
-	conn := client.(*AWSClient).globalacceleratorconn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
 	var sweeperErrs *multierror.Error
 
 	log.Printf("[INFO] deleting Endpoint Groups for Listener %s", *listenerArn)
@@ -363,7 +364,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 }
 
 func testAccPreCheckGlobalAccelerator(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
 
@@ -380,7 +381,7 @@ func testAccPreCheckGlobalAccelerator(t *testing.T) {
 
 func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -402,7 +403,7 @@ func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCh
 }
 
 func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_accelerator" {

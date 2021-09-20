@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
@@ -104,7 +105,7 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 
 func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -126,7 +127,7 @@ func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheck
 }
 
 func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_listener" {
