@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
+func TestAccAthenaWorkGroup_basic(t *testing.T) {
 	var workgroup1 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -50,7 +50,7 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
+func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 	var workgroup1 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -73,7 +73,7 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testing.T) {
+func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -110,7 +110,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *testing.T) {
+func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -147,7 +147,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *testing.T) {
+func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -184,7 +184,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_SseS3(t *testing.T) {
+func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
 	var workgroup1 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -215,7 +215,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_Kms(t *testing.T) {
+func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -258,7 +258,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(t *testing.T) {
+func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -299,7 +299,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) {
+func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 	var workgroup1 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -338,7 +338,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 	})
 } //
 
-func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_ForceDestroy(t *testing.T) {
+func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -379,7 +379,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
+func TestAccAthenaWorkGroup_description(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -416,7 +416,7 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
+func TestAccAthenaWorkGroup_state(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"
@@ -458,7 +458,7 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
+func TestAccAthenaWorkGroup_forceDestroy(t *testing.T) {
 	var workgroup athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dbName := sdkacctest.RandString(5)
@@ -490,7 +490,7 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
+func TestAccAthenaWorkGroup_tags(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_athena_workgroup.test"

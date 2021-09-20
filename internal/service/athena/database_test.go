@@ -16,7 +16,7 @@ import (
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 )
 
-func TestAccAWSAthenaDatabase_basic(t *testing.T) {
+func TestAccAthenaDatabase_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,7 +35,7 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
+func TestAccAthenaDatabase_encryption(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,7 +55,7 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
+func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := "_" + sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +75,7 @@ func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
+func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := "A" + sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,7 +92,7 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
+func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,7 +114,7 @@ func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	})
 }
 
-func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
+func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := sdkacctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
