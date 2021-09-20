@@ -23,13 +23,13 @@ func init() {
 }
 
 func testSweepWorkspacesIpGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).workspacesconn
 	input := &workspaces.DescribeIpGroupsInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = lister.DescribeIpGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
 		if page == nil {
@@ -41,13 +41,13 @@ func testSweepWorkspacesIpGroups(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(ipGroup.GroupId))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WorkSpaces Ip Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -56,7 +56,7 @@ func testSweepWorkspacesIpGroups(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = acctest.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
@@ -75,7 +75,7 @@ func testAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func testAccAwsWorkspacesIpGroup_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,14 +165,14 @@ func testAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWorkspacesIpGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWorkspacesIpGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -194,7 +194,7 @@ func testAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +217,7 @@ func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -250,7 +250,7 @@ func testAccCheckAwsWorkspacesIpGroupExists(n string, v *workspaces.IpGroup) res
 			return fmt.Errorf("No Workpsaces IP Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
