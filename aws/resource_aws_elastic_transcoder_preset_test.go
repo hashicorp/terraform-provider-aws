@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
@@ -196,7 +197,7 @@ func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 
 func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -222,7 +223,7 @@ func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictrans
 
 func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 		_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
 			Id: preset.Id,
 		})
@@ -232,7 +233,7 @@ func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Pre
 }
 
 func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastictranscoder_preset" {

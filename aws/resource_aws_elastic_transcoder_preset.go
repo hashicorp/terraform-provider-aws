@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticTranscoderPreset() *schema.Resource {
@@ -320,7 +321,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 }
 
 func resourceAwsElasticTranscoderPresetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
@@ -565,7 +566,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 }
 
 func resourceAwsElasticTranscoderPresetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	resp, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
 		Id: aws.String(d.Id()),
@@ -724,7 +725,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 }
 
 func resourceAwsElasticTranscoderPresetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())
 	_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
