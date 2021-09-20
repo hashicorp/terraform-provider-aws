@@ -250,7 +250,7 @@ func resourceLedgerDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForQLDBLedgerDeletion(conn, d.Id()); err != nil {
+	if err := WaitForLedgerDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for QLDB Ledger (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -270,7 +270,7 @@ func qldbLedgerRefreshStatusFunc(conn *qldb.QLDB, ledger string) resource.StateR
 	}
 }
 
-func waitForQLDBLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
+func WaitForLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{qldb.LedgerStateCreating,
 			qldb.LedgerStateActive,
