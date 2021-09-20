@@ -1,4 +1,4 @@
-package aws
+package cloudtrail
 
 import (
 	"fmt"
@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudtrail"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func Resource() *schema.Resource {
@@ -61,7 +60,7 @@ func Resource() *schema.Resource {
 									"field": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice(tfcloudtrail.field_Values(), false),
+										ValidateFunc: validation.StringInSlice(field_Values(), false),
 									},
 									"not_ends_with": {
 										Type:     schema.TypeList,
@@ -147,7 +146,7 @@ func Resource() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice(tfcloudtrail.resourceType_Values(), false),
+										ValidateFunc: validation.StringInSlice(resourceType_Values(), false),
 									},
 									"values": {
 										Type:     schema.TypeList,
@@ -278,7 +277,7 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -481,7 +480,7 @@ func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
 	var t *cloudtrail.UpdateTrailOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {

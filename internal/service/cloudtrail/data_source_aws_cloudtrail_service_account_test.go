@@ -1,4 +1,4 @@
-package aws
+package cloudtrail_test
 
 import (
 	"testing"
