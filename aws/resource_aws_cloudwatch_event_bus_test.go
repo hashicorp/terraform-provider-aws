@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepCloudWatchEventBuses(region string) error {
 				continue
 			}
 
-			r := resourceAwsCloudWatchEventBus()
+			r := ResourceBus()
 			d := r.Data(nil)
 			d.SetId(name)
 			err = r.Delete(d, client)
@@ -217,7 +218,7 @@ func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventBusExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventBus(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

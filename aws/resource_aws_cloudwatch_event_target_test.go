@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -384,7 +385,7 @@ func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

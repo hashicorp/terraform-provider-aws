@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventTarget() *schema.Resource {
+func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventTargetCreate,
-		Read:   resourceAwsCloudWatchEventTargetRead,
-		Update: resourceAwsCloudWatchEventTargetUpdate,
-		Delete: resourceAwsCloudWatchEventTargetDelete,
+		Create: resourceTargetCreate,
+		Read:   resourceTargetRead,
+		Update: resourceTargetUpdate,
+		Delete: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudWatchEventTargetImport,
@@ -385,7 +385,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	rule := d.Get("rule").(string)
@@ -419,10 +419,10 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
 
-	return resourceAwsCloudWatchEventTargetRead(d, meta)
+	return resourceTargetRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	busName := d.Get("event_bus_name").(string)
@@ -512,7 +512,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := buildPutTargetInputStruct(d)
@@ -523,10 +523,10 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error updating CloudWatch Events Target (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudWatchEventTargetRead(d, meta)
+	return resourceTargetRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.RemoveTargetsInput{

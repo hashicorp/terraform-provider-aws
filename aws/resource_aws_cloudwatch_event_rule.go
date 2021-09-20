@@ -25,12 +25,12 @@ const (
 	cloudWatchEventRuleDeleteRetryTimeout = 5 * time.Minute
 )
 
-func resourceAwsCloudWatchEventRule() *schema.Resource {
+func ResourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventRuleCreate,
-		Read:   resourceAwsCloudWatchEventRuleRead,
-		Update: resourceAwsCloudWatchEventRuleUpdate,
-		Delete: resourceAwsCloudWatchEventRuleDelete,
+		Create: resourceRuleCreate,
+		Read:   resourceRuleRead,
+		Update: resourceRuleUpdate,
+		Delete: resourceRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -103,7 +103,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -146,10 +146,10 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(tfevents.RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
 
-	return resourceAwsCloudWatchEventRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -216,7 +216,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	_, ruleName, err := tfevents.RuleParseResourceID(d.Id())
@@ -263,10 +263,10 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsCloudWatchEventRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, ruleName, err := tfevents.RuleParseResourceID(d.Id())

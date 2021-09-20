@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
+func ResourceBusPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventBusPolicyCreate,
-		Read:   resourceAwsCloudWatchEventBusPolicyRead,
-		Update: resourceAwsCloudWatchEventBusPolicyUpdate,
-		Delete: resourceAwsCloudWatchEventBusPolicyDelete,
+		Create: resourceBusPolicyCreate,
+		Read:   resourceBusPolicyRead,
+		Update: resourceBusPolicyUpdate,
+		Delete: resourceBusPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("event_bus_name", d.Id())
@@ -45,7 +45,7 @@ func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Get("event_bus_name").(string)
@@ -64,11 +64,11 @@ func resourceAwsCloudWatchEventBusPolicyCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(eventBusName)
 
-	return resourceAwsCloudWatchEventBusPolicyRead(d, meta)
+	return resourceBusPolicyRead(d, meta)
 }
 
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
-func resourceAwsCloudWatchEventBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Id()
@@ -133,7 +133,7 @@ func getEventBusPolicy(output *events.DescribeEventBusOutput) (*string, error) {
 	return output.Policy, nil
 }
 
-func resourceAwsCloudWatchEventBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Id()
@@ -154,10 +154,10 @@ func resourceAwsCloudWatchEventBusPolicyUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error updating policy for CloudWatch EventBus (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudWatchEventBusPolicyRead(d, meta)
+	return resourceBusPolicyRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Id()

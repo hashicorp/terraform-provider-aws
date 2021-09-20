@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventPermission() *schema.Resource {
+func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventPermissionCreate,
-		Read:   resourceAwsCloudWatchEventPermissionRead,
-		Update: resourceAwsCloudWatchEventPermissionUpdate,
-		Delete: resourceAwsCloudWatchEventPermissionDelete,
+		Create: resourcePermissionCreate,
+		Read:   resourcePermissionRead,
+		Update: resourcePermissionUpdate,
+		Delete: resourcePermissionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsCloudWatchEventPermission() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName := d.Get("event_bus_name").(string)
@@ -104,11 +104,11 @@ func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta int
 	id := tfevents.PermissionCreateResourceID(eventBusName, statementID)
 	d.SetId(id)
 
-	return resourceAwsCloudWatchEventPermissionRead(d, meta)
+	return resourcePermissionRead(d, meta)
 }
 
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
-func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
@@ -205,7 +205,7 @@ func getPolicyStatement(output *events.DescribeEventBusOutput, statementID strin
 	return findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, statementID)
 }
 
-func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
@@ -231,10 +231,10 @@ func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error updating CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudWatchEventPermissionRead(d, meta)
+	return resourcePermissionRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventPermissionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
