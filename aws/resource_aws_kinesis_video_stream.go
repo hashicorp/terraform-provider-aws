@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceStream() *schema.Resource {
@@ -25,7 +26,7 @@ func ResourceStream() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -83,9 +84,9 @@ func ResourceStream() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -93,7 +94,7 @@ func ResourceStream() *schema.Resource {
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisVideoConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &kinesisvideo.CreateStreamInput{
 		StreamName:           aws.String(d.Get("name").(string)),
@@ -170,7 +171,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("version", resp.StreamInfo.Version)
 
-	tags, err := keyvaluetags.KinesisvideoListTags(conn, d.Id())
+	tags, err := tftags.KinesisvideoListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Video Stream (%s): %s", d.Id(), err)
@@ -218,7 +219,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.KinesisvideoUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.KinesisvideoUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Video Stream (%s) tags: %s", d.Id(), err)
 		}
 	}
