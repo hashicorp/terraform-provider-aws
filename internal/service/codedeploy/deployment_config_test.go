@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
+func TestAccCodeDeployDeploymentConfig_basic(t *testing.T) {
 	var config1 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -44,7 +44,7 @@ func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
+func TestAccCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -87,7 +87,7 @@ func TestAccAWSCodeDeployDeploymentConfig_fleetPercent(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
+func TestAccCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -130,7 +130,7 @@ func TestAccAWSCodeDeployDeploymentConfig_hostCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
+func TestAccCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -179,7 +179,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficCanary(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
+func TestAccCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 	var config1, config2 codedeploy.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
