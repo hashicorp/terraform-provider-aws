@@ -15,7 +15,7 @@ import (
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
-func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
+func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	clusterResourceName := "aws_msk_cluster.test"
@@ -45,7 +45,7 @@ func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMskScramSecretAssociation_update(t *testing.T) {
+func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	secretResourceName := "aws_secretsmanager_secret.test.0"
@@ -92,7 +92,7 @@ func TestAccAwsMskScramSecretAssociation_update(t *testing.T) {
 	})
 }
 
-func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
+func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 
@@ -114,7 +114,7 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
+func TestAccKafkaScramSecretAssociation_Disappears_cluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	clusterResourceName := "aws_msk_cluster.test"

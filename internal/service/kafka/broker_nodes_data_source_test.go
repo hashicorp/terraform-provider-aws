@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSMskBrokerNodesDataSource_basic(t *testing.T) {
+func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_msk_broker_nodes.test"
 	resourceName := "aws_msk_cluster.test"
