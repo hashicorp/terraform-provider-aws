@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsWafv2IPSet_basic(t *testing.T) {
+func TestAccWAFV2IPSetDataSource_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_ip_set.test"
 	datasourceName := "data.aws_wafv2_ip_set.test"

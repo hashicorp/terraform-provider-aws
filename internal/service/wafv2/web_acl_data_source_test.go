@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsWafv2WebACL_basic(t *testing.T) {
+func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 	datasourceName := "data.aws_wafv2_web_acl.test"

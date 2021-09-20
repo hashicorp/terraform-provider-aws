@@ -80,7 +80,7 @@ func testSweepWafv2RuleGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
+func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -118,7 +118,7 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_updateRule(t *testing.T) {
+func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -184,7 +184,7 @@ func TestAccAwsWafv2RuleGroup_updateRule(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_updateRuleProperties(t *testing.T) {
+func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -357,7 +357,7 @@ func TestAccAwsWafv2RuleGroup_updateRuleProperties(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -420,7 +420,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
+func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -583,7 +583,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
+func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ruleGroupNewName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -631,7 +631,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
+func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -678,7 +678,7 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
+func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -725,7 +725,7 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
+func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -748,7 +748,7 @@ func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -802,7 +802,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
+func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -859,7 +859,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement_ForwardedIPConfig(t *testing.T) 
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_ipSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -896,7 +896,7 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement_IPSetForwardedIPConfig(t *testing.T) {
+func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -996,7 +996,7 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement_IPSetForwardedIPConfig(t *
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
+func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1069,7 +1069,7 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
+func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1100,7 +1100,7 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1138,7 +1138,7 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
+func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1219,7 +1219,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_RuleAction_CustomRequestHandling(t *testing.T) {
+func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1290,7 +1290,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomRequestHandling(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_RuleAction_CustomResponse(t *testing.T) {
+func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1337,7 +1337,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomResponse(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1392,7 +1392,7 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1463,7 +1463,7 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
+func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -1512,7 +1512,7 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"

@@ -92,7 +92,7 @@ func testSweepWafv2WebAcls(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAwsWafv2WebACL_basic(t *testing.T) {
+func TestAccWAFV2WebACL_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -132,7 +132,7 @@ func TestAccAwsWafv2WebACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Update_rule(t *testing.T) {
+func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -263,7 +263,7 @@ func TestAccAwsWafv2WebACL_Update_rule(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Update_ruleProperties(t *testing.T) {
+func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -469,7 +469,7 @@ func TestAccAwsWafv2WebACL_Update_ruleProperties(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Update_nameForceNew(t *testing.T) {
+func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 	var before, after wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ruleGroupNewName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -521,7 +521,7 @@ func TestAccAwsWafv2WebACL_Update_nameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_disappears(t *testing.T) {
+func TestAccWAFV2WebACL_disappears(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -544,7 +544,7 @@ func TestAccAwsWafv2WebACL_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_ManagedRuleGroup_basic(t *testing.T) {
+func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -615,7 +615,7 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_minimal(t *testing.T) {
+func TestAccWAFV2WebACL_minimal(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -648,7 +648,7 @@ func TestAccAwsWafv2WebACL_minimal(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_RateBased_basic(t *testing.T) {
+func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -717,7 +717,7 @@ func TestAccAwsWafv2WebACL_RateBased_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_GeoMatch_basic(t *testing.T) {
+func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -809,7 +809,7 @@ func TestAccAwsWafv2WebACL_GeoMatch_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_GeoMatch_forwardedIPConfig(t *testing.T) {
+func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -874,7 +874,7 @@ func TestAccAwsWafv2WebACL_GeoMatch_forwardedIPConfig(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_IPSetReference_basic(t *testing.T) {
+func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -920,7 +920,7 @@ func TestAccAwsWafv2WebACL_IPSetReference_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_IPSetReference_forwardedIPConfig(t *testing.T) {
+func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1024,7 +1024,7 @@ func TestAccAwsWafv2WebACL_IPSetReference_forwardedIPConfig(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_RateBased_forwardedIPConfig(t *testing.T) {
+func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1093,7 +1093,7 @@ func TestAccAwsWafv2WebACL_RateBased_forwardedIPConfig(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_RuleGroupReference_basic(t *testing.T) {
+func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1158,7 +1158,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReference_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Custom_requestHandling(t *testing.T) {
+func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1241,7 +1241,7 @@ func TestAccAwsWafv2WebACL_Custom_requestHandling(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Custom_response(t *testing.T) {
+func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1326,7 +1326,7 @@ func TestAccAwsWafv2WebACL_Custom_response(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_tags(t *testing.T) {
+func TestAccWAFV2WebACL_tags(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1376,7 +1376,7 @@ func TestAccAwsWafv2WebACL_tags(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13862
-func TestAccAwsWafv2WebACL_RateBased_maxNested(t *testing.T) {
+func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -1419,7 +1419,7 @@ func TestAccAwsWafv2WebACL_RateBased_maxNested(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Operators_maxNested(t *testing.T) {
+func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"

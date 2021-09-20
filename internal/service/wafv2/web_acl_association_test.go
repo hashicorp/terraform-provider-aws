@@ -17,7 +17,7 @@ import (
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 )
 
-func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
+func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 	testName := fmt.Sprintf("web-acl-association-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_web_acl_association.test"
 
@@ -49,7 +49,7 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
+func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 	testName := fmt.Sprintf("web-acl-association-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_web_acl_association.test"
 

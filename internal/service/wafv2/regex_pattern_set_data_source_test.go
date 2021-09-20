@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsWafv2RegexPatternSet_basic(t *testing.T) {
+func TestAccWAFV2RegexPatternSetDataSource_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 	datasourceName := "data.aws_wafv2_regex_pattern_set.test"
