@@ -1,4 +1,4 @@
-package aws
+package cognitoidp
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -91,7 +90,7 @@ func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(domain)
 
-	if _, err := waiter.waitUserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
+	if _, err := waitUserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
 		return fmt.Errorf("error waiting for User Pool Domain (%s) creation: %w", d.Id(), err)
 	}
 
@@ -148,7 +147,7 @@ func resourceUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error deleting User Pool Domain: %w", err)
 	}
 
-	if _, err := waiter.waitUserPoolDomainDeleted(conn, d.Id()); err != nil {
+	if _, err := waitUserPoolDomainDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}

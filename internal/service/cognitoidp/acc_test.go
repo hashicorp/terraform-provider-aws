@@ -1,4 +1,4 @@
-package aws
+package cognitoidp_test
 
 import (
 	"context"

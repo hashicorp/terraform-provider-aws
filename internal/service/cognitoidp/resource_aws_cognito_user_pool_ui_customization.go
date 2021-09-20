@@ -1,4 +1,4 @@
-package aws
+package cognitoidp
 
 import (
 	"encoding/base64"
@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -119,7 +118,7 @@ func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", d.Id(), err)
 	}
 
-	uiCustomization, err := finder.FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
+	uiCustomization, err := FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s) not found, removing from state", userPoolId, clientId)
