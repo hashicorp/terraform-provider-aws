@@ -535,7 +535,7 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.CanaryByName(conn, rs.Primary.ID)
+		_, err := finder.FindCanaryByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -564,7 +564,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
 
-		output, err := finder.CanaryByName(conn, rs.Primary.ID)
+		output, err := finder.FindCanaryByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

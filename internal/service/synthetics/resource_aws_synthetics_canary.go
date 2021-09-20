@@ -289,9 +289,9 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	iamwaiterStopTime := time.Now().Add(iamwaiter.PropagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		iamwaiter.PropagationTimeout+waiter.CanaryCreatedTimeout,
+		iamwaiter.PropagationTimeout+waiter.canaryCreatedTimeout,
 		func() (interface{}, error) {
-			return waiter.CanaryReady(conn, d.Id())
+			return waiter.waitCanaryReady(conn, d.Id())
 		},
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
@@ -322,7 +322,7 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	canary, err := finder.CanaryByName(conn, d.Id())
+	canary, err := finder.FindCanaryByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
@@ -445,11 +445,11 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if status != synthetics.CanaryStateReady {
-			if _, err := waiter.CanaryStopped(conn, d.Id()); err != nil {
+			if _, err := waiter.waitCanaryStopped(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", d.Id(), err)
 			}
 		} else {
-			if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
+			if _, err := waiter.waitCanaryReady(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Synthetics Canary (%s) ready: %w", d.Id(), err)
 			}
 		}
@@ -511,7 +511,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Synthetics Canary (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.CanaryDeleted(conn, d.Id())
+	_, err = waiter.waitCanaryDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) delete: %w", d.Id(), err)
@@ -675,7 +675,7 @@ func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
 		return fmt.Errorf("error starting Synthetics Canary (%s): %w", name, err)
 	}
 
-	_, err = waiter.CanaryRunning(conn, name)
+	_, err = waiter.waitCanaryRunning(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) start: %w", name, err)
@@ -694,7 +694,7 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)
 	}
 
-	_, err = waiter.CanaryStopped(conn, name)
+	_, err = waiter.waitCanaryStopped(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) stop: %w", name, err)

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func CanaryByName(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func FindCanaryByName(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
 	input := &synthetics.GetCanaryInput{
 		Name: aws.String(name),
 	}

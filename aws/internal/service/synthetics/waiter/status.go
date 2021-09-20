@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func CanaryState(conn *synthetics.Synthetics, name string) resource.StateRefreshFunc {
+func statusCanaryState(conn *synthetics.Synthetics, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.CanaryByName(conn, name)
+		output, err := finder.FindCanaryByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

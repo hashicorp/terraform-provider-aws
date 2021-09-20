@@ -12,18 +12,18 @@ import (
 )
 
 const (
-	CanaryCreatedTimeout = 5 * time.Minute
-	CanaryRunningTimeout = 5 * time.Minute
-	CanaryStoppedTimeout = 5 * time.Minute
-	CanaryDeletedTimeout = 5 * time.Minute
+	canaryCreatedTimeout = 5 * time.Minute
+	canaryRunningTimeout = 5 * time.Minute
+	canaryStoppedTimeout = 5 * time.Minute
+	canaryDeletedTimeout = 5 * time.Minute
 )
 
-func CanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},
 		Target:  []string{synthetics.CanaryStateReady},
-		Refresh: CanaryState(conn, name),
-		Timeout: CanaryCreatedTimeout,
+		Refresh: statusCanaryState(conn, name),
+		Timeout: canaryCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -39,7 +39,7 @@ func CanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Canary, 
 	return nil, err
 }
 
-func CanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStopping,
@@ -49,8 +49,8 @@ func CanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary
 			synthetics.CanaryStateStarting,
 		},
 		Target:  []string{synthetics.CanaryStateStopped},
-		Refresh: CanaryState(conn, name),
-		Timeout: CanaryStoppedTimeout,
+		Refresh: statusCanaryState(conn, name),
+		Timeout: canaryStoppedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -66,7 +66,7 @@ func CanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary
 	return nil, err
 }
 
-func CanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStarting,
@@ -75,8 +75,8 @@ func CanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Canary
 			synthetics.CanaryStateReady,
 		},
 		Target:  []string{synthetics.CanaryStateRunning},
-		Refresh: CanaryState(conn, name),
-		Timeout: CanaryRunningTimeout,
+		Refresh: statusCanaryState(conn, name),
+		Timeout: canaryRunningTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -92,12 +92,12 @@ func CanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Canary
 	return nil, err
 }
 
-func CanaryDeleted(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+func waitCanaryDeleted(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateDeleting, synthetics.CanaryStateStopped},
 		Target:  []string{},
-		Refresh: CanaryState(conn, name),
-		Timeout: CanaryDeletedTimeout,
+		Refresh: statusCanaryState(conn, name),
+		Timeout: canaryDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
