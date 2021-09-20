@@ -1,11 +1,11 @@
-package iam
+package iam_test
 
 import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestInstanceProfileARNToName(t *testing.T) {
@@ -54,7 +54,7 @@ func TestInstanceProfileARNToName(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := iam.InstanceProfileARNToName(testCase.InputARN)
+			got, err := tfiam.InstanceProfileARNToName(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())

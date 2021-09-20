@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"fmt"
@@ -11,9 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -120,7 +119,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *iam.GetUserOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetUser(request)
@@ -419,7 +418,7 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {

@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"fmt"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -129,7 +128,7 @@ func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
 		RoleName:            aws.String(roleName),
 	}
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AddRoleToInstanceProfile(request)
 		// IAM unfortunately does not provide a better error code or message for eventual consistency
 		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name

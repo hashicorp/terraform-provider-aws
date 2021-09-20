@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"fmt"
@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -128,7 +127,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var getPolicyResponse *iam.GetPolicyOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		getPolicyResponse, err = conn.GetPolicy(input)
 
@@ -191,7 +190,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var getPolicyVersionResponse *iam.GetPolicyVersionOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		getPolicyVersionResponse, err = conn.GetPolicyVersion(getPolicyVersionRequest)
 

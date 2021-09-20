@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"bytes"
@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/encryption"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/encryption"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -175,7 +174,7 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 
 	var output *iam.GetLoginProfileOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetLoginProfile(input)
@@ -223,7 +222,7 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %s", d.Id(), input)
 	// Handle IAM eventual consistency
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
 		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {

@@ -1,4 +1,4 @@
-package aws
+package iam_test
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package aws
+package iam
 
 import (
 	"fmt"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -106,7 +105,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetUserPolicyOutput
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetUserPolicy(request)
