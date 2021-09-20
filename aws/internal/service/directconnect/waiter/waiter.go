@@ -12,17 +12,17 @@ import (
 )
 
 const (
-	ConnectionDeletedTimeout       = 10 * time.Minute
-	ConnectionDisassociatedTimeout = 1 * time.Minute
-	LagDeletedTimeout              = 10 * time.Minute
+	connectionDeletedTimeout       = 10 * time.Minute
+	connectionDisassociatedTimeout = 1 * time.Minute
+	lagDeletedTimeout              = 10 * time.Minute
 )
 
-func ConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+func waitConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
 		Target:  []string{},
-		Refresh: ConnectionState(conn, id),
-		Timeout: ConnectionDeletedTimeout,
+		Refresh: statusConnectionState(conn, id),
+		Timeout: connectionDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -34,11 +34,11 @@ func ConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directcon
 	return nil, err
 }
 
-func GatewayCreated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
+func waitGatewayCreated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.GatewayStatePending},
 		Target:  []string{directconnect.GatewayStateAvailable},
-		Refresh: GatewayState(conn, id),
+		Refresh: statusGatewayState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -53,11 +53,11 @@ func GatewayCreated(conn *directconnect.DirectConnect, id string, timeout time.D
 	return nil, err
 }
 
-func GatewayDeleted(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
+func waitGatewayDeleted(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.GatewayStatePending, directconnect.GatewayStateAvailable, directconnect.GatewayStateDeleting},
 		Target:  []string{},
-		Refresh: GatewayState(conn, id),
+		Refresh: statusGatewayState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -72,11 +72,11 @@ func GatewayDeleted(conn *directconnect.DirectConnect, id string, timeout time.D
 	return nil, err
 }
 
-func GatewayAssociationCreated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
+func waitGatewayAssociationCreated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.GatewayAssociationStateAssociating},
 		Target:  []string{directconnect.GatewayAssociationStateAssociated},
-		Refresh: GatewayAssociationState(conn, id),
+		Refresh: statusGatewayAssociationState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -91,11 +91,11 @@ func GatewayAssociationCreated(conn *directconnect.DirectConnect, id string, tim
 	return nil, err
 }
 
-func GatewayAssociationUpdated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
+func waitGatewayAssociationUpdated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.GatewayAssociationStateUpdating},
 		Target:  []string{directconnect.GatewayAssociationStateAssociated},
-		Refresh: GatewayAssociationState(conn, id),
+		Refresh: statusGatewayAssociationState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -110,11 +110,11 @@ func GatewayAssociationUpdated(conn *directconnect.DirectConnect, id string, tim
 	return nil, err
 }
 
-func GatewayAssociationDeleted(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
+func waitGatewayAssociationDeleted(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.GatewayAssociationStateDisassociating},
 		Target:  []string{},
-		Refresh: GatewayAssociationState(conn, id),
+		Refresh: statusGatewayAssociationState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -129,12 +129,12 @@ func GatewayAssociationDeleted(conn *directconnect.DirectConnect, id string, tim
 	return nil, err
 }
 
-func LagDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
+func waitLagDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.LagStateAvailable, directconnect.LagStateRequested, directconnect.LagStatePending, directconnect.LagStateDeleting},
 		Target:  []string{},
-		Refresh: LagState(conn, id),
-		Timeout: LagDeletedTimeout,
+		Refresh: statusLagState(conn, id),
+		Timeout: lagDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

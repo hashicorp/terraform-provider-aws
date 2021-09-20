@@ -203,7 +203,7 @@ func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.GatewayByID(conn, rs.Primary.ID)
+		_, err := finder.FindGatewayByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -231,7 +231,7 @@ func testAccCheckAwsDxGatewayExists(name string, v *directconnect.Gateway) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
-		output, err := finder.GatewayByID(conn, rs.Primary.ID)
+		output, err := finder.FindGatewayByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

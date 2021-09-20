@@ -29,7 +29,7 @@ func DataSourceLocations() *schema.Resource {
 func dataSourceLocationsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	locations, err := finder.Locations(conn, &directconnect.DescribeLocationsInput{})
+	locations, err := finder.FindLocations(conn, &directconnect.DescribeLocationsInput{})
 
 	if err != nil {
 		return fmt.Errorf("error reading Direct Connect locations: %w", err)

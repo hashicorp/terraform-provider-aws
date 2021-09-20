@@ -78,7 +78,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.DirectConnectGateway.DirectConnectGatewayId))
 
-	if _, err := waiter.GatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitGatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to create: %w", d.Id(), err)
 	}
 
@@ -88,7 +88,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	output, err := finder.GatewayByID(conn, d.Id())
+	output, err := finder.FindGatewayByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Gateway (%s) not found, removing from state", d.Id())
@@ -123,7 +123,7 @@ func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Direct Connect Gateway (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.GatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.waitGatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to delete: %w", d.Id(), err)
 	}
 

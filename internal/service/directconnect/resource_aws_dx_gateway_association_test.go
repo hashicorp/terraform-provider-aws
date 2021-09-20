@@ -516,7 +516,7 @@ func testAccCheckAwsDxGatewayAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.GatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+		_, err := finder.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -544,14 +544,14 @@ func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.Ga
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
-		output, err := finder.GatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+		output, err := finder.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
 
 		if err != nil {
 			return err
 		}
 
 		if proposalID := rs.Primary.Attributes["proposal_id"]; proposalID != "" {
-			output, err := finder.GatewayAssociationProposalByID(conn, proposalID)
+			output, err := finder.FindGatewayAssociationProposalByID(conn, proposalID)
 
 			if err != nil {
 				return err

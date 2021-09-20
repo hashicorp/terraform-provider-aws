@@ -36,7 +36,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
-				output, err := finder.GatewayAssociationProposalByID(conn, d.Id())
+				output, err := finder.FindGatewayAssociationProposalByID(conn, d.Id())
 
 				if tfresource.NotFound(err) {
 					// Proposal may be end-of-life and removed by AWS.
@@ -123,14 +123,14 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	// First attempt to find by proposal ID.
-	output, err := finder.GatewayAssociationProposalByID(conn, d.Id())
+	output, err := finder.FindGatewayAssociationProposalByID(conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		// Attempt to find an existing association.
 		directConnectGatewayID := d.Get("dx_gateway_id").(string)
 		associatedGatewayID := d.Get("associated_gateway_id").(string)
 
-		output, err := finder.GatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+		output, err := finder.FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())

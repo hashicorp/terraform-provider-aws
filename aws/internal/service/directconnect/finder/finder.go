@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+func FindConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
 	input := &directconnect.DescribeConnectionsInput{
 		ConnectionId: aws.String(id),
 	}
@@ -47,8 +47,8 @@ func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnec
 	return connection, nil
 }
 
-func ConnectionAssociationExists(conn *directconnect.DirectConnect, connectionID, lagID string) error {
-	connection, err := ConnectionByID(conn, connectionID)
+func FindConnectionAssociationExists(conn *directconnect.DirectConnect, connectionID, lagID string) error {
+	connection, err := FindConnectionByID(conn, connectionID)
 
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func ConnectionAssociationExists(conn *directconnect.DirectConnect, connectionID
 	return nil
 }
 
-func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
+func FindGatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
 	input := &directconnect.DescribeDirectConnectGatewaysInput{
 		DirectConnectGatewayId: aws.String(id),
 	}
@@ -92,33 +92,33 @@ func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.G
 	return gateway, nil
 }
 
-func GatewayAssociationByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociationId: aws.String(id),
 	}
 
-	return GatewayAssociation(conn, input)
+	return FindGatewayAssociation(conn, input)
 }
 
-func GatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociatedGatewayId:    aws.String(associatedGatewayID),
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
 	}
 
-	return GatewayAssociation(conn, input)
+	return FindGatewayAssociation(conn, input)
 }
 
-func GatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
 		VirtualGatewayId:       aws.String(virtualGatewayID),
 	}
 
-	return GatewayAssociation(conn, input)
+	return FindGatewayAssociation(conn, input)
 }
 
-func GatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.GatewayAssociation, error) {
 	output, err := conn.DescribeDirectConnectGatewayAssociations(input)
 
 	if err != nil {
@@ -152,7 +152,7 @@ func GatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.
 	return association, nil
 }
 
-func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociationProposal, error) {
+func FindGatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociationProposal, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{
 		ProposalId: aws.String(id),
 	}
@@ -190,7 +190,7 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	return proposal, nil
 }
 
-func LagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
+func FindLagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
 	input := &directconnect.DescribeLagsInput{
 		LagId: aws.String(id),
 	}
@@ -228,10 +228,10 @@ func LagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, 
 	return lag, nil
 }
 
-func LocationByCode(conn *directconnect.DirectConnect, code string) (*directconnect.Location, error) {
+func FindLocationByCode(conn *directconnect.DirectConnect, code string) (*directconnect.Location, error) {
 	input := &directconnect.DescribeLocationsInput{}
 
-	locations, err := Locations(conn, input)
+	locations, err := FindLocations(conn, input)
 
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func LocationByCode(conn *directconnect.DirectConnect, code string) (*directconn
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func Locations(conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
+func FindLocations(conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
 	output, err := conn.DescribeLocations(input)
 
 	if err != nil {

@@ -64,7 +64,7 @@ func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := finder.ConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		err := finder.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -93,7 +93,7 @@ func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		err := finder.ConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+		err := finder.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 
 		if err != nil {
 			return err

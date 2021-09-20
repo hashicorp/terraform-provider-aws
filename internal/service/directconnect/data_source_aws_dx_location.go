@@ -46,7 +46,7 @@ func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	locationCode := d.Get("location_code").(string)
 
-	location, err := finder.LocationByCode(conn, locationCode)
+	location, err := finder.FindLocationByCode(conn, locationCode)
 
 	if tfresource.NotFound(err) {
 		return fmt.Errorf("no Direct Connect location matched; change the search criteria and try again")

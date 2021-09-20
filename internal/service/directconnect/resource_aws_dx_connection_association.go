@@ -63,7 +63,7 @@ func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	lagID := d.Get("lag_id").(string)
-	err := finder.ConnectionAssociationExists(conn, d.Id(), lagID)
+	err := finder.FindConnectionAssociationExists(conn, d.Id(), lagID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) LAG (%s) Association not found, removing from state", d.Id(), lagID)
@@ -88,7 +88,7 @@ func resourceConnectionAssociationDelete(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := tfresource.RetryWhen(
-		waiter.ConnectionDisassociatedTimeout,
+		waiter.connectionDisassociatedTimeout,
 		func() (interface{}, error) {
 			return conn.DisassociateConnectionFromLag(input)
 		},

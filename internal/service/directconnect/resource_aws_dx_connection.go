@@ -115,7 +115,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	connection, err := finder.ConnectionByID(conn, d.Id())
+	connection, err := finder.FindConnectionByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())
@@ -199,7 +199,7 @@ func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connection
 		return fmt.Errorf("error deleting Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
-	_, err = waiter.ConnectionDeleted(conn, connectionID)
+	_, err = waiter.waitConnectionDeleted(conn, connectionID)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Connection (%s) delete: %w", connectionID, err)

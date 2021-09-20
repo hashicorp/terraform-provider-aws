@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ConnectionState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusConnectionState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ConnectionByID(conn, id)
+		output, err := finder.FindConnectionByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +25,9 @@ func ConnectionState(conn *directconnect.DirectConnect, id string) resource.Stat
 	}
 }
 
-func GatewayState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusGatewayState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.GatewayByID(conn, id)
+		output, err := finder.FindGatewayByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,9 @@ func GatewayState(conn *directconnect.DirectConnect, id string) resource.StateRe
 	}
 }
 
-func GatewayAssociationState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusGatewayAssociationState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.GatewayAssociationByID(conn, id)
+		output, err := finder.FindGatewayAssociationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,9 +57,9 @@ func GatewayAssociationState(conn *directconnect.DirectConnect, id string) resou
 	}
 }
 
-func LagState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+func statusLagState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.LagByID(conn, id)
+		output, err := finder.FindLagByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
