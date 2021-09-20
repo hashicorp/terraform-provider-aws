@@ -62,7 +62,7 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		_, err := finder.ClusterByName(conn, rs.Primary.ID)
+		_, err := finder.FindClusterByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
