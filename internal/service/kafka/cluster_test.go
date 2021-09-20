@@ -970,7 +970,7 @@ func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourc
 
 func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := tftags.KafkaKeyValueTags(td.Tags).IgnoreAws().Map()
+		m := tfkafka.KeyValueTags(td.Tags).IgnoreAws().Map()
 		v, ok := m[key]
 		if value != "" && !ok {
 			return fmt.Errorf("Missing tag: %s - (found tags %v)", key, m)
