@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBroker() *schema.Resource {
@@ -95,7 +96,7 @@ func ResourceBroker() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kms_key_id": {
@@ -103,7 +104,7 @@ func ResourceBroker() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"use_aws_owned_key": {
 							Type:     schema.TypeBool,

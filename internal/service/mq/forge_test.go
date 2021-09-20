@@ -2,6 +2,7 @@ package mq
 
 import (
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestCanonicalXML(t *testing.T) {
