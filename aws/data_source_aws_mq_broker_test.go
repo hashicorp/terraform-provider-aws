@@ -22,7 +22,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix),

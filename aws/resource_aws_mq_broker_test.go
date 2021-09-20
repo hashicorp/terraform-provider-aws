@@ -76,7 +76,7 @@ func TestResourceAWSMqBrokerPasswordValidation(t *testing.T) {
 }
 
 func testSweepMqBrokers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -86,7 +86,7 @@ func testSweepMqBrokers(region string) error {
 		MaxResults: aws.Int64(100),
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, err)
 			return nil
 		}
@@ -265,7 +265,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -338,7 +338,7 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -417,7 +417,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -541,7 +541,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -653,7 +653,7 @@ func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -687,7 +687,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) 
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -720,7 +720,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -753,7 +753,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -826,7 +826,7 @@ func TestAccAWSMqBroker_tags(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -876,7 +876,7 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -929,7 +929,7 @@ func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -968,14 +968,14 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMqBroker(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMqBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -995,7 +995,7 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1036,7 +1036,7 @@ func TestAccAWSMqBroker_rabbitmq_Logs(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1077,7 +1077,7 @@ func TestAccAWSMqBroker_rabbitmq_Validation_AuditLog(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1111,7 +1111,7 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1173,7 +1173,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 			testAccPreCheckAWSMq(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1202,7 +1202,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 }
 
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*AWSClient).mqconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_broker" {
@@ -1238,7 +1238,7 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 			return fmt.Errorf("No MQ Broker is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mqconn
+		conn := acctest.Provider.Meta().(*AWSClient).mqconn
 		resp, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 			BrokerId: aws.String(rs.Primary.ID),
 		})
@@ -1254,7 +1254,7 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 }
 
 func testAccPreCheckAWSMq(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := acctest.Provider.Meta().(*AWSClient).mqconn
 
 	input := &mq.ListBrokersInput{}
 
