@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_eks_cluster.test"
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -56,9 +57,39 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 }
 
 func testAccAWSEksClusterDataSourceConfig_Basic(rName string) string {
-	return composeConfig(testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}), `
+	return acctest.ConfigCompose(testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }
 `)
 }
+func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ms := s.RootModule()
+		rs, ok := ms.Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s in %s", name, ms.Path)
+		}
+
+		is := rs.Primary
+		if is == nil {
+			return fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
+		}
+
+		if v, ok := is.Attributes[key]; !ok || !(v > value) {
+			if !ok {
+				return fmt.Errorf("%s: Attribute '%s' not found", name, key)
+			}
+
+			return fmt.Errorf(
+				"%s: Attribute '%s' is not greater than %#v, got %#v",
+				name,
+				key,
+				value,
+				v)
+		}
+		return nil
+
+	}
+}
+

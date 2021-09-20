@@ -8,14 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/token"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_cluster_auth.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, eks.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
