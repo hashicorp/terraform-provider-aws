@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFilter() *schema.Resource {
@@ -82,22 +83,22 @@ func ResourceFilter() *schema.Resource {
 									"greater_than": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
+										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
 									"greater_than_or_equal": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
+										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
 									"less_than": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
+										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
 									"less_than_or_equal": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
+										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
 								},
 							},
