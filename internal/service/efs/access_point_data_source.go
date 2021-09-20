@@ -137,7 +137,7 @@ func dataSourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
