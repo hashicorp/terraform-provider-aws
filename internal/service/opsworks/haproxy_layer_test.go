@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSOpsworksHAProxyLayer_basic(t *testing.T) {
+func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_haproxy_layer.test"
@@ -32,7 +32,7 @@ func TestAccAWSOpsworksHAProxyLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksHAProxyLayer_tags(t *testing.T) {
+func TestAccOpsWorksHAProxyLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_haproxy_layer.test"

@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksRailsAppLayer_basic(t *testing.T) {
+func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -44,7 +44,7 @@ func TestAccAWSOpsworksRailsAppLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
+func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_rails_app_layer.test"

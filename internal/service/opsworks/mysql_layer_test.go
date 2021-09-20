@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksMysqlLayer_basic(t *testing.T) {
+func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_mysql_layer.test"
@@ -34,7 +34,7 @@ func TestAccAWSOpsworksMysqlLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksMysqlLayer_tags(t *testing.T) {
+func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_mysql_layer.test"

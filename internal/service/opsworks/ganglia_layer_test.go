@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSOpsworksGangliaLayer_basic(t *testing.T) {
+func TestAccOpsWorksGangliaLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_ganglia_layer.test"
@@ -32,7 +32,7 @@ func TestAccAWSOpsworksGangliaLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksGangliaLayer_tags(t *testing.T) {
+func TestAccOpsWorksGangliaLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_ganglia_layer.test"

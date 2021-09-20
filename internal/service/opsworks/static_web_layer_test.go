@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksStaticWebLayer_basic(t *testing.T) {
+func TestAccOpsWorksStaticWebLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_static_web_layer.test"
@@ -39,7 +39,7 @@ func TestAccAWSOpsworksStaticWebLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStaticWebLayer_tags(t *testing.T) {
+func TestAccOpsWorksStaticWebLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_static_web_layer.test"

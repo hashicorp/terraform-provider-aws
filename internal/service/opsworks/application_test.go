@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSOpsworksApplication_basic(t *testing.T) {
+func TestAccOpsWorksApplication_basic(t *testing.T) {
 	var opsapp opsworks.App
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

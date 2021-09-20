@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksPhpAppLayer_basic(t *testing.T) {
+func TestAccOpsWorksPHPAppLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_php_app_layer.test"
@@ -39,7 +39,7 @@ func TestAccAWSOpsworksPhpAppLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksPhpAppLayer_tags(t *testing.T) {
+func TestAccOpsWorksPHPAppLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_php_app_layer.test"

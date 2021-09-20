@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSOpsworksPermission_basic(t *testing.T) {
+func TestAccOpsWorksPermission_basic(t *testing.T) {
 	sName := fmt.Sprintf("tf-ops-perm-%d", sdkacctest.RandInt())
 	var opsperm opsworks.Permission
 	resource.ParallelTest(t, resource.TestCase{
@@ -96,7 +96,7 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4804
-func TestAccAWSOpsworksPermission_Self(t *testing.T) {
+func TestAccOpsWorksPermission_self(t *testing.T) {
 	var opsperm opsworks.Permission
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_permission.test"

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
+func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 	sName := fmt.Sprintf("test-db-instance-%d", sdkacctest.RandInt())
 	var opsdb opsworks.RdsDbInstance
 	resource.ParallelTest(t, resource.TestCase{

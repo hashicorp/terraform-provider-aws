@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksJavaAppLayer_basic(t *testing.T) {
+func TestAccOpsWorksJavaAppLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_java_app_layer.test"
@@ -34,7 +34,7 @@ func TestAccAWSOpsworksJavaAppLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksJavaAppLayer_tags(t *testing.T) {
+func TestAccOpsWorksJavaAppLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_java_app_layer.test"

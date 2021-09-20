@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksMemcachedLayer_basic(t *testing.T) {
+func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_memcached_layer.test"
@@ -34,7 +34,7 @@ func TestAccAWSOpsworksMemcachedLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksMemcachedLayer_tags(t *testing.T) {
+func TestAccOpsWorksMemcachedLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_memcached_layer.test"

@@ -18,7 +18,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`, and Opsworks stacks named `tf-acc`.
 
-func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
+func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
@@ -61,7 +61,7 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
+func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.test"
@@ -106,7 +106,7 @@ func TestAccAWSOpsworksCustomLayer_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
+func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
