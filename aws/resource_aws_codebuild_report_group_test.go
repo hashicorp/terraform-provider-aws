@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepCodeBuildReportGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -57,7 +57,7 @@ func testSweepCodeBuildReportGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CodeBuild Report Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -77,7 +77,7 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +205,7 @@ func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,14 +233,14 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeBuildReportGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeBuildReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -249,7 +249,7 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 }
 
 func testAccPreCheckAWSCodeBuildReportGroup(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 	input := &codebuild.ListReportGroupsInput{}
 
@@ -265,7 +265,7 @@ func testAccPreCheckAWSCodeBuildReportGroup(t *testing.T) {
 }
 
 func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_report_group" {
@@ -292,7 +292,7 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
 		if err != nil {

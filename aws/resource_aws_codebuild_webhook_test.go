@@ -24,7 +24,7 @@ func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +88,7 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +137,7 @@ func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,7 +179,7 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,7 +214,7 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -269,7 +269,7 @@ func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedF
 }
 
 func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_webhook" {
@@ -305,7 +305,7 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 		resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 			Names: []*string{

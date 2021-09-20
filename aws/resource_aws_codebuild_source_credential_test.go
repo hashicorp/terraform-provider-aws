@@ -21,7 +21,7 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 }
 
 func testAccCheckAWSCodeBuildSourceCredentialDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_source_credential" {
@@ -123,7 +123,7 @@ func testAccCheckAWSCodeBuildSourceCredentialExists(name string, sourceCredentia
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
 
 		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
 		if err != nil {
