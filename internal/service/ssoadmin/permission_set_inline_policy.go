@@ -76,7 +76,7 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyPut(d *schema.ResourceData, met
 func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	permissionSetArn, instanceArn, err := parseSsoAdminResourceID(d.Id())
+	permissionSetArn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID: %w", err)
 	}
@@ -112,7 +112,7 @@ func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interfac
 func resourcePermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	permissionSetArn, instanceArn, err := parseSsoAdminResourceID(d.Id())
+	permissionSetArn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID: %w", err)
 	}

@@ -97,7 +97,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedPolicyAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +120,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears_permissionSet(t *testi
 				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -175,7 +175,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy(s *terraform.State) e
 			continue
 		}
 
-		managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(rs.Primary.ID)
+		managedPolicyArn, permissionSetArn, instanceArn, err := tfssoadmin.ParseManagedPolicyAttachmentID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
@@ -212,7 +212,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName string) r
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(rs.Primary.ID)
+		managedPolicyArn, permissionSetArn, instanceArn, err := tfssoadmin.ParseManagedPolicyAttachmentID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)

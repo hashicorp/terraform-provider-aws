@@ -137,7 +137,7 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
+	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
 	}
@@ -193,7 +193,7 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
+	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
 	}
@@ -245,7 +245,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
+	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
 	}
@@ -266,7 +266,7 @@ func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func parseSsoAdminResourceID(id string) (string, string, error) {
+func ParseResourceID(id string) (string, string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("unexpected format for ID (%q), expected PERMISSION_SET_ARN,INSTANCE_ARN", id)

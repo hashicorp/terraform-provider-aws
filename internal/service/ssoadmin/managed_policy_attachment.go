@@ -83,7 +83,7 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
+	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
 	}
@@ -117,7 +117,7 @@ func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{
 func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
+	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
 	}
@@ -140,7 +140,7 @@ func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func parseSsoAdminManagedPolicyAttachmentID(id string) (string, string, string, error) {
+func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		return "", "", "", fmt.Errorf("error parsing ID: expected MANAGED_POLICY_ARN,PERMISSION_SET_ARN,INSTANCE_ARN")

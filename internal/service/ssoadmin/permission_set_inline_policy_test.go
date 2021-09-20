@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func TestAccAWSSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
@@ -91,7 +92,7 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissionSetInlinePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +115,7 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears_permissionSet(t *tes
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,7 +131,7 @@ func testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy(s *terraform.State)
 			continue
 		}
 
-		permissionSetArn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
+		permissionSetArn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID (%s): %w", rs.Primary.ID, err)
@@ -176,7 +177,7 @@ func testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName string)
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		permissionSetArn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
+		permissionSetArn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID (%s): %w", rs.Primary.ID, err)
