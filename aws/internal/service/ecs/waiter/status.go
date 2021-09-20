@@ -14,20 +14,20 @@ import (
 
 const (
 	// AWS will likely add consts for these at some point
-	ServiceStatusInactive = "INACTIVE"
-	ServiceStatusActive   = "ACTIVE"
-	ServiceStatusDraining = "DRAINING"
+	serviceStatusInactive = "INACTIVE"
+	serviceStatusActive   = "ACTIVE"
+	serviceStatusDraining = "DRAINING"
 
-	ServiceStatusError = "ERROR"
-	ServiceStatusNone  = "NONE"
+	serviceStatusError = "ERROR"
+	serviceStatusNone  = "NONE"
 
-	ClusterStatusError = "ERROR"
-	ClusterStatusNone  = "NONE"
+	clusterStatusError = "ERROR"
+	clusterStatusNone  = "NONE"
 )
 
-func CapacityProviderStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.CapacityProviderByARN(conn, arn)
+		output, err := finder.FindCapacityProviderByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,9 @@ func CapacityProviderStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc
 	}
 }
 
-func CapacityProviderUpdateStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.CapacityProviderByARN(conn, arn)
+		output, err := finder.FindCapacityProviderByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,7 +57,7 @@ func CapacityProviderUpdateStatus(conn *ecs.ECS, arn string) resource.StateRefre
 	}
 }
 
-func ServiceStatus(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusService(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeServicesInput{
 			Services: aws.StringSlice([]string{id}),
@@ -67,15 +67,15 @@ func ServiceStatus(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 		output, err := conn.DescribeServices(input)
 
 		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-			return nil, ServiceStatusNone, nil
+			return nil, serviceStatusNone, nil
 		}
 
 		if err != nil {
-			return nil, ServiceStatusError, err
+			return nil, serviceStatusError, err
 		}
 
 		if len(output.Services) == 0 {
-			return nil, ServiceStatusNone, nil
+			return nil, serviceStatusNone, nil
 		}
 
 		log.Printf("[DEBUG] ECS service (%s) is currently %q", id, *output.Services[0].Status)
@@ -83,20 +83,20 @@ func ServiceStatus(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 	}
 }
 
-func ClusterStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ClusterByARN(conn, arn)
+		output, err := finder.FindClusterByARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-			return nil, ClusterStatusNone, nil
+			return nil, clusterStatusNone, nil
 		}
 
 		if err != nil {
-			return nil, ClusterStatusError, err
+			return nil, clusterStatusError, err
 		}
 
 		if len(output.Clusters) == 0 {
-			return nil, ClusterStatusNone, nil
+			return nil, clusterStatusNone, nil
 		}
 
 		return output, aws.StringValue(output.Clusters[0].Status), err

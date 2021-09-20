@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func CapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
+func FindCapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	input := &ecs.DescribeCapacityProvidersInput{
 		CapacityProviders: aws.StringSlice([]string{arn}),
 		Include:           aws.StringSlice([]string{ecs.CapacityProviderFieldTags}),
@@ -38,7 +38,7 @@ func CapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, er
 	return capacityProvider, nil
 }
 
-func ClusterByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, error) {
+func FindClusterByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, error) {
 	input := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(arn)},
 		Include: []*string{
