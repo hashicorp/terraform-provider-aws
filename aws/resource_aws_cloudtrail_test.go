@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -124,12 +125,12 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 
 func testAccAWSCloudTrail_basic(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -164,12 +165,12 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 
 func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -200,12 +201,12 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 
 func testAccAWSCloudTrail_enableLogging(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -249,12 +250,12 @@ func testAccAWSCloudTrail_enableLogging(t *testing.T) {
 
 func testAccAWSCloudTrail_multiRegion(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -296,12 +297,12 @@ func testAccAWSCloudTrail_multiRegion(t *testing.T) {
 
 func testAccAWSCloudTrail_organization(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -334,12 +335,12 @@ func testAccAWSCloudTrail_organization(t *testing.T) {
 
 func testAccAWSCloudTrail_logValidation(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -374,14 +375,14 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 
 func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_cloudtrail.test"
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -408,12 +409,12 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 	var trail cloudtrail.Trail
 	var trailTags []*cloudtrail.Tag
 	var trailTagsModified []*cloudtrail.Tag
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -463,12 +464,12 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 
 func testAccAWSCloudTrail_globalServiceEvents(t *testing.T) {
 	var trail cloudtrail.Trail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -489,12 +490,12 @@ func testAccAWSCloudTrail_globalServiceEvents(t *testing.T) {
 }
 
 func testAccAWSCloudTrail_eventSelector(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -505,8 +506,8 @@ func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "2"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 				),
@@ -531,18 +532,18 @@ func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "2"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.0.type", "AWS::S3::Object"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.0.values.#", "2"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/tf1", rName)),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/tf2", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/tf1", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/tf2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", "1"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 				),
@@ -558,12 +559,12 @@ func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 }
 
 func testAccAWSCloudTrail_eventSelectorDynamoDB(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -574,7 +575,7 @@ func testAccAWSCloudTrail_eventSelectorDynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::DynamoDB::Table"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexp.MustCompile(`table/tf-acc-test-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexp.MustCompile(`table/tf-acc-test-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "All"),
 				),
@@ -585,11 +586,11 @@ func testAccAWSCloudTrail_eventSelectorDynamoDB(t *testing.T) {
 
 func testAccAWSCloudTrail_insightSelector(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -611,11 +612,11 @@ func testAccAWSCloudTrail_insightSelector(t *testing.T) {
 
 func testAccAWSCloudTrail_advanced_event_selector(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -867,7 +868,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 func testAccAWSCloudTrailConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -876,7 +877,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailModifiedConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
@@ -888,7 +889,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailCloudWatchConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -942,7 +943,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 func testAccAWSCloudTrailCloudWatchModifiedConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1000,7 +1001,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 func testAccAWSCloudTrailMultiRegionConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name                  = %[1]q
   s3_bucket_name        = aws_s3_bucket.test.id
@@ -1010,7 +1011,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailOrganizationConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = ["cloudtrail.${data.aws_partition.current.dns_suffix}"]
 }
@@ -1024,7 +1025,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailLogValidationConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
@@ -1036,7 +1037,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailLogValidationModifiedConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
@@ -1046,7 +1047,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailKMSKeyConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -1077,7 +1078,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailGlobalServiceEventsConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
@@ -1087,7 +1088,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailTagsConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1101,7 +1102,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailTagsModifiedConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1116,7 +1117,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailTagsModifiedAgainConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1125,7 +1126,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailEventSelectorConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1153,7 +1154,7 @@ resource "aws_s3_bucket" "test2" {
 }
 
 func testAccAWSCloudTrailEventSelectorReadWriteTypeConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1167,7 +1168,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailEventSelectorModifiedConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1243,7 +1244,7 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccAWSCloudTrailEventSelectorNoneConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1252,7 +1253,7 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccAWSCloudTrailEventSelectorDynamoDBConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1286,7 +1287,7 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccAWSCloudTrailInsightSelectorConfig(rName string) string {
-	return composeConfig(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudTrailBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
