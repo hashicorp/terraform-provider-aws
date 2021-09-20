@@ -10,6 +10,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceDomain() *schema.Resource {
@@ -306,7 +307,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", pointersMapToStringList(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
 		return fmt.Errorf("error setting advanced_options: %w", err)
 	}
 
@@ -344,7 +345,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting vpc_options: %w", err)
 		}
 
-		endpoints := pointersMapToStringList(ds.Endpoints)
+		endpoints := verify.PointersMapToStringList(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
 			return fmt.Errorf("error setting endpoint: %w", err)
 		}
