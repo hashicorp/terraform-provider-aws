@@ -124,7 +124,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		stage = cloudfront.FunctionStageLive
 	}
 
-	describeFunctionOutput, err := finder.FunctionByNameAndStage(conn, d.Id(), stage)
+	describeFunctionOutput, err := finder.FindFunctionByNameAndStage(conn, d.Id(), stage)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Function (%s/%s) not found, removing from state", d.Id(), stage)

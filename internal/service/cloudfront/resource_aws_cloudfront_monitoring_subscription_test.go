@@ -171,7 +171,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionDestroy(s *terraform.State) err
 			continue
 		}
 
-		s, err := finder.MonitoringSubscriptionByDistributionId(conn, rs.Primary.ID)
+		s, err := finder.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 			continue
@@ -200,7 +200,7 @@ func testAccCheckCloudFrontMonitoringSubscriptionExists(n string, v *cloudfront.
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-		out, err := finder.MonitoringSubscriptionByDistributionId(conn, rs.Primary.ID)
+		out, err := finder.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

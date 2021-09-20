@@ -74,7 +74,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)
 
-	describeFunctionOutput, err := finder.FunctionByNameAndStage(conn, name, stage)
+	describeFunctionOutput, err := finder.FindFunctionByNameAndStage(conn, name, stage)
 
 	if err != nil {
 		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", name, stage, err)

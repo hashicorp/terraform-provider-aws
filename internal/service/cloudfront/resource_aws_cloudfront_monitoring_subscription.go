@@ -85,7 +85,7 @@ func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface
 func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	subscription, err := finder.MonitoringSubscriptionByDistributionId(conn, d.Id())
+	subscription, err := finder.FindMonitoringSubscriptionByDistributionID(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		log.Printf("[WARN] CloudFront Distribution (%s) not found, removing from state", d.Id())

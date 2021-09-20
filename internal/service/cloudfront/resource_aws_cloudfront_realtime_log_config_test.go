@@ -208,7 +208,7 @@ func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
+		_, err := finder.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
 		// Verify the error is what we want
 		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
 			continue
@@ -234,7 +234,7 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-		out, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
+		out, err := finder.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

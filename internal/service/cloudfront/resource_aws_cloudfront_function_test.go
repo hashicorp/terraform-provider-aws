@@ -53,7 +53,7 @@ func testSweepCloudfrontFunctions(region string) error {
 		for _, item := range page.FunctionList.Items {
 			name := aws.StringValue(item.Name)
 
-			output, err := finder.FunctionByNameAndStage(conn, name, cloudfront.FunctionStageDevelopment)
+			output, err := finder.FindFunctionByNameAndStage(conn, name, cloudfront.FunctionStageDevelopment)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -314,7 +314,7 @@ func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
+		_, err := finder.FindFunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -344,7 +344,7 @@ func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFun
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
-		output, err := finder.FunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
+		output, err := finder.FindFunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 
 		if err != nil {
 			return err
