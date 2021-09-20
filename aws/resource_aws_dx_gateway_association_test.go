@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).dxconn
+	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*acctest.SweepResource, 0)
@@ -62,7 +63,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 					gatewayID := aws.StringValue(association.AssociatedGateway.Id)
 
 					if aws.StringValue(association.AssociatedGateway.Region) != region {
-						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association (%s) in different home region: %s", directConnectGatewayID, gatewayID, aws.StringValue(association.AssociatedGateway.Region))
+						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association (%s) in different home Region: %s", directConnectGatewayID, gatewayID, aws.StringValue(association.AssociatedGateway.Region))
 						continue
 					}
 
@@ -103,7 +104,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 	// these within the service itself so they can only be found
 	// via AssociatedGatewayId of the EC2 Transit Gateway since the
 	// DirectConnectGatewayId lives in the other account.
-	ec2conn := client.(*AWSClient).ec2conn
+	ec2conn := client.(*conns.AWSClient).EC2Conn
 
 	err = ec2conn.DescribeTransitGatewaysPages(&ec2.DescribeTransitGatewaysInput{}, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
 		if page == nil {
@@ -505,7 +506,7 @@ func testAccAwsDxGatewayAssociationImportStateIdFunc(resourceName string) resour
 }
 
 func testAccCheckAwsDxGatewayAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway_association" {
@@ -538,7 +539,7 @@ func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.Ga
 			return fmt.Errorf("No Direct Connect Gateway Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		output, err := finder.GatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
 

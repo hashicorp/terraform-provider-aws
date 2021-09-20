@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxLag() *schema.Resource {
@@ -76,8 +77,8 @@ func resourceAwsDxLag() *schema.Resource {
 }
 
 func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -116,9 +117,9 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lag, err := finder.LagByID(conn, d.Id())
 
@@ -133,7 +134,7 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    aws.StringValue(lag.Region),
 		Service:   "directconnect",
 		AccountID: aws.StringValue(lag.OwnerAccount),
@@ -169,7 +170,7 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateLagInput{
@@ -198,7 +199,7 @@ func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.Get("force_destroy").(bool) {
 		lag, err := finder.LagByID(conn, d.Id())

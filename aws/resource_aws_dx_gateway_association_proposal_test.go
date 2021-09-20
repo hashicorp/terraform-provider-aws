@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).dxconn
+	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*acctest.SweepResource, 0)
@@ -45,7 +46,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 			proposalID := aws.StringValue(proposal.ProposalId)
 
 			if proposalRegion := aws.StringValue(proposal.AssociatedGateway.Region); proposalRegion != region {
-				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in different home region: %s", proposalID, proposalRegion)
+				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in different home Region: %s", proposalID, proposalRegion)
 				continue
 			}
 
@@ -294,7 +295,7 @@ func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 }
 
 func testAccCheckAwsDxGatewayAssociationProposalDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway_association_proposal" {
@@ -328,7 +329,7 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
 
@@ -359,7 +360,7 @@ func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) re
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
 

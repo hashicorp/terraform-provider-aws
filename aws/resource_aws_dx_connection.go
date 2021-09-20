@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxConnection() *schema.Resource {
@@ -76,8 +77,8 @@ func resourceAwsDxConnection() *schema.Resource {
 }
 
 func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -108,9 +109,9 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connection, err := finder.ConnectionByID(conn, d.Id())
 
@@ -125,7 +126,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    aws.StringValue(connection.Region),
 		Service:   "directconnect",
 		AccountID: aws.StringValue(connection.OwnerAccount),
@@ -162,7 +163,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -177,7 +178,7 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	return deleteDirectConnectConnection(conn, d.Id())
 }

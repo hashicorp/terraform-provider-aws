@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepDxConnections(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).dxconn
+	conn := client.(*conns.AWSClient).DirectConnectConn
 
 	var sweeperErrs *multierror.Error
 
@@ -222,7 +223,7 @@ func TestAccAwsDxConnection_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_connection" {
@@ -247,7 +248,7 @@ func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
 
 func testAccCheckAwsDxConnectionExists(name string, v *directconnect.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

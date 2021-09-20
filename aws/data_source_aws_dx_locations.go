@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDxLocations() *schema.Resource {
@@ -24,7 +25,7 @@ func dataSourceAwsDxLocations() *schema.Resource {
 }
 
 func dataSourceAwsDxLocationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	locations, err := finder.Locations(conn, &directconnect.DescribeLocationsInput{})
 
@@ -38,7 +39,7 @@ func dataSourceAwsDxLocationsRead(d *schema.ResourceData, meta interface{}) erro
 		locationCodes = append(locationCodes, location.LocationCode)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("location_codes", aws.StringValueSlice(locationCodes))
 
 	return nil

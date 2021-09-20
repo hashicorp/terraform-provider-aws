@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxConnectionAssociation() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsDxConnectionAssociation() *schema.Resource {
 }
 
 func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	connectionID := d.Get("connection_id").(string)
 	lagID := d.Get("lag_id").(string)
@@ -57,7 +58,7 @@ func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	lagID := d.Get("lag_id").(string)
 	err := finder.ConnectionAssociationExists(conn, d.Id(), lagID)
@@ -76,7 +77,7 @@ func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	lagID := d.Get("lag_id").(string)
 	input := &directconnect.DisassociateConnectionFromLagInput{

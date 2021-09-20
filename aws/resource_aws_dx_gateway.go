@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDxGateway() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsDxGateway() *schema.Resource {
 }
 
 func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
@@ -83,7 +84,7 @@ func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	output, err := finder.GatewayByID(conn, d.Id())
 
@@ -105,7 +106,7 @@ func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGateway(&directconnect.DeleteDirectConnectGatewayInput{

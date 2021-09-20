@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
 }
 
 func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_connection_association" {
@@ -78,7 +79,7 @@ func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
