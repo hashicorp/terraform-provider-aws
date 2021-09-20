@@ -14,8 +14,8 @@ import (
 )
 
 func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
@@ -24,7 +24,7 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,8 +46,8 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17639
 func TestAccAwsLbListenerCertificate_CertificateArn_Underscores(t *testing.T) {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
@@ -56,7 +56,7 @@ func TestAccAwsLbListenerCertificate_CertificateArn_Underscores(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,8 +80,8 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 	keys := make([]string, 4)
 	certificates := make([]string, 4)
 	for i := 0; i < 4; i++ {
-		keys[i] = tlsRsaPrivateKeyPem(2048)
-		certificates[i] = tlsRsaX509SelfSignedCertificatePem(keys[i], "example.com")
+		keys[i] = acctest.TLSRSAPrivateKeyPEM(2048)
+		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(keys[i], "example.com")
 	}
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -90,7 +90,7 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,22 +149,22 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 }
 
 func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	resourceName := "aws_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLbListenerCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLbListenerCertificate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLbListenerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,7 +173,7 @@ func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener_certificate" {
@@ -291,7 +291,7 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccLbListenerCertificateConfig(rName, key, certificate string) string {
@@ -369,7 +369,7 @@ resource "aws_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
   listener_arn    = aws_lb_listener.test.arn
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccLbListenerCertificateConfigMultiple(rName string, keys, certificates []string) string {
@@ -400,7 +400,7 @@ resource "aws_iam_server_certificate" "additional_2" {
   certificate_body = "%[4]s"
   private_key      = "%[5]s"
 }
-`, rName, tlsPemEscapeNewlines(certificates[1]), tlsPemEscapeNewlines(keys[1]), tlsPemEscapeNewlines(certificates[2]), tlsPemEscapeNewlines(keys[2]))
+`, rName, acctest.TLSPEMEscapeNewlines(certificates[1]), acctest.TLSPEMEscapeNewlines(keys[1]), acctest.TLSPEMEscapeNewlines(certificates[2]), acctest.TLSPEMEscapeNewlines(keys[2]))
 }
 
 func testAccLbListenerCertificateConfigMultipleAddNew(rName string, keys, certificates []string) string {
@@ -415,5 +415,5 @@ resource "aws_lb_listener_certificate" "additional_3" {
   listener_arn    = aws_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.additional_3.arn
 }
-`, rName, tlsPemEscapeNewlines(certificates[3]), tlsPemEscapeNewlines(keys[3]))
+`, rName, acctest.TLSPEMEscapeNewlines(certificates[3]), acctest.TLSPEMEscapeNewlines(keys[3]))
 }

@@ -18,7 +18,7 @@ func TestAccDataSourceAWSLBTargetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBTargetGroupConfigBasic(rName),
@@ -78,7 +78,7 @@ func TestAccDataSourceAWSLBTargetGroup_appCookie(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBTargetGroupConfigAppCookie(rName),
@@ -120,7 +120,7 @@ func TestAccDataSourceAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBTargetGroupConfigBackwardsCompatibility(rName),

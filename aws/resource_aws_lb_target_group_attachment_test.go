@@ -20,7 +20,7 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +38,7 @@ func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +78,7 @@ func TestAccAWSLBTargetGroupAttachment_Port(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,7 +116,7 @@ func TestAccAWSLBTargetGroupAttachment_lambda(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +136,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestChe
 			return fmt.Errorf("Attachment not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
@@ -174,7 +174,7 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 			return errors.New("No Target Group Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 		_, hasPort := rs.Primary.Attributes["port"]
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
@@ -205,7 +205,7 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {

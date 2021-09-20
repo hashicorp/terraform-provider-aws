@@ -18,7 +18,7 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigBasic(rName),
@@ -53,7 +53,7 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(rName),
@@ -80,18 +80,18 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 
 func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	dataSourceName := "data.aws_lb_listener.test"
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigHTTPS(rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)),
+				Config: testAccDataSourceAWSLBListenerConfigHTTPS(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -125,7 +125,7 @@ func TestAccDataSourceAWSLBListener_DefaultAction_Forward(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigDefaultActionForward(rName),

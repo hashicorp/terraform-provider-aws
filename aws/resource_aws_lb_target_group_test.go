@@ -28,7 +28,7 @@ func init() {
 }
 
 func testSweepLBTargetGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -54,7 +54,7 @@ func testSweepLBTargetGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping LB Target Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -102,7 +102,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,7 +147,7 @@ func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,7 +223,7 @@ func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -248,7 +248,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func TestAccAWSLBTargetGroup_Protocol_Geneve(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -353,7 +353,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -385,7 +385,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -407,7 +407,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -431,7 +431,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -462,7 +462,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -491,7 +491,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -550,7 +550,7 @@ func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -593,7 +593,7 @@ func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -615,7 +615,7 @@ func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -637,7 +637,7 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -666,7 +666,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -695,7 +695,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -724,7 +724,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -751,7 +751,7 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -791,7 +791,7 @@ func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -826,7 +826,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -891,7 +891,7 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -977,7 +977,7 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1065,7 +1065,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1126,7 +1126,7 @@ protocol = "TCP"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1175,7 +1175,7 @@ func TestAccAWSLBTargetGroup_stickinessDefaultNLB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1217,7 +1217,7 @@ func TestAccAWSLBTargetGroup_stickinessDefaultALB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1241,7 +1241,7 @@ func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1301,7 +1301,7 @@ func TestAccAWSLBTargetGroup_stickinessValidALB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1334,7 +1334,7 @@ func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1359,7 +1359,7 @@ func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1391,7 +1391,7 @@ func TestAccAWSLBTargetGroup_preserveClientIPValid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1423,7 +1423,7 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 			return errors.New("No Target Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
 
@@ -1461,7 +1461,7 @@ func testAccCheckAWSLBTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.Tes
 }
 
 func testAccCheckAWSLBTargetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {

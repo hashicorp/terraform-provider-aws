@@ -68,7 +68,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func TestAccAWSLBListenerRule_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -238,7 +238,7 @@ func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +283,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -372,7 +372,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -410,7 +410,7 @@ func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -441,7 +441,7 @@ func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -472,7 +472,7 @@ func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -500,7 +500,7 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -568,8 +568,8 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 
 func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 	var conf elbv2.Rule
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_lb_listener_rule.cognito"
@@ -582,7 +582,7 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -612,8 +612,8 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 
 func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 	var conf elbv2.Rule
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_lb_listener_rule.oidc"
@@ -623,7 +623,7 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -656,15 +656,15 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 
 func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 	var rule elbv2.Rule
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -683,15 +683,15 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	var rule elbv2.Rule
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -715,7 +715,7 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -752,7 +752,7 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -791,7 +791,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -836,7 +836,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -857,7 +857,7 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -896,7 +896,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -935,7 +935,7 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -998,7 +998,7 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1037,7 +1037,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1111,7 +1111,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1194,7 +1194,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1296,7 +1296,7 @@ func testAccCheckAWSLBListenerRuleActionOrderDisappears(rule *elbv2.Rule, action
 			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 		input := &elbv2.ModifyRuleInput{
 			Actions: newActions,
@@ -1330,7 +1330,7 @@ func testAccCheckAWSLBListenerRuleExists(n string, res *elbv2.Rule) resource.Tes
 			return errors.New("No Listener Rule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 		describe, err := conn.DescribeRules(&elbv2.DescribeRulesInput{
 			RuleArns: []*string{aws.String(rs.Primary.ID)},
@@ -1351,7 +1351,7 @@ func testAccCheckAWSLBListenerRuleExists(n string, res *elbv2.Rule) resource.Tes
 }
 
 func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {
@@ -2973,7 +2973,7 @@ resource "aws_cognito_user_pool_domain" "test" {
   domain       = "%[1]s-pool-domain"
   user_pool_id = aws_cognito_user_pool.test.id
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSLBListenerRuleConfig_oidc(rName, key, certificate string) string {
@@ -3119,7 +3119,7 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_cognito"
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSLBListenerRuleConfig_Action_Order(rName, key, certificate string) string {
@@ -3258,7 +3258,7 @@ resource "aws_security_group" "test" {
     Name = var.rName
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSLBListenerRuleConfig_condition_error(condition string) string {

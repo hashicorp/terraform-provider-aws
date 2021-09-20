@@ -24,7 +24,7 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -61,7 +61,7 @@ func TestAccAWSLBListener_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +186,7 @@ func TestAccAWSLBListener_basicUdp(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,7 +222,7 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -252,15 +252,15 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 
 func TestAccAWSLBListener_https(t *testing.T) {
 	var conf elbv2.Listener
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -299,7 +299,7 @@ func TestAccAWSLBListener_LoadBalancerArn_GatewayLoadBalancer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -317,15 +317,15 @@ func TestAccAWSLBListener_LoadBalancerArn_GatewayLoadBalancer(t *testing.T) {
 
 func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 	var listener1 elbv2.Listener
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -353,7 +353,7 @@ func TestAccAWSLBListener_redirect(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -395,7 +395,7 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -428,15 +428,15 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 
 func TestAccAWSLBListener_cognito(t *testing.T) {
 	var conf elbv2.Listener
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -472,15 +472,15 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 
 func TestAccAWSLBListener_oidc(t *testing.T) {
 	var conf elbv2.Listener
-	key := tlsRsaPrivateKeyPem(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -520,15 +520,15 @@ func TestAccAWSLBListener_oidc(t *testing.T) {
 
 func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 	var listener elbv2.Listener
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -553,15 +553,15 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
 	var listener elbv2.Listener
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -602,7 +602,7 @@ func testAccCheckAWSLBListenerDefaultActionOrderDisappears(listener *elbv2.Liste
 			return fmt.Errorf("Unable to find default action order %d from default actions: %#v", actionOrderToDelete, listener.DefaultActions)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 		input := &elbv2.ModifyListenerInput{
 			DefaultActions: newDefaultActions,
@@ -626,7 +626,7 @@ func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.Tes
 			return errors.New("No Listener ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 		listener, err := finder.ListenerByARN(conn, rs.Primary.ID)
 
@@ -644,7 +644,7 @@ func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.Tes
 }
 
 func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {
@@ -1184,7 +1184,7 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccAWSLBListenerConfig_LoadBalancerArn_GatewayLoadBalancer(rName string) string {
@@ -1295,7 +1295,7 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccAWSLBListenerConfig_redirect(rName string) string {
@@ -1467,7 +1467,7 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccAWSLBListenerConfig_oidc(rName, key, certificate string) string {
@@ -1549,7 +1549,7 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
@@ -1624,7 +1624,7 @@ resource "aws_lb_target_group" "test" {
     Name = %[1]q
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccAWSLBListenerTagsConfig1(rName, tagKey1, tagValue1 string) string {
