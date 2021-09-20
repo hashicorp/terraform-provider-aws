@@ -134,8 +134,8 @@ func testAccCheckAWSEcrRepositoryPolicyDestroy(s *terraform.State) error {
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-				isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
+				tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
 				return nil
 			}
 			return err

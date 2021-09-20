@@ -51,10 +51,10 @@ func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetLifecyclePolicy(input)
 		if err != nil {
-			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
 				return nil
 			}
 			return err

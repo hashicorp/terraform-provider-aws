@@ -85,7 +85,7 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading ECR repository: %#v", params)
 	out, err := conn.DescribeRepositories(params)
 	if err != nil {
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 			return fmt.Errorf("ECR Repository (%s) not found", name)
 		}
 		return fmt.Errorf("error reading ECR repository: %w", err)

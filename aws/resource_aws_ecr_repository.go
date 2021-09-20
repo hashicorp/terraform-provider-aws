@@ -304,7 +304,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 		Force:          aws.Bool(true),
 	})
 	if err != nil {
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting ECR repository: %s", err)
@@ -317,7 +317,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -325,11 +325,11 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 
 		return resource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Repository to be deleted", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 		return nil
 	}
 
