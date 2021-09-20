@@ -5,24 +5,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dbClusterResourceName := "aws_rds_cluster.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -46,12 +47,12 @@ func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
 
 func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +60,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSClusterRoleAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRDSClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,13 +70,13 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 
 func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_role_association.test"
 	clusterResourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRDSCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,13 +94,13 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 
 func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
 	var dbClusterRole rds.DBClusterRole
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster_role_association.test"
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), roleResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,7 +175,7 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 }
 
 func testAccAWSRDSClusterRoleAssociationConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_iam_policy_document" "rds_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]

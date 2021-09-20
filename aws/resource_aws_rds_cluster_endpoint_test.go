@@ -9,22 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	var customReaderEndpoint rds.DBClusterEndpoint
 	var customEndpoint rds.DBClusterEndpoint
 	readerResourceName := "aws_rds_cluster_endpoint.reader"
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -35,9 +36,9 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 					testAccCheckAWSRDSClusterEndpointAttributes(&customReaderEndpoint),
 					testAccCheckAWSRDSClusterEndpointExists(defaultResourceName, &customEndpoint),
 					testAccCheckAWSRDSClusterEndpointAttributes(&customEndpoint),
-					testAccMatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
-					testAccMatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, "endpoint"),
 					resource.TestCheckResourceAttr(defaultResourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(readerResourceName, "tags.%", "0"),
@@ -59,13 +60,13 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccAWSRDSClusterEndpoint_tags(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	var customReaderEndpoint rds.DBClusterEndpoint
 	resourceName := "aws_rds_cluster_endpoint.reader"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -209,7 +210,7 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 }
 
 func testAccAWSClusterEndpointConfigBase(n int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = aws_rds_cluster.default.engine
   engine_version             = aws_rds_cluster.default.engine_version

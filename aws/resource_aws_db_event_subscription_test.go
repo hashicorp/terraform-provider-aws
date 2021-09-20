@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -80,13 +81,13 @@ func testSweepDbEventSubscriptions(region string) error {
 
 func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	var v rds.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_db_event_subscription.test"
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 				Config: testAccAWSDBEventSubscriptionConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("es:%s$", subscriptionName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("es:%s$", subscriptionName))),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "name", subscriptionName),
@@ -124,12 +125,12 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 
 func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 	var eventSubscription rds.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_db_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -147,13 +148,13 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 
 func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
 	var v rds.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-rds-event-subs-")
 	resourceName := "aws_db_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -173,13 +174,13 @@ func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
 
 func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 	var v rds.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_db_event_subscription.test"
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-with-ids-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -215,13 +216,13 @@ func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 
 func TestAccAWSDBEventSubscription_categoryUpdate(t *testing.T) {
 	var v rds.EventSubscription
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_db_event_subscription.test"
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{

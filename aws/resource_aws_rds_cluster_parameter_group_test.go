@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -86,11 +87,11 @@ func testSweepRdsClusterParameterGroups(region string) error {
 func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
@@ -182,12 +183,12 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 
 func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 	var v rds.DBClusterParameterGroup
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -196,7 +197,7 @@ func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
@@ -226,8 +227,8 @@ func TestAccAWSDBClusterParameterGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -254,8 +255,8 @@ func TestAccAWSDBClusterParameterGroup_namePrefix_Parameter(t *testing.T) {
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -282,8 +283,8 @@ func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -307,8 +308,8 @@ func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -330,11 +331,11 @@ func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
 func TestAccAWSDBClusterParameterGroup_disappears(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", acctest.RandInt())
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -353,11 +354,11 @@ func TestAccAWSDBClusterParameterGroup_disappears(t *testing.T) {
 func TestAccAWSDBClusterParameterGroup_only(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", acctest.RandInt())
+	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -386,11 +387,11 @@ func TestAccAWSDBClusterParameterGroup_only(t *testing.T) {
 func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	groupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -446,11 +447,11 @@ func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 func TestAccAWSDBClusterParameterGroup_caseParameters(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{

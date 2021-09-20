@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -77,11 +78,11 @@ func testSweepRdsDbParameterGroups(region string) error {
 func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -104,7 +105,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("pg:%s$", groupName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("pg:%s$", groupName))),
 				),
 			},
 			{
@@ -139,7 +140,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("pg:%s$", groupName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("pg:%s$", groupName))),
 				),
 			},
 			{
@@ -169,11 +170,11 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSDBParameterGroup_caseWithMixedParameters(t *testing.T) {
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -188,11 +189,11 @@ func TestAccAWSDBParameterGroup_caseWithMixedParameters(t *testing.T) {
 func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -556,11 +557,11 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -580,8 +581,8 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -600,8 +601,8 @@ func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -618,11 +619,11 @@ func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -658,11 +659,11 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -687,11 +688,11 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -716,11 +717,11 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -776,11 +777,11 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 func TestAccAWSDBParameterGroup_caseParameters(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1198,7 +1199,7 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccAWSDBParameterGroupConfigCaseWithMixedParameters(rName string) string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
   family = "mysql5.6"
