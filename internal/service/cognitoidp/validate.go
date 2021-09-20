@@ -3,7 +3,6 @@ package cognitoidp
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {

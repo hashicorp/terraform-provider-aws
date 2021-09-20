@@ -3,7 +3,6 @@ package cognitoidp
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidUserGroupName(t *testing.T) {
