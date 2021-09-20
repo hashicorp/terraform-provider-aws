@@ -1,4 +1,4 @@
-package aws
+package elastictranscoder_test
 
 import (
 	"fmt"
