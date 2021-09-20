@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesNotificationTopic() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsSesNotificationTopic() *schema.Resource {
 }
 
 func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
 	includeOriginalHeaders := d.Get("include_original_headers").(bool)
@@ -93,7 +94,7 @@ func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
 	if err != nil {
@@ -141,7 +142,7 @@ func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSesNotificationTopicDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
 	if err != nil {

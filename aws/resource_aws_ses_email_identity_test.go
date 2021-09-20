@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -73,7 +74,7 @@ func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
 }
 
 func testAccCheckAwsSESEmailIdentityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_email_identity" {
@@ -112,7 +113,7 @@ func testAccCheckAwsSESEmailIdentityExists(n string) resource.TestCheckFunc {
 		}
 
 		email := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{

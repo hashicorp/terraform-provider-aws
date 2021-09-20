@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesIdentityPolicy() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsSesIdentityPolicy() *schema.Resource {
 }
 
 func resourceAwsSesIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	identity := d.Get("identity").(string)
 	policyName := d.Get("name").(string)
@@ -70,7 +71,7 @@ func resourceAwsSesIdentityPolicyCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -92,7 +93,7 @@ func resourceAwsSesIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -135,7 +136,7 @@ func resourceAwsSesIdentityPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSesIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	identity, policyName, err := resourceAwsSesIdentityPolicyParseID(d.Id())
 	if err != nil {

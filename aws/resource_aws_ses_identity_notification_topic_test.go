@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 }
 
 func testAccCheckAwsSESIdentityNotificationTopicDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_identity_notification_topic" {
@@ -95,7 +96,7 @@ func testAccCheckAwsSESIdentityNotificationTopicExists(n string) resource.TestCh
 		}
 
 		identity := rs.Primary.Attributes["identity"]
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		params := &ses.GetIdentityNotificationAttributesInput{
 			Identities: []*string{aws.String(identity)},

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesDomainIdentityVerification() *schema.Resource {
@@ -54,7 +55,7 @@ func getAwsSesIdentityVerificationAttributes(conn *ses.SES, domainName string) (
 }
 
 func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 	domainName := d.Get("domain").(string)
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		att, err := getAwsSesIdentityVerificationAttributes(conn, domainName)
@@ -90,7 +91,7 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -114,10 +115,10 @@ func resourceAwsSesDomainIdentityVerificationRead(d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)

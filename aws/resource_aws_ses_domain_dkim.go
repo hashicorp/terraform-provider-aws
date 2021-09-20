@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesDomainDkim() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsSesDomainDkim() *schema.Resource {
 }
 
 func resourceAwsSesDomainDkimCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)
 
@@ -53,7 +54,7 @@ func resourceAwsSesDomainDkimCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSesDomainDkimRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
 	d.Set("domain", domainName)

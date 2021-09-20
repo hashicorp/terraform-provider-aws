@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesReceiptRule() *schema.Resource {
@@ -410,7 +411,7 @@ func resourceAwsSesReceiptRuleImport(d *schema.ResourceData, meta interface{}) (
 }
 
 func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	createOpts := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -432,7 +433,7 @@ func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -461,7 +462,7 @@ func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	describeOpts := &ses.DescribeReceiptRuleInput{
@@ -638,10 +639,10 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -650,7 +651,7 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSesReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),

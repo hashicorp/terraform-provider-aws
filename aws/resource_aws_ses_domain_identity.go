@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesDomainIdentity() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 }
 
 func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)
 
@@ -60,7 +61,7 @@ func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -85,10 +86,10 @@ func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -97,7 +98,7 @@ func resourceAwsSesDomainIdentityRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSesDomainIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)
 

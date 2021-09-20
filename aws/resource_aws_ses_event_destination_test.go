@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
@@ -101,7 +102,7 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -141,7 +142,7 @@ func testAccCheckAwsSESEventDestinationExists(n string, v *ses.EventDestination)
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
 			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Only one SES Receipt RuleSet can be active at a time, so run serially
@@ -81,7 +82,7 @@ func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_active_receipt_rule_set" {
@@ -114,7 +115,7 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 			return fmt.Errorf("SES Active Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		response, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 		if err != nil {

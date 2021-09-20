@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesReceiptFilter() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsSesReceiptFilter() *schema.Resource {
 }
 
 func resourceAwsSesReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	name := d.Get("name").(string)
 
@@ -87,7 +88,7 @@ func resourceAwsSesReceiptFilterCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	listOpts := &ses.ListReceiptFiltersInput{}
 
@@ -116,10 +117,10 @@ func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", filter.Name)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -128,7 +129,7 @@ func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepSesReceiptRuleSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sesconn
+	conn := client.(*conns.AWSClient).SESConn
 
 	// You cannot delete the receipt rule set that is currently active.
 	// Setting the name of the receipt rule set to make active to null disables all email receiving.
@@ -131,7 +132,7 @@ func TestAccAWSSESReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckSESReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_rule_set" {
@@ -170,7 +171,7 @@ func testAccCheckAwsSESReceiptRuleSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		params := &ses.DescribeReceiptRuleSetInput{
 			RuleSetName: aws.String(rs.Primary.ID),

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesConfigurationSet() *schema.Resource {
@@ -67,7 +68,7 @@ func resourceAwsSesConfigurationSet() *schema.Resource {
 }
 
 func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	configurationSetName := d.Get("name").(string)
 
@@ -124,7 +125,7 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
@@ -158,10 +159,10 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ses.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -170,7 +171,7 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
@@ -212,7 +213,7 @@ func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
 	input := &ses.DeleteConfigurationSetInput{
