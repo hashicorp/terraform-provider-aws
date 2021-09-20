@@ -171,7 +171,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	directoryID := d.Get("directory_id").(string)
 
-	rawOutput, state, err := waiter.DirectoryState(conn, directoryID)()
+	rawOutput, state, err := waiter.StatusDirectoryState(conn, directoryID)()
 	if err != nil {
 		return fmt.Errorf("error getting WorkSpaces Directory (%s): %w", directoryID, err)
 	}

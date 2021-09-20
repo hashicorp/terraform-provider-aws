@@ -239,7 +239,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryID)
 
-	_, err = waiter.DirectoryRegistered(conn, d.Id())
+	_, err = waiter.WaitDirectoryRegistered(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to register: %w", d.Id(), err)
@@ -302,7 +302,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	directory, err := finder.DirectoryByID(conn, d.Id())
+	directory, err := finder.FindDirectoryByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
@@ -470,7 +470,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deregistering WorkSpaces Directory (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.DirectoryDeregistered(conn, d.Id())
+	_, err = waiter.WaitDirectoryDeregistered(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to deregister: %w", d.Id(), err)

@@ -35,7 +35,7 @@ func testSweepWorkspacesIpGroups(region string) error {
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]*acctest.SweepResource, 0)
 
-	err = lister.DescribeIpGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
+	err = lister.DescribeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

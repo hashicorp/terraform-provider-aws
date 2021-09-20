@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
+func FindDirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{
 		DirectoryIds: aws.StringSlice([]string{id}),
 	}

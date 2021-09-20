@@ -183,7 +183,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
 
 	log.Printf("[DEBUG] Waiting for workspace %q to be available...", workspaceID)
-	_, err = waiter.WorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.WaitWorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("workspace %q is not available: %s", workspaceID, err)
 	}
@@ -199,7 +199,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := waiter.WorkspaceState(conn, d.Id())()
+	rawOutput, state, err := waiter.StatusWorkspaceState(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error reading workspace (%s): %s", d.Id(), err)
 	}
@@ -319,7 +319,7 @@ func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)
-	_, err = waiter.WorkspaceTerminated(conn, id, timeout)
+	_, err = waiter.WaitWorkspaceTerminated(conn, id, timeout)
 	if err != nil {
 		return fmt.Errorf("workspace %q was not terminated: %s", id, err)
 	}
@@ -372,7 +372,7 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q %s property to be modified...", d.Id(), p)
-	_, err = waiter.WorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = waiter.WaitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error modifying workspace %q property %q was not modified: %w", d.Id(), p, err)
 	}
