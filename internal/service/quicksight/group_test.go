@@ -17,7 +17,7 @@ import (
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
-func TestAccAWSQuickSightGroup_basic(t *testing.T) {
+func TestAccQuickSightGroup_basic(t *testing.T) {
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -54,7 +54,7 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
+func TestAccQuickSightGroup_withDescription(t *testing.T) {
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -88,7 +88,7 @@ func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightGroup_disappears(t *testing.T) {
+func TestAccQuickSightGroup_disappears(t *testing.T) {
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
