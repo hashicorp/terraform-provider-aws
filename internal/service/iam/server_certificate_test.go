@@ -56,7 +56,7 @@ func testSweepIamServerCertificates(region string) error {
 	return nil
 }
 
-func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
+func TestAccIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate
 
 	resourceName := "aws_iam_server_certificate.test"
@@ -95,7 +95,7 @@ func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMServerCertificate_tags(t *testing.T) {
+func TestAccIAMServerCertificate_tags(t *testing.T) {
 	var cert iam.ServerCertificate
 
 	resourceName := "aws_iam_server_certificate.test"
@@ -146,7 +146,7 @@ func TestAccAWSIAMServerCertificate_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
+func TestAccIAMServerCertificate_Name_prefix(t *testing.T) {
 	var cert iam.ServerCertificate
 
 	resourceName := "aws_iam_server_certificate.test"
@@ -170,7 +170,7 @@ func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
+func TestAccIAMServerCertificate_disappears(t *testing.T) {
 	var cert iam.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"
 
@@ -195,7 +195,7 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMServerCertificate_file(t *testing.T) {
+func TestAccIAMServerCertificate_file(t *testing.T) {
 	var cert iam.ServerCertificate
 
 	rInt := sdkacctest.RandInt()
@@ -233,7 +233,7 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMServerCertificate_Path(t *testing.T) {
+func TestAccIAMServerCertificate_path(t *testing.T) {
 	var cert iam.ServerCertificate
 
 	resourceName := "aws_iam_server_certificate.test"

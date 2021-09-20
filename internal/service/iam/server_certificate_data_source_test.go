@@ -36,7 +36,7 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 	}
 }
 
-func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
+func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
@@ -65,7 +65,7 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
+func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
@@ -80,7 +80,7 @@ func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
+func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	path := "/test-path/"
 	pathPrefix := "/test-path/"

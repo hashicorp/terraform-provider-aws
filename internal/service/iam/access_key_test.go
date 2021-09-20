@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
-func TestAccAWSAccessKey_basic(t *testing.T) {
+func TestAccIAMAccessKey_basic(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -53,7 +53,7 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAccessKey_encrypted(t *testing.T) {
+func TestAccIAMAccessKey_encrypted(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -87,7 +87,7 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSAccessKey_status(t *testing.T) {
+func TestAccIAMAccessKey_status(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

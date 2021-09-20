@@ -17,7 +17,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
+func TestAccIAMRolePolicy_basic(t *testing.T) {
 	var rolePolicy1, rolePolicy2, rolePolicy3 iam.GetRolePolicyOutput
 	role := sdkacctest.RandString(10)
 	policy1 := sdkacctest.RandString(10)
@@ -68,7 +68,7 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
+func TestAccIAMRolePolicy_disappears(t *testing.T) {
 	var out iam.GetRolePolicyOutput
 	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
@@ -96,7 +96,7 @@ func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
+func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
 	role := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role_policy.test"
@@ -141,7 +141,7 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
+func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
 	role := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role_policy.test"
@@ -185,7 +185,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolePolicy_invalidJSON(t *testing.T) {
+func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
 	role := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -202,7 +202,7 @@ func TestAccAWSIAMRolePolicy_invalidJSON(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolePolicy_Policy_InvalidResource(t *testing.T) {
+func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{

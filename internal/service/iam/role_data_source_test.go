@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
+func TestAccIAMRoleDataSource_basic(t *testing.T) {
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"
@@ -38,7 +38,7 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMRole_tags(t *testing.T) {
+func TestAccIAMRoleDataSource_tags(t *testing.T) {
 	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"

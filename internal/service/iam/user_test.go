@@ -198,7 +198,7 @@ func testSweepIamUsers(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSUser_basic(t *testing.T) {
+func TestAccIAMUser_basic(t *testing.T) {
 	var conf iam.GetUserOutput
 
 	name1 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -238,7 +238,7 @@ func TestAccAWSUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_disappears(t *testing.T) {
+func TestAccIAMUser_disappears(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -262,7 +262,7 @@ func TestAccAWSUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
+func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -292,7 +292,7 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
+func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -322,7 +322,7 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
+func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -352,7 +352,7 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
+func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -381,7 +381,7 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
+func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -411,7 +411,7 @@ func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_nameChange(t *testing.T) {
+func TestAccIAMUser_nameChange(t *testing.T) {
 	var conf iam.GetUserOutput
 
 	name1 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -448,7 +448,7 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_pathChange(t *testing.T) {
+func TestAccIAMUser_pathChange(t *testing.T) {
 	var conf iam.GetUserOutput
 
 	name := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
@@ -485,7 +485,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_permissionsBoundary(t *testing.T) {
+func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -563,7 +563,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 	})
 }
 
-func TestAccAWSUser_tags(t *testing.T) {
+func TestAccIAMUser_tags(t *testing.T) {
 	var user iam.GetUserOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

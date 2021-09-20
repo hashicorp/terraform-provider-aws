@@ -92,7 +92,7 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 	}
 }
 
-func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
+func TestAccIAMSessionContextDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
@@ -115,7 +115,7 @@ func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
+func TestAccIAMSessionContextDataSource_withPath(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
@@ -137,7 +137,7 @@ func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
+func TestAccIAMSessionContextDataSource_notAssumedRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
@@ -159,7 +159,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) {
+func TestAccIAMSessionContextDataSource_notAssumedRoleWithPath(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
@@ -181,7 +181,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) 
 	})
 }
 
-func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleUser(t *testing.T) {
+func TestAccIAMSessionContextDataSource_notAssumedRoleUser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_session_context.test"
 

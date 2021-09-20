@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
+func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListAttachedGroupPoliciesOutput
 
 	rString := sdkacctest.RandString(8)

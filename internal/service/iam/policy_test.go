@@ -98,7 +98,7 @@ func testSweepIamPolicies(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSIAMPolicy_basic(t *testing.T) {
+func TestAccIAMPolicy_basic(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
@@ -143,7 +143,7 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicy_description(t *testing.T) {
+func TestAccIAMPolicy_description(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
@@ -170,7 +170,7 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicy_tags(t *testing.T) {
+func TestAccIAMPolicy_tags(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
@@ -215,7 +215,7 @@ func TestAccAWSIAMPolicy_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicy_disappears(t *testing.T) {
+func TestAccIAMPolicy_disappears(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
@@ -238,7 +238,7 @@ func TestAccAWSIAMPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
+func TestAccIAMPolicy_namePrefix(t *testing.T) {
 	var out iam.GetPolicyOutput
 	namePrefix := "tf-acc-test-"
 	resourceName := "aws_iam_policy.test"
@@ -266,7 +266,7 @@ func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicy_path(t *testing.T) {
+func TestAccIAMPolicy_path(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
@@ -293,7 +293,7 @@ func TestAccAWSIAMPolicy_path(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicy_policy(t *testing.T) {
+func TestAccIAMPolicy_policy(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"

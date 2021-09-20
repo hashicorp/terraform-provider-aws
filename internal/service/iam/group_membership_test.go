@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSGroupMembership_basic(t *testing.T) {
+func TestAccIAMGroupMembership_basic(t *testing.T) {
 	var group iam.GetGroupOutput
 
 	rString := sdkacctest.RandString(8)
@@ -58,7 +58,7 @@ func TestAccAWSGroupMembership_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGroupMembership_paginatedUserList(t *testing.T) {
+func TestAccIAMGroupMembership_paginatedUserList(t *testing.T) {
 	var group iam.GetGroupOutput
 
 	rString := sdkacctest.RandString(8)

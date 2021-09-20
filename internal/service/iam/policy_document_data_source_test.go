@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
@@ -32,7 +32,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
@@ -61,7 +61,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_source(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_sourceList(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -79,7 +79,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceList(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -97,7 +97,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceConflicting(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_sourceListConflicting(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -111,7 +111,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceListConflicting(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -129,7 +129,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_override(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_overrideList(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -147,7 +147,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_overrideList(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_noStatementMerge(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -165,7 +165,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_noStatementMerge(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_noStatementOverride(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -183,7 +183,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_noStatementOverride(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
@@ -206,7 +206,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
-func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -225,7 +225,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_stringA
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
-func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multiplePrincipals(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipals(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -243,7 +243,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multipl
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multiplePrincipalsGov(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipalsGov(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -261,7 +261,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multipl
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_version20081017(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),

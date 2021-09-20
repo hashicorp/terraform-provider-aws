@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
+func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
 	rString := sdkacctest.RandString(8)
@@ -57,7 +57,7 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
+func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
 	rString := sdkacctest.RandString(8)
@@ -81,7 +81,7 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicyAttachment_Groups_RenamedGroup(t *testing.T) {
+func TestAccIAMPolicyAttachment_Groups_renamedGroup(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -113,7 +113,7 @@ func TestAccAWSIAMPolicyAttachment_Groups_RenamedGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicyAttachment_Roles_RenamedRole(t *testing.T) {
+func TestAccIAMPolicyAttachment_Roles_renamedRole(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -145,7 +145,7 @@ func TestAccAWSIAMPolicyAttachment_Roles_RenamedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMPolicyAttachment_Users_RenamedUser(t *testing.T) {
+func TestAccIAMPolicyAttachment_Users_renamedUser(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

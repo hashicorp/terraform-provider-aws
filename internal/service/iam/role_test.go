@@ -157,7 +157,7 @@ func testSweepIamRoles(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSIAMRole_basic(t *testing.T) {
+func TestAccIAMRole_basic(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -185,7 +185,7 @@ func TestAccAWSIAMRole_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
+func TestAccIAMRole_basicWithDescription(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -229,7 +229,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_NameGenerated(t *testing.T) {
+func TestAccIAMRole_nameGenerated(t *testing.T) {
 	var conf iam.Role
 	resourceName := "aws_iam_role.test"
 
@@ -256,7 +256,7 @@ func TestAccAWSIAMRole_NameGenerated(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_NamePrefix(t *testing.T) {
+func TestAccIAMRole_namePrefix(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -284,7 +284,7 @@ func TestAccAWSIAMRole_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_testNameChange(t *testing.T) {
+func TestAccIAMRole_testNameChange(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -316,7 +316,7 @@ func TestAccAWSIAMRole_testNameChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_badJSON(t *testing.T) {
+func TestAccIAMRole_badJSON(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -333,7 +333,7 @@ func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_disappears(t *testing.T) {
+func TestAccIAMRole_disappears(t *testing.T) {
 	var role iam.Role
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -357,7 +357,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
+func TestAccIAMRole_ForceDetach_policies(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -385,7 +385,7 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
+func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -432,7 +432,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
+func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	var role iam.Role
 
 	rName := sdkacctest.RandString(10)
@@ -505,7 +505,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_tags(t *testing.T) {
+func TestAccIAMRole_tags(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -542,7 +542,7 @@ func TestAccAWSIAMRole_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
+func TestAccIAMRole_policyBasicInline(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -590,7 +590,7 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_policyBasicInlineEmpty(t *testing.T) {
+func TestAccIAMRole_policyBasicInlineEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
@@ -611,7 +611,7 @@ func TestAccAWSIAMRole_policyBasicInlineEmpty(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
+func TestAccIAMRole_policyBasicManaged(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -656,9 +656,9 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
+// TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
 // out of band, it should be reattached.
-func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -689,9 +689,9 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testin
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty: if a policy is removed
+// TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_inlineNonEmpty: if a policy is removed
 // out of band, it should be recreated.
-func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -722,9 +722,9 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty: if managed_policies arg
+// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedNonEmpty: if managed_policies arg
 // exists and is non-empty, policy attached out of band should be removed
-func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedNonEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -756,9 +756,9 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
+// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
 // exists and is non-empty, policy added out of band should be removed
-func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -791,9 +791,9 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent: if there is no
+// TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent: if there is no
 // inline_policy attribute, out of band changes should be ignored.
-func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -832,9 +832,9 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testi
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent: if there is no
+// TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent: if there is no
 // managed_policies attribute, out of band changes should be ignored.
-func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -864,9 +864,9 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent(t *test
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
+// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
 // out of band with empty inline arg, should be removed
-func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -896,9 +896,9 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) 
 	})
 }
 
-// TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
+// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
 // out of band with empty managed arg, should be detached
-func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T) {
+func TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	policyName := sdkacctest.RandomWithPrefix("tf-acc-test")

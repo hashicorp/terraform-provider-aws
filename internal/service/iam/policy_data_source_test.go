@@ -80,7 +80,7 @@ func TestPolicySearchDetails(t *testing.T) {
 	}
 }
 
-func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
+func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
@@ -106,7 +106,7 @@ func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
+func TestAccIAMPolicyDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
@@ -132,7 +132,7 @@ func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
+func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -160,7 +160,7 @@ func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicy_NonExistent(t *testing.T) {
+func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
 	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 	policyPath := "/test-path/"
 

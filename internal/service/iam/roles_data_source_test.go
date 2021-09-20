@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSIAMRolesDataSource_basic(t *testing.T) {
+func TestAccIAMRolesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccAWSIAMRolesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolesDataSource_nameRegex(t *testing.T) {
+func TestAccIAMRolesDataSource_nameRegex(t *testing.T) {
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_iam_roles.test"
@@ -51,7 +51,7 @@ func TestAccAWSIAMRolesDataSource_nameRegex(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolesDataSource_pathPrefix(t *testing.T) {
+func TestAccIAMRolesDataSource_pathPrefix(t *testing.T) {
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
@@ -73,7 +73,7 @@ func TestAccAWSIAMRolesDataSource_pathPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
+func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,7 +92,7 @@ func TestAccAWSIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
+func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")

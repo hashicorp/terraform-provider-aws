@@ -36,8 +36,8 @@ func testSweepIamServiceLinkedRoles(region string) error {
 	}
 
 	// include generic service role names created by:
-	// TestAccAWSIAMServiceLinkedRole_basic
-	// TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc
+	// TestAccIAMServiceLinkedRole_basic
+	// TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc
 	customSuffixRegex := regexp.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
 	err = conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		if len(page.Roles) == 0 {
@@ -140,7 +140,7 @@ func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
 	}
 }
 
-func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
+func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "elasticbeanstalk.amazonaws.com"
 	name := "AWSServiceRoleForElasticBeanstalk"
@@ -190,7 +190,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
+func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "autoscaling.amazonaws.com"
 	customSuffix := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -221,7 +221,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4439
-func TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc(t *testing.T) {
+func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "custom-resource.application-autoscaling.amazonaws.com"
 	name := "AWSServiceRoleForApplicationAutoScaling_CustomResource"
@@ -250,7 +250,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc(t *testing.T) 
 	})
 }
 
-func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
+func TestAccIAMServiceLinkedRole_description(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "autoscaling.amazonaws.com"
 	customSuffix := sdkacctest.RandomWithPrefix("tf-acc-test")

@@ -16,7 +16,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 	var out iam.ListAttachedRolePoliciesOutput
 	rInt := sdkacctest.RandInt()
 	testPolicy := fmt.Sprintf("tf-acctest-%d", rInt)
@@ -68,7 +68,7 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_disappears(t *testing.T) {
 	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -92,7 +92,7 @@ func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
 	var role iam.Role
 
