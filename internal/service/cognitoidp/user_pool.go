@@ -724,7 +724,7 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.UserPoolTags = tags.IgnoreAws().CognitoidentityproviderTags()
+		params.UserPoolTags = Tags(tags.IgnoreAws())
 	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
@@ -908,7 +908,7 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", userPool.Name)
-	tags := tftags.CognitoidentityKeyValueTags(userPool.UserPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(userPool.UserPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1143,7 +1143,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(tags) > 0 {
-			params.UserPoolTags = tags.IgnoreAws().CognitoidentityproviderTags()
+			params.UserPoolTags = Tags(tags.IgnoreAws())
 		}
 
 		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
