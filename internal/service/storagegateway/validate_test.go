@@ -2,7 +2,6 @@ package storagegateway
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValid4ByteASN(t *testing.T) {

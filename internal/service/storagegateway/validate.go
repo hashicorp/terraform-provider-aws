@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
