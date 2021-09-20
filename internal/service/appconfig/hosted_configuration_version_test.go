@@ -126,7 +126,7 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
+func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
@@ -158,7 +158,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
+func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 

@@ -101,7 +101,7 @@ func testSweepAppConfigEnvironments(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
+func TestAccAppConfigEnvironment_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
 	appResourceName := "aws_appconfig_application.test"
@@ -133,7 +133,7 @@ func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
+func TestAccAppConfigEnvironment_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
 
@@ -155,7 +155,7 @@ func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_updateName(t *testing.T) {
+func TestAccAppConfigEnvironment_updateName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_environment.test"
@@ -188,7 +188,7 @@ func TestAccAWSAppConfigEnvironment_updateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_updateDescription(t *testing.T) {
+func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_environment.test"
@@ -234,7 +234,7 @@ func TestAccAWSAppConfigEnvironment_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_Monitors(t *testing.T) {
+func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
 
@@ -290,7 +290,7 @@ func TestAccAWSAppConfigEnvironment_Monitors(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_MultipleEnvironments(t *testing.T) {
+func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName1 := "aws_appconfig_environment.test"
 	resourceName2 := "aws_appconfig_environment.test2"
@@ -333,7 +333,7 @@ func TestAccAWSAppConfigEnvironment_MultipleEnvironments(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
+func TestAccAppConfigEnvironment_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
 

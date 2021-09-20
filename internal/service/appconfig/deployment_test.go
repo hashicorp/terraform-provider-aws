@@ -15,7 +15,7 @@ import (
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 )
 
-func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
+func TestAccAppConfigDeployment_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment.test"
 	appResourceName := "aws_appconfig_application.test"
@@ -57,7 +57,7 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
+func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment.test"
 	strategy := "AppConfig.Linear50PercentEvery30Seconds"
@@ -86,7 +86,7 @@ func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeployment_Tags(t *testing.T) {
+func TestAccAppConfigDeployment_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment.test"
 
