@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
@@ -17,7 +18,7 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 		Read: dataSourceTransitGatewayVPNAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -86,7 +87,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta inte
 
 	transitGatewayAttachment := output.TransitGatewayAttachments[0]
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVPCEndpoint() *schema.Resource {
@@ -104,7 +105,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_endpoint_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -136,7 +137,7 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -225,7 +226,7 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", tftags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}

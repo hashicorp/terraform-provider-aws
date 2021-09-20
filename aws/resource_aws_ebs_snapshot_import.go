@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ebs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceEBSSnapshotImport() *schema.Resource {
@@ -23,7 +24,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 		Read:          resourceEBSSnapshotImportRead,
 		Update:        resourceEBSSnapshotImportUpdate,
 		Delete:        resourceEBSSnapshotImportDelete,
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -151,8 +152,8 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -161,7 +162,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.ImportSnapshotInput{
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImportSnapshotTask),
@@ -231,7 +232,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 
 		tags := d.Get("tags").(map[string]interface{})
 		if len(tags) > 0 {
-			if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+			if err := tftags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
 				return resource.NonRetryableError(fmt.Errorf("error setting tags: %s", err))
 			}
 		}
@@ -284,7 +285,7 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	tags := keyvaluetags.Ec2KeyValueTags(snapshot.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(snapshot.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -311,7 +312,7 @@ func resourceEBSSnapshotImportUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

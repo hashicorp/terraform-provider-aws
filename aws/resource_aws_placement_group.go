@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePlacementGroup() *schema.Resource {
@@ -49,18 +50,18 @@ func ResourcePlacementGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := ec2.CreatePlacementGroupInput{
@@ -139,7 +140,7 @@ func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", pg.GroupName)
 	d.Set("strategy", pg.Strategy)
 	d.Set("placement_group_id", pg.GroupId)
-	tags := keyvaluetags.Ec2KeyValueTags(pg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(pg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -170,7 +171,7 @@ func resourcePlacementGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		pgId := d.Get("placement_group_id").(string)
-		if err := keyvaluetags.Ec2UpdateTags(conn, pgId, o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, pgId, o, n); err != nil {
 			return fmt.Errorf("error updating Placement Group (%s) tags: %s", pgId, err)
 		}
 	}

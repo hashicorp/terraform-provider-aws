@@ -12,8 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceSubnetGroup() *schema.Resource {
@@ -53,8 +54,8 @@ func ResourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: resourceAwsElasticacheSubnetGroupDiff,
@@ -70,13 +71,13 @@ func resourceAwsElasticacheSubnetGroupDiff(_ context.Context, diff *schema.Resou
 		return nil
 	}
 
-	return SetTagsDiff(context.Background(), diff, meta)
+	return verify.SetTagsDiff(context.Background(), diff, meta)
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get the group properties
 	name := d.Get("name").(string)
@@ -152,7 +153,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", group.CacheSubnetGroupDescription)
 	d.Set("subnet_ids", ids)
 
-	tags, err := keyvaluetags.ElasticacheListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.ElasticacheListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
 		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
@@ -197,7 +198,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

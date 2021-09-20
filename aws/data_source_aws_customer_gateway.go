@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCustomerGateway() *schema.Resource {
@@ -36,7 +37,7 @@ func DataSourceCustomerGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -97,7 +98,7 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("bgp_asn", int(asn))
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(cg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(cg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags for EC2 Customer Gateway %q: %w", aws.StringValue(cg.CustomerGatewayId), err)
 	}
 

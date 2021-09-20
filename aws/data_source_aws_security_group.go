@@ -8,11 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSecurityGroup() *schema.Resource {
@@ -43,7 +44,7 @@ func DataSourceSecurityGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"description": {
 				Type:     schema.TypeString,
@@ -70,7 +71,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		},
 	)
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -96,7 +97,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

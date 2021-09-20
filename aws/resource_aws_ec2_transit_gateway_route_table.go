@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTransitGatewayRouteTable() *schema.Resource {
@@ -23,7 +24,7 @@ func ResourceTransitGatewayRouteTable() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -38,8 +39,8 @@ func ResourceTransitGatewayRouteTable() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -53,7 +54,7 @@ func ResourceTransitGatewayRouteTable() *schema.Resource {
 func resourceTransitGatewayRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayRouteTableInput{
 		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
@@ -107,7 +108,7 @@ func resourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 
-	tags := keyvaluetags.Ec2KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -139,7 +140,7 @@ func resourceTransitGatewayRouteTableUpdate(d *schema.ResourceData, meta interfa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway Route Table (%s) tags: %s", d.Id(), err)
 		}
 	}

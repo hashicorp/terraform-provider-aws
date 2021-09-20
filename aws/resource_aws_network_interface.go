@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceNetworkInterface() *schema.Resource {
@@ -111,8 +112,8 @@ func ResourceNetworkInterface() *schema.Resource {
 				Set: resourceAwsEniAttachmentHash,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -139,7 +140,7 @@ func ResourceNetworkInterface() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -147,7 +148,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.CreateNetworkInterfaceInput{
 		SubnetId:          aws.String(d.Get("subnet_id").(string)),
@@ -285,7 +286,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting ipv6 addresses: %s", err)
 	}
 
-	tags := keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -569,7 +570,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}

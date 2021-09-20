@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const DefaultSecurityGroupName = "default"
@@ -179,8 +180,8 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			// This is not implemented. Added to prevent breaking changes.
 			"revoke_rules_on_delete": {
 				Type:     schema.TypeBool,
@@ -189,14 +190,14 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	securityGroupOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -251,7 +252,7 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Default Security Group ID: %s", d.Id())
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+		if err := tftags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding EC2 Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -311,7 +312,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting Egress rule set for (%s): %w", d.Id(), err)
 	}
 
-	tags := keyvaluetags.Ec2KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -348,7 +349,7 @@ func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}

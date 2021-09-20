@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceRouteTables() *schema.Resource {
@@ -19,7 +20,7 @@ func DataSourceRouteTables() *schema.Resource {
 
 			"filter": ec2CustomFiltersSchema(),
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -50,7 +51,7 @@ func dataSourceRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(

@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCoIPPool() *schema.Resource {
@@ -41,7 +42,7 @@ func DataSourceCoIPPool() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"filter": ec2CustomFiltersSchema(),
 		},
@@ -68,7 +69,7 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
@@ -105,7 +106,7 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("pool_id", coip.PoolId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(coip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(coip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

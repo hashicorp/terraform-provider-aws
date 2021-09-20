@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
@@ -56,18 +57,18 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 			},
 			"accepter":  vpcPeeringConnectionOptionsSchema(),
 			"requester": vpcPeeringConnectionOptionsSchema(),
-			"tags":      tagsSchema(),
-			"tags_all":  tagsSchemaComputed(),
+			"tags":      tftags.TagsSchema(),
+			"tags_all":  tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	id := d.Get("vpc_peering_connection_id").(string)
 
@@ -92,7 +93,7 @@ func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{
 	d.SetId(id)
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags.Map()); err != nil {
+		if err := tftags.Ec2CreateTags(conn, d.Id(), tags.Map()); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}

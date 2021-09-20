@@ -12,8 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceVPCDHCPOptions() *schema.Resource {
@@ -60,9 +61,9 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -74,14 +75,14 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	setDHCPOption := func(key string) *ec2.NewDhcpConfiguration {
 		log.Printf("[DEBUG] Setting DHCP option %s...", key)
@@ -180,7 +181,7 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 
 	opts := resp.DhcpOptions[0]
 
-	tags := keyvaluetags.Ec2KeyValueTags(opts.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(opts.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -226,7 +227,7 @@ func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

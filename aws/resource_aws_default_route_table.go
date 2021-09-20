@@ -10,11 +10,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceDefaultRouteTable() *schema.Resource {
@@ -128,8 +129,8 @@ func ResourceDefaultRouteTable() *schema.Resource {
 				Set: resourceAwsRouteTableHash,
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -137,14 +138,14 @@ func ResourceDefaultRouteTable() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
@@ -242,7 +243,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+		if err := tftags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding tags: %w", err)
 		}
 	}

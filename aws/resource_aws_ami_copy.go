@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceAMICopy() *schema.Resource {
@@ -219,8 +220,8 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"virtualization_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -231,7 +232,7 @@ func ResourceAMICopy() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		// The remaining operations are shared with the generic aws_ami resource,
 		// since the aws_ami_copy resource only differs in how it's created.
@@ -244,7 +245,7 @@ func ResourceAMICopy() *schema.Resource {
 func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CopyImageInput{
 		Description:   aws.String(d.Get("description").(string)),
@@ -271,7 +272,7 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("manage_ebs_snapshots", true)
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(client, d.Id(), tags); err != nil {
+		if err := tftags.Ec2CreateTags(client, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
