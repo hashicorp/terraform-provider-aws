@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ImageStatus fetches the Image and its Status
-func ImageStatus(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string) resource.StateRefreshFunc {
+// statusImage fetches the Image and its Status
+func statusImage(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &imagebuilder.GetImageInput{
 			ImageBuildVersionArn: aws.String(imageBuildVersionArn),

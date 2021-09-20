@@ -102,7 +102,7 @@ func ResourceImageRecipe() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										// https://github.com/hashicorp/terraform-provider-aws/issues/17274.
-										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), tfimagebuilder.EbsVolumeTypeGp3), false),
+										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), tfimagebuilder.EBSVolumeTypeGP3), false),
 									},
 								},
 							},

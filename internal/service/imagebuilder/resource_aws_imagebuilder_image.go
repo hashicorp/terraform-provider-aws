@@ -191,7 +191,7 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.ImageBuildVersionArn))
 
-	if _, err := waiter.ImageStatusAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitImageStatusAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Image Builder Image (%s) to become available: %w", d.Id(), err)
 	}
 
