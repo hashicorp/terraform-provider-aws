@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/encryption"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/encryption"
 )
 
 func resourceAwsIamAccessKey() *schema.Resource {
