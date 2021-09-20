@@ -24,14 +24,14 @@ func init() {
 }
 
 func testSweepAppConfigEnvironments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).appconfigconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
@@ -69,7 +69,7 @@ func testSweepAppConfigEnvironments(region string) error {
 					d := r.Data(nil)
 					d.SetId(id)
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -87,11 +87,11 @@ func testSweepAppConfigEnvironments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Environments sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -107,7 +107,7 @@ func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -138,14 +138,14 @@ func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,7 +161,7 @@ func TestAccAWSAppConfigEnvironment_updateName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +194,7 @@ func TestAccAWSAppConfigEnvironment_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -239,7 +239,7 @@ func TestAccAWSAppConfigEnvironment_Monitors(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -296,7 +296,7 @@ func TestAccAWSAppConfigEnvironment_MultipleEnvironments(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -338,7 +338,7 @@ func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -376,7 +376,7 @@ func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigEnvironmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_environment" {
@@ -429,7 +429,7 @@ func testAccCheckAWSAppConfigEnvironmentExists(resourceName string) resource.Tes
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 		input := &appconfig.GetEnvironmentInput{
 			ApplicationId: aws.String(appID),

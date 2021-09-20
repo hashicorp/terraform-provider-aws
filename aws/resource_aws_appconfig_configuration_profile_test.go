@@ -27,14 +27,14 @@ func init() {
 }
 
 func testSweepAppConfigConfigurationProfiles(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).appconfigconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
@@ -72,7 +72,7 @@ func testSweepAppConfigConfigurationProfiles(region string) error {
 					d := r.Data(nil)
 					d.SetId(id)
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -90,11 +90,11 @@ func testSweepAppConfigConfigurationProfiles(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Configuration Profiles for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Configuration Profiles sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -110,7 +110,7 @@ func TestAccAWSAppConfigConfigurationProfile_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -142,14 +142,14 @@ func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppConfigConfigurationProfileConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigConfigurationProfileExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigConfigurationProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigConfigurationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,7 +164,7 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_JSON(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +217,7 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_Lambda(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -255,7 +255,7 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -290,7 +290,7 @@ func TestAccAWSAppConfigConfigurationProfile_updateName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -324,7 +324,7 @@ func TestAccAWSAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -362,7 +362,7 @@ func TestAccAWSAppConfigConfigurationProfile_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -400,7 +400,7 @@ func TestAccAWSAppConfigConfigurationProfile_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigConfigurationProfileDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_configuration_profile" {
@@ -453,7 +453,7 @@ func testAccCheckAWSAppConfigConfigurationProfileExists(resourceName string) res
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 		output, err := conn.GetConfigurationProfile(&appconfig.GetConfigurationProfileInput{
 			ApplicationId:          aws.String(appID),

@@ -24,14 +24,14 @@ func init() {
 }
 
 func testSweepAppConfigHostedConfigurationVersions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).appconfigconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
@@ -86,7 +86,7 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 							d := r.Data(nil)
 							d.SetId(id)
 
-							sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+							sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 						}
 
 						return !lastPage
@@ -112,11 +112,11 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Hosted Configuration Versions sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -131,7 +131,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,14 +163,14 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppConfigHostedConfigurationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppconfigHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -179,7 +179,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 }
 
 func testAccCheckAppConfigHostedConfigurationVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_hosted_configuration_version" {
@@ -233,7 +233,7 @@ func testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName strin
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 		output, err := conn.GetHostedConfigurationVersion(&appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),

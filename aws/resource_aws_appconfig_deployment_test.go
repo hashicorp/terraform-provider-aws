@@ -25,7 +25,7 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
@@ -63,7 +63,7 @@ func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
@@ -91,7 +91,7 @@ func TestAccAWSAppConfigDeployment_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func testAccCheckAWSAppConfigDeploymentExists(resourceName string) resource.Test
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),
