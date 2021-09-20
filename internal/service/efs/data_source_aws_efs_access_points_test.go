@@ -1,4 +1,4 @@
-package aws
+package efs_test
 
 import (
 	"testing"

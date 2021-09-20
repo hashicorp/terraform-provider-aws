@@ -4,8 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -34,7 +33,7 @@ func statusAccessPointLifeCycleState(conn *efs.EFS, accessPointId string) resour
 
 func statusBackupPolicy(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindBackupPolicyByID(conn, id)
+		output, err := FindBackupPolicyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -50,7 +49,7 @@ func statusBackupPolicy(conn *efs.EFS, id string) resource.StateRefreshFunc {
 
 func statusFileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindFileSystemByID(conn, id)
+		output, err := FindFileSystemByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -1,4 +1,4 @@
-package aws
+package efs_test
 
 import (
 	"fmt"
@@ -12,13 +12,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func init() {
@@ -425,7 +425,7 @@ func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindFileSystemByID(conn, rs.Primary.ID)
+		_, err := tfefs.FindFileSystemByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -454,7 +454,7 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		fs, err := finder.FindFileSystemByID(conn, rs.Primary.ID)
+		fs, err := tfefs.FindFileSystemByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

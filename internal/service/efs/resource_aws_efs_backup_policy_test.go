@@ -1,4 +1,4 @@
-package aws
+package efs_test
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 )
 
 func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
@@ -127,7 +127,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		output, err := finder.FindBackupPolicyByID(conn, rs.Primary.ID)
+		output, err := tfefs.FindBackupPolicyByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -147,7 +147,7 @@ func testAccCheckEfsBackupPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := finder.FindBackupPolicyByID(conn, rs.Primary.ID)
+		output, err := tfefs.FindBackupPolicyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
