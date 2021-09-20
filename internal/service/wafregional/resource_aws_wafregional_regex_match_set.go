@@ -1,4 +1,4 @@
-package aws
+package wafregional
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafregional/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -101,7 +100,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional Regex Match Set: %s", d.Get("name").(string))
-	set, err := finder.FindRegexMatchSetByID(conn, d.Id())
+	set, err := FindRegexMatchSetByID(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
