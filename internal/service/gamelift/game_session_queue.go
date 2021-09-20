@@ -82,7 +82,7 @@ func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) er
 		Destinations:          expandGameliftGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
-		Tags:                  tags.IgnoreAws().GameliftTags(),
+		Tags:                  Tags(tags.IgnoreAws()),
 	}
 	log.Printf("[INFO] Creating Gamelift Session Queue: %s", input)
 	out, err := conn.CreateGameSessionQueue(&input)
@@ -138,7 +138,7 @@ func resourceGameSessionQueueRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting player_latency_policy: %s", err)
 	}
 
-	tags, err := tftags.GameliftListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Game Lift Session Queue (%s): %s", arn, err)
@@ -204,7 +204,7 @@ func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Game Lift Session Queue (%s) tags: %s", arn, err)
 		}
 	}
