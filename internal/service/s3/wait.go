@@ -1,4 +1,4 @@
-package waiter
+package s3
 
 import (
 	"time"
