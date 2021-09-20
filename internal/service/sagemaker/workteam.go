@@ -147,7 +147,7 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SagemakerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
@@ -195,7 +195,7 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting notification_configuration: %w", err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
@@ -243,7 +243,7 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
 		}
 	}

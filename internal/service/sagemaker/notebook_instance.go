@@ -190,7 +190,7 @@ func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = tags.IgnoreAws().SagemakerTags()
+		createOpts.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
@@ -293,7 +293,7 @@ func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting additional_code_repositories for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
+	tags, err := ListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Sagemaker Notebook Instance (%s): %s", d.Id(), err)
@@ -319,7 +319,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
