@@ -1,4 +1,4 @@
-package waiter
+package codestarconnections
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
