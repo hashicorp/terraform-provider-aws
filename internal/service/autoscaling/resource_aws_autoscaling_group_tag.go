@@ -63,7 +63,7 @@ func resourceGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := d.Get("tag").([]interface{})
 	key := tags[0].(map[string]interface{})["key"].(string)
 
-	if err := tftags.AutoscalingUpdateTags(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, nil, tags); err != nil {
+	if err := tftags.AutoscalingUpdateTags(conn, identifier, tfautoscaling.TagResourceTypeGroup, nil, tags); err != nil {
 		return fmt.Errorf("error creating AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
@@ -80,7 +80,7 @@ func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	value, err := tftags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
+	value, err := tftags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AutoScaling Group (%s) tag (%s), removing from state", identifier, key)
@@ -113,7 +113,7 @@ func resourceGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := tftags.AutoscalingUpdateTags(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, nil, d.Get("tag")); err != nil {
+	if err := tftags.AutoscalingUpdateTags(conn, identifier, tfautoscaling.TagResourceTypeGroup, nil, d.Get("tag")); err != nil {
 		return fmt.Errorf("error updating AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
@@ -128,7 +128,7 @@ func resourceGroupTagDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := tftags.AutoscalingUpdateTags(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, d.Get("tag"), nil); err != nil {
+	if err := tftags.AutoscalingUpdateTags(conn, identifier, tfautoscaling.TagResourceTypeGroup, d.Get("tag"), nil); err != nil {
 		return fmt.Errorf("error deleting AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
