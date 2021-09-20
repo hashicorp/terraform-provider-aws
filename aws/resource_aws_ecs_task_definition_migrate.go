@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcsTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	switch v {
 	case 0:

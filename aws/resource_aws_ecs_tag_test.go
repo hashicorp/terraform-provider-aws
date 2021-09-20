@@ -9,6 +9,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEcsTag_basic(t *testing.T) {
@@ -180,7 +181,7 @@ resource "aws_ecs_tag" "test" {
 }
 
 func testAccPreCheckAWSBatch(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 

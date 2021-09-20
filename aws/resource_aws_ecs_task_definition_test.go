@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepEcsTaskDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ecsconn
+	conn := client.(*conns.AWSClient).ECSConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListTaskDefinitionsPages(&ecs.ListTaskDefinitionsInput{}, func(page *ecs.ListTaskDefinitionsOutput, lastPage bool) bool {
@@ -1070,7 +1071,7 @@ func TestValidateAwsEcsTaskDefinitionContainerDefinitions(t *testing.T) {
 }
 
 func testAccCheckAWSEcsTaskDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_task_definition" {
@@ -1102,7 +1103,7 @@ func testAccCheckAWSEcsTaskDefinitionExists(name string, def *ecs.TaskDefinition
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 		out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
 			TaskDefinition: aws.String(rs.Primary.Attributes["arn"]),
