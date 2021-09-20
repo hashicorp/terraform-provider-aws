@@ -160,7 +160,7 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 
-	tags, err := tftags.SsoadminListTags(conn, arn, instanceArn)
+	tags, err := ListTags(conn, arn, instanceArn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSO Permission Set (%s): %w", arn, err)
 	}
