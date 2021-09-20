@@ -72,7 +72,7 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.PortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string))
+	output, err := waiter.WaitPortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Portfolio Constraints: %w", err)

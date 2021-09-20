@@ -86,7 +86,7 @@ func DataSourceProduct() *schema.Resource {
 func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
+	output, err := waiter.WaitProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Product: %w", err)

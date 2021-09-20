@@ -204,7 +204,7 @@ func testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy(s *terraform.
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = waiter.BudgetResourceAssociationDeleted(conn, budgetName, resourceID)
+		err = waiter.WaitBudgetResourceAssociationDeleted(conn, budgetName, resourceID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -234,7 +234,7 @@ func testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = waiter.BudgetResourceAssociationReady(conn, budgetName, resourceID)
+		_, err = waiter.WaitBudgetResourceAssociationReady(conn, budgetName, resourceID)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Budget Resource Association existence (%s): %w", rs.Primary.ID, err)

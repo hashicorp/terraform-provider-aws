@@ -338,8 +338,8 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// There are two API operations for getting information about provisioned products:
-	// 1. DescribeProvisionedProduct (used in waiter.ProvisionedProductReady) and
-	// 2. DescribeRecord (used in waiter.RecordReady)
+	// 1. DescribeProvisionedProduct (used in waiter.WaitProvisionedProductReady) and
+	// 2. DescribeRecord (used in waiter.WaitRecordReady)
 
 	// They provide some overlapping information. Most of the unique information available from
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
@@ -350,7 +350,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 		acceptLanguage = v.(string)
 	}
 
-	output, err := waiter.ProvisionedProductReady(conn, acceptLanguage, d.Id(), "")
+	output, err := waiter.WaitProvisionedProductReady(conn, acceptLanguage, d.Id(), "")
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
@@ -390,7 +390,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 
 	// tags are only available from the record tied to the provisioned product
 
-	recordOutput, err := waiter.RecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId))
+	recordOutput, err := waiter.WaitRecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
@@ -525,7 +525,7 @@ func resourceProvisionedProductDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error terminating Service Catalog Provisioned Product (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.ProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "")
+	err = waiter.WaitProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "")
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil

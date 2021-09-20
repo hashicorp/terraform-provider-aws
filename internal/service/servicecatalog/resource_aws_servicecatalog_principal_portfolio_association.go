@@ -120,7 +120,7 @@ func resourcePrincipalPortfolioAssociationRead(d *schema.ResourceData, meta inte
 		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
 	}
 
-	output, err := waiter.PrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
+	output, err := waiter.WaitPrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
 
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException)) {
 		log.Printf("[WARN] Service Catalog Principal Portfolio Association (%s) not found, removing from state", d.Id())
@@ -173,7 +173,7 @@ func resourcePrincipalPortfolioAssociationDelete(d *schema.ResourceData, meta in
 		return fmt.Errorf("error disassociating Service Catalog Principal from Portfolio (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.PrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID)
+	err = waiter.WaitPrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID)
 
 	if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil

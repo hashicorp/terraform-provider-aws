@@ -64,7 +64,7 @@ func DataSourceConstraint() *schema.Resource {
 func dataSourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.ConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
+	output, err := waiter.WaitConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)

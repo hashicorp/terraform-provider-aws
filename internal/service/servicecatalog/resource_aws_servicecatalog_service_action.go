@@ -138,7 +138,7 @@ func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error
 func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.ServiceActionReady(conn, d.Get("accept_language").(string), d.Id())
+	output, err := waiter.WaitServiceActionReady(conn, d.Get("accept_language").(string), d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Service Action (%s) not found, removing from state", d.Id())
@@ -250,7 +250,7 @@ func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting Service Catalog Service Action (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.ServiceActionDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
+	if err := waiter.WaitServiceActionDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Service Action (%s) to be deleted: %w", d.Id(), err)
 	}
 

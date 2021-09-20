@@ -194,7 +194,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) 
 			continue
 		}
 
-		err := waiter.ProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
+		err := waiter.WaitProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
@@ -218,7 +218,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err := waiter.ProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
+		_, err := waiter.WaitProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)

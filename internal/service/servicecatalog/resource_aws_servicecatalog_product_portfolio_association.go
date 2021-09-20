@@ -114,7 +114,7 @@ func resourceProductPortfolioAssociationRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.ProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
+	output, err := waiter.WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Product Portfolio Association (%s) not found, removing from state", d.Id())
@@ -166,7 +166,7 @@ func resourceProductPortfolioAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error disassociating Service Catalog Product from Portfolio (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.ProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
+	err = waiter.WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Product Portfolio Disassociation (%s): %w", d.Id(), err)

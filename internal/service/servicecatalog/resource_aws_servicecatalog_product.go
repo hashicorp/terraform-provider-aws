@@ -226,7 +226,7 @@ func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId))
 
-	if _, err := waiter.ProductReady(conn, aws.StringValue(input.AcceptLanguage),
+	if _, err := waiter.WaitProductReady(conn, aws.StringValue(input.AcceptLanguage),
 		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId)); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be ready: %w", d.Id(), err)
 	}
@@ -239,7 +239,7 @@ func resourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Id())
+	output, err := waiter.WaitProductReady(conn, d.Get("accept_language").(string), d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
@@ -381,7 +381,7 @@ func resourceProductDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Service Catalog Product (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ProductDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
+	if _, err := waiter.WaitProductDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be deleted: %w", d.Id(), err)
 	}
 

@@ -110,7 +110,7 @@ func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.TagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
+	output, err := waiter.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option Resource Association (%s) not found, removing from state", d.Id())
@@ -163,7 +163,7 @@ func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error disassociating Service Catalog Tag Option from Resource (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.TagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
+	err = waiter.WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Tag Option Resource Disassociation (%s): %w", d.Id(), err)

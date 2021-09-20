@@ -191,7 +191,7 @@ func testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy(s *terrafor
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = waiter.ProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
+		err = waiter.WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -221,7 +221,7 @@ func testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = waiter.ProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
+		_, err = waiter.WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Product Portfolio Association existence (%s): %w", rs.Primary.ID, err)

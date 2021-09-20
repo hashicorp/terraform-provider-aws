@@ -93,7 +93,7 @@ func resourceBudgetResourceAssociationRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.BudgetResourceAssociationReady(conn, budgetName, resourceID)
+	output, err := waiter.WaitBudgetResourceAssociationReady(conn, budgetName, resourceID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Budget Resource Association (%s) not found, removing from state", d.Id())
@@ -139,7 +139,7 @@ func resourceBudgetResourceAssociationDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error disassociating Service Catalog Budget from Resource (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.BudgetResourceAssociationDeleted(conn, budgetName, resourceID)
+	err = waiter.WaitBudgetResourceAssociationDeleted(conn, budgetName, resourceID)
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Budget Resource Disassociation (%s): %w", d.Id(), err)

@@ -167,7 +167,7 @@ func resourceProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := waiter.ProvisioningArtifactReady(conn, artifactID, productID)
+	output, err := waiter.WaitProvisioningArtifactReady(conn, artifactID, productID)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioning Artifact (%s) not found, removing from state", d.Id())
@@ -292,7 +292,7 @@ func resourceProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error deleting Service Catalog Provisioning Artifact (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.ProvisioningArtifactDeleted(conn, artifactID, productID); err != nil {
+	if err := waiter.WaitProvisioningArtifactDeleted(conn, artifactID, productID); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Provisioning Artifact (%s) to be deleted: %w", d.Id(), err)
 	}
 

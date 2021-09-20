@@ -155,11 +155,11 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := waiter.PortfolioShareCreatedWithToken(conn, aws.StringValue(output.PortfolioShareToken), waitForAcceptance); err != nil {
+		if _, err := waiter.WaitPortfolioShareCreatedWithToken(conn, aws.StringValue(output.PortfolioShareToken), waitForAcceptance); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
 		}
 	} else {
-		if _, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance); err != nil {
+		if _, err := waiter.WaitPortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
 		}
 	}
@@ -181,7 +181,7 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 		waitForAcceptance = v.(bool)
 	}
 
-	output, err := waiter.PortfolioShareReady(conn, portfolioID, shareType, principalID, waitForAcceptance)
+	output, err := waiter.WaitPortfolioShareReady(conn, portfolioID, shareType, principalID, waitForAcceptance)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
@@ -288,11 +288,11 @@ func resourcePortfolioShareDelete(d *schema.ResourceData, meta interface{}) erro
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := waiter.PortfolioShareDeletedWithToken(conn, aws.StringValue(output.PortfolioShareToken)); err != nil {
+		if _, err := waiter.WaitPortfolioShareDeletedWithToken(conn, aws.StringValue(output.PortfolioShareToken)); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be deleted: %w", d.Id(), err)
 		}
 	} else {
-		if _, err := waiter.PortfolioShareDeleted(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)); err != nil {
+		if _, err := waiter.WaitPortfolioShareDeleted(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be deleted: %w", d.Id(), err)
 		}
 	}

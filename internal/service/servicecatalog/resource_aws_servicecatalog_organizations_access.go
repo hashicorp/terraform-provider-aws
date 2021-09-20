@@ -59,7 +59,7 @@ func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{})
 func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.OrganizationsAccessStable(conn)
+	output, err := waiter.WaitOrganizationsAccessStable(conn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		// theoretically this should not be possible

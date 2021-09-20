@@ -109,7 +109,7 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := waiter.TagOptionReady(conn, d.Id())
+	output, err := waiter.WaitTagOptionReady(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Tag Option (%s) not found, removing from state", d.Id())
@@ -193,7 +193,7 @@ func resourceTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Service Catalog Tag Option (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.TagOptionDeleted(conn, d.Id()); err != nil {
+	if err := waiter.WaitTagOptionDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Tag Option (%s) to be deleted: %w", d.Id(), err)
 	}
 

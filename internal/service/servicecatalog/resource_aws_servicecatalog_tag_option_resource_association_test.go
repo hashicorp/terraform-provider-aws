@@ -160,7 +160,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy(s *terrafo
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = waiter.TagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
+		err = waiter.WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -190,7 +190,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceNam
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = waiter.TagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
+		_, err = waiter.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Tag Option Resource Association existence (%s): %w", rs.Primary.ID, err)

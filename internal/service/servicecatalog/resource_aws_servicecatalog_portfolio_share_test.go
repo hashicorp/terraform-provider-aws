@@ -108,7 +108,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) erro
 			continue
 		}
 
-		output, err := finder.PortfolioShare(
+		output, err := finder.FindPortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["type"],
@@ -141,7 +141,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err := finder.PortfolioShare(
+		_, err := finder.FindPortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["type"],

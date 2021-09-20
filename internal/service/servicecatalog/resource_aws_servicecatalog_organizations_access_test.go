@@ -47,7 +47,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State)
 			continue
 		}
 
-		output, err := waiter.OrganizationsAccessStable(conn)
+		output, err := waiter.WaitOrganizationsAccessStable(conn)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", rs.Primary.ID, err)
@@ -73,7 +73,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		output, err := waiter.OrganizationsAccessStable(conn)
+		output, err := waiter.WaitOrganizationsAccessStable(conn)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", rs.Primary.ID, err)

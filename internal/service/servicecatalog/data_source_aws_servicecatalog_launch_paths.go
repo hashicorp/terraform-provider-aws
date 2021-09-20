@@ -71,7 +71,7 @@ func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	summaries, err := waiter.LaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string))
+	summaries, err := waiter.WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Launch Paths: %w", err)
