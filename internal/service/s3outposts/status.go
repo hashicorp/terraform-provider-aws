@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -16,7 +15,7 @@ const (
 // statusEndpoint fetches the Endpoint and its Status
 func statusEndpoint(conn *s3outposts.S3Outposts, endpointArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		endpoint, err := finder.FindEndpoint(conn, endpointArn)
+		endpoint, err := FindEndpoint(conn, endpointArn)
 
 		if err != nil {
 			return nil, endpointStatusUnknown, err
