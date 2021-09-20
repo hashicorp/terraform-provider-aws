@@ -7,29 +7,30 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsAppsyncFunction_basic(t *testing.T) {
-	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt())
-	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(8))
-	rName3 := fmt.Sprintf("tfexample%s", acctest.RandString(8))
+	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName3 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
@@ -37,7 +38,7 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName3, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfig(rName1, rName3, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
@@ -53,26 +54,26 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 }
 
 func TestAccAwsAppsyncFunction_description(t *testing.T) {
-	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt())
-	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(8))
+	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, testAccGetRegion(), "test description 1"),
+				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, acctest.Region(), "test description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 1"),
 				),
 			},
 			{
-				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, testAccGetRegion(), "test description 2"),
+				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, acctest.Region(), "test description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 2"),
@@ -88,19 +89,19 @@ func TestAccAwsAppsyncFunction_description(t *testing.T) {
 }
 
 func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
-	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt())
-	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(8))
+	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfigResponseMappingTemplate(rName1, rName2, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfigResponseMappingTemplate(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 				),
@@ -115,22 +116,22 @@ func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
 }
 
 func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
-	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt())
-	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(8))
+	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppsyncFunction(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppsyncFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
