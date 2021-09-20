@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSBillingServiceAccount_basic(t *testing.T) {
+func TestAccNASBillingServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_billing_service_account.main"
 
 	billingAccountID := "386209384616"
