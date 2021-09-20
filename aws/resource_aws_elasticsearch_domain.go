@@ -473,7 +473,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		input.AdvancedOptions = expandStringMap(v.(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
@@ -489,7 +489,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 			}
 
 			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandESEBSOptions(s)
+			input.EBSOptions = expandEBSOptions(s)
 		}
 	}
 
@@ -500,7 +500,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 
 		s := options[0].(map[string]interface{})
-		input.EncryptionAtRestOptions = expandESEncryptAtRestOptions(s)
+		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
@@ -547,7 +547,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 
 		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandESVPCOptions(s)
+		input.VPCOptions = expandVPCOptions(s)
 	}
 
 	if v, ok := d.GetOk("log_publishing_options"); ok {
@@ -563,11 +563,11 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandESDomainEndpointOptions(v.([]interface{}))
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
-		input.CognitoOptions = expandESCognitoOptions(v.([]interface{}))
+		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating ElasticSearch domain: %s", input)
@@ -709,11 +709,11 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	d.Set("domain_name", ds.DomainName)
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
-	err = d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions))
+	err = d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions))
 	if err != nil {
 		return err
 	}
-	err = d.Set("encrypt_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions))
+	err = d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions))
 	if err != nil {
 		return err
 	}
@@ -721,7 +721,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	err = d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions))
+	err = d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions))
 	if err != nil {
 		return err
 	}
@@ -746,12 +746,12 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
+	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
 		return fmt.Errorf("error setting snapshot_options: %s", err)
 	}
 
 	if ds.VPCOptions != nil {
-		err = d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions))
+		err = d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions))
 		if err != nil {
 			return err
 		}
@@ -788,7 +788,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		d.Set("log_publishing_options", m)
 	}
 
-	if err := d.Set("domain_endpoint_options", flattenESDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
+	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
 		return fmt.Errorf("error setting domain_endpoint_options: %s", err)
 	}
 
@@ -834,7 +834,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("advanced_options") {
-		input.AdvancedOptions = expandStringMap(d.Get("advanced_options").(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringMap(d.Get("advanced_options").(map[string]interface{}))
 	}
 
 	if d.HasChange("advanced_security_options") {
@@ -842,7 +842,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("domain_endpoint_options") {
-		input.DomainEndpointOptions = expandESDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
+		input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 	}
 
 	if d.HasChanges("ebs_options", "cluster_config") {
@@ -850,7 +850,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 		if len(options) == 1 {
 			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandESEBSOptions(s)
+			input.EBSOptions = expandEBSOptions(s)
 		}
 
 		if d.HasChange("cluster_config") {
@@ -881,12 +881,12 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("vpc_options") {
 		options := d.Get("vpc_options").([]interface{})
 		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandESVPCOptions(s)
+		input.VPCOptions = expandVPCOptions(s)
 	}
 
 	if d.HasChange("cognito_options") {
 		options := d.Get("cognito_options").([]interface{})
-		input.CognitoOptions = expandESCognitoOptions(options)
+		input.CognitoOptions = expandCognitoOptions(options)
 	}
 
 	if d.HasChange("log_publishing_options") {
