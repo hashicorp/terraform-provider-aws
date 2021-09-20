@@ -16,7 +16,7 @@ func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSMskKafkaVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +36,7 @@ func TestAccAWSMskKafkaVersionDataSource_preferred(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSMskKafkaVersionPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSMskKafkaVersionDataSource_preferred(t *testing.T) {
 }
 
 func testAccAWSMskKafkaVersionPreCheck(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 
 	input := &kafka.ListKafkaVersionsInput{}
 

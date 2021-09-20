@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepMskConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -64,7 +64,7 @@ func testSweepMskConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -84,7 +84,7 @@ func TestAccAWSMskConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,14 +116,14 @@ func TestAccAWSMskConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMskConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskConfigurationExists(resourceName, &configuration1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMskConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMskConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,7 +139,7 @@ func TestAccAWSMskConfiguration_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,7 +174,7 @@ func TestAccAWSMskConfiguration_KafkaVersions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +205,7 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 }
 
 func testAccCheckMskConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_configuration" {
@@ -273,7 +273,7 @@ func testAccCheckMskConfigurationExists(resourceName string, configuration *kafk
 			return fmt.Errorf("Resource ID not set: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(rs.Primary.ID),

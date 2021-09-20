@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepMskClusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -32,7 +32,7 @@ func testSweepMskClusters(region string) error {
 
 	out, err := conn.ListClusters(&kafka.ListClustersInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] skipping msk cluster domain sweep for %s: %s", region, err)
 			return nil
 		}
@@ -86,7 +86,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -185,7 +185,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_InstanceType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +227,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -347,7 +347,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -382,7 +382,7 @@ func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -424,7 +424,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionAtRestKmsKeyArn(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -454,7 +454,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -490,7 +490,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -522,7 +522,7 @@ func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -560,7 +560,7 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -616,7 +616,7 @@ func TestAccAWSMskCluster_OpenMonitoring(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -664,7 +664,7 @@ func TestAccAWSMskCluster_LoggingInfo(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -716,7 +716,7 @@ func TestAccAWSMskCluster_KafkaVersionUpgrade(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -754,7 +754,7 @@ func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -804,7 +804,7 @@ func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -849,7 +849,7 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -887,7 +887,7 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 		opts := &kafka.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
@@ -914,7 +914,7 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 			return fmt.Errorf("No Cluster arn is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 		resp, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		})
@@ -949,7 +949,7 @@ func testAccCheckMskClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 
 func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 
 		tagOut, err := conn.ListTagsForResource(&kafka.ListTagsForResourceInput{
 			ResourceArn: cluster.ClusterArn,
@@ -985,7 +985,7 @@ func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string,
 }
 
 func testAccPreCheckAWSMsk(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+	conn := acctest.Provider.Meta().(*AWSClient).kafkaconn
 
 	input := &kafka.ListClustersInput{}
 

@@ -18,7 +18,7 @@ func TestAccAWSMskConfigurationDataSource_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
