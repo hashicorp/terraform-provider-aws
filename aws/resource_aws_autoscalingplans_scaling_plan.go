@@ -410,7 +410,7 @@ func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta i
 		ScalingPlanName:    aws.String(scalingPlanName),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
 	})
-	if isAWSErr(err, autoscalingplans.ErrCodeObjectNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, autoscalingplans.ErrCodeObjectNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
