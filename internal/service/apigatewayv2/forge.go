@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // hashStringCaseInsensitive hashes strings in a case insensitive manner.
