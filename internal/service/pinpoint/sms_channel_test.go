@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 )
 
 func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func TestAccAWSPinpointSMSChannel_disappears(t *testing.T) {
 				Config: testAccAWSPinpointSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSMSChannel(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfpinpoint.ResourceSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
