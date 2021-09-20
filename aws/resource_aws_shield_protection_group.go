@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsShieldProtectionGroup() *schema.Resource {
+func ResourceProtectionGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsShieldProtectionGroupCreate,
-		Read:   resourceAwsShieldProtectionGroupRead,
-		Update: resourceAwsShieldProtectionGroupUpdate,
-		Delete: resourceAwsShieldProtectionGroupDelete,
+		Create: resourceProtectionGroupCreate,
+		Read:   resourceProtectionGroupRead,
+		Update: resourceProtectionGroupUpdate,
+		Delete: resourceProtectionGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -70,7 +70,7 @@ func resourceAwsShieldProtectionGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -100,10 +100,10 @@ func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(protectionGroupID)
 
-	return resourceAwsShieldProtectionGroupRead(d, meta)
+	return resourceProtectionGroupRead(d, meta)
 }
 
-func resourceAwsShieldProtectionGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -158,7 +158,7 @@ func resourceAwsShieldProtectionGroupRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
 	input := &shield.UpdateProtectionGroupInput{
@@ -189,10 +189,10 @@ func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsShieldProtectionGroupRead(d, meta)
+	return resourceProtectionGroupRead(d, meta)
 }
 
-func resourceAwsShieldProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
