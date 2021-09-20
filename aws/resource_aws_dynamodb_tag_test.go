@@ -18,7 +18,7 @@ func TestAccAWSDynamodbTag_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamodbTagExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDynamodbTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDynamodbTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccAWSDynamodbTag_Value(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{

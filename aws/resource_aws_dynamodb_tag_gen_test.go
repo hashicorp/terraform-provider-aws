@@ -15,7 +15,7 @@ import (
 )
 
 func testAccCheckDynamodbTagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_tag" {
@@ -61,7 +61,7 @@ func testAccCheckDynamodbTagExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
 
 		_, err = keyvaluetags.DynamodbGetTag(conn, identifier, key)
 
