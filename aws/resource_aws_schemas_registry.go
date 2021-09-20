@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSchemasRegistry() *schema.Resource {
@@ -56,8 +57,8 @@ func resourceAwsSchemasRegistry() *schema.Resource {
 }
 
 func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -86,9 +87,9 @@ func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.RegistryByName(conn, d.Id())
 
@@ -126,7 +127,7 @@ func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChanges("description") {
 		input := &schemas.UpdateRegistryInput{
@@ -153,7 +154,7 @@ func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSchemasRegistryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*conns.AWSClient).SchemasConn
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry (%s)", d.Id())
 	_, err := conn.DeleteRegistry(&schemas.DeleteRegistryInput{

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSchemasDiscoverer() *schema.Resource {
@@ -52,8 +53,8 @@ func resourceAwsSchemasDiscoverer() *schema.Resource {
 }
 
 func resourceAwsSchemasDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sourceARN := d.Get("source_arn").(string)
@@ -82,9 +83,9 @@ func resourceAwsSchemasDiscovererCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSchemasDiscovererRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.DiscovererByID(conn, d.Id())
 
@@ -122,7 +123,7 @@ func resourceAwsSchemasDiscovererRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSchemasDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChange("description") {
 		input := &schemas.UpdateDiscovererInput{
@@ -149,7 +150,7 @@ func resourceAwsSchemasDiscovererUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSchemasDiscovererDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*conns.AWSClient).SchemasConn
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Discoverer (%s)", d.Id())
 	_, err := conn.DeleteDiscoverer(&schemas.DeleteDiscovererInput{

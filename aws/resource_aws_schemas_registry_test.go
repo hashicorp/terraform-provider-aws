@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepSchemasRegistries(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).schemasconn
+	conn := client.(*conns.AWSClient).SchemasConn
 	input := &schemas.ListRegistriesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -247,7 +248,7 @@ func TestAccAWSSchemasRegistry_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSSchemasRegistryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).schemasconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_registry" {
@@ -281,7 +282,7 @@ func testAccCheckSchemasRegistryExists(n string, v *schemas.DescribeRegistryOutp
 			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).schemasconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 		output, err := finder.RegistryByName(conn, rs.Primary.ID)
 

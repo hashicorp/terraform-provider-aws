@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepSchemasDiscoverers(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).schemasconn
+	conn := client.(*conns.AWSClient).SchemasConn
 	input := &schemas.ListDiscoverersInput{}
 	var sweeperErrs *multierror.Error
 
@@ -204,7 +205,7 @@ func TestAccAWSSchemasDiscoverer_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSSchemasDiscovererDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).schemasconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_discoverer" {
@@ -238,7 +239,7 @@ func testAccCheckSchemasDiscovererExists(n string, v *schemas.DescribeDiscoverer
 			return fmt.Errorf("No EventBridge Schemas Discoverer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).schemasconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 		output, err := finder.DiscovererByID(conn, rs.Primary.ID)
 

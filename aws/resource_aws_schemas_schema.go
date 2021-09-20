@@ -15,6 +15,7 @@ import (
 	tfschemas "github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSchemasSchema() *schema.Resource {
@@ -91,8 +92,8 @@ func resourceAwsSchemasSchema() *schema.Resource {
 }
 
 func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -127,9 +128,9 @@ func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
 
@@ -187,7 +188,7 @@ func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*conns.AWSClient).SchemasConn
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
@@ -229,7 +230,7 @@ func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSchemasSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*conns.AWSClient).SchemasConn
 
 	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -217,7 +218,7 @@ func TestAccAWSSchemasSchema_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSSchemasSchemaDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).schemasconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_schema" {
@@ -263,7 +264,7 @@ func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).schemasconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
 		output, err := finder.SchemaByNameAndRegistryName(conn, name, registryName)
 
