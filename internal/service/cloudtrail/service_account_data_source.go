@@ -12,7 +12,7 @@ import (
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-east/verifying-cloudtrail.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-west/verifying-cloudtrail.html
-var cloudTrailServiceAccountPerRegionMap = map[string]string{
+var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "525921808201",
 	endpoints.ApEast1RegionID:      "119688915426",
 	endpoints.ApNortheast1RegionID: "216624486486",
@@ -63,7 +63,7 @@ func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) erro
 		region = v.(string)
 	}
 
-	if accid, ok := cloudTrailServiceAccountPerRegionMap[region]; ok {
+	if accid, ok := ServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,

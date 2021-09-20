@@ -5,10 +5,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 )
 
 func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
-	expectedAccountID := cloudTrailServiceAccountPerRegionMap[acctest.Region()]
+	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
 
@@ -29,7 +30,7 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
-	expectedAccountID := cloudTrailServiceAccountPerRegionMap[acctest.Region()]
+	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
 
