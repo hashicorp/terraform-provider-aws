@@ -91,7 +91,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 	selection := &backup.Selection{
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
 		ListOfTags:    expandBackupConditionTags(d.Get("selection_tag").(*schema.Set).List()),
-		Resources:     expandStringSet(d.Get("resources").(*schema.Set)),
+		Resources:     flex.ExpandStringSet(d.Get("resources").(*schema.Set)),
 		SelectionName: aws.String(d.Get("name").(string)),
 	}
 

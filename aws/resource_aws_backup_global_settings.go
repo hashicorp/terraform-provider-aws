@@ -33,7 +33,7 @@ func resourceAwsBackupGlobalSettingsUpdate(d *schema.ResourceData, meta interfac
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.UpdateGlobalSettingsInput{
-		GlobalSettings: expandStringMap(d.Get("global_settings").(map[string]interface{})),
+		GlobalSettings: flex.ExpandStringMap(d.Get("global_settings").(map[string]interface{})),
 	}
 
 	_, err := conn.UpdateGlobalSettings(input)
