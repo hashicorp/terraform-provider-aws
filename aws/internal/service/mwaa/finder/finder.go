@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // EnvironmentByName returns the MWAA Environment corresponding to the specified Name.
