@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 )
 
 func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
@@ -328,7 +329,7 @@ func testAccCheckAWSDocDBClusterParameterGroupDisappears(group *docdb.DBClusterP
 			return err
 		}
 
-		return waitForDocDBClusterParameterGroupDeletion(conn, *group.DBClusterParameterGroupName)
+		return tfdocdb.WaitForClusterParameterGroupDeletion(conn, *group.DBClusterParameterGroupName)
 	}
 }
 

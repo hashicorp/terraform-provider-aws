@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 )
 
 func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
@@ -206,7 +207,7 @@ func testAccCheckAWSDocDBSubnetGroupDisappears(group *docdb.DBSubnetGroup) resou
 			return err
 		}
 
-		return waitForDocDBSubnetGroupDeletion(conn, *group.DBSubnetGroupName)
+		return tfdocdb.WaitForSubnetGroupDeletion(conn, *group.DBSubnetGroupName)
 	}
 }
 
