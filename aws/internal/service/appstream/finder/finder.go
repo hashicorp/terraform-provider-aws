@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// StackByName Retrieve a appstream stack by name
-func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
+// findStackByName Retrieve a appstream stack by name
+func findStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
 	input := &appstream.DescribeStacksInput{
 		Names: []*string{aws.String(name)},
 	}
