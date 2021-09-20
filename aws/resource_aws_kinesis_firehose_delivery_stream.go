@@ -259,8 +259,8 @@ func flattenVpcConfiguration(description *firehose.VpcConfigurationDescription) 
 
 	m := map[string]interface{}{
 		"vpc_id":             aws.StringValue(description.VpcId),
-		"subnet_ids":         flattenStringSet(description.SubnetIds),
-		"security_group_ids": flattenStringSet(description.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringSet(description.SubnetIds),
+		"security_group_ids": flex.FlattenStringSet(description.SecurityGroupIds),
 		"role_arn":           aws.StringValue(description.RoleARN),
 	}
 
@@ -432,7 +432,7 @@ func flattenFirehoseHiveJsonSerDe(hjsd *firehose.HiveJsonSerDe) []map[string]int
 	}
 
 	m := map[string]interface{}{
-		"timestamp_formats": flattenStringList(hjsd.TimestampFormats),
+		"timestamp_formats": flex.FlattenStringList(hjsd.TimestampFormats),
 	}
 
 	return []map[string]interface{}{m}
@@ -1786,7 +1786,7 @@ func expandFirehoseHiveJsonSerDe(l []interface{}) *firehose.HiveJsonSerDe {
 	m := l[0].(map[string]interface{})
 
 	return &firehose.HiveJsonSerDe{
-		TimestampFormats: expandStringList(m["timestamp_formats"].([]interface{})),
+		TimestampFormats: flex.ExpandStringList(m["timestamp_formats"].([]interface{})),
 	}
 }
 
@@ -1803,7 +1803,7 @@ func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 
 	return &firehose.OpenXJsonSerDe{
 		CaseInsensitive:                    aws.Bool(m["case_insensitive"].(bool)),
-		ColumnToJsonKeyMappings:            expandStringMap(m["column_to_json_key_mappings"].(map[string]interface{})),
+		ColumnToJsonKeyMappings:            flex.ExpandStringMap(m["column_to_json_key_mappings"].(map[string]interface{})),
 		ConvertDotsInJsonKeysToUnderscores: aws.Bool(m["convert_dots_in_json_keys_to_underscores"].(bool)),
 	}
 }
@@ -1857,7 +1857,7 @@ func expandFirehoseOrcSerDe(l []interface{}) *firehose.OrcSerDe {
 	}
 
 	if v, ok := m["bloom_filter_columns"].([]interface{}); ok && len(v) > 0 {
-		orcSerDe.BloomFilterColumns = expandStringList(v)
+		orcSerDe.BloomFilterColumns = flex.ExpandStringList(v)
 	}
 
 	return orcSerDe
@@ -2018,8 +2018,8 @@ func extractVpcConfiguration(es map[string]interface{}) *firehose.VpcConfigurati
 
 	return &firehose.VpcConfiguration{
 		RoleARN:          aws.String(vpcConfig["role_arn"].(string)),
-		SubnetIds:        expandStringSet(vpcConfig["subnet_ids"].(*schema.Set)),
-		SecurityGroupIds: expandStringSet(vpcConfig["security_group_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringSet(vpcConfig["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(vpcConfig["security_group_ids"].(*schema.Set)),
 	}
 }
 
