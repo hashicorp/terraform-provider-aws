@@ -352,7 +352,7 @@ func expandSagemakerWorkteamOidcMemberDefinition(l []interface{}) *sagemaker.Oid
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.OidcMemberDefinition{
-		Groups: expandStringSet(m["groups"].(*schema.Set)),
+		Groups: flex.ExpandStringSet(m["groups"].(*schema.Set)),
 	}
 
 	return config
@@ -364,7 +364,7 @@ func flattenSagemakerWorkteamOidcMemberDefinition(config *sagemaker.OidcMemberDe
 	}
 
 	m := map[string]interface{}{
-		"groups": flattenStringSet(config.Groups),
+		"groups": flex.FlattenStringSet(config.Groups),
 	}
 
 	return []map[string]interface{}{m}

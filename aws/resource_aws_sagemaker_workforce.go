@@ -270,7 +270,7 @@ func expandSagemakerWorkforceSourceIpConfig(l []interface{}) *sagemaker.SourceIp
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.SourceIpConfig{
-		Cidrs: expandStringSet(m["cidrs"].(*schema.Set)),
+		Cidrs: flex.ExpandStringSet(m["cidrs"].(*schema.Set)),
 	}
 
 	return config
@@ -282,7 +282,7 @@ func flattenSagemakerWorkforceSourceIpConfig(config *sagemaker.SourceIpConfig) [
 	}
 
 	m := map[string]interface{}{
-		"cidrs": flattenStringSet(config.Cidrs),
+		"cidrs": flex.FlattenStringSet(config.Cidrs),
 	}
 
 	return []map[string]interface{}{m}

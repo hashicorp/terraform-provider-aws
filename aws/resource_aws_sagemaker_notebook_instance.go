@@ -148,7 +148,7 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 	name := d.Get("name").(string)
 
 	createOpts := &sagemaker.CreateNotebookInstanceInput{
-		SecurityGroupIds:     expandStringSet(d.Get("security_groups").(*schema.Set)),
+		SecurityGroupIds:     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		NotebookInstanceName: aws.String(name),
 		RoleArn:              aws.String(d.Get("role_arn").(string)),
 		InstanceType:         aws.String(d.Get("instance_type").(string)),
@@ -191,7 +191,7 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.AdditionalCodeRepositories = expandStringSet(v.(*schema.Set))
+		createOpts.AdditionalCodeRepositories = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] sagemaker notebook instance create config: %#v", *createOpts)
@@ -229,7 +229,7 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 
 	}
 
-	if err := d.Set("security_groups", flattenStringList(notebookInstance.SecurityGroups)); err != nil {
+	if err := d.Set("security_groups", flex.FlattenStringList(notebookInstance.SecurityGroups)); err != nil {
 		return fmt.Errorf("error setting security groups for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("name", notebookInstance.NotebookInstanceName); err != nil {
@@ -286,7 +286,7 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting network_interface_id for sagemaker notebook instance (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("additional_code_repositories", flattenStringSet(notebookInstance.AdditionalCodeRepositories)); err != nil {
+	if err := d.Set("additional_code_repositories", flex.FlattenStringSet(notebookInstance.AdditionalCodeRepositories)); err != nil {
 		return fmt.Errorf("error setting additional_code_repositories for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
@@ -367,7 +367,7 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("additional_code_repositories") {
 		if v, ok := d.GetOk("additional_code_repositories"); ok {
-			updateOpts.AdditionalCodeRepositories = expandStringSet(v.(*schema.Set))
+			updateOpts.AdditionalCodeRepositories = flex.ExpandStringSet(v.(*schema.Set))
 		} else {
 			updateOpts.DisassociateAdditionalCodeRepositories = aws.Bool(true)
 		}
