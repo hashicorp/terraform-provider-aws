@@ -25,7 +25,7 @@ func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,14 +60,14 @@ func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_basic_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionGroupExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsShieldProtectionGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsShieldProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,7 +203,7 @@ func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +237,7 @@ func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 }
 
 func testAccCheckAWSShieldProtectionGroupDestroy(s *terraform.State) error {
-	shieldconn := testAccProvider.Meta().(*AWSClient).shieldconn
+	shieldconn := acctest.Provider.Meta().(*AWSClient).shieldconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection_group" {
@@ -273,7 +273,7 @@ func testAccCheckAWSShieldProtectionGroupExists(name string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).shieldconn
+		conn := acctest.Provider.Meta().(*AWSClient).shieldconn
 
 		input := &shield.DescribeProtectionGroupInput{
 			ProtectionGroupId: aws.String(rs.Primary.ID),
