@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const organizationsPolicyTypeStatusDisabled = "DISABLED"
@@ -166,7 +167,7 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 }
 
 func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
@@ -226,7 +227,7 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
@@ -323,7 +324,7 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -410,7 +411,7 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 

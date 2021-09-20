@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
@@ -36,7 +37,7 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_organizations_access" {
@@ -67,7 +68,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string)
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 		output, err := waiter.OrganizationsAccessStable(conn)
 

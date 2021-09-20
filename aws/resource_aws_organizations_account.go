@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
@@ -83,8 +84,8 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 }
 
 func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the account
@@ -181,9 +182,9 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := &organizations.DescribeAccountInput{
 		AccountId: aws.String(d.Id()),
@@ -241,7 +242,7 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -269,7 +270,7 @@ func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsOrganizationsAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.RemoveAccountFromOrganizationInput{
 		AccountId: aws.String(d.Id()),

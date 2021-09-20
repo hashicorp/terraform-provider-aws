@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
 }
 
 func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
@@ -77,7 +78,7 @@ func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsOrganizationsPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -122,7 +123,7 @@ func resourceAwsOrganizationsPolicyAttachmentRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsOrganizationsPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(d.Id())
 	if err != nil {

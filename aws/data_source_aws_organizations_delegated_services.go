@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsOrganizationsDelegatedServices() *schema.Resource {
@@ -41,7 +42,7 @@ func dataSourceAwsOrganizationsDelegatedServices() *schema.Resource {
 }
 
 func dataSourceAwsOrganizationsDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(d.Get("account_id").(string)),
@@ -65,7 +66,7 @@ func dataSourceAwsOrganizationsDelegatedServicesRead(ctx context.Context, d *sch
 		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return nil
 }

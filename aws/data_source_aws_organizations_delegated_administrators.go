@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsOrganizationsDelegatedAdministrators() *schema.Resource {
@@ -66,7 +67,7 @@ func dataSourceAwsOrganizationsDelegatedAdministrators() *schema.Resource {
 }
 
 func dataSourceAwsOrganizationsDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
 
@@ -93,7 +94,7 @@ func dataSourceAwsOrganizationsDelegatedAdministratorsRead(ctx context.Context, 
 		return diag.FromErr(fmt.Errorf("error setting delegated_administrators: %w", err))
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return nil
 }

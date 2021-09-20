@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogOrganizationsAccess() *schema.Resource {
@@ -27,9 +28,9 @@ func resourceAwsServiceCatalogOrganizationsAccess() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
@@ -54,7 +55,7 @@ func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsServiceCatalogOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.OrganizationsAccessStable(conn)
 
@@ -83,7 +84,7 @@ func resourceAwsServiceCatalogOrganizationsAccessRead(d *schema.ResourceData, me
 }
 
 func resourceAwsServiceCatalogOrganizationsAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite

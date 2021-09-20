@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
@@ -113,7 +114,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_policy_attachment" {
@@ -172,7 +173,7 @@ func testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName string) res
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).organizationsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 		targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(rs.Primary.ID)
 		if err != nil {
