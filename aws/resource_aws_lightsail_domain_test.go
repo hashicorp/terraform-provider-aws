@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSLightsailDomain_basic(t *testing.T) {
@@ -51,7 +52,7 @@ func TestAccAWSLightsailDomain_disappears(t *testing.T) {
 				Config: testAccAWSLightsailDomainConfig_basic(lightsailDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailDomainExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(testAccProviderLightsailDomain, resourceAwsLightsailDomain(), resourceName),
+					acctest.CheckResourceDisappears(testAccProviderLightsailDomain, ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

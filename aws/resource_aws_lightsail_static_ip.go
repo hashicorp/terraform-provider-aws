@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLightsailStaticIp() *schema.Resource {
+func ResourceStaticIP() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailStaticIpCreate,
-		Read:   resourceAwsLightsailStaticIpRead,
-		Delete: resourceAwsLightsailStaticIpDelete,
+		Create: resourceStaticIPCreate,
+		Read:   resourceStaticIPRead,
+		Delete: resourceStaticIPDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -38,7 +38,7 @@ func resourceAwsLightsailStaticIp() *schema.Resource {
 	}
 }
 
-func resourceAwsLightsailStaticIpCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStaticIPCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	name := d.Get("name").(string)
@@ -53,10 +53,10 @@ func resourceAwsLightsailStaticIpCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(name)
 
-	return resourceAwsLightsailStaticIpRead(d, meta)
+	return resourceStaticIPRead(d, meta)
 }
 
-func resourceAwsLightsailStaticIpRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	name := d.Get("name").(string)
@@ -83,7 +83,7 @@ func resourceAwsLightsailStaticIpRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsLightsailStaticIpDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStaticIPDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	name := d.Get("name").(string)
