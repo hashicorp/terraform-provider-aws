@@ -115,8 +115,8 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 	req := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        aws.String(d.Get("direction").(string)),
-		IpAddresses:      expandRoute53ResolverEndpointIpAddresses(d.Get("ip_address").(*schema.Set)),
-		SecurityGroupIds: expandStringSet(d.Get("security_group_ids").(*schema.Set)),
+		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 	}
 	if v, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(v.(string))
@@ -163,7 +163,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 	d.Set("direction", ep.Direction)
 	d.Set("host_vpc_id", ep.HostVPCId)
 	d.Set("name", ep.Name)
-	if err := d.Set("security_group_ids", flattenStringSet(ep.SecurityGroupIds)); err != nil {
+	if err := d.Set("security_group_ids", flex.FlattenStringSet(ep.SecurityGroupIds)); err != nil {
 		return err
 	}
 
@@ -177,7 +177,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 			return fmt.Errorf("error getting Route53 Resolver endpoint (%s) IP addresses: %s", d.Id(), err)
 		}
 
-		ipAddresses = append(ipAddresses, flattenRoute53ResolverEndpointIpAddresses(resp.IpAddresses)...)
+		ipAddresses = append(ipAddresses, flattenEndpointIPAddresses(resp.IpAddresses)...)
 
 		if resp.NextToken == nil {
 			break
@@ -242,7 +242,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		for _, v := range add {
 			_, err := conn.AssociateResolverEndpointIpAddress(&route53resolver.AssociateResolverEndpointIpAddressInput{
 				ResolverEndpointId: aws.String(d.Id()),
-				IpAddress:          expandRoute53ResolverEndpointIpAddressUpdate(v),
+				IpAddress:          expandEndpointIPAddressUpdate(v),
 			})
 			if err != nil {
 				return fmt.Errorf("error associating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
@@ -259,7 +259,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		for _, v := range del {
 			_, err := conn.DisassociateResolverEndpointIpAddress(&route53resolver.DisassociateResolverEndpointIpAddressInput{
 				ResolverEndpointId: aws.String(d.Id()),
-				IpAddress:          expandRoute53ResolverEndpointIpAddressUpdate(v),
+				IpAddress:          expandEndpointIPAddressUpdate(v),
 			})
 			if err != nil {
 				return fmt.Errorf("error disassociating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)

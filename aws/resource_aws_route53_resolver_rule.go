@@ -5,17 +5,19 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 const (
@@ -132,7 +134,7 @@ func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface
 		req.ResolverEndpointId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target_ip"); ok {
-		req.TargetIps = expandRoute53ResolverRuleTargetIps(v.(*schema.Set))
+		req.TargetIps = expandRuleTargetIPs(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
 		req.Tags = tags.IgnoreAws().Route53resolverTags()
@@ -181,7 +183,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("rule_type", rule.RuleType)
 	d.Set("share_status", rule.ShareStatus)
-	if err := d.Set("target_ip", schema.NewSet(route53ResolverRuleHashTargetIp, flattenRoute53ResolverRuleTargetIps(rule.TargetIps))); err != nil {
+	if err := d.Set("target_ip", schema.NewSet(route53ResolverRuleHashTargetIp, flattenRuleTargetIPs(rule.TargetIps))); err != nil {
 		return err
 	}
 
@@ -220,7 +222,7 @@ func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface
 			req.Config.ResolverEndpointId = aws.String(v.(string))
 		}
 		if v, ok := d.GetOk("target_ip"); ok {
-			req.Config.TargetIps = expandRoute53ResolverRuleTargetIps(v.(*schema.Set))
+			req.Config.TargetIps = expandRuleTargetIPs(v.(*schema.Set))
 		}
 
 		log.Printf("[DEBUG] Updating Route53 Resolver rule: %#v", req)
@@ -326,4 +328,26 @@ func route53ResolverRuleHashTargetIp(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-%d-", m["ip"].(string), m["port"].(int)))
 	return create.StringHashcode(buf.String())
+}
+
+// trimTrailingPeriod is used to remove the trailing period
+// of "name" or "domain name" attributes often returned from
+// the Route53 API or provided as user input.
+// The single dot (".") domain name is returned as-is.
+func trimTrailingPeriod(v interface{}) string {
+	var str string
+	switch value := v.(type) {
+	case *string:
+		str = aws.StringValue(value)
+	case string:
+		str = value
+	default:
+		return ""
+	}
+
+	if str == "." {
+		return str
+	}
+
+	return strings.TrimSuffix(str, ".")
 }

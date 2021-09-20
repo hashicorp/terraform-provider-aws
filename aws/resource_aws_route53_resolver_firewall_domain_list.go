@@ -122,7 +122,7 @@ func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, me
 		return fmt.Errorf("error listing Route 53 Resolver DNS Firewall domain list (%s) domains: %w", d.Id(), err)
 	}
 
-	d.Set("domains", flattenStringSet(domains))
+	d.Set("domains", flex.FlattenStringSet(domains))
 
 	tags, err := keyvaluetags.Route53resolverListTags(conn, arn)
 	if err != nil {
@@ -167,7 +167,7 @@ func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, 
 
 		_, err := conn.UpdateFirewallDomains(&route53resolver.UpdateFirewallDomainsInput{
 			FirewallDomainListId: aws.String(d.Id()),
-			Domains:              expandStringSet(domains),
+			Domains:              flex.ExpandStringSet(domains),
 			Operation:            aws.String(operation),
 		})
 
