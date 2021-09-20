@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceCrawler() *schema.Resource {
@@ -30,7 +31,7 @@ func ResourceCrawler() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -269,8 +270,8 @@ func ResourceCrawler() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -317,8 +318,8 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceCrawlerRead(d, meta)
 }
 
-func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *keyvaluetags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
@@ -639,7 +640,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.GlueUpdateTags(glueConn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.GlueUpdateTags(glueConn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -725,7 +726,7 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags, err := keyvaluetags.GlueListTags(glueConn, crawlerARN)
+	tags, err := tftags.GlueListTags(glueConn, crawlerARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Crawler (%s): %w", crawlerARN, err)
