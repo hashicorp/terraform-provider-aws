@@ -1,8 +1,9 @@
 package mq_test
 
 import (
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"testing"
+
+	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 )
 
 func TestCanonicalXML(t *testing.T) {
