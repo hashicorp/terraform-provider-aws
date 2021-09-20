@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -16,7 +15,7 @@ func FindQueryDefinition(ctx context.Context, conn *cloudwatchlogs.CloudWatchLog
 	}
 
 	var result *cloudwatchlogs.QueryDefinition
-	err := lister.describeQueryDefinitionsPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
+	err := describeQueryDefinitionsPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

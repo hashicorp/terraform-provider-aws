@@ -1,4 +1,4 @@
-package aws
+package cloudwatchlogs_test
 
 import (
 	"context"
@@ -14,12 +14,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func init() {
@@ -238,7 +238,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName string, v *cloudwatchl
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
-		result, err := finder.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
+		result, err := tfcloudwatchlogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -262,7 +262,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		result, err := finder.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
+		result, err := tfcloudwatchlogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch query definition (%s): %w", rs.Primary.ID, err)
 		}

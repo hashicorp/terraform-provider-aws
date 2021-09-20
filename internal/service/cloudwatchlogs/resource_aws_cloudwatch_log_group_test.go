@@ -1,4 +1,4 @@
-package aws
+package cloudwatchlogs_test
 
 import (
 	"fmt"

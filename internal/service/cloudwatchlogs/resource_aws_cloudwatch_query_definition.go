@@ -1,4 +1,4 @@
-package aws
+package cloudwatchlogs
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -89,7 +88,7 @@ func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlog
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	result, err := finder.FindQueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
+	result, err := FindQueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading CloudWatch query definition (%s): %w", d.Id(), err))
