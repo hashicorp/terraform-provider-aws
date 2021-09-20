@@ -7,18 +7,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDmsCertificate_basic(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
-	randId := acctest.RandString(8)
+	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -40,11 +41,11 @@ func TestAccAWSDmsCertificate_basic(t *testing.T) {
 
 func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
-	randId := acctest.RandString(8)
+	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -52,7 +53,7 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 				Config: testAccAWSDmsCertificateConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSDmsCertificateExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDmsCertificate(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDmsCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,11 +63,11 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 
 func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -88,11 +89,11 @@ func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
 
 func TestAccAWSDmsCertificate_tags(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
-	randId := acctest.RandString(8)
+	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
