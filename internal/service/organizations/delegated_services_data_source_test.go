@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsOrganizationsDelegatedServices_basic(t *testing.T) {
+func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedServices_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsOrganizationsDelegatedServices_empty(t *testing.T) {
+func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
@@ -61,7 +61,7 @@ func TestAccDataSourceAwsOrganizationsDelegatedServices_empty(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsOrganizationsDelegatedServices_multiple(t *testing.T) {
+func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
 	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
