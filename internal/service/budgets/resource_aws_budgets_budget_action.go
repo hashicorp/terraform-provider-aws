@@ -245,7 +245,7 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(tfbudgets.BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waiter.ActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waiter.waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
 		return fmt.Errorf("error waiting for Budget Action (%s) to create: %w", d.Id(), err)
 	}
 
@@ -261,7 +261,7 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+	output, err := finder.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
@@ -353,7 +353,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error updating Budget Action (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waiter.waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
 		return fmt.Errorf("error waiting for Budget Action (%s) to update: %w", d.Id(), err)
 	}
 

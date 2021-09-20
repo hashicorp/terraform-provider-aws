@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ActionStatus(conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
+func statusAction(conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		output, err := finder.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

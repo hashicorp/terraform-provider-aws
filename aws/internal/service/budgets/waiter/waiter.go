@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	ActionAvailableTimeout = 2 * time.Minute
+	actionAvailableTimeout = 2 * time.Minute
 )
 
-func ActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
+func waitActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			budgets.ActionStatusExecutionInProgress,
@@ -23,8 +23,8 @@ func ActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName stri
 			budgets.ActionStatusExecutionFailure,
 			budgets.ActionStatusPending,
 		},
-		Refresh: ActionStatus(conn, accountID, actionID, budgetName),
-		Timeout: ActionAvailableTimeout,
+		Refresh: statusAction(conn, accountID, actionID, budgetName),
+		Timeout: actionAvailableTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

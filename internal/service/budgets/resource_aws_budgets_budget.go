@@ -274,7 +274,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	budget, err := finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+	budget, err := finder.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -323,7 +323,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("time_unit", budget.TimeUnit)
 
-	notifications, err := finder.NotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
+	notifications, err := finder.FindNotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -350,7 +350,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 			tfMap["threshold_type"] = aws.StringValue(notification.ThresholdType)
 		}
 
-		subscribers, err := finder.SubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
+		subscribers, err := finder.FindSubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
 
 		if tfresource.NotFound(err) {
 			tfList = append(tfList, tfMap)

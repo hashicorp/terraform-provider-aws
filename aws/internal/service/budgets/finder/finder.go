@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ActionByAccountIDActionIDAndBudgetName(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
+func FindActionByAccountIDActionIDAndBudgetName(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
 	input := &budgets.DescribeBudgetActionInput{
 		AccountId:  aws.String(accountID),
 		ActionId:   aws.String(actionID),
@@ -38,7 +38,7 @@ func ActionByAccountIDActionIDAndBudgetName(conn *budgets.Budgets, accountID, ac
 	return output.Action, nil
 }
 
-func BudgetByAccountIDAndBudgetName(conn *budgets.Budgets, accountID, budgetName string) (*budgets.Budget, error) {
+func FindBudgetByAccountIDAndBudgetName(conn *budgets.Budgets, accountID, budgetName string) (*budgets.Budget, error) {
 	input := &budgets.DescribeBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
@@ -67,7 +67,7 @@ func BudgetByAccountIDAndBudgetName(conn *budgets.Budgets, accountID, budgetName
 	return output.Budget, nil
 }
 
-func NotificationsByAccountIDAndBudgetName(conn *budgets.Budgets, accountID, budgetName string) ([]*budgets.Notification, error) {
+func FindNotificationsByAccountIDAndBudgetName(conn *budgets.Budgets, accountID, budgetName string) ([]*budgets.Notification, error) {
 	input := &budgets.DescribeNotificationsForBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
@@ -111,7 +111,7 @@ func NotificationsByAccountIDAndBudgetName(conn *budgets.Budgets, accountID, bud
 	return output, nil
 }
 
-func SubscribersByAccountIDBudgetNameAndNotification(conn *budgets.Budgets, accountID, budgetName string, notification *budgets.Notification) ([]*budgets.Subscriber, error) {
+func FindSubscribersByAccountIDBudgetNameAndNotification(conn *budgets.Budgets, accountID, budgetName string, notification *budgets.Notification) ([]*budgets.Subscriber, error) {
 	input := &budgets.DescribeSubscribersForNotificationInput{
 		AccountId:    aws.String(accountID),
 		BudgetName:   aws.String(budgetName),
