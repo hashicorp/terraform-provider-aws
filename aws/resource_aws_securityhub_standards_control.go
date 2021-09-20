@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubStandardsControl() *schema.Resource {
+func ResourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAwsSecurityHubStandardsControlPut,
-		ReadContext:   resourceAwsSecurityHubStandardsControlRead,
+		ReadContext:   resourceStandardsControlRead,
 		UpdateContext: resourceAwsSecurityHubStandardsControlPut,
-		DeleteContext: resourceAwsSecurityHubStandardsControlDelete,
+		DeleteContext: resourceStandardsControlDelete,
 
 		Schema: map[string]*schema.Schema{
 			"control_id": {
@@ -82,7 +82,7 @@ func resourceAwsSecurityHubStandardsControl() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(d.Id())
@@ -135,10 +135,10 @@ func resourceAwsSecurityHubStandardsControlPut(ctx context.Context, d *schema.Re
 		return diag.Errorf("error updating Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsSecurityHubStandardsControlRead(ctx, d, meta)
+	return resourceStandardsControlRead(ctx, d, meta)
 }
 
-func resourceAwsSecurityHubStandardsControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[WARN] Cannot delete Security Hub Standards Control. Terraform will remove this resource from the state.")
 	return nil
 }

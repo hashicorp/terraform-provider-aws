@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubInsight() *schema.Resource {
+func ResourceInsight() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsSecurityHubInsightCreate,
-		ReadWithoutTimeout:   resourceAwsSecurityHubInsightRead,
-		UpdateWithoutTimeout: resourceAwsSecurityHubInsightUpdate,
-		DeleteWithoutTimeout: resourceAwsSecurityHubInsightDelete,
+		CreateWithoutTimeout: resourceInsightCreate,
+		ReadWithoutTimeout:   resourceInsightRead,
+		UpdateWithoutTimeout: resourceInsightUpdate,
+		DeleteWithoutTimeout: resourceInsightDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -143,7 +143,7 @@ func resourceAwsSecurityHubInsight() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	name := d.Get("name").(string)
@@ -169,10 +169,10 @@ func resourceAwsSecurityHubInsightCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.StringValue(output.InsightArn))
 
-	return resourceAwsSecurityHubInsightRead(ctx, d, meta)
+	return resourceInsightRead(ctx, d, meta)
 }
 
-func resourceAwsSecurityHubInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	insight, err := finder.Insight(ctx, conn, d.Id())
@@ -206,7 +206,7 @@ func resourceAwsSecurityHubInsightRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAwsSecurityHubInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.UpdateInsightInput{
@@ -231,10 +231,10 @@ func resourceAwsSecurityHubInsightUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error updating Security Hub Insight (%s): %w", d.Id(), err))
 	}
 
-	return resourceAwsSecurityHubInsightRead(ctx, d, meta)
+	return resourceInsightRead(ctx, d, meta)
 }
 
-func resourceAwsSecurityHubInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.DeleteInsightInput{

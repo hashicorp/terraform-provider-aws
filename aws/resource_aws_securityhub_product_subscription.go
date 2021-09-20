@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubProductSubscription() *schema.Resource {
+func ResourceProductSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubProductSubscriptionCreate,
-		Read:   resourceAwsSecurityHubProductSubscriptionRead,
-		Delete: resourceAwsSecurityHubProductSubscriptionDelete,
+		Create: resourceProductSubscriptionCreate,
+		Read:   resourceProductSubscriptionRead,
+		Delete: resourceProductSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,7 +35,7 @@ func resourceAwsSecurityHubProductSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubProductSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProductSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	productArn := d.Get("product_arn").(string)
 
@@ -51,10 +51,10 @@ func resourceAwsSecurityHubProductSubscriptionCreate(d *schema.ResourceData, met
 
 	d.SetId(fmt.Sprintf("%s,%s", productArn, *resp.ProductSubscriptionArn))
 
-	return resourceAwsSecurityHubProductSubscriptionRead(d, meta)
+	return resourceProductSubscriptionRead(d, meta)
 }
 
-func resourceAwsSecurityHubProductSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProductSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	productArn, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(d.Id())
@@ -114,7 +114,7 @@ func resourceAwsSecurityHubProductSubscriptionParseId(id string) (string, string
 	return parts[0], parts[1], nil
 }
 
-func resourceAwsSecurityHubProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
 

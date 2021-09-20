@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubStandardsSubscriptionExists(resourceName, &standardsSubscription),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubStandardsSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStandardsSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

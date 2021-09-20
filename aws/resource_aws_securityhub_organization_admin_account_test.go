@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
@@ -58,7 +59,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

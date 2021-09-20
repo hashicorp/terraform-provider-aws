@@ -21,11 +21,11 @@ const (
 	SecurityHubMemberStatusDeleted    = "Deleted"
 )
 
-func resourceAwsSecurityHubMember() *schema.Resource {
+func ResourceMember() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubMemberCreate,
-		Read:   resourceAwsSecurityHubMemberRead,
-		Delete: resourceAwsSecurityHubMemberDelete,
+		Create: resourceMemberCreate,
+		Read:   resourceMemberRead,
+		Delete: resourceMemberDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,7 +59,7 @@ func resourceAwsSecurityHubMember() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
@@ -97,10 +97,10 @@ func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsSecurityHubMemberRead(d, meta)
+	return resourceMemberRead(d, meta)
 }
 
-func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
@@ -138,7 +138,7 @@ func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
