@@ -84,7 +84,7 @@ func testSweepTimestreamWriteTables(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSTimestreamWriteTable_basic(t *testing.T) {
+func TestAccTimestreamWriteTable_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_timestreamwrite_table.test"
 	dbResourceName := "aws_timestreamwrite_database.test"
@@ -115,7 +115,7 @@ func TestAccAWSTimestreamWriteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
+func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -137,7 +137,7 @@ func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteTable_RetentionProperties(t *testing.T) {
+func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_timestreamwrite_table.test"
 
@@ -186,7 +186,7 @@ func TestAccAWSTimestreamWriteTable_RetentionProperties(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteTable_Tags(t *testing.T) {
+func TestAccTimestreamWriteTable_tags(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
