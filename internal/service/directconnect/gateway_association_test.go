@@ -70,7 +70,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceGatewayAssociation()
+					r := tfdirectconnect.ResourceGatewayAssociation()
 					d := r.Data(nil)
 					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, gatewayID))
 
@@ -133,7 +133,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 						continue
 					}
 
-					r := ResourceGatewayAssociation()
+					r := tfdirectconnect.ResourceGatewayAssociation()
 					d := r.Data(nil)
 					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, transitGatewayID))
 
@@ -588,7 +588,7 @@ func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.Tes
 			"vpn_gateway_id": rs.Primary.Attributes["associated_gateway_id"], // vpn_gateway_id was removed in 3.0, but older state still has it
 		}
 
-		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(context.Background(), rawState, acctest.Provider.Meta())
+		updatedRawState, err := tfdirectconnect.GatewayAssociationStateUpgradeV0(context.Background(), rawState, acctest.Provider.Meta())
 
 		if err != nil {
 			return err

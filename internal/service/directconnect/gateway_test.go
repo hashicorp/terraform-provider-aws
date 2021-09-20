@@ -83,7 +83,7 @@ func testSweepDirectConnectGateways(region string) error {
 				continue
 			}
 
-			r := ResourceGateway()
+			r := tfdirectconnect.ResourceGateway()
 			d := r.Data(nil)
 			d.SetId(directConnectGatewayID)
 
@@ -155,7 +155,7 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -54,7 +54,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 				continue
 			}
 
-			r := ResourceGatewayAssociationProposal()
+			r := tfdirectconnect.ResourceGatewayAssociationProposal()
 			d := r.Data(nil)
 			d.SetId(proposalID)
 
@@ -173,7 +173,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 				Config: testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -199,7 +199,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
