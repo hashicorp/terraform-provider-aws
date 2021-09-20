@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -145,13 +146,13 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
 	resourceName2 := "aws_iam_group.test2"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
@@ -181,13 +182,13 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{

@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestPolicySearchDetails(t *testing.T) {
@@ -81,11 +82,11 @@ func TestPolicySearchDetails(t *testing.T) {
 func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
-	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -107,11 +108,11 @@ func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
 func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
-	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -134,12 +135,12 @@ func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
-	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -159,12 +160,12 @@ func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMPolicy_NonExistent(t *testing.T) {
-	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	policyName := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -200,7 +201,7 @@ EOF
 }
 
 func testAccAwsDataSourceIamPolicyConfig_Arn(policyName, policyPath string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		`
 data "aws_iam_policy" "test" {
@@ -210,7 +211,7 @@ data "aws_iam_policy" "test" {
 }
 
 func testAccAwsDataSourceIamPolicyConfig_Name(policyName, policyPath string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		`
 data "aws_iam_policy" "test" {
@@ -220,7 +221,7 @@ data "aws_iam_policy" "test" {
 }
 
 func testAccAwsDataSourceIamPolicyConfig_PathPrefix(policyName, policyPath string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		fmt.Sprintf(`
 data "aws_iam_policy" "test" {
@@ -231,7 +232,7 @@ data "aws_iam_policy" "test" {
 }
 
 func testAccAwsDataSourceIamPolicyConfig_NonExistent(policyName, policyPath string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		fmt.Sprintf(`
 data "aws_iam_policy" "test" {

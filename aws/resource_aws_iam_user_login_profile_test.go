@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestGenerateIAMPassword(t *testing.T) {
@@ -62,11 +63,11 @@ func TestIAMPasswordPolicyCheck(t *testing.T) {
 func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
-	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
@@ -101,11 +102,11 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
-	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
@@ -137,11 +138,11 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 }
 
 func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
-	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
@@ -155,11 +156,11 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 }
 
 func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
-	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
@@ -175,11 +176,11 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
-	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	username := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
@@ -257,7 +258,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 		}
 
 		iamAsCreatedUserSession := session.New(&aws.Config{
-			Region:      aws.String(testAccGetRegion()),
+			Region:      aws.String(acctest.Region()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
 		_, err = iamAsCreatedUserSession.Config.Credentials.Get()

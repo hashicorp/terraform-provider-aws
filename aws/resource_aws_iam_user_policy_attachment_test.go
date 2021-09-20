@@ -7,21 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListAttachedUserPoliciesOutput
-	rName := acctest.RandString(10)
-	policyName1 := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
-	policyName2 := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
-	policyName3 := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	rName := sdkacctest.RandString(10)
+	policyName1 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
+	policyName2 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
+	policyName3 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{

@@ -6,15 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	userName := fmt.Sprintf("tf-acc-user-pa-basic-%s", rString)
 	userName2 := fmt.Sprintf("tf-acc-user-pa-basic-2-%s", rString)
 	userName3 := fmt.Sprintf("tf-acc-user-pa-basic-3-%s", rString)
@@ -28,8 +29,8 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -58,14 +59,14 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	userNamePrefix := fmt.Sprintf("tf-acc-user-pa-pe-%s-", rString)
 	policyName := fmt.Sprintf("tf-acc-policy-pa-pe-%s-", rString)
 	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-pe-%s-", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -82,14 +83,14 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 func TestAccAWSIAMPolicyAttachment_Groups_RenamedGroup(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	groupName1 := fmt.Sprintf("%s-1", rName)
 	groupName2 := fmt.Sprintf("%s-2", rName)
 	resourceName := "aws_iam_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -114,14 +115,14 @@ func TestAccAWSIAMPolicyAttachment_Groups_RenamedGroup(t *testing.T) {
 func TestAccAWSIAMPolicyAttachment_Roles_RenamedRole(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	roleName1 := fmt.Sprintf("%s-1", rName)
 	roleName2 := fmt.Sprintf("%s-2", rName)
 	resourceName := "aws_iam_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -146,14 +147,14 @@ func TestAccAWSIAMPolicyAttachment_Roles_RenamedRole(t *testing.T) {
 func TestAccAWSIAMPolicyAttachment_Users_RenamedUser(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	userName1 := fmt.Sprintf("%s-1", rName)
 	userName2 := fmt.Sprintf("%s-2", rName)
 	resourceName := "aws_iam_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
