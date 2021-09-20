@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDaxSubnetGroup() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsDaxSubnetGroup() *schema.Resource {
 }
 
 func resourceAwsDaxSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
@@ -64,7 +65,7 @@ func resourceAwsDaxSubnetGroupCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsDaxSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	resp, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 		SubnetGroupNames: []*string{aws.String(d.Id())},
@@ -91,7 +92,7 @@ func resourceAwsDaxSubnetGroupRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDaxSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.UpdateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -114,7 +115,7 @@ func resourceAwsDaxSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsDaxSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.DeleteSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),

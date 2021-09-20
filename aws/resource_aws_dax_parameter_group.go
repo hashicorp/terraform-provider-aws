@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDaxParameterGroup() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsDaxParameterGroup() *schema.Resource {
 }
 
 func resourceAwsDaxParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.CreateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Get("name").(string)),
@@ -75,7 +76,7 @@ func resourceAwsDaxParameterGroupCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	resp, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []*string{aws.String(d.Id())},
@@ -121,7 +122,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.UpdateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -142,7 +143,7 @@ func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDaxParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*conns.AWSClient).DAXConn
 
 	input := &dax.DeleteParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
