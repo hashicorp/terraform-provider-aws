@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProtectionGroup() *schema.Resource {
@@ -38,7 +39,7 @@ func ResourceProtectionGroup() *schema.Resource {
 				ConflictsWith: []string{"resource_type"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validation.All(validateArn,
+					ValidateFunc: validation.All(verify.ValidARN,
 						validation.StringLenBetween(1, 2048),
 					),
 				},
