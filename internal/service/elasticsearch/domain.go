@@ -632,7 +632,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
-	err = waitForElasticSearchDomainCreation(conn, d.Get("domain_name").(string), d.Id())
+	err = WaitForDomainCreation(conn, d.Get("domain_name").(string), d.Id())
 	if err != nil {
 		return err
 	}
@@ -642,7 +642,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceDomainRead(d, meta)
 }
 
-func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string) error {
+func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string) error {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(domainName),
 	}
