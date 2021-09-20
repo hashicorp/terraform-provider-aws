@@ -2,11 +2,6 @@ package route53recoverycontrolconfig_test
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAccAWSRoute53RecoveryControlConfig_serial(t *testing.T) {
