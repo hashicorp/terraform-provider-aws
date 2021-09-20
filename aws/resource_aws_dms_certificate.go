@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceCertificate() *schema.Resource {
@@ -54,18 +55,18 @@ func ResourceCertificate() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	certificateID := d.Get("certificate_id").(string)
 
 	request := &dms.ImportCertificateInput{
@@ -141,7 +142,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("certificate_arn").(string))
+	tags, err := tftags.DatabasemigrationserviceListTags(conn, d.Get("certificate_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DMS Certificate (%s): %w", d.Get("certificate_arn").(string), err)
@@ -168,7 +169,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 		arn := d.Get("certificate_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Certificate (%s) tags: %w", arn, err)
 		}
 	}
