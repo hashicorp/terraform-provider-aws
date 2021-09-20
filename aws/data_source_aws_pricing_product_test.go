@@ -8,12 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckPricing(t) },
-		ErrorCheck:        testAccErrorCheck(t, pricing.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -29,8 +30,8 @@ func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 
 func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckPricing(t) },
-		ErrorCheck:        testAccErrorCheck(t, pricing.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +46,7 @@ func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 }
 
 func testAccDataSourceAwsPricingProductConfigEc2() string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccPricingRegionProviderConfig(),
 		`
 data "aws_ec2_instance_type_offering" "available" {
@@ -96,7 +97,7 @@ data "aws_pricing_product" "test" {
 }
 
 func testAccDataSourceAwsPricingProductConfigRedshift() string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccPricingRegionProviderConfig(),
 		`
 data "aws_redshift_orderable_cluster" "test" {
