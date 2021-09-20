@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceActivity() *schema.Resource {
@@ -36,18 +37,18 @@ func ResourceActivity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceActivityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating Step Function Activity")
 
 	params := &sfn.CreateActivityInput{
@@ -70,7 +71,7 @@ func resourceActivityUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.SfnUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.SfnUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -102,7 +103,7 @@ func resourceActivityRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Error setting creation_date: %s", err)
 	}
 
-	tags, err := keyvaluetags.SfnListTags(conn, d.Id())
+	tags, err := tftags.SfnListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SFN Activity (%s): %s", d.Id(), err)
