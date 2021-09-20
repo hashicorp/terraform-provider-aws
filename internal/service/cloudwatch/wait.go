@@ -1,4 +1,4 @@
-package waiter
+package cloudwatch
 
 import (
 	"context"
