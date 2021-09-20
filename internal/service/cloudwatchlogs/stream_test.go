@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
 func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchLogStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +82,7 @@ func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &lg),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGroup(), logGroupResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +99,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		logGroup, exists, err := lookupCloudWatchLogStream(conn, rs.Primary.ID, logGroupName, nil)
+		logGroup, exists, err := tfcloudwatchlogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
 		if err != nil {
 			return err
 		}
@@ -121,7 +122,7 @@ func testAccCheckAWSCloudWatchLogStreamDestroy(s *terraform.State) error {
 		}
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
-		_, exists, err := lookupCloudWatchLogStream(conn, rs.Primary.ID, logGroupName, nil)
+		_, exists, err := tfcloudwatchlogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
 
 		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 			continue
@@ -159,7 +160,7 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 		"logstream/1234",
 	}
 	for _, v := range validNames {
-		_, errors := validateCloudWatchLogStreamName(v, "name")
+		_, errors := tfcloudwatchlogs.ValidStreamName(v, "name")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
 		}
@@ -171,7 +172,7 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 		"stringwith:colon",
 	}
 	for _, v := range invalidNames {
-		_, errors := validateCloudWatchLogStreamName(v, "name")
+		_, errors := tfcloudwatchlogs.ValidStreamName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
 		}

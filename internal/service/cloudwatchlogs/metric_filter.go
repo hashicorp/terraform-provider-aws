@@ -138,7 +138,7 @@ func resourceMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
-	mf, err := lookupCloudWatchLogMetricFilter(conn, d.Get("name").(string),
+	mf, err := LookupMetricFilter(conn, d.Get("name").(string),
 		d.Get("log_group_name").(string), nil)
 	if err != nil {
 		if tfresource.NotFound(err) {
@@ -161,7 +161,7 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
+func LookupMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	name, logGroupName string, nextToken *string) (*cloudwatchlogs.MetricFilter, error) {
 
 	input := cloudwatchlogs.DescribeMetricFiltersInput{
@@ -191,7 +191,7 @@ func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	if resp.NextToken != nil {
-		return lookupCloudWatchLogMetricFilter(conn, name, logGroupName, resp.NextToken)
+		return LookupMetricFilter(conn, name, logGroupName, resp.NextToken)
 	}
 
 	return nil, &resource.NotFoundError{
