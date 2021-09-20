@@ -111,7 +111,7 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		if isAWSErr(err, resourcegroups.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, resourcegroups.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Resource Groups Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
