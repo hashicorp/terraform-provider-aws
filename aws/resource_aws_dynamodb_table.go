@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -99,7 +99,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"billing_mode": {
@@ -188,7 +188,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"name": {

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -44,7 +44,7 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"global_secondary_index": {
@@ -116,7 +116,7 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"range_key": {
