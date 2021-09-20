@@ -110,7 +110,7 @@ func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().Wafv2Tags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateRegexPatternSet(params)
@@ -161,7 +161,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error setting regular_expression: %s", err)
 	}
 
-	tags, err := tftags.Wafv2ListTags(conn, aws.StringValue(resp.RegexPatternSet.ARN))
+	tags, err := ListTags(conn, aws.StringValue(resp.RegexPatternSet.ARN))
 	if err != nil {
 		return fmt.Errorf("Error listing tags for WAFv2 RegexPatternSet (%s): %s", aws.StringValue(resp.RegexPatternSet.ARN), err)
 	}
@@ -209,7 +209,7 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating tags: %s", err)
 		}
 	}
