@@ -10,6 +10,7 @@ import (
 	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // CarrierGatewayByID returns the carrier gateway corresponding to the specified identifier.
@@ -365,7 +366,7 @@ func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 	}
 
 	for _, route := range routeTable.Routes {
-		if tfnet.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
+		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
 			return route, nil
 		}
 	}
@@ -383,7 +384,7 @@ func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr str
 	}
 
 	for _, route := range routeTable.Routes {
-		if tfnet.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
 			return route, nil
 		}
 	}

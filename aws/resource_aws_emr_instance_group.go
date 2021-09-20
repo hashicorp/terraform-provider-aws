@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -45,7 +46,7 @@ func ResourceInstanceGroup() *schema.Resource {
 			"autoscaling_policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
 			"bid_price": {
@@ -63,7 +64,7 @@ func ResourceInstanceGroup() *schema.Resource {
 				Optional:         true,
 				ForceNew:         false,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -95,7 +96,7 @@ func ResourceInstanceGroup() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateAwsEmrEbsVolumeType(),
+							ValidateFunc: validateAwsEMREBSVolumeType(),
 						},
 						"volumes_per_instance": {
 							Type:     schema.TypeInt,

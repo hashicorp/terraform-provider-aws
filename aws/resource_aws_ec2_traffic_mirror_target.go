@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTrafficMirrorTarget() *schema.Resource {
@@ -52,7 +53,7 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 					"network_interface_id",
 					"network_load_balancer_arn",
 				},
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,

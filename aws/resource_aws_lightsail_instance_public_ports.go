@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceInstancePublicPorts() *schema.Resource {
@@ -41,7 +42,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 						"from_port": {

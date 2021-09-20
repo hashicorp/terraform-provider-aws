@@ -26,6 +26,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSecurityGroup() *schema.Resource {
@@ -109,7 +110,7 @@ func ResourceSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 
@@ -118,7 +119,7 @@ func ResourceSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 
@@ -144,7 +145,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateSecurityGroupRuleDescription,
+							ValidateFunc: validSecurityGroupRuleDescription,
 						},
 					},
 				},
@@ -179,7 +180,7 @@ func ResourceSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 
@@ -188,7 +189,7 @@ func ResourceSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 
@@ -214,7 +215,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateSecurityGroupRuleDescription,
+							ValidateFunc: validSecurityGroupRuleDescription,
 						},
 					},
 				},

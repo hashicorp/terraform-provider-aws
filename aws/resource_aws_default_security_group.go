@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const DefaultSecurityGroupName = "default"
@@ -62,13 +63,13 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateSecurityGroupRuleDescription,
+							ValidateFunc: validSecurityGroupRuleDescription,
 						},
 						"from_port": {
 							Type:     schema.TypeInt,
@@ -79,7 +80,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 						"prefix_list_ids": {
@@ -123,13 +124,13 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateSecurityGroupRuleDescription,
+							ValidateFunc: validSecurityGroupRuleDescription,
 						},
 						"from_port": {
 							Type:     schema.TypeInt,
@@ -140,7 +141,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
 						"prefix_list_ids": {
