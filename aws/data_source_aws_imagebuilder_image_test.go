@@ -17,7 +17,7 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{

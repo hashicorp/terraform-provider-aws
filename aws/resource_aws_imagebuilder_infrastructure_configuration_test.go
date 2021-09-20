@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepImageBuilderInfrastructureConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -62,7 +62,7 @@ func testSweepImageBuilderInfrastructureConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Image Builder Infrastructure Configuration sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -82,7 +82,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,14 +122,14 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_disappears(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsImageBuilderInfrastructureConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsImageBuilderInfrastructureConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Description(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,7 +180,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceProfileName(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,7 +214,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceTypes(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,11 +247,11 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_KeyPair(t *testing.T) {
 	keyPairResourceName2 := "aws_key_pair.test2"
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
-	publicKey1, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey1, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
-	publicKey2, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey2, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -259,7 +259,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_KeyPair(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -295,7 +295,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3BucketNa
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -333,7 +333,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3KeyPrefi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -371,7 +371,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_ResourceTags(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -409,7 +409,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SecurityGroupIds(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -447,7 +447,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SnsTopicArn(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -483,7 +483,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SubnetId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -517,7 +517,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -561,7 +561,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailur
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -589,7 +589,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailur
 }
 
 func testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).imagebuilderconn
+	conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
@@ -625,7 +625,7 @@ func testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName s
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).imagebuilderconn
+		conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
 
 		input := &imagebuilder.GetInfrastructureConfigurationInput{
 			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),

@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepImageBuilderComponents(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -91,7 +91,7 @@ func testSweepImageBuilderComponents(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Image Builder Component sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -110,7 +110,7 @@ func TestAccAwsImageBuilderComponent_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,14 +149,14 @@ func TestAccAwsImageBuilderComponent_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsImageBuilderComponentConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderComponentExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsImageBuilderComponent(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsImageBuilderComponent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,7 +171,7 @@ func TestAccAwsImageBuilderComponent_ChangeDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,7 +197,7 @@ func TestAccAwsImageBuilderComponent_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,7 +224,7 @@ func TestAccAwsImageBuilderComponent_KmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,7 +250,7 @@ func TestAccAwsImageBuilderComponent_Platform_Windows(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -276,7 +276,7 @@ func TestAccAwsImageBuilderComponent_SupportedOsVersions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -302,7 +302,7 @@ func TestAccAwsImageBuilderComponent_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -346,7 +346,7 @@ func TestAccAwsImageBuilderComponent_Uri(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsImageBuilderComponentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -366,7 +366,7 @@ func TestAccAwsImageBuilderComponent_Uri(t *testing.T) {
 }
 
 func testAccCheckAwsImageBuilderComponentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).imagebuilderconn
+	conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_component" {
@@ -402,7 +402,7 @@ func testAccCheckAwsImageBuilderComponentExists(resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).imagebuilderconn
+		conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
 
 		input := &imagebuilder.GetComponentInput{
 			ComponentBuildVersionArn: aws.String(rs.Primary.ID),
