@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepGameliftFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).gameliftconn
+	conn := client.(*conns.AWSClient).GameLiftConn
 
 	return testAccGameliftListFleets(conn, nil, region, func(fleetIds []*string) error {
 		if len(fleetIds) == 0 {
@@ -564,7 +565,7 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 			return fmt.Errorf("No Gamelift Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
 			FleetIds: aws.StringSlice([]string{rs.Primary.ID}),
@@ -594,7 +595,7 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 
 func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		input := &gamelift.DeleteFleetInput{FleetId: res.FleetId}
 		err := resource.Retry(60*time.Minute, func() *resource.RetryError {
@@ -620,7 +621,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 }
 
 func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_fleet" {
