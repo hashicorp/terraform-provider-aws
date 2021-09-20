@@ -302,7 +302,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName string, config
 			var err error
 			output, err = conn.GetPublicAccessBlock(input)
 
-			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
 				return resource.RetryableError(err)
 			}
 
@@ -343,7 +343,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockDestroy(s *terraform.State) error 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(input)
 
-			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
 				return nil
 			}
 
@@ -385,7 +385,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockDisappears() resource.TestCheckFun
 		return resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(getInput)
 
-			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
 				return nil
 			}
 

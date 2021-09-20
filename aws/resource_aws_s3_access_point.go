@@ -252,7 +252,7 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 		Name:      aws.String(name),
 	})
 
-	if isAWSErr(err, "NoSuchAccessPointPolicy", "") {
+	if tfawserr.ErrMessageContains(err, "NoSuchAccessPointPolicy", "") {
 		d.Set("policy", "")
 	} else {
 		if err != nil {
@@ -274,7 +274,7 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 		Name:      aws.String(name),
 	})
 
-	if isAWSErr(err, "NoSuchAccessPointPolicy", "") {
+	if tfawserr.ErrMessageContains(err, "NoSuchAccessPointPolicy", "") {
 		d.Set("has_public_access_policy", false)
 	} else {
 		if err != nil {
@@ -337,7 +337,7 @@ func resourceAwsS3AccessPointDelete(d *schema.ResourceData, meta interface{}) er
 		Name:      aws.String(name),
 	})
 
-	if isAWSErr(err, "NoSuchAccessPoint", "") {
+	if tfawserr.ErrMessageContains(err, "NoSuchAccessPoint", "") {
 		return nil
 	}
 
