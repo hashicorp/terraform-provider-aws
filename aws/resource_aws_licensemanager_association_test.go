@@ -17,7 +17,7 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLicenseManagerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 
 func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+		conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -70,7 +70,7 @@ func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpe
 }
 
 func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+	conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_licensemanager_association" {

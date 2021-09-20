@@ -21,7 +21,7 @@ func init() {
 }
 
 func testSweepLicenseManagerLicenseConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -30,7 +30,7 @@ func testSweepLicenseManagerLicenseConfigurations(region string) error {
 	resp, err := conn.ListLicenseConfigurations(&licensemanager.ListLicenseConfigurationsInput{})
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
 			return nil
 		}
@@ -68,7 +68,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,7 +104,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func testAccCheckLicenseManagerLicenseConfigurationExists(resourceName string, l
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+		conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
 		resp, err := conn.ListLicenseConfigurations(&licensemanager.ListLicenseConfigurationsInput{
 			LicenseConfigurationArns: [](*string){aws.String(rs.Primary.ID)},
 		})
@@ -165,7 +165,7 @@ func testAccCheckLicenseManagerLicenseConfigurationExists(resourceName string, l
 }
 
 func testAccCheckLicenseManagerLicenseConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+	conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_licensemanager_license_configuration" {
