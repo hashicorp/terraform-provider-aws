@@ -1,4 +1,4 @@
-package aws
+package redshift_test
 
 import (
 	"errors"
@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 func init() {
@@ -618,7 +618,7 @@ func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindClusterByID(conn, rs.Primary.ID)
+		_, err := tfredshift.FindClusterByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -655,7 +655,7 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 				return fmt.Errorf("error deleting Redshift Cluster Snapshot (%s): %w", snapshot_identifier, err)
 			}
 
-			_, err = finder.FindClusterByID(conn, rs.Primary.ID)
+			_, err = tfredshift.FindClusterByID(conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				return nil
@@ -685,7 +685,7 @@ func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
-		output, err := finder.FindClusterByID(conn, rs.Primary.ID)
+		output, err := tfredshift.FindClusterByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

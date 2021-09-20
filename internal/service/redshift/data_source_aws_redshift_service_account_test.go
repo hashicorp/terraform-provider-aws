@@ -1,4 +1,4 @@
-package aws
+package redshift_test
 
 import (
 	"testing"

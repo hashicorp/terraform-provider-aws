@@ -1,4 +1,4 @@
-package aws
+package redshift
 
 import (
 	"fmt"
@@ -14,11 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -522,7 +519,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rsc, err := finder.FindClusterByID(conn, d.Id())
+	rsc, err := FindClusterByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster (%s) not found, removing from state", d.Id())
@@ -562,9 +559,9 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 	if len(rsc.ClusterNodes) > 1 {
-		d.Set("cluster_type", tfredshift.clusterTypeMultiNode)
+		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
-		d.Set("cluster_type", tfredshift.clusterTypeSingleNode)
+		d.Set("cluster_type", clusterTypeSingleNode)
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set("database_name", rsc.DBName)
@@ -879,7 +876,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.clusterInvalidClusterStateFaultTimeout,
+		clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCluster(input)
 		},
@@ -894,7 +891,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Redshift Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Redshift Cluster (%s) delete: %w", d.Id(), err)
