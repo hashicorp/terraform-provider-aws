@@ -2,6 +2,7 @@ package iam
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func expandStringListKeepEmpty(configured []interface{}) []*string {
