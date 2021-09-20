@@ -17,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceTable() *schema.Resource {
@@ -64,7 +65,7 @@ func ResourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		SchemaVersion: 1,
@@ -285,8 +286,8 @@ func ResourceTable() *schema.Resource {
 					dynamodb.StreamViewTypeKeysOnly,
 				}, false),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -323,7 +324,7 @@ func ResourceTable() *schema.Resource {
 func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	keySchemaMap := map[string]interface{}{
 		"hash_key": d.Get("hash_key").(string),
@@ -444,7 +445,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requiresTagging {
-		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
+		if err := tftags.DynamodbUpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
 			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -579,7 +580,7 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
-	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.DynamodbListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
@@ -764,7 +765,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}
