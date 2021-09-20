@@ -2,7 +2,6 @@ package batch_test
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {

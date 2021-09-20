@@ -3,7 +3,6 @@ package batch
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidName(t *testing.T) {
