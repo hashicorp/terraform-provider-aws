@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSignerSigningJob_basic(t *testing.T) {
+func TestAccSignerSigningJob_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_signer_signing_job.test"
 	profileResourceName := "aws_signer_signing_profile.test"

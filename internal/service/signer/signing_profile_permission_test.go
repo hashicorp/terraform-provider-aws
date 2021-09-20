@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
+func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
 	resourceName := "aws_signer_signing_profile_permission.test_sp_permission"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(53)
@@ -48,7 +48,7 @@ func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
+func TestAccSignerSigningProfilePermission_getSigningProfile(t *testing.T) {
 	resourceName := "aws_signer_signing_profile_permission.test_sp_permission"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(53)
@@ -89,7 +89,7 @@ func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 	})
 }
 
-func TestAccAWSSignerSigningProfilePermission_StartSigningJob_GetSP(t *testing.T) {
+func TestAccSignerSigningProfilePermission_StartSigningJob_getSP(t *testing.T) {
 	resourceName1 := "aws_signer_signing_profile_permission.sp1_perm"
 	resourceName2 := "aws_signer_signing_profile_permission.sp2_perm"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
@@ -123,7 +123,7 @@ func TestAccAWSSignerSigningProfilePermission_StartSigningJob_GetSP(t *testing.T
 	})
 }
 
-func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
+func TestAccSignerSigningProfilePermission_statementPrefix(t *testing.T) {
 	resourceName := "aws_signer_signing_profile_permission.sp1_perm"
 	profileResourceName := "aws_signer_signing_profile.test_sp"
 	rString := sdkacctest.RandString(53)
