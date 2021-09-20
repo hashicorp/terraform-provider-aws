@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecr/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcrRepository() *schema.Resource {
@@ -106,8 +107,8 @@ func resourceAwsEcrRepository() *schema.Resource {
 }
 
 func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ECRConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := ecr.CreateRepositoryInput{
@@ -144,9 +145,9 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECRConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading ECR repository %s", d.Id())
 	var out *ecr.DescribeRepositoriesOutput
@@ -270,7 +271,7 @@ func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration
 
 func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	if d.HasChange("image_tag_mutability") {
 		if err := resourceAwsEcrRepositoryUpdateImageTagMutability(conn, d); err != nil {
@@ -296,7 +297,7 @@ func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),

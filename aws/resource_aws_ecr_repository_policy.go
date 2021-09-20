@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecr/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEcrRepositoryPolicy() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 }
 
 func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := ecr.SetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Get("repository").(string)),
@@ -84,7 +85,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := &ecr.GetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -146,7 +147,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.DeleteRepositoryPolicy(&ecr.DeleteRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),

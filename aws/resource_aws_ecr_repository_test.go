@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepEcrRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).ecrconn
+	conn := client.(*conns.AWSClient).ECRConn
 
 	var errors error
 	err = conn.DescribeRepositoriesPages(&ecr.DescribeRepositoriesInput{}, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
@@ -301,7 +302,7 @@ func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
 }
 
 func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_repository" {
@@ -343,7 +344,7 @@ func testAccCheckAWSEcrRepositoryExists(name string, res *ecr.Repository) resour
 			return fmt.Errorf("No ECR repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 		output, err := conn.DescribeRepositories(&ecr.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
