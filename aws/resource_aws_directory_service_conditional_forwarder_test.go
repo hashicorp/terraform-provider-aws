@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
@@ -16,8 +17,8 @@ func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDirectoryServiceConditionalForwarderDestroy,
 		Steps: []resource.TestStep{

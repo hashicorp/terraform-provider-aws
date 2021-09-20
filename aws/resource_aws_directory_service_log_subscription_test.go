@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
@@ -15,8 +16,8 @@ func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
 	logGroupName := "ad-service-log-subscription-test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDirectoryServiceLogSubscriptionDestroy,
 		Steps: []resource.TestStep{
