@@ -1,4 +1,4 @@
-package finder
+package appstream
 
 import (
 	"context"
