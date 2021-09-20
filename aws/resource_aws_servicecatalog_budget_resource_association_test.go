@@ -27,14 +27,14 @@ func init() {
 }
 
 func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
@@ -67,7 +67,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(port.Id)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -111,7 +111,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(pvd.ProductViewSummary.ProductId)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -125,11 +125,11 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Product) Associations for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Budget Resource Associations for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Budget Resource Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -144,7 +144,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("budgets", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,14 +171,14 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("budgets", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,7 +187,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 }
 
 func testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_budget_resource_association" {
@@ -228,7 +228,7 @@ func testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName s
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 		_, err = waiter.BudgetResourceAssociationReady(conn, budgetName, resourceID)
 

@@ -17,7 +17,7 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{

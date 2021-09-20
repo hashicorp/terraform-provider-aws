@@ -29,14 +29,14 @@ func init() {
 }
 
 func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	// no paginator or list operation for associations directly, have to list products and associations of products
@@ -89,7 +89,7 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.ProductPortfolioAssociationCreateID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(detail.Id), productID))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -108,11 +108,11 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Product Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -129,11 +129,11 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, testAccDefaultEmailAddress),
+				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
@@ -158,14 +158,14 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, testAccDefaultEmailAddress),
+				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProductPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,7 +174,7 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 }
 
 func testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_product_portfolio_association" {
@@ -215,7 +215,7 @@ func testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 		_, err = waiter.ProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
 

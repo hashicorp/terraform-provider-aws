@@ -28,14 +28,14 @@ func init() {
 }
 
 func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
@@ -68,7 +68,7 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -87,11 +87,11 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Principal Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -106,7 +106,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,14 +133,14 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +149,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 }
 
 func testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
@@ -190,7 +190,7 @@ func testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceNa
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 		_, err = waiter.PrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
 
