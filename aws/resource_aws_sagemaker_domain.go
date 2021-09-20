@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDomain() *schema.Resource {
@@ -64,7 +65,7 @@ func ResourceDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"app_network_access_type": {
 				Type:         schema.TypeString,
@@ -88,7 +89,7 @@ func ResourceDomain() *schema.Resource {
 						"execution_role": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"sharing_settings": {
 							Type:     schema.TypeList,
@@ -106,7 +107,7 @@ func ResourceDomain() *schema.Resource {
 									"s3_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -136,7 +137,7 @@ func ResourceDomain() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -165,7 +166,7 @@ func ResourceDomain() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -194,7 +195,7 @@ func ResourceDomain() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
