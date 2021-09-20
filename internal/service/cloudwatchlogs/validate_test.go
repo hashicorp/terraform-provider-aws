@@ -1,18 +1,8 @@
 package cloudwatchlogs
 
-
 import (
-	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidLogGroupName(t *testing.T) {
@@ -146,4 +136,3 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 		}
 	}
 }
-
