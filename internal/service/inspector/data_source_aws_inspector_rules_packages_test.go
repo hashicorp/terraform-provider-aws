@@ -1,4 +1,4 @@
-package aws
+package inspector_test
 
 import (
 	"testing"
