@@ -566,7 +566,7 @@ func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetWorkGroup(input)
 
-		if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
+		if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "is not found") {
 			continue
 		}
 

@@ -72,7 +72,7 @@ func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetNamedQuery(input)
 		if err != nil {
-			if isAWSErr(err, athena.ErrCodeInvalidRequestException, rs.Primary.ID) {
+			if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, rs.Primary.ID) {
 				return nil
 			}
 			return err

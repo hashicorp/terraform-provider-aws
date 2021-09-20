@@ -81,7 +81,7 @@ func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.GetNamedQuery(input)
 	if err != nil {
-		if isAWSErr(err, athena.ErrCodeInvalidRequestException, d.Id()) {
+		if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, d.Id()) {
 			log.Printf("[WARN] Athena Named Query (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

@@ -181,7 +181,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetWorkGroup(input)
 
-	if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
+	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "is not found") {
 		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
