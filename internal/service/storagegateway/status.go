@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -118,7 +117,7 @@ func statusNFSFileShare(conn *storagegateway.StorageGateway, fileShareArn string
 
 func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.FindSMBFileShareByARN(conn, arn)
+		output, err := FindSMBFileShareByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -135,7 +134,7 @@ func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resourc
 func statusFileSystemAssociation(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		output, err := finder.FindFileSystemAssociationByARN(conn, fileSystemArn)
+		output, err := FindFileSystemAssociationByARN(conn, fileSystemArn)
 
 		// there was an unhandled error in the Finder
 		if err != nil {

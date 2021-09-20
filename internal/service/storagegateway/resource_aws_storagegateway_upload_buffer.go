@@ -1,4 +1,4 @@
-package aws
+package storagegateway
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -83,7 +82,7 @@ func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error 
 		return resourceUploadBufferRead(d, meta)
 	}
 
-	disk, err := finder.FindLocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
+	disk, err := FindLocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
 
 	if err != nil {
 		return fmt.Errorf("error listing Storage Gateway Local Disks after creating Upload Buffer: %w", err)
@@ -106,7 +105,7 @@ func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	foundDiskID, err := finder.FindUploadBufferDisk(conn, gatewayARN, diskID)
+	foundDiskID, err := FindUploadBufferDisk(conn, gatewayARN, diskID)
 
 	if !d.IsNewResource() && isAWSErrStorageGatewayGatewayNotFound(err) {
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
@@ -132,7 +131,7 @@ func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("gateway_arn", gatewayARN)
 
 	if _, ok := d.GetOk("disk_path"); !ok {
-		disk, err := finder.FindLocalDiskByDiskID(conn, gatewayARN, aws.StringValue(foundDiskID))
+		disk, err := FindLocalDiskByDiskID(conn, gatewayARN, aws.StringValue(foundDiskID))
 
 		if err != nil {
 			return fmt.Errorf("error listing Storage Gateway Local Disks: %w", err)

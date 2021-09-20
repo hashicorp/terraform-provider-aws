@@ -1,4 +1,4 @@
-package aws
+package storagegateway_test
 
 import (
 	"fmt"

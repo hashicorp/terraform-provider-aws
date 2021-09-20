@@ -1,4 +1,4 @@
-package aws
+package storagegateway
 
 import (
 	"fmt"
@@ -12,8 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -251,7 +250,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	if _, err = waiter.waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
 	}
 
@@ -386,7 +385,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
 		}
 
-		if _, err = waiter.waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
 		}
 	}
@@ -410,7 +409,7 @@ func resourceNFSFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting Storage Gateway NFS File Share: %w", err)
 	}
 
-	if _, err = waiter.waitNFSFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waitNFSFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfresource.NotFound(err) {
 			return nil
 		}
