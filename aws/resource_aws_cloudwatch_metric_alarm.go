@@ -319,7 +319,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 
 	d.Set("actions_enabled", resp.ActionsEnabled)
 
-	if err := d.Set("alarm_actions", flattenStringSet(resp.AlarmActions)); err != nil {
+	if err := d.Set("alarm_actions", flex.FlattenStringSet(resp.AlarmActions)); err != nil {
 		return fmt.Errorf("error setting Alarm Actions: %w", err)
 	}
 	arn := aws.StringValue(resp.AlarmArn)
@@ -333,7 +333,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	}
 	d.Set("evaluation_periods", resp.EvaluationPeriods)
 
-	if err := d.Set("insufficient_data_actions", flattenStringSet(resp.InsufficientDataActions)); err != nil {
+	if err := d.Set("insufficient_data_actions", flex.FlattenStringSet(resp.InsufficientDataActions)); err != nil {
 		return fmt.Errorf("error setting Insufficient Data Actions: %w", err)
 	}
 	d.Set("metric_name", resp.MetricName)
@@ -345,7 +345,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if err := d.Set("ok_actions", flattenStringSet(resp.OKActions)); err != nil {
+	if err := d.Set("ok_actions", flex.FlattenStringSet(resp.OKActions)); err != nil {
 		return fmt.Errorf("error setting OK Actions: %w", err)
 	}
 
@@ -478,11 +478,11 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("alarm_actions"); ok {
-		params.AlarmActions = expandStringSet(v.(*schema.Set))
+		params.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("insufficient_data_actions"); ok {
-		params.InsufficientDataActions = expandStringSet(v.(*schema.Set))
+		params.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v := d.Get("metric_query"); v != nil {
@@ -490,7 +490,7 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("ok_actions"); ok {
-		params.OKActions = expandStringSet(v.(*schema.Set))
+		params.OKActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("dimensions"); ok {

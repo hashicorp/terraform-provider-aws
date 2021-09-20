@@ -137,7 +137,7 @@ func resourceAwsCloudWatchCompositeAlarmRead(ctx context.Context, d *schema.Reso
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 
-	if err := d.Set("alarm_actions", flattenStringSet(alarm.AlarmActions)); err != nil {
+	if err := d.Set("alarm_actions", flex.FlattenStringSet(alarm.AlarmActions)); err != nil {
 		return diag.Errorf("error setting alarm_actions: %s", err)
 	}
 
@@ -146,11 +146,11 @@ func resourceAwsCloudWatchCompositeAlarmRead(ctx context.Context, d *schema.Reso
 	d.Set("alarm_rule", alarm.AlarmRule)
 	d.Set("arn", alarm.AlarmArn)
 
-	if err := d.Set("insufficient_data_actions", flattenStringSet(alarm.InsufficientDataActions)); err != nil {
+	if err := d.Set("insufficient_data_actions", flex.FlattenStringSet(alarm.InsufficientDataActions)); err != nil {
 		return diag.Errorf("error setting insufficient_data_actions: %s", err)
 	}
 
-	if err := d.Set("ok_actions", flattenStringSet(alarm.OKActions)); err != nil {
+	if err := d.Set("ok_actions", flex.FlattenStringSet(alarm.OKActions)); err != nil {
 		return diag.Errorf("error setting ok_actions: %s", err)
 	}
 
@@ -224,7 +224,7 @@ func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("alarm_actions"); ok {
-		out.AlarmActions = expandStringSet(v.(*schema.Set))
+		out.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("alarm_description"); ok {
@@ -240,11 +240,11 @@ func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("insufficient_data_actions"); ok {
-		out.InsufficientDataActions = expandStringSet(v.(*schema.Set))
+		out.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("ok_actions"); ok {
-		out.OKActions = expandStringSet(v.(*schema.Set))
+		out.OKActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if len(tags) > 0 {
