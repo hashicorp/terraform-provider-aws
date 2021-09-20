@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codebuild/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepCodeBuildReportGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).codebuildconn
+	conn := client.(*conns.AWSClient).CodeBuildConn
 	input := &codebuild.ListReportGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -249,7 +250,7 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 }
 
 func testAccPreCheckAWSCodeBuildReportGroup(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	input := &codebuild.ListReportGroupsInput{}
 
@@ -265,7 +266,7 @@ func testAccPreCheckAWSCodeBuildReportGroup(t *testing.T) {
 }
 
 func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_report_group" {
@@ -292,7 +293,7 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
 		if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeBuildWebhook() *schema.Resource {
@@ -89,7 +90,7 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 }
 
 func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
@@ -156,7 +157,7 @@ func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFi
 }
 
 func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -194,7 +195,7 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
@@ -228,7 +229,7 @@ func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	_, err := conn.DeleteWebhook(&codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
@@ -91,7 +92,7 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 }
 
 func testAccCheckAWSCodeBuildSourceCredentialDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_source_credential" {
@@ -123,7 +124,7 @@ func testAccCheckAWSCodeBuildSourceCredentialExists(name string, sourceCredentia
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codebuildconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
 		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
 		if err != nil {
