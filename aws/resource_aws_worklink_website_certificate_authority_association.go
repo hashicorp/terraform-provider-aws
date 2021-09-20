@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation() *schema.Resource {
+func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate,
-		Read:   resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead,
-		Delete: resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete,
+		Create: resourceWebsiteCertificateAuthorityAssociationCreate,
+		Read:   resourceWebsiteCertificateAuthorityAssociationRead,
+		Delete: resourceWebsiteCertificateAuthorityAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,7 +48,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation() *schema.Resourc
 	}
 }
 
-func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
@@ -67,10 +67,10 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate(d *schema.R
 
 	d.SetId(fmt.Sprintf("%s,%s", d.Get("fleet_arn").(string), aws.StringValue(resp.WebsiteCaId)))
 
-	return resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d, meta)
+	return resourceWebsiteCertificateAuthorityAssociationRead(d, meta)
 }
 
-func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
@@ -101,7 +101,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.Res
 	return nil
 }
 
-func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
