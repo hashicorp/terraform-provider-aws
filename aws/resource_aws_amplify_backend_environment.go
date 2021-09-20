@@ -13,6 +13,7 @@ import (
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAmplifyBackendEnvironment() *schema.Resource {
@@ -63,7 +64,7 @@ func resourceAwsAmplifyBackendEnvironment() *schema.Resource {
 }
 
 func resourceAwsAmplifyBackendEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID := d.Get("app_id").(string)
 	environmentName := d.Get("environment_name").(string)
@@ -95,7 +96,7 @@ func resourceAwsAmplifyBackendEnvironmentCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsAmplifyBackendEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, environmentName, err := tfamplify.BackendEnvironmentParseResourceID(d.Id())
 
@@ -125,7 +126,7 @@ func resourceAwsAmplifyBackendEnvironmentRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsAmplifyBackendEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, environmentName, err := tfamplify.BackendEnvironmentParseResourceID(d.Id())
 

@@ -14,6 +14,7 @@ import (
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAmplifyBranch() *schema.Resource {
@@ -182,8 +183,8 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 }
 
 func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AmplifyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	appID := d.Get("app_id").(string)
@@ -265,9 +266,9 @@ func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AmplifyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())
 
@@ -323,7 +324,7 @@ func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())
@@ -415,7 +416,7 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAmplifyBranchDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())
 

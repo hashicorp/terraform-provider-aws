@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
@@ -162,7 +163,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
@@ -177,7 +178,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 }
 
 func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_domain_association" {
