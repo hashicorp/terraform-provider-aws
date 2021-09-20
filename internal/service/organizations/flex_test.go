@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestFlattenOrganizationalUnits(t *testing.T) {
