@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func QueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
+func statusQueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.QueueAttributesByURL(conn, url)
+		output, err := finder.FindQueueAttributesByURL(conn, url)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

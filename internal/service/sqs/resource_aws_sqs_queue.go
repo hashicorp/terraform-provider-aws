@@ -65,7 +65,7 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(tfsqs.FifoThroughputLimit_Values(), false),
+			ValidateFunc: validation.StringInSlice(tfsqs.FIFOThroughputLimit_Values(), false),
 		},
 
 		"kms_data_key_reuse_period_seconds": {
@@ -198,7 +198,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoQueue := d.Get("fifo_queue").(bool)
 
 	if fifoQueue {
-		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsqs.FifoQueueNameSuffix)
+		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsqs.FIFOQueueNameSuffix)
 	} else {
 		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
@@ -222,7 +222,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
 	var output *sqs.CreateQueueOutput
-	err = resource.Retry(waiter.QueueCreatedTimeout, func() *resource.RetryError {
+	err = resource.Retry(waiter.queueCreatedTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateQueue(input)
@@ -248,7 +248,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.QueueUrl))
 
-	err = waiter.QueueAttributesPropagated(conn, d.Id(), attributes)
+	err = waiter.waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue (%s) attributes to create: %w", d.Id(), err)
@@ -269,7 +269,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.QueueAttributesByURL(conn, d.Id())
+	output, err := finder.FindQueueAttributesByURL(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
@@ -295,12 +295,12 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 	if d.Get("kms_data_key_reuse_period_seconds").(int) == 0 {
-		d.Set("kms_data_key_reuse_period_seconds", tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds)
+		d.Set("kms_data_key_reuse_period_seconds", tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
 	d.Set("name", name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsqs.FifoQueueNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsqs.FIFOQueueNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -353,7 +353,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating SQS Queue (%s) attributes: %w", d.Id(), err)
 		}
 
-		err = waiter.QueueAttributesPropagated(conn, d.Id(), attributes)
+		err = waiter.waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
 		if err != nil {
 			return fmt.Errorf("error waiting for SQS Queue (%s) attributes to update: %w", d.Id(), err)
@@ -386,7 +386,7 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting SQS Queue (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.QueueDeleted(conn, d.Id())
+	err = waiter.waitQueueDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue (%s) to delete: %w", d.Id(), err)
@@ -405,7 +405,7 @@ func resourceAwsSqsQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		var name string
 
 		if fifoQueue {
-			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsqs.FifoQueueNameSuffix)
+			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsqs.FIFOQueueNameSuffix)
 		} else {
 			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}

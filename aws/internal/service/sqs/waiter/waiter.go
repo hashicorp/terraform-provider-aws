@@ -21,18 +21,18 @@ const (
 	// as this will negatively impact user experience when configurations
 	// have incorrect references or permissions.
 	// Reference: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SetQueueAttributes.html
-	QueueAttributePropagationTimeout = 1 * time.Minute
+	queueAttributePropagationTimeout = 1 * time.Minute
 
 	// If you delete a queue, you must wait at least 60 seconds before creating a queue with the same name.
 	// ReferenceL https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html
-	QueueCreatedTimeout = 70 * time.Second
+	queueCreatedTimeout = 70 * time.Second
 
-	QueueDeletedTimeout = 15 * time.Second
+	queueDeletedTimeout = 15 * time.Second
 
 	queueStateExists = "exists"
 )
 
-func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]string) error {
+func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]string) error {
 	attributesMatch := func(got map[string]string) error {
 		for k, e := range expected {
 			g, ok := got[k]
@@ -44,7 +44,7 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 				}
 
 				// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
-				if k == sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds) {
+				if k == sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds) {
 					continue
 				}
 
@@ -77,10 +77,10 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 	}
 
 	var got map[string]string
-	err := resource.Retry(QueueAttributePropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(queueAttributePropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		got, err = finder.QueueAttributesByURL(conn, url)
+		got, err = finder.FindQueueAttributesByURL(conn, url)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -96,7 +96,7 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 	})
 
 	if tfresource.TimedOut(err) {
-		got, err = finder.QueueAttributesByURL(conn, url)
+		got, err = finder.FindQueueAttributesByURL(conn, url)
 
 		if err != nil {
 			return err
@@ -112,12 +112,12 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 	return nil
 }
 
-func QueueDeleted(conn *sqs.SQS, url string) error {
+func waitQueueDeleted(conn *sqs.SQS, url string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{queueStateExists},
 		Target:  []string{},
-		Refresh: QueueState(conn, url),
-		Timeout: QueueDeletedTimeout,
+		Refresh: statusQueueState(conn, url),
+		Timeout: queueDeletedTimeout,
 
 		ContinuousTargetOccurence: 3,
 	}
