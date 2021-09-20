@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
+func TestAccSSMParameterDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -44,7 +44,7 @@ func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
+func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
 

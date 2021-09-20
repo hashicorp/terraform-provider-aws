@@ -15,7 +15,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMAssociation_basic(t *testing.T) {
+func TestAccSSMAssociation_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-acc-ssm-association-%s", sdkacctest.RandString(10))
 	resourceName := "aws_ssm_association.test"
 
@@ -41,7 +41,7 @@ func TestAccAWSSSMAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_disappears(t *testing.T) {
+func TestAccSSMAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_association.test"
 
@@ -63,7 +63,7 @@ func TestAccAWSSSMAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_ApplyOnlyAtCronInterval(t *testing.T) {
+func TestAccSSMAssociation_applyOnlyAtCronInterval(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -96,7 +96,7 @@ func TestAccAWSSSMAssociation_ApplyOnlyAtCronInterval(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
+func TestAccSSMAssociation_withTargets(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 	oneTarget := `
@@ -175,7 +175,7 @@ targets {
 	})
 }
 
-func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
+func TestAccSSMAssociation_withParameters(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -211,7 +211,7 @@ func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
+func TestAccSSMAssociation_withAssociationName(t *testing.T) {
 	assocName1 := sdkacctest.RandString(10)
 	assocName2 := sdkacctest.RandString(10)
 	rName := sdkacctest.RandString(5)
@@ -248,7 +248,7 @@ func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T) {
+func TestAccSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T) {
 	assocName := sdkacctest.RandString(10)
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_ssm_association.test"
@@ -286,7 +286,7 @@ func TestAccAWSSSMAssociation_withAssociationNameAndScheduleExpression(t *testin
 	})
 }
 
-func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
+func TestAccSSMAssociation_withDocumentVersion(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -313,7 +313,7 @@ func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
+func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -362,7 +362,7 @@ func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withAutomationTargetParamName(t *testing.T) {
+func TestAccSSMAssociation_withAutomationTargetParamName(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -398,7 +398,7 @@ func TestAccAWSSSMAssociation_withAutomationTargetParamName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
+func TestAccSSMAssociation_withScheduleExpression(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -431,7 +431,7 @@ func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withComplianceSeverity(t *testing.T) {
+func TestAccSSMAssociation_withComplianceSeverity(t *testing.T) {
 	assocName := sdkacctest.RandString(10)
 	rName := sdkacctest.RandString(10)
 	compSeverity1 := "HIGH"
@@ -473,7 +473,7 @@ func TestAccAWSSSMAssociation_withComplianceSeverity(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_rateControl(t *testing.T) {
+func TestAccSSMAssociation_rateControl(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 

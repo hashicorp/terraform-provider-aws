@@ -15,7 +15,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
@@ -56,7 +56,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_noRole(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_noRole(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_task.test"
@@ -77,7 +77,7 @@ func TestAccAWSSSMMaintenanceWindowTask_noRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_task.test"
@@ -113,7 +113,7 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_Description(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_description(t *testing.T) {
 	var task1, task2 ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -149,7 +149,7 @@ func TestAccAWSSSMMaintenanceWindowTask_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationAutomationParameters(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_taskInvocationAutomationParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
@@ -184,7 +184,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationAutomationParameters(t *te
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationLambdaParameters(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_taskInvocationLambdaParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	rString := sdkacctest.RandString(8)
@@ -217,7 +217,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationLambdaParameters(t *testin
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	serviceRoleResourceName := "aws_iam_role.test"
@@ -259,7 +259,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudWatch(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParametersCloudWatch(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	serviceRoleResourceName := "aws_iam_role.test"
@@ -311,7 +311,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudW
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_taskInvocationStepFunctionParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	rString := sdkacctest.RandString(8)
@@ -338,7 +338,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_emptyNotificationConfig(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_emptyNotification(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_task.test"
@@ -360,7 +360,7 @@ func TestAccAWSSSMMaintenanceWindowTask_emptyNotificationConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTask_disappears(t *testing.T) {
+func TestAccSSMMaintenanceWindowTask_disappears(t *testing.T) {
 	var before ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 

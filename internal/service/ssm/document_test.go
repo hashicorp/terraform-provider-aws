@@ -15,7 +15,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMDocument_basic(t *testing.T) {
+func TestAccSSMDocument_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -45,7 +45,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_Name(t *testing.T) {
+func TestAccSSMDocument_name(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_document.test"
@@ -79,7 +79,7 @@ func TestAccAWSSSMDocument_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_target_type(t *testing.T) {
+func TestAccSSMDocument_Target_type(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,7 +111,7 @@ func TestAccAWSSSMDocument_target_type(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_VersionName(t *testing.T) {
+func TestAccSSMDocument_versionName(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -143,7 +143,7 @@ func TestAccAWSSSMDocument_VersionName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_update(t *testing.T) {
+func TestAccSSMDocument_update(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,7 +178,7 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_permission_public(t *testing.T) {
+func TestAccSSMDocument_Permission_public(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +204,7 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_permission_private(t *testing.T) {
+func TestAccSSMDocument_Permission_private(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	ids := "123456789012"
@@ -230,7 +230,7 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
+func TestAccSSMDocument_Permission_batching(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	ids := "123456789012,123456789013,123456789014,123456789015,123456789016,123456789017,123456789018,123456789019,123456789020,123456789021,123456789022,123456789023,123456789024,123456789025,123456789026,123456789027,123456789028,123456789029,123456789030,123456789031,123456789032"
@@ -256,7 +256,7 @@ func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_permission_change(t *testing.T) {
+func TestAccSSMDocument_Permission_change(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	idsInitial := "123456789012,123456789013"
@@ -301,7 +301,7 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_params(t *testing.T) {
+func TestAccSSMDocument_params(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -331,7 +331,7 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_automation(t *testing.T) {
+func TestAccSSMDocument_automation(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -356,7 +356,7 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_package(t *testing.T) {
+func TestAccSSMDocument_package(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	rInt := sdkacctest.RandInt()
 	rInt2 := sdkacctest.RandInt()
@@ -392,7 +392,7 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
+func TestAccSSMDocument_SchemaVersion_1(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_document.test"
 
@@ -425,7 +425,7 @@ func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_session(t *testing.T) {
+func TestAccSSMDocument_session(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -450,7 +450,7 @@ func TestAccAWSSSMDocument_session(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_DocumentFormat_YAML(t *testing.T) {
+func TestAccSSMDocument_DocumentFormat_yaml(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	content1 := `
@@ -506,7 +506,7 @@ mainSteps:
 	})
 }
 
-func TestAccAWSSSMDocument_Tags(t *testing.T) {
+func TestAccSSMDocument_tags(t *testing.T) {
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 
@@ -550,7 +550,7 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_disappears(t *testing.T) {
+func TestAccSSMDocument_disappears(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{

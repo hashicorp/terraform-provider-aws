@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSSMActivation_basic(t *testing.T) {
+func TestAccSSMActivation_basic(t *testing.T) {
 	var ssmActivation ssm.Activation
 	name := sdkacctest.RandomWithPrefix("tf-acc")
 	tag := sdkacctest.RandomWithPrefix("tf-acc")
@@ -47,7 +47,7 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMActivation_update(t *testing.T) {
+func TestAccSSMActivation_update(t *testing.T) {
 	var ssmActivation1, ssmActivation2 ssm.Activation
 	name := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_ssm_activation.test"
@@ -97,7 +97,7 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
+func TestAccSSMActivation_expirationDate(t *testing.T) {
 	var ssmActivation ssm.Activation
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	expirationTime := time.Now().Add(48 * time.Hour).UTC()
@@ -129,7 +129,7 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMActivation_disappears(t *testing.T) {
+func TestAccSSMActivation_disappears(t *testing.T) {
 	var ssmActivation ssm.Activation
 	name := sdkacctest.RandomWithPrefix("tf-acc")
 	tag := sdkacctest.RandomWithPrefix("tf-acc")

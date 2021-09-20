@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSSsmDocumentDataSource_basic(t *testing.T) {
+func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_document.test"
 	name := fmt.Sprintf("test_document-%d", sdkacctest.RandInt())
 

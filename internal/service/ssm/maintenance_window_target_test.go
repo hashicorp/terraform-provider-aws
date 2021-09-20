@@ -16,7 +16,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	var maint ssm.MaintenanceWindowTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
@@ -52,7 +52,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 	var maint ssm.MaintenanceWindowTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
@@ -85,7 +85,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTarget_validation(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -109,7 +109,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_validation(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 	var maint ssm.MaintenanceWindowTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
@@ -165,7 +165,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 	var maint ssm.MaintenanceWindowTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
@@ -200,7 +200,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTarget_disappears(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 	var maint ssm.MaintenanceWindowTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"
@@ -222,7 +222,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMMaintenanceWindowTarget_disappears_window(t *testing.T) {
+func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 	var maint ssm.MaintenanceWindowTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_target.test"

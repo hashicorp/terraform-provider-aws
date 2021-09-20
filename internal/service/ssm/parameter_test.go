@@ -15,7 +15,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMParameter_basic(t *testing.T) {
+func TestAccSSMParameter_basic(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -49,7 +49,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_Tier(t *testing.T) {
+func TestAccSSMParameter_tier(t *testing.T) {
 	var parameter1, parameter2, parameter3 ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -91,7 +91,7 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
+func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 	var parameter ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -139,7 +139,7 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
+func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 	var parameter1, parameter2 ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -187,7 +187,7 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_disappears(t *testing.T) {
+func TestAccSSMParameter_disappears(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -210,7 +210,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_overwrite(t *testing.T) {
+func TestAccSSMParameter_overwrite(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -243,7 +243,7 @@ func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
-func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
+func TestAccSSMParameter_overwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -273,7 +273,7 @@ func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
-func TestAccAWSSSMParameter_noOverwriteWithTags(t *testing.T) {
+func TestAccSSMParameter_noOverwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -303,7 +303,7 @@ func TestAccAWSSSMParameter_noOverwriteWithTags(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
-func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
+func TestAccSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -339,7 +339,7 @@ func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_tags(t *testing.T) {
+func TestAccSSMParameter_tags(t *testing.T) {
 	var param ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -385,7 +385,7 @@ func TestAccAWSSSMParameter_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_updateType(t *testing.T) {
+func TestAccSSMParameter_updateType(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -416,7 +416,7 @@ func TestAccAWSSSMParameter_updateType(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
+func TestAccSSMParameter_updateDescription(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -447,7 +447,7 @@ func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
+func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 	var beforeParam, afterParam ssm.Parameter
 	before := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	after := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
@@ -482,7 +482,7 @@ func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_fullPath(t *testing.T) {
+func TestAccSSMParameter_fullPath(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("/path/%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -512,7 +512,7 @@ func TestAccAWSSSMParameter_fullPath(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_secure(t *testing.T) {
+func TestAccSSMParameter_secure(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
@@ -542,7 +542,7 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
+func TestAccSSMParameter_DataType_awsEC2Image(t *testing.T) {
 	var param ssm.Parameter
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_parameter.test"
@@ -570,7 +570,7 @@ func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
+func TestAccSSMParameter_secureWithKey(t *testing.T) {
 	var param ssm.Parameter
 	randString := sdkacctest.RandString(10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
@@ -601,7 +601,7 @@ func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
+func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 	var param ssm.Parameter
 	randString := sdkacctest.RandString(10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)

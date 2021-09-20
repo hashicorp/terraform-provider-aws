@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSSsmPatchBaselineDataSource_existingBaseline(t *testing.T) {
+func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 	resourceName := "data.aws_ssm_patch_baseline.test_existing"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +29,7 @@ func TestAccAWSSsmPatchBaselineDataSource_existingBaseline(t *testing.T) {
 	})
 }
 
-func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
+func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 	resourceName := "data.aws_ssm_patch_baseline.test_new"
 	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
 

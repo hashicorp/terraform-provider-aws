@@ -13,7 +13,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
+func TestAccSSMPatchGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
@@ -33,7 +33,7 @@ func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
+func TestAccSSMPatchGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
@@ -55,7 +55,7 @@ func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
+func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName1 := "aws_ssm_patch_group.test1"
 	resourceName2 := "aws_ssm_patch_group.test2"
