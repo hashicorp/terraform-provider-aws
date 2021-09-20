@@ -78,7 +78,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
-		Tags:                  tags.IgnoreAws().CodecommitTags(),
+		Tags:                  Tags(tags.IgnoreAws()),
 	}
 
 	out, err := conn.CreateRepository(input)
@@ -119,7 +119,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CodecommitUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeCommit Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -160,7 +160,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags, err := tftags.CodecommitListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeCommit Repository (%s): %s", d.Get("arn").(string), err)
