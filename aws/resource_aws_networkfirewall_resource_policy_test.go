@@ -22,7 +22,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,14 +92,14 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallResourcePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,14 +114,14 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears_FirewallPolicy(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallResourcePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallFirewallPolicy(), "aws_networkfirewall_firewall_policy.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallFirewallPolicy(), "aws_networkfirewall_firewall_policy.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,14 +136,14 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears_RuleGroup(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallResourcePolicy_ruleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallResourcePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallRuleGroup(), "aws_networkfirewall_rule_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallRuleGroup(), "aws_networkfirewall_rule_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -157,7 +157,7 @@ func testAccCheckAwsNetworkFirewallResourcePolicyDestroy(s *terraform.State) err
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
 		policy, err := finder.ResourcePolicy(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -184,7 +184,7 @@ func testAccCheckAwsNetworkFirewallResourcePolicyExists(n string) resource.TestC
 			return fmt.Errorf("No NetworkFirewall Resource Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
 		policy, err := finder.ResourcePolicy(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
