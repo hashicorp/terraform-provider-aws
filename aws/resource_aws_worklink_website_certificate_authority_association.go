@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation() *schema.Resourc
 }
 
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
 		FleetArn:    aws.String(d.Get("fleet_arn").(string)),
@@ -70,7 +71,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate(d *schema.R
 }
 
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
@@ -101,7 +102,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.Res
 }
 
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).worklinkconn
+	conn := meta.(*conns.AWSClient).WorkLinkConn
 
 	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {

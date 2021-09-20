@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
@@ -100,7 +101,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 }
 
 func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_worklink_website_certificate_authority_association" {
@@ -136,7 +137,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDisappears(res
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
 		fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -182,7 +183,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(n strin
 			return fmt.Errorf("WorkLink Fleet ARN is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).worklinkconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
 		fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
