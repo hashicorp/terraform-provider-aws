@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAthenaDatabase_basic(t *testing.T) {
@@ -135,8 +136,8 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 // StartQueryExecution requires OutputLocation but terraform destroy deleted S3 bucket as well.
 // So temporary S3 bucket as OutputLocation is created to confirm whether the database is actually deleted.
 func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
-	athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
-	s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
+	athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+	s3conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_database" {
 			continue
@@ -237,7 +238,7 @@ func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc 
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -267,7 +268,7 @@ func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -296,7 +297,7 @@ func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFun
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{

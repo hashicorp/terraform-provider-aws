@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
@@ -536,7 +537,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 
 func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.CreateNamedQueryInput{
 			Name:        aws.String(queryName),
@@ -555,7 +556,7 @@ func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, database
 }
 
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).athenaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_workgroup" {
 			continue
@@ -589,7 +590,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.GetWorkGroupInput{
 			WorkGroup: aws.String(rs.Primary.ID),
@@ -609,7 +610,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 
 func testAccCheckAWSAthenaWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
 
 		input := &athena.DeleteWorkGroupInput{
 			WorkGroup: workgroup.Name,

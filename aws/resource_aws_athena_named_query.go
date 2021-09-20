@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAthenaNamedQuery() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsAthenaNamedQuery() *schema.Resource {
 }
 
 func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.CreateNamedQueryInput{
 		Database:    aws.String(d.Get("database").(string)),
@@ -73,7 +74,7 @@ func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.GetNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
@@ -98,7 +99,7 @@ func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAthenaNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
