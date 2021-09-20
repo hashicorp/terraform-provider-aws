@@ -185,13 +185,13 @@ func resourceSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Checking if grant is deleted: %s", grantName)
-	err = waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn, grantName)
+	err = WaitForSnapshotCopyGrantToBeDeleted(conn, grantName)
 
 	return err
 }
 
 // Used by the tests as well
-func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName string) error {
+func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName string) error {
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error
 		var grant *redshift.SnapshotCopyGrant

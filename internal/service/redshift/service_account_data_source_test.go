@@ -6,10 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
-	expectedAccountID := redshiftServiceAccountPerRegionMap[acctest.Region()]
+	expectedAccountID := tfredshift.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_redshift_service_account.main"
 
@@ -30,7 +31,7 @@ func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
 }
 
 func TestAccAWSRedshiftServiceAccount_Region(t *testing.T) {
-	expectedAccountID := redshiftServiceAccountPerRegionMap[acctest.Region()]
+	expectedAccountID := tfredshift.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_redshift_service_account.regional"
 

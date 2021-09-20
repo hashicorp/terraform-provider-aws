@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func testSweepRedshiftSnapshotSchedules(region string) error {
 
 			for _, prefix := range prefixesToSweep {
 				if strings.HasPrefix(id, prefix) {
-					r := ResourceSnapshotSchedule()
+					r := tfredshift.ResourceSnapshotSchedule()
 					d := r.Data(nil)
 					d.SetId(id)
 
@@ -358,7 +359,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleCreateSnapshotScheduleAssociation(cl
 			return fmt.Errorf("Error associate Redshift Cluster and Snapshot Schedule: %s", err)
 		}
 
-		if err := waitForRedshiftSnapshotScheduleAssociationActive(conn, 75*time.Minute, aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier)); err != nil {
+		if err := tfredshift.WaitForSnapshotScheduleAssociationActive(conn, 75*time.Minute, aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier)); err != nil {
 			return err
 		}
 

@@ -22,7 +22,7 @@ func ResourceSnapshotScheduleAssociation() *schema.Resource {
 		Delete: resourceSnapshotScheduleAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
+				clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(d.Id())
 				if err != nil {
 					return nil, fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
 				}
@@ -64,7 +64,7 @@ func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error associating Redshift Cluster (%s) and Snapshot Schedule (%s): %s", clusterIdentifier, scheduleIdentifier, err)
 	}
 
-	if err := waitForRedshiftSnapshotScheduleAssociationActive(conn, 75*time.Minute, clusterIdentifier, scheduleIdentifier); err != nil {
+	if err := WaitForSnapshotScheduleAssociationActive(conn, 75*time.Minute, clusterIdentifier, scheduleIdentifier); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta inte
 
 func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
-	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
+	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
 	}
@@ -118,7 +118,7 @@ func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interf
 
 func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
-	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
+	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
 	}
@@ -150,7 +150,7 @@ func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsRedshiftSnapshotScheduleAssociationParseId(id string) (clusterIdentifier, scheduleIdentifier string, err error) {
+func SnapshotScheduleAssociationParseID(id string) (clusterIdentifier, scheduleIdentifier string, err error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err = fmt.Errorf("aws_redshift_snapshot_schedule_association id must be of the form <ClusterIdentifier>/<ScheduleIdentifier>")
@@ -204,7 +204,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdent
 	}
 }
 
-func waitForRedshiftSnapshotScheduleAssociationActive(conn *redshift.Redshift, timeout time.Duration, clusterIdentifier, scheduleIdentifier string) error {
+func WaitForSnapshotScheduleAssociationActive(conn *redshift.Redshift, timeout time.Duration, clusterIdentifier, scheduleIdentifier string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying},
 		Target:     []string{redshift.ScheduleStateActive},
