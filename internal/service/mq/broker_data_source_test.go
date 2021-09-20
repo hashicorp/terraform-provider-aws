@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
+func TestAccMQBrokerDataSource_basic(t *testing.T) {
 	rString := sdkacctest.RandString(7)
 	prefix := "tf-acc-test-d-mq-broker"
 	brokerName := fmt.Sprintf("%s-%s", prefix, rString)

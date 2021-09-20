@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMqConfiguration_basic(t *testing.T) {
+func TestAccMQConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
@@ -63,7 +63,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqConfiguration_withData(t *testing.T) {
+func TestAccMQConfiguration_withData(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
@@ -98,7 +98,7 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
+func TestAccMQConfiguration_withLdapData(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
@@ -134,7 +134,7 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 	})
 }
 
-func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
+func TestAccMQConfiguration_updateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
