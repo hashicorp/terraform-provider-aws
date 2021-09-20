@@ -337,7 +337,7 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting default_action: %w", err)
 	}
 
-	tags, err := tftags.Elbv2ListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)

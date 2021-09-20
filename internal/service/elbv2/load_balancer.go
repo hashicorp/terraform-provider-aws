@@ -284,7 +284,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(tags) > 0 {
-		elbOpts.Tags = tags.IgnoreAws().Elbv2Tags()
+		elbOpts.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
@@ -389,7 +389,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("tags_all")
 
 		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err := UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
@@ -404,7 +404,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		})
 
 		if tfresource.TimedOut(err) {
-			err = tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err = UpdateTags(conn, d.Id(), o, n)
 		}
 
 		if err != nil {
@@ -763,7 +763,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
-	tags, err := tftags.Elbv2ListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)

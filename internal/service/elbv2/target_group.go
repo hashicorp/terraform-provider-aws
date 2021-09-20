@@ -366,7 +366,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().Elbv2Tags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateTargetGroup(params)
@@ -442,7 +442,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err := UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
@@ -457,7 +457,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			err = tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
+			err = UpdateTags(conn, d.Id(), o, n)
 		}
 
 		if err != nil {
@@ -796,7 +796,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return fmt.Errorf("error setting stickiness: %w", err)
 	}
 
-	tags, err := tftags.Elbv2ListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)

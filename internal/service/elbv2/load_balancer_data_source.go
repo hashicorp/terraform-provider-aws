@@ -193,7 +193,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := tftags.Elbv2ListTags(conn, arn)
+			tags, err := ListTags(conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
@@ -241,7 +241,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
-	tags, err := tftags.Elbv2ListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
