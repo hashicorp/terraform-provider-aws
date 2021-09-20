@@ -204,7 +204,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 
 	req := &sns.CreateTopicInput{
 		Name: aws.String(name),
-		Tags: tags.IgnoreAws().SnsTags(),
+		Tags: Tags(tags.IgnoreAws()),
 	}
 
 	if len(attributes) > 0 {
@@ -482,7 +482,7 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.SnsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -608,7 +608,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
-	tags, err := tftags.SnsListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
