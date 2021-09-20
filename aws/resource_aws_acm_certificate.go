@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -165,8 +166,8 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -205,7 +206,7 @@ func ResourceCertificate() *schema.Resource {
 
 				return nil
 			},
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -232,7 +233,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &acm.ImportCertificateInput{
 		Certificate: []byte(d.Get("certificate_body").(string)),
@@ -261,7 +262,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(d.Get("domain_name").(string)),
@@ -362,7 +363,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("status", resp.Certificate.Status)
 
-		tags, err := keyvaluetags.AcmListTags(conn, d.Id())
+		tags, err := tftags.AcmListTags(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err))
@@ -426,7 +427,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.AcmUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.AcmUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
