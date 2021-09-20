@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsAppsyncResolver_basic(t *testing.T) {
@@ -284,7 +285,7 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_resolver" {
 			continue
@@ -331,7 +332,7 @@ func testAccCheckAwsAppsyncResolverExists(name string, resolver *appsync.Resolve
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
 		input := &appsync.GetResolverInput{
 			ApiId:     aws.String(apiID),

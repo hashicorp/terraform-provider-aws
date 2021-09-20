@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsAppsyncDatasource_basic(t *testing.T) {
@@ -94,7 +95,7 @@ func TestAccAwsAppsyncDatasource_DynamoDBConfig_Region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.Region", acctest.Region()),
 				),
 			},
 			{
@@ -102,7 +103,7 @@ func TestAccAwsAppsyncDatasource_DynamoDBConfig_Region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.Region", acctest.Region()),
 				),
 			},
 			{
@@ -164,7 +165,7 @@ func TestAccAwsAppsyncDatasource_ElasticsearchConfig_Region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.Region", acctest.Region()),
 				),
 			},
 			{
@@ -172,7 +173,7 @@ func TestAccAwsAppsyncDatasource_ElasticsearchConfig_Region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncDatasourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.Region", acctest.Region()),
 				),
 			},
 			{
@@ -267,7 +268,7 @@ func TestAccAwsAppsyncDatasource_Type_DynamoDB(t *testing.T) {
 					testAccCheckAwsAppsyncDatasourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "dynamodb_config.0.table_name", dynamodbTableResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.Region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_DYNAMODB"),
 				),
@@ -298,7 +299,7 @@ func TestAccAwsAppsyncDatasource_Type_Elasticsearch(t *testing.T) {
 					testAccCheckAwsAppsyncDatasourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "elasticsearch_config.0.endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.Region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ELASTICSEARCH"),
 				),
@@ -398,7 +399,7 @@ func TestAccAwsAppsyncDatasource_Type_None(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncDatasourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_datasource" {
 			continue
@@ -442,7 +443,7 @@ func testAccCheckAwsAppsyncDatasourceExists(name string) resource.TestCheckFunc 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
 		input := &appsync.GetDataSourceInput{
 			ApiId: aws.String(apiID),

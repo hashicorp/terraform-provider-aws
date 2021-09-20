@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppsyncResolver() *schema.Resource {
@@ -107,7 +108,7 @@ func resourceAwsAppsyncResolver() *schema.Resource {
 }
 
 func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -157,7 +158,7 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAppsyncResolverRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, typeName, fieldName, err := decodeAppsyncResolverID(d.Id())
 
@@ -204,7 +205,7 @@ func resourceAwsAppsyncResolverRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.UpdateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -252,7 +253,7 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAppsyncResolverDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, typeName, fieldName, err := decodeAppsyncResolverID(d.Id())
 
