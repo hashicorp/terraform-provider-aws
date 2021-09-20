@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // This test can be run via the pattern: TestAccAWSAccessAnalyzer
@@ -150,7 +151,7 @@ func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 }
 
 func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).accessanalyzerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_accessanalyzer_analyzer" {
@@ -182,7 +183,7 @@ func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
 
 func testAccCheckAwsAccessAnalyzerAnalyzerDisappears(analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).accessanalyzerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
 
 		input := &accessanalyzer.DeleteAnalyzerInput{
 			AnalyzerName: analyzer.Name,
@@ -205,7 +206,7 @@ func testAccCheckAwsAccessAnalyzerAnalyzerExists(resourceName string, analyzer *
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).accessanalyzerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
 
 		input := &accessanalyzer.GetAnalyzerInput{
 			AnalyzerName: aws.String(rs.Primary.ID),

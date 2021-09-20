@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -66,8 +67,8 @@ func resourceAwsAccessAnalyzerAnalyzer() *schema.Resource {
 }
 
 func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	analyzerName := d.Get("analyzer_name").(string)
 
@@ -107,9 +108,9 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &accessanalyzer.GetAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
@@ -151,7 +152,7 @@ func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAccessAnalyzerAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -164,7 +165,7 @@ func resourceAwsAccessAnalyzerAnalyzerUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAccessAnalyzerAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
 	input := &accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
