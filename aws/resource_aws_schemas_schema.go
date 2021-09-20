@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSchema() *schema.Resource {
@@ -38,7 +39,7 @@ func ResourceSchema() *schema.Resource {
 			"content": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 
 			"description": {
