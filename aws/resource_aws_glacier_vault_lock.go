@@ -13,13 +13,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlacierVaultLock() *schema.Resource {
+func ResourceVaultLock() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlacierVaultLockCreate,
-		Read:   resourceAwsGlacierVaultLockRead,
+		Create: resourceVaultLockCreate,
+		Read:   resourceVaultLockRead,
 		// Allow ignore_deletion_error update
 		Update: schema.Noop,
-		Delete: resourceAwsGlacierVaultLockDelete,
+		Delete: resourceVaultLockDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsGlacierVaultLock() *schema.Resource {
 	}
 }
 
-func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn
 	vaultName := d.Get("vault_name").(string)
 
@@ -73,7 +73,7 @@ func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(vaultName)
 
 	if !d.Get("complete_lock").(bool) {
-		return resourceAwsGlacierVaultLockRead(d, meta)
+		return resourceVaultLockRead(d, meta)
 	}
 
 	completeLockInput := &glacier.CompleteVaultLockInput{
@@ -90,10 +90,10 @@ func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error waiting for Glacier Vault Lock (%s) completion: %s", d.Id(), err)
 	}
 
-	return resourceAwsGlacierVaultLockRead(d, meta)
+	return resourceVaultLockRead(d, meta)
 }
 
-func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn
 
 	input := &glacier.GetVaultLockInput{
@@ -127,7 +127,7 @@ func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsGlacierVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn
 
 	input := &glacier.AbortVaultLockInput{
