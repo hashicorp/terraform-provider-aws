@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsInternetGateway_typical(t *testing.T) {
+func TestAccEC2InternetGatewayDataSource_typical(t *testing.T) {
 	igwResourceName := "aws_internet_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	ds1ResourceName := "data.aws_internet_gateway.by_id"

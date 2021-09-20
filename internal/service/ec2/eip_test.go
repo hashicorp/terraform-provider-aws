@@ -98,7 +98,7 @@ func testSweepEC2Eips(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSEIP_basic(t *testing.T) {
+func TestAccEC2EIP_basic(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -126,7 +126,7 @@ func TestAccAWSEIP_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_disappears(t *testing.T) {
+func TestAccEC2EIP_disappears(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -148,7 +148,7 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Instance(t *testing.T) {
+func TestAccEC2EIP_instance(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -176,7 +176,7 @@ func TestAccAWSEIP_Instance(t *testing.T) {
 
 // Regression test for https://github.com/hashicorp/terraform/issues/3429 (now
 // https://github.com/hashicorp/terraform-provider-aws/issues/42)
-func TestAccAWSEIP_Instance_reassociate(t *testing.T) {
+func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -206,7 +206,7 @@ func TestAccAWSEIP_Instance_reassociate(t *testing.T) {
 
 // This test is an expansion of TestAccAWSEIP_instance, by testing the
 // associated Private EIPs of two instances
-func TestAccAWSEIP_Instance_associatedUserPrivateIP(t *testing.T) {
+func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	var one ec2.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -245,7 +245,7 @@ func TestAccAWSEIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Instance_notAssociated(t *testing.T) {
+func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -279,7 +279,7 @@ func TestAccAWSEIP_Instance_notAssociated(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
+func TestAccEC2EIP_Instance_ec2Classic(t *testing.T) {
 	resourceName := "aws_eip.test"
 	var conf ec2.Address
 
@@ -307,7 +307,7 @@ func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_NetworkInterface(t *testing.T) {
+func TestAccEC2EIP_networkInterface(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -337,7 +337,7 @@ func TestAccAWSEIP_NetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
+func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	var one, two ec2.Address
 	resourceName := "aws_eip.test"
 	resourceName2 := "aws_eip.test2"
@@ -373,7 +373,7 @@ func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Tags_EC2VPC_withVPCTrue(t *testing.T) {
+func TestAccEC2EIP_TagsEC2VPC_withVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -416,7 +416,7 @@ func TestAccAWSEIP_Tags_EC2VPC_withVPCTrue(t *testing.T) {
 }
 
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/18756
-func TestAccAWSEIP_Tags_EC2VPC_withoutVPCTrue(t *testing.T) {
+func TestAccEC2EIP_TagsEC2VPC_withoutVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -458,7 +458,7 @@ func TestAccAWSEIP_Tags_EC2VPC_withoutVPCTrue(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Tags_EC2Classic_withVPCTrue(t *testing.T) {
+func TestAccEC2EIP_TagsEC2Classic_withVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -500,7 +500,7 @@ func TestAccAWSEIP_Tags_EC2Classic_withVPCTrue(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Tags_EC2Classic_withoutVPCTrue(t *testing.T) {
+func TestAccEC2EIP_TagsEC2Classic_withoutVPCTrue(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -517,7 +517,7 @@ func TestAccAWSEIP_Tags_EC2Classic_withoutVPCTrue(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_PublicIPv4Pool_default(t *testing.T) {
+func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -545,7 +545,7 @@ func TestAccAWSEIP_PublicIPv4Pool_default(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_PublicIPv4Pool_custom(t *testing.T) {
+func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 	if os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL") == "" {
 		t.Skip("Environment variable AWS_EC2_EIP_PUBLIC_IPV4_POOL is not set")
 	}
@@ -579,7 +579,7 @@ func TestAccAWSEIP_PublicIPv4Pool_custom(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_CustomerOwnedIPv4Pool(t *testing.T) {
+func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -606,7 +606,7 @@ func TestAccAWSEIP_CustomerOwnedIPv4Pool(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_networkBorderGroup(t *testing.T) {
+func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 
@@ -634,7 +634,7 @@ func TestAccAWSEIP_networkBorderGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_carrierIP(t *testing.T) {
+func TestAccEC2EIP_carrierIP(t *testing.T) {
 	var conf ec2.Address
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eip.test"
@@ -663,7 +663,7 @@ func TestAccAWSEIP_carrierIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_BYOIPAddress_default(t *testing.T) {
+func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 	// Test case address not set
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
@@ -685,7 +685,7 @@ func TestAccAWSEIP_BYOIPAddress_default(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_BYOIPAddress_custom(t *testing.T) {
+func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 	// Test Case for address being set
 
 	if os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS") == "" {
@@ -715,7 +715,7 @@ func TestAccAWSEIP_BYOIPAddress_custom(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
+func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 	// Test Case for both address and public_ipv4_pool being set
 	if os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS") == "" {
 		t.Skip("Environment variable AWS_EC2_EIP_BYOIP_ADDRESS is not set")

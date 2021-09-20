@@ -16,7 +16,7 @@ import (
 )
 
 // IPv4 to Internet Gateway.
-func TestAccAWSRoute_basic(t *testing.T) {
+func TestAccEC2Route_basic(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
@@ -65,7 +65,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_disappears(t *testing.T) {
+func TestAccEC2Route_disappears(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -89,7 +89,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
+func TestAccEC2Route_Disappears_routeTable(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
@@ -114,7 +114,7 @@ func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
+func TestAccEC2Route_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
@@ -164,7 +164,7 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
+func TestAccEC2Route_ipv6ToInternetGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -209,7 +209,7 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
+func TestAccEC2Route_ipv6ToInstance(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
@@ -254,7 +254,7 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
+func TestAccEC2Route_IPv6ToNetworkInterface_unattached(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
@@ -299,7 +299,7 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
+func TestAccEC2Route_ipv6ToVPCPeeringConnection(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -344,7 +344,7 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
+func TestAccEC2Route_ipv6ToVPNGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -389,7 +389,7 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
+func TestAccEC2Route_ipv4ToVPNGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -434,7 +434,7 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
+func TestAccEC2Route_ipv4ToInstance(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
@@ -479,7 +479,7 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
+func TestAccEC2Route_IPv4ToNetworkInterface_unattached(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
@@ -524,7 +524,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
+func TestAccEC2Route_IPv4ToNetworkInterface_attached(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
@@ -570,7 +570,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
+func TestAccEC2Route_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eni1ResourceName := "aws_network_interface.test1"
@@ -639,7 +639,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
+func TestAccEC2Route_ipv4ToVPCPeeringConnection(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -684,7 +684,7 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
+func TestAccEC2Route_ipv4ToNatGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
@@ -729,7 +729,7 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
+func TestAccEC2Route_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
@@ -760,7 +760,7 @@ func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
+func TestAccEC2Route_ipv4ToTransitGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -805,7 +805,7 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
+func TestAccEC2Route_ipv6ToTransitGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -850,7 +850,7 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_CarrierGateway(t *testing.T) {
+func TestAccEC2Route_ipv4ToCarrierGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	cgwResourceName := "aws_ec2_carrier_gateway.test"
@@ -895,7 +895,7 @@ func TestAccAWSRoute_IPv4_To_CarrierGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
+func TestAccEC2Route_ipv4ToLocalGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
@@ -940,7 +940,7 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
+func TestAccEC2Route_ipv6ToLocalGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
@@ -985,7 +985,7 @@ func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
+func TestAccEC2Route_conditionalCIDRBlock(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1024,7 +1024,7 @@ func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
+func TestAccEC2Route_IPv4Update_target(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -1231,7 +1231,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
+func TestAccEC2Route_IPv6Update_target(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -1391,7 +1391,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
+func TestAccEC2Route_ipv4ToVPCEndpoint(t *testing.T) {
 	var route ec2.Route
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route.test"
@@ -1437,7 +1437,7 @@ func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/11455.
-func TestAccAWSRoute_LocalRoute(t *testing.T) {
+func TestAccEC2Route_localRoute(t *testing.T) {
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
 	resourceName := "aws_route.test"
@@ -1476,7 +1476,7 @@ func TestAccAWSRoute_LocalRoute(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_InternetGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToInternetGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -1521,7 +1521,7 @@ func TestAccAWSRoute_PrefixList_To_InternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_VpnGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToVPNGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -1566,7 +1566,7 @@ func TestAccAWSRoute_PrefixList_To_VpnGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_Instance(t *testing.T) {
+func TestAccEC2Route_prefixListToInstance(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
@@ -1611,7 +1611,7 @@ func TestAccAWSRoute_PrefixList_To_Instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_NetworkInterface_Unattached(t *testing.T) {
+func TestAccEC2Route_PrefixListToNetworkInterface_unattached(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
@@ -1656,7 +1656,7 @@ func TestAccAWSRoute_PrefixList_To_NetworkInterface_Unattached(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_NetworkInterface_Attached(t *testing.T) {
+func TestAccEC2Route_PrefixListToNetworkInterface_attached(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
@@ -1702,7 +1702,7 @@ func TestAccAWSRoute_PrefixList_To_NetworkInterface_Attached(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_VpcPeeringConnection(t *testing.T) {
+func TestAccEC2Route_prefixListToVPCPeeringConnection(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -1747,7 +1747,7 @@ func TestAccAWSRoute_PrefixList_To_VpcPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_NatGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToNatGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
@@ -1792,7 +1792,7 @@ func TestAccAWSRoute_PrefixList_To_NatGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_TransitGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToTransitGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -1837,7 +1837,7 @@ func TestAccAWSRoute_PrefixList_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_CarrierGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToCarrierGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	cgwResourceName := "aws_ec2_carrier_gateway.test"
@@ -1886,7 +1886,7 @@ func TestAccAWSRoute_PrefixList_To_CarrierGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_LocalGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToLocalGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
@@ -1935,7 +1935,7 @@ func TestAccAWSRoute_PrefixList_To_LocalGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_PrefixList_To_EgressOnlyInternetGateway(t *testing.T) {
+func TestAccEC2Route_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"

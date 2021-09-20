@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachmentAccepter_Basic_sameAccount(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
@@ -52,7 +52,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *t
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
@@ -100,7 +100,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *te
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentAccepter_basic_differentAccount(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachmentAccepter_Basic_differentAccount(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"

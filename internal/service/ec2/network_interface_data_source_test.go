@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
+func TestAccEC2NetworkInterfaceDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -39,7 +39,7 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
+func TestAccEC2NetworkInterfaceDataSource_filters(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -59,7 +59,7 @@ func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
+func TestAccEC2NetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	eipResourceName := "aws_eip.test"
@@ -107,7 +107,7 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
+func TestAccEC2NetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	eipResourceName := "aws_eip.test"

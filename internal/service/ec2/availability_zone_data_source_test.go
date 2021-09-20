@@ -12,7 +12,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
+func TestAccEC2AvailabilityZoneDataSource_allAvailabilityZones(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -40,7 +40,7 @@ func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
+func TestAccEC2AvailabilityZoneDataSource_filter(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -68,7 +68,7 @@ func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
+func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -96,7 +96,7 @@ func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
+func TestAccEC2AvailabilityZoneDataSource_name(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -124,7 +124,7 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
+func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
@@ -152,7 +152,7 @@ func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
+func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 

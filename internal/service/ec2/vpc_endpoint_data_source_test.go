@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
+func TestAccEC2VPCEndpointDataSource_gatewayBasic(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
+func TestAccEC2VPCEndpointDataSource_byID(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -71,7 +71,7 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
+func TestAccEC2VPCEndpointDataSource_byFilter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -101,7 +101,7 @@ func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
+func TestAccEC2VPCEndpointDataSource_byTags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -131,7 +131,7 @@ func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) {
+func TestAccEC2VPCEndpointDataSource_gatewayWithRouteTableAndTags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -162,7 +162,7 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) 
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
+func TestAccEC2VPCEndpointDataSource_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

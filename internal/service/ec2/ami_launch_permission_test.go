@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
+func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -40,7 +40,7 @@ func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
+func TestAccEC2AMILaunchPermission_Disappears_launchPermission(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -64,7 +64,7 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 
 // Bug reference: https://github.com/hashicorp/terraform-provider-aws/issues/6222
 // Images with <group>all</group> will not have <userId> and can cause a panic
-func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing.T) {
+func TestAccEC2AMILaunchPermission_DisappearsLaunchPermission_public(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -87,7 +87,7 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing
 	})
 }
 
-func TestAccAWSAMILaunchPermission_Disappears_AMI(t *testing.T) {
+func TestAccEC2AMILaunchPermission_Disappears_ami(t *testing.T) {
 	imageID := ""
 	resourceName := "aws_ami_launch_permission.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

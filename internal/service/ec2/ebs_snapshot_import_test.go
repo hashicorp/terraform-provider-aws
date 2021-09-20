@@ -21,7 +21,7 @@ import (
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
-func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
+func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ebs_snapshot_import.test"
@@ -46,7 +46,7 @@ func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
+func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ebs_snapshot_import.test"
@@ -92,7 +92,7 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
+func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ebs_snapshot_import.test"
@@ -118,7 +118,7 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
+func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parentResourceName := "aws_s3_bucket_object.image"

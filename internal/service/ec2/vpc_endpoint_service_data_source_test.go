@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,7 +39,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,7 +66,7 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_custom(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -93,7 +93,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -120,7 +120,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -147,7 +147,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_ServiceType_Gateway(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -166,7 +166,7 @@ func TestAccDataSourceAwsVpcEndpointService_ServiceType_Gateway(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcEndpointService_ServiceType_Interface(t *testing.T) {
+func TestAccEC2VPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{

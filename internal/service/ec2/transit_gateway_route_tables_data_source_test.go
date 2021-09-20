@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTablesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2TransitGatewayRouteTables_Filter(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTablesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{

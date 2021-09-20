@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDefaultVpc_basic(t *testing.T) {
+func TestAccEC2DefaultVPC_basic(t *testing.T) {
 	var vpc ec2.Vpc
 
 	resource.ParallelTest(t, resource.TestCase{

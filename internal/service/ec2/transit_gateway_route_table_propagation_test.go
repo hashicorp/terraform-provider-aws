@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEc2TransitGatewayRouteTablePropagation_basic(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTablePropagation_basic(t *testing.T) {
 	var transitGatewayRouteTablePropagtion1 ec2.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"

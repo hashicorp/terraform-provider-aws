@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDefaultSubnet_basic(t *testing.T) {
+func TestAccEC2DefaultSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 
 	resourceName := "aws_default_subnet.foo"
@@ -45,7 +45,7 @@ func TestAccAWSDefaultSubnet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultSubnet_publicIp(t *testing.T) {
+func TestAccEC2DefaultSubnet_publicIP(t *testing.T) {
 	var v ec2.Subnet
 
 	resourceName := "aws_default_subnet.foo"

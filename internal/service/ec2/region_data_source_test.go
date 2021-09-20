@@ -75,7 +75,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 }
 
-func TestAccDataSourceAwsRegion_basic(t *testing.T) {
+func TestAccEC2RegionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,7 +95,7 @@ func TestAccDataSourceAwsRegion_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
+func TestAccEC2RegionDataSource_endpoint(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -115,7 +115,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
+func TestAccEC2RegionDataSource_endpointAndName(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRegion_name(t *testing.T) {
+func TestAccEC2RegionDataSource_name(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
+func TestAccEC2RouteTableAssociation_Subnet_basic(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
@@ -45,7 +45,7 @@ func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTableAssociation_Subnet_ChangeRouteTable(t *testing.T) {
+func TestAccEC2RouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable1 := "aws_route_table.test"
@@ -79,7 +79,7 @@ func TestAccAWSRouteTableAssociation_Subnet_ChangeRouteTable(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTableAssociation_Gateway_basic(t *testing.T) {
+func TestAccEC2RouteTableAssociation_Gateway_basic(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
@@ -110,7 +110,7 @@ func TestAccAWSRouteTableAssociation_Gateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTableAssociation_Gateway_ChangeRouteTable(t *testing.T) {
+func TestAccEC2RouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable1 := "aws_route_table.test"
@@ -144,7 +144,7 @@ func TestAccAWSRouteTableAssociation_Gateway_ChangeRouteTable(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
+func TestAccEC2RouteTableAssociation_disappears(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

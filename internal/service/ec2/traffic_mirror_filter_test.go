@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
+func TestAccEC2TrafficMirrorFilter_basic(t *testing.T) {
 	var v ec2.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 	description := "test filter"
@@ -66,7 +66,7 @@ func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
+func TestAccEC2TrafficMirrorFilter_tags(t *testing.T) {
 	var v ec2.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 
@@ -113,7 +113,7 @@ func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TrafficMirrorFilter_disappears(t *testing.T) {
+func TestAccEC2TrafficMirrorFilter_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 	description := "test filter"

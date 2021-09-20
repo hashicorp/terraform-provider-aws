@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEIPAssociation_instance(t *testing.T) {
+func TestAccEC2EIPAssociation_instance(t *testing.T) {
 	resourceName := "aws_eip_association.test"
 	var a ec2.Address
 
@@ -40,7 +40,7 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
+func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 	resourceName := "aws_eip_association.test"
 	var a ec2.Address
 
@@ -66,7 +66,7 @@ func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIPAssociation_basic(t *testing.T) {
+func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	var a ec2.Address
 	resourceName := "aws_eip_association.by_allocation_id"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -97,7 +97,7 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
+func TestAccEC2EIPAssociation_ec2Classic(t *testing.T) {
 	var a ec2.Address
 	resourceName := "aws_eip_association.test"
 
@@ -126,7 +126,7 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
+func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	var a ec2.Address
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eip_association.test"
@@ -160,7 +160,7 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIPAssociation_disappears(t *testing.T) {
+func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	var a ec2.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

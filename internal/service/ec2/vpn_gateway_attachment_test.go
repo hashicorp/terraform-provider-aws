@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
+func TestAccEC2VPNGatewayAttachment_basic(t *testing.T) {
 	var v ec2.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -35,7 +35,7 @@ func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGatewayAttachment_disappears(t *testing.T) {
+func TestAccEC2VPNGatewayAttachment_disappears(t *testing.T) {
 	var v ec2.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

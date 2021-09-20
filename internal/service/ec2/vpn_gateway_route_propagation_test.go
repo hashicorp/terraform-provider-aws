@@ -13,7 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
+func TestAccEC2VPNGatewayRoutePropagation_basic(t *testing.T) {
 	var rtID, gwID string
 
 	resource.ParallelTest(t, resource.TestCase{

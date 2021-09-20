@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSInstancesDataSource_basic(t *testing.T) {
+func TestAccEC2InstancesDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstancesDataSource_tags(t *testing.T) {
+func TestAccEC2InstancesDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstancesDataSource_instanceStateNames(t *testing.T) {
+func TestAccEC2InstancesDataSource_instanceStateNames(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{

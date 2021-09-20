@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSubnets_basic(t *testing.T) {
+func TestAccEC2SubnetsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,7 +34,7 @@ func TestAccDataSourceAwsSubnets_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSubnets_filter(t *testing.T) {
+func TestAccEC2SubnetsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{

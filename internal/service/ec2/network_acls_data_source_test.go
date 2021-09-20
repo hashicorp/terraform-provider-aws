@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsNetworkAcls_basic(t *testing.T) {
+func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsNetworkAcls_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkAcls_Filter(t *testing.T) {
+func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsNetworkAcls_Filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkAcls_Tags(t *testing.T) {
+func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -76,7 +76,7 @@ func TestAccDataSourceAwsNetworkAcls_Tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkAcls_VpcID(t *testing.T) {
+func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	dataSourceName := "data.aws_network_acls.test"
 

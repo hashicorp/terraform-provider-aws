@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
+func TestAccEC2SecurityGroupsDataSource_tag(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dataSourceName := "data.aws_security_groups.by_tag"
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
+func TestAccEC2SecurityGroupsDataSource_filter(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dataSourceName := "data.aws_security_groups.by_filter"
 	resource.ParallelTest(t, resource.TestCase{

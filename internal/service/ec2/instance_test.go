@@ -160,7 +160,7 @@ func TestFetchRootDevice(t *testing.T) {
 	}
 }
 
-func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
+func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -186,7 +186,7 @@ func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
+func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -212,7 +212,7 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_inEc2Classic(t *testing.T) {
+func TestAccEC2Instance_inEC2Classic(t *testing.T) {
 	resourceName := "aws_instance.test"
 	var v ec2.Instance
 
@@ -239,7 +239,7 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_basic(t *testing.T) {
+func TestAccEC2Instance_basic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -272,7 +272,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
+func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -314,7 +314,7 @@ func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
+func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_instance.test"
@@ -341,7 +341,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
+func TestAccEC2Instance_EBSBlockDevice_invalidIopsForVolumeType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -356,7 +356,7 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsBlockDevice_InvalidThroughputForVolumeType(t *testing.T) {
+func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -371,7 +371,7 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidThroughputForVolumeType(t *testing
 	})
 }
 
-func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
+func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_instance.test"
@@ -401,7 +401,7 @@ func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_userDataBase64(t *testing.T) {
+func TestAccEC2Instance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -429,7 +429,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
+func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -476,10 +476,10 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	})
 }
 
-// TestAccAWSInstance_GP2WithIopsValue updated in v3.0.0
+// TestAccEC2Instance_gp2WithIopsValue updated in v3.0.0
 // to account for apply-time validation of the root_block_device.iops attribute for supported volume types
 // Reference: https://github.com/hashicorp/terraform-provider-aws/pull/14310
-func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
+func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -494,7 +494,7 @@ func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_blockDevices(t *testing.T) {
+func TestAccEC2Instance_blockDevices(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -611,7 +611,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
+func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -639,7 +639,7 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
+func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -706,7 +706,7 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
+func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -760,7 +760,7 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_disableApiTermination(t *testing.T) {
+func TestAccEC2Instance_disableAPITermination(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -812,7 +812,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_dedicatedInstance(t *testing.T) {
+func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -841,7 +841,7 @@ func TestAccAWSInstance_dedicatedInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_outpost(t *testing.T) {
+func TestAccEC2Instance_outpost(t *testing.T) {
 	var v ec2.Instance
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_instance.test"
@@ -868,7 +868,7 @@ func TestAccAWSInstance_outpost(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_placementGroup(t *testing.T) {
+func TestAccEC2Instance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -895,7 +895,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
+func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -922,7 +922,7 @@ func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
+func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -939,7 +939,7 @@ func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 	})
 }
 
-func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
+func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -966,7 +966,7 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
+func TestAccEC2Instance_networkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -992,7 +992,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
+func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1029,7 +1029,7 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
+func TestAccEC2Instance_networkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1057,7 +1057,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_tags(t *testing.T) {
+func TestAccEC2Instance_tags(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1092,7 +1092,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_blockDeviceTags_volumeTags(t *testing.T) {
+func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1143,7 +1143,7 @@ func TestAccAWSInstance_blockDeviceTags_volumeTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
+func TestAccEC2Instance_BlockDeviceTags_withAttachedVolume(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	ebsVolumeName := "aws_ebs_volume.test"
@@ -1192,7 +1192,7 @@ func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
+func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1249,7 +1249,7 @@ func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
+func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1306,7 +1306,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
+func TestAccEC2Instance_withIAMInstanceProfile(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1344,7 +1344,7 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17719
-func TestAccAWSInstance_withIamInstanceProfilePath(t *testing.T) {
+func TestAccEC2Instance_withIAMInstanceProfilePath(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1370,7 +1370,7 @@ func TestAccAWSInstance_withIamInstanceProfilePath(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_privateIP(t *testing.T) {
+func TestAccEC2Instance_privateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1407,7 +1407,7 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
+func TestAccEC2Instance_associatePublicIPAndPrivateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1446,7 +1446,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 
 // Allow Empty Private IP
 // https://github.com/hashicorp/terraform-provider-aws/issues/13626
-func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
+func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1485,7 +1485,7 @@ func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 
 // Guard against regression with KeyPairs
 // https://github.com/hashicorp/terraform/issues/2302
-func TestAccAWSInstance_keyPairCheck(t *testing.T) {
+func TestAccEC2Instance_keyPairCheck(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	keyPairResourceName := "aws_key_pair.test"
@@ -1513,7 +1513,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
+func TestAccEC2Instance_rootBlockDeviceMismatch(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1550,7 +1550,7 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 //
 // The following triggers "diffs didn't match during apply" without the fix in to
 // set NewRemoved on the .# field when it changes to 0.
-func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
+func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -1584,7 +1584,7 @@ func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_changeInstanceType(t *testing.T) {
+func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1620,7 +1620,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_basic(t *testing.T) {
+func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1648,7 +1648,7 @@ func TestAccAWSInstance_EbsRootDevice_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifySize(t *testing.T) {
+func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1688,7 +1688,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifySize(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
+func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1728,7 +1728,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io1(t *testing.T) {
+func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1771,7 +1771,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io1(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io2(t *testing.T) {
+func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1814,7 +1814,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io2(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyThroughput_Gp3(t *testing.T) {
+func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1857,7 +1857,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyThroughput_Gp3(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyDeleteOnTermination(t *testing.T) {
+func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1897,7 +1897,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyDeleteOnTermination(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyAll(t *testing.T) {
+func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1943,7 +1943,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyAll(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing.T) {
+func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1996,7 +1996,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermination(t *testing.T) {
+func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTermination(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2052,7 +2052,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 }
 
 // Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
-func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.T) {
+func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.T) {
 	var instance ec2.Instance
 
 	resourceName := "aws_instance.test"
@@ -2103,7 +2103,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 	})
 }
 
-func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
+func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	var instance ec2.Instance
 	var eni ec2.NetworkInterface
 	resourceName := "aws_instance.test"
@@ -2134,7 +2134,7 @@ func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
+func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	var instance ec2.Instance
 	var eni ec2.NetworkInterface
 	resourceName := "aws_instance.test"
@@ -2165,7 +2165,7 @@ func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
+func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	var eniPrimary ec2.NetworkInterface
@@ -2208,7 +2208,7 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/3205
-func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
+func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2244,7 +2244,7 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
-func TestAccAWSInstance_NewNetworkInterface_PublicIPAndSecondaryPrivateIPs(t *testing.T) {
+func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2283,7 +2283,7 @@ func TestAccAWSInstance_NewNetworkInterface_PublicIPAndSecondaryPrivateIPs(t *te
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
-func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs(t *testing.T) {
+func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2313,7 +2313,7 @@ func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
-func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
+func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2360,7 +2360,7 @@ func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
-func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPs(t *testing.T) {
+func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2391,7 +2391,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPs(t *t
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
-func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
+func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -2439,7 +2439,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPsUpdat
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
-func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
+func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2468,7 +2468,7 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
-func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
+func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2497,7 +2497,7 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
-func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
+func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2526,7 +2526,7 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
-func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
+func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2555,7 +2555,7 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
-func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
+func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2584,7 +2584,7 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
-func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
+func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2612,7 +2612,7 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_basic(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -2642,7 +2642,7 @@ func TestAccAWSInstance_LaunchTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_OverrideTemplate(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -2670,7 +2670,7 @@ func TestAccAWSInstance_LaunchTemplate_OverrideTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_SetSpecificVersion(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -2704,7 +2704,7 @@ func TestAccAWSInstance_LaunchTemplate_SetSpecificVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_ModifyTemplate_DefaultVersion(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -2738,7 +2738,7 @@ func TestAccAWSInstance_LaunchTemplate_ModifyTemplate_DefaultVersion(t *testing.
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_UpdateTemplateVersion(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -2772,7 +2772,7 @@ func TestAccAWSInstance_LaunchTemplate_UpdateTemplateVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_LaunchTemplate_SwapIDAndName(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -2806,7 +2806,7 @@ func TestAccAWSInstance_LaunchTemplate_SwapIDAndName(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
+func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -2848,7 +2848,7 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
+func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -2891,7 +2891,7 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2919,7 +2919,7 @@ func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10203
-func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationUnspecifiedToEmpty_nonBurstable(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2951,7 +2951,7 @@ func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *t
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
+func TestAccEC2Instance_CreditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -2979,7 +2979,7 @@ func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *tes
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
+func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3015,7 +3015,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
+func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3051,7 +3051,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3079,7 +3079,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3107,7 +3107,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
+func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 	var first, second, third ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3151,7 +3151,7 @@ func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
+func TestAccEC2Instance_CreditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3178,7 +3178,7 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 	})
 }
 
-func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3206,7 +3206,7 @@ func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 	})
 }
 
-func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3242,7 +3242,7 @@ func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3278,7 +3278,7 @@ func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) 
 	})
 }
 
-func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 	var first, second, third ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3322,7 +3322,7 @@ func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3359,7 +3359,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *te
 	})
 }
 
-func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *testing.T) {
+func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3396,7 +3396,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 	})
 }
 
-func TestAccAWSInstance_disappears(t *testing.T) {
+func TestAccEC2Instance_disappears(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -3418,7 +3418,7 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
+func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3451,7 +3451,7 @@ func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
+func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3483,7 +3483,7 @@ func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_hibernation(t *testing.T) {
+func TestAccEC2Instance_hibernation(t *testing.T) {
 	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -3517,7 +3517,7 @@ func TestAccAWSInstance_hibernation(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_metadataOptions(t *testing.T) {
+func TestAccEC2Instance_metadataOptions(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -3557,7 +3557,7 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_enclaveOptions(t *testing.T) {
+func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -3593,7 +3593,7 @@ func TestAccAWSInstance_enclaveOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing.T) {
+func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -3627,7 +3627,7 @@ func TestAccAWSInstance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 	})
 }
 
-func TestAccAWSInstance_CapacityReservation_Preference_open(t *testing.T) {
+func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -3655,7 +3655,7 @@ func TestAccAWSInstance_CapacityReservation_Preference_open(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_CapacityReservation_Preference_none(t *testing.T) {
+func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -3683,7 +3683,7 @@ func TestAccAWSInstance_CapacityReservation_Preference_none(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_CapacityReservation_TargetId(t *testing.T) {
+func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -3711,7 +3711,7 @@ func TestAccAWSInstance_CapacityReservation_TargetId(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_CapacityReservation_modifyPreference(t *testing.T) {
+func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3749,7 +3749,7 @@ func TestAccAWSInstance_CapacityReservation_modifyPreference(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_CapacityReservation_modifyTarget(t *testing.T) {
+func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4260,7 +4260,7 @@ resource "aws_instance" "test" {
 `, size, delete, volumeType, throughput))
 }
 
-func TestAccAWSInstance_GP3RootBlockDevice(t *testing.T) {
+func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 

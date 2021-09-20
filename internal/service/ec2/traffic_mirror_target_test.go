@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
+func TestAccEC2TrafficMirrorTarget_nlb(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
@@ -51,7 +51,7 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
+func TestAccEC2TrafficMirrorTarget_eni(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -84,7 +84,7 @@ func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
+func TestAccEC2TrafficMirrorTarget_tags(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
@@ -133,7 +133,7 @@ func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
+func TestAccEC2TrafficMirrorTarget_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"

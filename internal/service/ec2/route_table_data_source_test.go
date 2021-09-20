@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
+func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 	rtResourceName := "aws_route_table.test"
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -97,7 +97,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRouteTable_main(t *testing.T) {
+func TestAccEC2RouteTableDataSource_main(t *testing.T) {
 	datasourceName := "data.aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

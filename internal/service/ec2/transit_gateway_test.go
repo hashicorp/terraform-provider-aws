@@ -113,7 +113,7 @@ func testSweepEc2TransitGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
+func TestAccEC2TransitGateway_basic(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -150,7 +150,7 @@ func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_disappears(t *testing.T) {
+func TestAccEC2TransitGateway_disappears(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -172,7 +172,7 @@ func TestAccAWSEc2TransitGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_AmazonSideASN(t *testing.T) {
+func TestAccEC2TransitGateway_amazonSideASN(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -206,7 +206,7 @@ func TestAccAWSEc2TransitGateway_AmazonSideASN(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
+func TestAccEC2TransitGateway_autoAcceptSharedAttachments(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -240,7 +240,7 @@ func TestAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t *testing.T) {
+func TestAccEC2TransitGateway_defaultRouteTableAssociationAndPropagationDisabled(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -267,7 +267,7 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisab
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
+func TestAccEC2TransitGateway_defaultRouteTableAssociation(t *testing.T) {
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -309,7 +309,7 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
+func TestAccEC2TransitGateway_defaultRouteTablePropagation(t *testing.T) {
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -351,7 +351,7 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DnsSupport(t *testing.T) {
+func TestAccEC2TransitGateway_dnsSupport(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -385,7 +385,7 @@ func TestAccAWSEc2TransitGateway_DnsSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
+func TestAccEC2TransitGateway_vpnECMPSupport(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -419,7 +419,7 @@ func TestAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_Description(t *testing.T) {
+func TestAccEC2TransitGateway_description(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -453,7 +453,7 @@ func TestAccAWSEc2TransitGateway_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_Tags(t *testing.T) {
+func TestAccEC2TransitGateway_tags(t *testing.T) {
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 

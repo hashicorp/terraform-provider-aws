@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEc2TrafficMirrorFilterRule_basic(t *testing.T) {
+func TestAccEC2TrafficMirrorFilterRule_basic(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
@@ -105,7 +105,7 @@ func TestAccAWSEc2TrafficMirrorFilterRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TrafficMirrorFilterRule_disappears(t *testing.T) {
+func TestAccEC2TrafficMirrorFilterRule_disappears(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"

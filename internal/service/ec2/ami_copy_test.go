@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAMICopy_basic(t *testing.T) {
+func TestAccEC2AMICopy_basic(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_copy.test"
@@ -42,7 +42,7 @@ func TestAccAWSAMICopy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMICopy_Description(t *testing.T) {
+func TestAccEC2AMICopy_description(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_copy.test"
@@ -71,7 +71,7 @@ func TestAccAWSAMICopy_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
+func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_copy.test"
@@ -93,7 +93,7 @@ func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMICopy_DestinationOutpost(t *testing.T) {
+func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
@@ -116,7 +116,7 @@ func TestAccAWSAMICopy_DestinationOutpost(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMICopy_tags(t *testing.T) {
+func TestAccEC2AMICopy_tags(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami_copy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

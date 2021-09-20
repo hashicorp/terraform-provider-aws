@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
+func TestAccEC2TransitGatewayVPCAttachmentDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
@@ -35,7 +35,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
+func TestAccEC2TransitGatewayVPCAttachmentDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 

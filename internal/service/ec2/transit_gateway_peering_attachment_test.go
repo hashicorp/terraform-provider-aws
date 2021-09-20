@@ -83,7 +83,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -122,7 +122,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -150,7 +150,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -202,7 +202,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T)
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
+func TestAccEC2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

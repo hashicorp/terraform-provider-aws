@@ -106,7 +106,7 @@ func testSweepNetworkAcls(region string) error {
 	return nil
 }
 
-func TestAccAWSNetworkAcl_basic(t *testing.T) {
+func TestAccEC2NetworkACL_basic(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 	var networkAcl ec2.NetworkAcl
 
@@ -133,7 +133,7 @@ func TestAccAWSNetworkAcl_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_tags(t *testing.T) {
+func TestAccEC2NetworkACL_tags(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	var networkAcl ec2.NetworkAcl
@@ -178,7 +178,7 @@ func TestAccAWSNetworkAcl_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_disappears(t *testing.T) {
+func TestAccEC2NetworkACL_disappears(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -200,7 +200,7 @@ func TestAccAWSNetworkAcl_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_Egress_ConfigMode(t *testing.T) {
+func TestAccEC2NetworkACL_Egress_mode(t *testing.T) {
 	var networkAcl1, networkAcl2, networkAcl3 ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -253,7 +253,7 @@ func TestAccAWSNetworkAcl_Egress_ConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_Ingress_ConfigMode(t *testing.T) {
+func TestAccEC2NetworkACL_Ingress_mode(t *testing.T) {
 	var networkAcl1, networkAcl2, networkAcl3 ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -306,7 +306,7 @@ func TestAccAWSNetworkAcl_Ingress_ConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
+func TestAccEC2NetworkACL_egressAndIngressRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -348,7 +348,7 @@ func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
+func TestAccEC2NetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -382,7 +382,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
+func TestAccEC2NetworkACL_OnlyIngressRules_update(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -437,7 +437,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
+func TestAccEC2NetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -462,7 +462,7 @@ func TestAccAWSNetworkAcl_CaseSensitivityNoChanges(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
+func TestAccEC2NetworkACL_onlyEgressRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -490,7 +490,7 @@ func TestAccAWSNetworkAcl_OnlyEgressRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
+func TestAccEC2NetworkACL_subnetChange(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -525,7 +525,7 @@ func TestAccAWSNetworkAcl_SubnetChange(t *testing.T) {
 
 }
 
-func TestAccAWSNetworkAcl_Subnets(t *testing.T) {
+func TestAccEC2NetworkACL_subnets(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -573,7 +573,7 @@ func TestAccAWSNetworkAcl_Subnets(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
+func TestAccEC2NetworkACL_subnetsDelete(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -619,7 +619,7 @@ func TestAccAWSNetworkAcl_SubnetsDelete(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
+func TestAccEC2NetworkACL_ipv6Rules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -654,7 +654,7 @@ func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_ipv6ICMPRules(t *testing.T) {
+func TestAccEC2NetworkACL_ipv6ICMPRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_network_acl.test"
@@ -675,7 +675,7 @@ func TestAccAWSNetworkAcl_ipv6ICMPRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
+func TestAccEC2NetworkACL_ipv6VPCRules(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 
@@ -705,7 +705,7 @@ func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAcl_espProtocol(t *testing.T) {
+func TestAccEC2NetworkACL_espProtocol(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 

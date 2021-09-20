@@ -74,7 +74,7 @@ func testSweepEc2PlacementGroups(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSPlacementGroup_basic(t *testing.T) {
+func TestAccEC2PlacementGroup_basic(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -103,7 +103,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_tags(t *testing.T) {
+func TestAccEC2PlacementGroup_tags(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -147,7 +147,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSPlacementGroup_disappears(t *testing.T) {
+func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

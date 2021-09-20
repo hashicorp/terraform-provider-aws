@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayId(t *testing.T) {
+func TestAccEC2TransitGatewayDxGatewayAttachmentDataSource_transitGatewayIdAndDxGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
@@ -38,7 +38,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 	})
 }
 
-func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
+func TestAccEC2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"

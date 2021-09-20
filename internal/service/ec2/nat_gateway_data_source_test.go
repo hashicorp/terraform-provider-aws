@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsNatGateway_basic(t *testing.T) {
+func TestAccEC2NatGatewayDataSource_basic(t *testing.T) {
 	// This is used as a portion of CIDR network addresses.
 	rInt := sdkacctest.RandIntRange(4, 254)
 

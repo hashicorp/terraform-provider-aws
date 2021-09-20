@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSRouteDataSource_basic(t *testing.T) {
+func TestAccEC2RouteDataSource_basic(t *testing.T) {
 	instanceRouteResourceName := "aws_route.instance"
 	pcxRouteResourceName := "aws_route.vpc_peering_connection"
 	rtResourceName := "aws_route_table.test"
@@ -49,7 +49,7 @@ func TestAccAWSRouteDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteDataSource_TransitGatewayID(t *testing.T) {
+func TestAccEC2RouteDataSource_transitGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -72,7 +72,7 @@ func TestAccAWSRouteDataSource_TransitGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteDataSource_IPv6DestinationCidr(t *testing.T) {
+func TestAccEC2RouteDataSource_ipv6DestinationCIDR(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -94,7 +94,7 @@ func TestAccAWSRouteDataSource_IPv6DestinationCidr(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
+func TestAccEC2RouteDataSource_localGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_route.by_local_gateway_id"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -117,7 +117,7 @@ func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteDataSource_CarrierGatewayID(t *testing.T) {
+func TestAccEC2RouteDataSource_carrierGatewayID(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -140,7 +140,7 @@ func TestAccAWSRouteDataSource_CarrierGatewayID(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteDataSource_DestinationPrefixListId(t *testing.T) {
+func TestAccEC2RouteDataSource_destinationPrefixListID(t *testing.T) {
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -163,7 +163,7 @@ func TestAccAWSRouteDataSource_DestinationPrefixListId(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteDataSource_GatewayVpcEndpoint(t *testing.T) {
+func TestAccEC2RouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 	var routeTable ec2.RouteTable
 	var vpce ec2.VpcEndpoint
 	rtResourceName := "aws_route_table.test"

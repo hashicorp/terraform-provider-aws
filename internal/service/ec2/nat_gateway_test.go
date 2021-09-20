@@ -58,7 +58,7 @@ func testSweepNatGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSNatGateway_basic(t *testing.T) {
+func TestAccEC2NatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 
@@ -85,7 +85,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNatGateway_ConnectivityType_Private(t *testing.T) {
+func TestAccEC2NatGateway_ConnectivityType_private(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 
@@ -111,7 +111,7 @@ func TestAccAWSNatGateway_ConnectivityType_Private(t *testing.T) {
 	})
 }
 
-func TestAccAWSNatGateway_tags(t *testing.T) {
+func TestAccEC2NatGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 

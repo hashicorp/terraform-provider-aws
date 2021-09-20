@@ -74,7 +74,7 @@ func TestAvailabilityZonesSort(t *testing.T) {
 	}
 }
 
-func TestAccAWSAvailabilityZones_basic(t *testing.T) {
+func TestAccEC2AvailabilityZonesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -90,7 +90,7 @@ func TestAccAWSAvailabilityZones_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_AllAvailabilityZones(t *testing.T) {
+func TestAccEC2AvailabilityZonesDataSource_allAvailabilityZones(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +108,7 @@ func TestAccAWSAvailabilityZones_AllAvailabilityZones(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_Filter(t *testing.T) {
+func TestAccEC2AvailabilityZonesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccAWSAvailabilityZones_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_ExcludeNames(t *testing.T) {
+func TestAccEC2AvailabilityZonesDataSource_excludeNames(t *testing.T) {
 	allDataSourceName := "data.aws_availability_zones.all"
 	excludeDataSourceName := "data.aws_availability_zones.test"
 
@@ -145,7 +145,7 @@ func TestAccAWSAvailabilityZones_ExcludeNames(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_ExcludeZoneIds(t *testing.T) {
+func TestAccEC2AvailabilityZonesDataSource_excludeZoneIDs(t *testing.T) {
 	allDataSourceName := "data.aws_availability_zones.all"
 	excludeDataSourceName := "data.aws_availability_zones.test"
 
@@ -164,7 +164,7 @@ func TestAccAWSAvailabilityZones_ExcludeZoneIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_stateFilter(t *testing.T) {
+func TestAccEC2AvailabilityZonesDataSource_stateFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),

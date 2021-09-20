@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSNetworkInterfaceAttachment_basic(t *testing.T) {
+func TestAccEC2NetworkInterfaceAttachment_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 	rInt := sdkacctest.RandInt()
 

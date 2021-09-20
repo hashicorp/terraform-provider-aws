@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
+func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 	resourceName := "aws_ebs_encryption_by_default.test"
 
 	resource.ParallelTest(t, resource.TestCase{

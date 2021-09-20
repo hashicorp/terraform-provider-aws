@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
+func TestAccEC2TransitGatewayDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 
@@ -39,7 +39,7 @@ func TestAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayDataSource_ID(t *testing.T) {
+func TestAccEC2TransitGatewayDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 

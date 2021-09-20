@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
+func TestAccEC2SpotPriceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
+func TestAccEC2SpotPriceDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{

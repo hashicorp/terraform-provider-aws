@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTable_basic(t *testing.T) {
 	var transitGatewayRouteTable1 ec2.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -47,7 +47,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTable_disappears(t *testing.T) {
 	var transitGatewayRouteTable1 ec2.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
@@ -69,7 +69,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTable_Disappears_transitGateway(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	var transitGatewayRouteTable1 ec2.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
@@ -94,7 +94,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRouteTable_Tags(t *testing.T) {
+func TestAccEC2TransitGatewayRouteTable_tags(t *testing.T) {
 	var transitGatewayRouteTable1, transitGatewayRouteTable2, transitGatewayRouteTable3 ec2.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 

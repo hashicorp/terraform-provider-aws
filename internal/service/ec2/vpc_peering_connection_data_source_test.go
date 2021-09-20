@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsVpcPeeringConnection_CidrBlock(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 	requesterVpcResourceName := "aws_vpc.requester"
@@ -29,7 +29,7 @@ func TestAccDataSourceAwsVpcPeeringConnection_CidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcPeeringConnection_Id(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 	accepterVpcResourceName := "aws_vpc.accepter"
@@ -68,7 +68,7 @@ func TestAccDataSourceAwsVpcPeeringConnection_Id(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcPeeringConnection_PeerCidrBlock(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 	accepterVpcResourceName := "aws_vpc.accepter"
@@ -89,7 +89,7 @@ func TestAccDataSourceAwsVpcPeeringConnection_PeerCidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcPeeringConnection_PeerVpcId(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 
@@ -109,7 +109,7 @@ func TestAccDataSourceAwsVpcPeeringConnection_PeerVpcId(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcPeeringConnection_VpcId(t *testing.T) {
+func TestAccEC2VPCPeeringConnectionDataSource_vpcID(t *testing.T) {
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 

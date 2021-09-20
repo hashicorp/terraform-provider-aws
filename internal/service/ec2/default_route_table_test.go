@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
+func TestAccEC2DefaultRouteTable_basic(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpcResourceName := "aws_vpc.test"
@@ -61,7 +61,7 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
+func TestAccEC2DefaultRouteTable_Disappears_vpc(t *testing.T) {
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
 	resourceName := "aws_default_route_table.test"
@@ -87,7 +87,7 @@ func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
+func TestAccEC2DefaultRouteTable_Route_mode(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -155,7 +155,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
+func TestAccEC2DefaultRouteTable_swap(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -223,7 +223,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
+func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -255,7 +255,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_IPv4_To_VpcEndpoint(t *testing.T) {
+func TestAccEC2DefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
@@ -296,7 +296,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_VpcEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
+func TestAccEC2DefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -328,7 +328,7 @@ func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_Tags(t *testing.T) {
+func TestAccEC2DefaultRouteTable_tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -368,7 +368,7 @@ func TestAccAWSDefaultRouteTable_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
+func TestAccEC2DefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -406,7 +406,7 @@ func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
+func TestAccEC2DefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -447,7 +447,7 @@ func TestAccAWSDefaultRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_RevokeExistingRules(t *testing.T) {
+func TestAccEC2DefaultRouteTable_revokeExistingRules(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rtResourceName := "aws_route_table.test"

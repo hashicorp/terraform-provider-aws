@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
+func TestAccEC2VPNConnectionRoute_basic(t *testing.T) {
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

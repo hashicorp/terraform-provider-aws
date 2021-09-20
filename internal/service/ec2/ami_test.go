@@ -18,7 +18,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSAMI_basic(t *testing.T) {
+func TestAccEC2AMI_basic(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
@@ -78,7 +78,7 @@ func TestAccAWSAMI_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMI_description(t *testing.T) {
+func TestAccEC2AMI_description(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
@@ -166,7 +166,7 @@ func TestAccAWSAMI_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMI_disappears(t *testing.T) {
+func TestAccEC2AMI_disappears(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -189,7 +189,7 @@ func TestAccAWSAMI_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMI_EphemeralBlockDevices(t *testing.T) {
+func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
@@ -251,7 +251,7 @@ func TestAccAWSAMI_EphemeralBlockDevices(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMI_Gp3BlockDevice(t *testing.T) {
+func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
@@ -315,7 +315,7 @@ func TestAccAWSAMI_Gp3BlockDevice(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMI_tags(t *testing.T) {
+func TestAccEC2AMI_tags(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

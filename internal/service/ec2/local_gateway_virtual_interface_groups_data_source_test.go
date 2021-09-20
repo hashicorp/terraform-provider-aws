@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_basic(t *testing.T) {
+func TestAccEC2LocalGatewayVirtualInterfaceGroupsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +29,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_basic(t *testing.
 	})
 }
 
-func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Filter(t *testing.T) {
+func TestAccEC2LocalGatewayVirtualInterfaceGroupsDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Filter(t *testing
 	})
 }
 
-func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Tags(t *testing.T) {
+func TestAccEC2LocalGatewayVirtualInterfaceGroupsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 

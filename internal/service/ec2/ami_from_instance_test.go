@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSAMIFromInstance_basic(t *testing.T) {
+func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_from_instance.test"
@@ -44,7 +44,7 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMIFromInstance_tags(t *testing.T) {
+func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_from_instance.test"
@@ -84,7 +84,7 @@ func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
+func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_from_instance.test"

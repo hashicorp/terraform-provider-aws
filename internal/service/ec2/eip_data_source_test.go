@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSEIP_Filter(t *testing.T) {
+func TestAccEC2EIPDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -32,7 +32,7 @@ func TestAccDataSourceAWSEIP_Filter(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_Id(t *testing.T) {
+func TestAccEC2EIPDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 
@@ -53,7 +53,7 @@ func TestAccDataSourceAWSEIP_Id(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_PublicIP_EC2Classic(t *testing.T) {
+func TestAccEC2EIPDataSource_PublicIP_ec2Classic(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 
@@ -74,7 +74,7 @@ func TestAccDataSourceAWSEIP_PublicIP_EC2Classic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_PublicIP_VPC(t *testing.T) {
+func TestAccEC2EIPDataSource_PublicIP_vpc(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 
@@ -96,7 +96,7 @@ func TestAccDataSourceAWSEIP_PublicIP_VPC(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_Tags(t *testing.T) {
+func TestAccEC2EIPDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -118,7 +118,7 @@ func TestAccDataSourceAWSEIP_Tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_NetworkInterface(t *testing.T) {
+func TestAccEC2EIPDataSource_networkInterface(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 
@@ -141,7 +141,7 @@ func TestAccDataSourceAWSEIP_NetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_Instance(t *testing.T) {
+func TestAccEC2EIPDataSource_instance(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 
@@ -162,7 +162,7 @@ func TestAccDataSourceAWSEIP_Instance(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_CarrierIP(t *testing.T) {
+func TestAccEC2EIPDataSource_carrierIP(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -183,7 +183,7 @@ func TestAccDataSourceAWSEIP_CarrierIP(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
+func TestAccEC2EIPDataSource_customerOwnedIPv4Pool(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 

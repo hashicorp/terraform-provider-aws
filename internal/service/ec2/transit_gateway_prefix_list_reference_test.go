@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
+func TestAccEC2TransitGatewayPrefixListReference_basic(t *testing.T) {
 	managedPrefixListResourceName := "aws_ec2_managed_prefix_list.test"
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -50,7 +50,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
+func TestAccEC2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -76,7 +76,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t *testing.T) {
+func TestAccEC2TransitGatewayPrefixListReference_Disappears_transitGateway(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -103,7 +103,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 	})
 }
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t *testing.T) {
+func TestAccEC2TransitGatewayPrefixListReference_transitGatewayAttachmentID(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayVpcAttachmentResourceName1 := "aws_ec2_transit_gateway_vpc_attachment.test.0"
 	transitGatewayVpcAttachmentResourceName2 := "aws_ec2_transit_gateway_vpc_attachment.test.1"

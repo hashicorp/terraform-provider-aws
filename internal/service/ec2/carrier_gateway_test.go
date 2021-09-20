@@ -67,7 +67,7 @@ func testSweepEc2CarrierGateway(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
+func TestAccEC2CarrierGateway_basic(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	vpcResourceName := "aws_vpc.test"
@@ -98,7 +98,7 @@ func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
+func TestAccEC2CarrierGateway_disappears(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -121,7 +121,7 @@ func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CarrierGateway_Tags(t *testing.T) {
+func TestAccEC2CarrierGateway_tags(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

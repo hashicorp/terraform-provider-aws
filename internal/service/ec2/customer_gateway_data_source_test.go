@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
+func TestAccEC2CustomerGatewayDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
@@ -37,7 +37,7 @@ func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
+func TestAccEC2CustomerGatewayDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 

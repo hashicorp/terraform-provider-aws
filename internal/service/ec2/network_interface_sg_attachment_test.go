@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
+func TestAccEC2NetworkInterfaceSgAttachment_SG_basic(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
@@ -38,7 +38,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
+func TestAccEC2NetworkInterfaceSgAttachment_SG_disappears(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -60,7 +60,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkInterfaceSGAttachment_Instance(t *testing.T) {
+func TestAccEC2NetworkInterfaceSgAttachment_SG_instance(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
@@ -84,7 +84,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_Instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkInterfaceSGAttachment_DataSource(t *testing.T) {
+func TestAccEC2NetworkInterfaceSgAttachment_SG_dataSource(t *testing.T) {
 	instanceDataSourceName := "data.aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
@@ -108,7 +108,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_DataSource(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkInterfaceSGAttachment_Multiple(t *testing.T) {
+func TestAccEC2NetworkInterfaceSgAttachment_SG_multiple(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName1 := "aws_security_group.test.0"
 	securityGroupResourceName2 := "aws_security_group.test.1"

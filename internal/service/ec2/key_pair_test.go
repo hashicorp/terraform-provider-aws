@@ -61,7 +61,7 @@ func testSweepKeyPairs(region string) error {
 	return nil
 }
 
-func TestAccAWSKeyPair_basic(t *testing.T) {
+func TestAccEC2KeyPair_basic(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -97,7 +97,7 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKeyPair_tags(t *testing.T) {
+func TestAccEC2KeyPair_tags(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -148,7 +148,7 @@ func TestAccAWSKeyPair_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSKeyPair_generatedName(t *testing.T) {
+func TestAccEC2KeyPair_generatedName(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
@@ -181,7 +181,7 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSKeyPair_namePrefix(t *testing.T) {
+func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
@@ -214,7 +214,7 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSKeyPair_disappears(t *testing.T) {
+func TestAccEC2KeyPair_disappears(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

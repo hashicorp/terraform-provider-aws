@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_basic(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableVPCAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
@@ -45,7 +45,7 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_disappears(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableVPCAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 
@@ -67,7 +67,7 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_disappears(t *testing.T) 
 	})
 }
 
-func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_Tags(t *testing.T) {
+func TestAccEC2LocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 

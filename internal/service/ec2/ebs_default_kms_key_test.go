@@ -14,7 +14,7 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
-func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
+func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 	resourceName := "aws_ebs_default_kms_key.test"
 	resourceNameKey := "aws_kms_key.test"
 

@@ -63,7 +63,7 @@ func testSweepEc2EgressOnlyInternetGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
+func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
 	var igw ec2.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
 
@@ -89,7 +89,7 @@ func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEgressOnlyInternetGateway_Tags(t *testing.T) {
+func TestAccEC2EgressOnlyInternetGateway_tags(t *testing.T) {
 	var v ec2.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
 

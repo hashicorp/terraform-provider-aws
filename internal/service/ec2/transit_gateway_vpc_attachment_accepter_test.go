@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
+func TestAccEC2TransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
@@ -58,7 +58,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
+func TestAccEC2TransitGatewayVPCAttachmentAccepter_tags(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
@@ -130,7 +130,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T) {
+func TestAccEC2TransitGatewayVPCAttachmentAccepter_transitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGateway ec2.TransitGateway
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment

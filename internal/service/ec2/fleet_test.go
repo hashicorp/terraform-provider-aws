@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEc2Fleet_basic(t *testing.T) {
+func TestAccEC2Fleet_basic(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -65,7 +65,7 @@ func TestAccAWSEc2Fleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_disappears(t *testing.T) {
+func TestAccEC2Fleet_disappears(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -88,7 +88,7 @@ func TestAccAWSEc2Fleet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_ExcessCapacityTerminationPolicy(t *testing.T) {
+func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -124,7 +124,7 @@ func TestAccAWSEc2Fleet_ExcessCapacityTerminationPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateId(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
@@ -168,7 +168,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchT
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateName(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
@@ -212,7 +212,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchT
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_Version(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	var launchTemplate ec2.LaunchTemplate
 	launchTemplateResourceName := "aws_launch_template.test"
@@ -262,7 +262,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_Version
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_AvailabilityZone(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_ec2_fleet.test"
@@ -303,7 +303,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_AvailabilityZone(t *testin
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_InstanceType(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -343,7 +343,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_InstanceType(t *testing.T)
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_MaxPrice(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 	acctest.Skip(t, "EC2 API is not correctly returning MaxPrice override")
 
 	var fleet1, fleet2 ec2.FleetData
@@ -385,7 +385,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_MaxPrice(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -425,7 +425,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority_Multiple(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -467,7 +467,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority_Multiple(t *testi
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_SubnetId(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	subnetResourceName1 := "aws_subnet.test.0"
 	subnetResourceName2 := "aws_subnet.test.1"
@@ -509,7 +509,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_SubnetId(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -549,7 +549,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity(t *testin
 	})
 }
 
-func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(t *testing.T) {
+func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -591,7 +591,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(
 	})
 }
 
-func TestAccAWSEc2Fleet_OnDemandOptions_AllocationStrategy(t *testing.T) {
+func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -629,7 +629,7 @@ func TestAccAWSEc2Fleet_OnDemandOptions_AllocationStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_ReplaceUnhealthyInstances(t *testing.T) {
+func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -665,7 +665,7 @@ func TestAccAWSEc2Fleet_ReplaceUnhealthyInstances(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_SpotOptions_AllocationStrategy(t *testing.T) {
+func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -703,7 +703,7 @@ func TestAccAWSEc2Fleet_SpotOptions_AllocationStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_SpotOptions_CapacityRebalance(t *testing.T) {
+func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -733,7 +733,7 @@ func TestAccAWSEc2Fleet_SpotOptions_CapacityRebalance(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_SpotOptions_InstanceInterruptionBehavior(t *testing.T) {
+func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -771,7 +771,7 @@ func TestAccAWSEc2Fleet_SpotOptions_InstanceInterruptionBehavior(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_SpotOptions_InstancePoolsToUseCount(t *testing.T) {
+func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -809,7 +809,7 @@ func TestAccAWSEc2Fleet_SpotOptions_InstancePoolsToUseCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_Tags(t *testing.T) {
+func TestAccEC2Fleet_tags(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -846,7 +846,7 @@ func TestAccAWSEc2Fleet_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType(t *testing.T) {
+func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -878,7 +878,7 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType(t 
 	})
 }
 
-func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType_OnDemand(t *testing.T) {
+func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDemand(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -907,7 +907,7 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType_On
 	})
 }
 
-func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType_Spot(t *testing.T) {
+func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -936,7 +936,7 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType_Sp
 	})
 }
 
-func TestAccAWSEc2Fleet_TargetCapacitySpecification_TotalTargetCapacity(t *testing.T) {
+func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -974,7 +974,7 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_TotalTargetCapacity(t *testi
 	})
 }
 
-func TestAccAWSEc2Fleet_TerminateInstancesWithExpiration(t *testing.T) {
+func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1010,7 +1010,7 @@ func TestAccAWSEc2Fleet_TerminateInstancesWithExpiration(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2Fleet_Type(t *testing.T) {
+func TestAccEC2Fleet_type(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1048,7 +1048,7 @@ func TestAccAWSEc2Fleet_Type(t *testing.T) {
 }
 
 // Test for the bug described in https://github.com/hashicorp/terraform-provider-aws/issues/6777
-func TestAccAWSEc2Fleet_TemplateMultipleNetworkInterfaces(t *testing.T) {
+func TestAccEC2Fleet_templateMultipleNetworkInterfaces(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

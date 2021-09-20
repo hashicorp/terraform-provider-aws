@@ -79,7 +79,7 @@ func testSweepLaunchTemplates(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSLaunchTemplate_basic(t *testing.T) {
+func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -112,7 +112,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_Name_Generated(t *testing.T) {
+func TestAccEC2LaunchTemplate_Name_generated(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 
@@ -139,7 +139,7 @@ func TestAccAWSLaunchTemplate_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_Name_Prefix(t *testing.T) {
+func TestAccEC2LaunchTemplate_Name_prefix(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 
@@ -166,7 +166,7 @@ func TestAccAWSLaunchTemplate_Name_Prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
+func TestAccEC2LaunchTemplate_disappears(t *testing.T) {
 	var launchTemplate ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -189,7 +189,7 @@ func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS(t *testing.T) {
+func TestAccEC2LaunchTemplate_BlockDeviceMappings_ebs(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -220,7 +220,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *testing.T) {
+func TestAccEC2LaunchTemplate_BlockDeviceMappingsEBS_deleteOnTermination(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -262,7 +262,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 	})
 }
 
-func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_Gp3(t *testing.T) {
+func TestAccEC2LaunchTemplate_BlockDeviceMappingsEBS_gp3(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -295,7 +295,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_Gp3(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
+func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -350,7 +350,7 @@ func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_ElasticInferenceAccelerator(t *testing.T) {
+func TestAccEC2LaunchTemplate_elasticInferenceAccelerator(t *testing.T) {
 	var template1 ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -386,7 +386,7 @@ func TestAccAWSLaunchTemplate_ElasticInferenceAccelerator(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_NetworkInterfaces_DeleteOnTermination(t *testing.T) {
+func TestAccEC2LaunchTemplate_NetworkInterfaces_deleteOnTermination(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -442,7 +442,7 @@ func TestAccAWSLaunchTemplate_NetworkInterfaces_DeleteOnTermination(t *testing.T
 	})
 }
 
-func TestAccAWSLaunchTemplate_data(t *testing.T) {
+func TestAccEC2LaunchTemplate_data(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -487,7 +487,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_description(t *testing.T) {
+func TestAccEC2LaunchTemplate_description(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -521,7 +521,7 @@ func TestAccAWSLaunchTemplate_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_update(t *testing.T) {
+func TestAccEC2LaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 
@@ -562,7 +562,7 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_Tags(t *testing.T) {
+func TestAccEC2LaunchTemplate_tags(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -607,7 +607,7 @@ func TestAccAWSLaunchTemplate_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_capacityReservation_preference(t *testing.T) {
+func TestAccEC2LaunchTemplate_CapacityReservation_preference(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -633,7 +633,7 @@ func TestAccAWSLaunchTemplate_capacityReservation_preference(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
+func TestAccEC2LaunchTemplate_CapacityReservation_target(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -659,7 +659,7 @@ func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_cpuOptions(t *testing.T) {
+func TestAccEC2LaunchTemplate_cpuOptions(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -680,7 +680,7 @@ func TestAccAWSLaunchTemplate_cpuOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_creditSpecification_nonBurstable(t *testing.T) {
+func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -707,7 +707,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_nonBurstable(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_creditSpecification_t2(t *testing.T) {
+func TestAccEC2LaunchTemplate_CreditSpecification_t2(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -735,7 +735,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t2(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
+func TestAccEC2LaunchTemplate_CreditSpecification_t3(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -764,7 +764,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6757
-func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *testing.T) {
+func TestAccEC2LaunchTemplate_IAMInstanceProfile_emptyBlock(t *testing.T) {
 	var template1 ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -786,7 +786,7 @@ func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *test
 	})
 }
 
-func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
+func TestAccEC2LaunchTemplate_networkInterface(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -817,7 +817,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_networkInterfaceAddresses(t *testing.T) {
+func TestAccEC2LaunchTemplate_networkInterfaceAddresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -847,7 +847,7 @@ func TestAccAWSLaunchTemplate_networkInterfaceAddresses(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_networkInterfaceType(t *testing.T) {
+func TestAccEC2LaunchTemplate_networkInterfaceType(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -875,7 +875,7 @@ func TestAccAWSLaunchTemplate_networkInterfaceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
+func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -925,7 +925,7 @@ func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_associateCarrierIPAddress(t *testing.T) {
+func TestAccEC2LaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -975,7 +975,7 @@ func TestAccAWSLaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_Placement_HostResourceGroupArn(t *testing.T) {
+func TestAccEC2LaunchTemplate_Placement_hostResourceGroupARN(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1002,7 +1002,7 @@ func TestAccAWSLaunchTemplate_Placement_HostResourceGroupArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_placement_partitionNum(t *testing.T) {
+func TestAccEC2LaunchTemplate_Placement_partitionNum(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1036,7 +1036,7 @@ func TestAccAWSLaunchTemplate_placement_partitionNum(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
+func TestAccEC2LaunchTemplate_NetworkInterface_ipv6Addresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
@@ -1064,7 +1064,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_networkInterface_ipv6AddressCount(t *testing.T) {
+func TestAccEC2LaunchTemplate_NetworkInterface_ipv6AddressCount(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1092,7 +1092,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6AddressCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_instanceMarketOptions(t *testing.T) {
+func TestAccEC2LaunchTemplate_instanceMarketOptions(t *testing.T) {
 	var template ec2.LaunchTemplate
 	var group autoscaling.Group
 	groupName := "aws_autoscaling_group.test"
@@ -1136,7 +1136,7 @@ func TestAccAWSLaunchTemplate_instanceMarketOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
+func TestAccEC2LaunchTemplate_licenseSpecification(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1163,7 +1163,7 @@ func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_metadataOptions(t *testing.T) {
+func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1205,7 +1205,7 @@ func TestAccAWSLaunchTemplate_metadataOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_enclaveOptions(t *testing.T) {
+func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1246,7 +1246,7 @@ func TestAccAWSLaunchTemplate_enclaveOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_hibernation(t *testing.T) {
+func TestAccEC2LaunchTemplate_hibernation(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1287,7 +1287,7 @@ func TestAccAWSLaunchTemplate_hibernation(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_defaultVersion(t *testing.T) {
+func TestAccEC2LaunchTemplate_defaultVersion(t *testing.T) {
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := "Test Description 1"
@@ -1333,7 +1333,7 @@ func TestAccAWSLaunchTemplate_defaultVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
+func TestAccEC2LaunchTemplate_updateDefaultVersion(t *testing.T) {
 	resourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := "Test Description 1"
