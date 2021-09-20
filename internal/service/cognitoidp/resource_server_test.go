@@ -16,7 +16,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
+func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 	var resourceServer cognitoidentityprovider.ResourceServerType
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
@@ -59,7 +59,7 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
+func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	var resourceServer cognitoidentityprovider.ResourceServerType
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))

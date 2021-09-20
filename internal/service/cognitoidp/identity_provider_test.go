@@ -15,7 +15,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
+func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
@@ -76,7 +76,7 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityProvider_idpIdentifiers(t *testing.T) {
+func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
@@ -112,7 +112,7 @@ func TestAccAWSCognitoIdentityProvider_idpIdentifiers(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
+func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
@@ -135,7 +135,7 @@ func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoIdentityProvider_disappears_userPool(t *testing.T) {
+func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))

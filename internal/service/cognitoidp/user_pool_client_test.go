@@ -17,7 +17,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -49,7 +49,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_enableRevocation(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_enableRevocation(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -95,7 +95,7 @@ func TestAccAWSCognitoUserPoolClient_enableRevocation(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_refreshTokenValidity(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_refreshTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -130,7 +130,7 @@ func TestAccAWSCognitoUserPoolClient_refreshTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_accessTokenValidity(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_accessTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -165,7 +165,7 @@ func TestAccAWSCognitoUserPoolClient_accessTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_idTokenValidity(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_idTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -200,7 +200,7 @@ func TestAccAWSCognitoUserPoolClient_idTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_tokenValidityUnits(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_tokenValidityUnits(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -241,7 +241,7 @@ func TestAccAWSCognitoUserPoolClient_tokenValidityUnits(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -284,7 +284,7 @@ func TestAccAWSCognitoUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_name(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -319,7 +319,7 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_allFields(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -375,7 +375,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -434,7 +434,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_analytics(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -487,7 +487,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -522,7 +522,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_disappears(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -545,7 +545,7 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
+func TestAccCognitoIDPUserPoolClient_Disappears_userPool(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"

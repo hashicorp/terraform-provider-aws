@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
+func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	groupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	updatedGroupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
@@ -50,7 +50,7 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
+func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	groupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
 	updatedGroupName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(10))
@@ -91,7 +91,7 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
+func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_cognito_user_group.main"
 
