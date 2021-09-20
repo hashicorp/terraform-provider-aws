@@ -1,4 +1,4 @@
-package aws
+package elasticache
 
 import (
 	"fmt"
@@ -13,9 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -117,7 +116,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.FindElastiCacheUserGroupByID(conn, d.Id())
+	resp, err := FindElastiCacheUserGroupByID(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
 		d.SetId("")
 		log.Printf("[DEBUG] ElastiCache User Group (%s) not found", d.Id())
@@ -251,7 +250,7 @@ func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsElasticacheUserGroupStateRefreshFunc(id string, conn *elasticache.ElastiCache) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := finder.FindElastiCacheUserGroupByID(conn, id)
+		v, err := FindElastiCacheUserGroupByID(conn, id)
 
 		if err != nil {
 			log.Printf("Error on retrieving ElastiCache User Group when waiting: %s", err)

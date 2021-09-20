@@ -1,4 +1,4 @@
-package aws
+package elasticache_test
 
 import (
 	"errors"
@@ -15,14 +15,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func init() {
@@ -62,7 +62,7 @@ func testSweepElasticacheClusters(region string) error {
 				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))
 			}
-			_, err = waiter.WaitCacheClusterDeleted(conn, id, waiter.CacheClusterDeletedTimeout)
+			_, err = tfelasticache.WaitCacheClusterDeleted(conn, id, tfelasticache.CacheClusterDeletedTimeout)
 			if err != nil {
 				log.Printf("[ERROR] Failed waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): waiting for completion: %w", id, err))
@@ -850,7 +850,7 @@ func testAccCheckAWSElasticacheClusterDestroy(s *terraform.State) error {
 		if rs.Type != "aws_elasticache_cluster" {
 			continue
 		}
-		_, err := finder.FindCacheClusterByID(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindCacheClusterByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

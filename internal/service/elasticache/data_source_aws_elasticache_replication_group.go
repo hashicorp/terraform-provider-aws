@@ -1,4 +1,4 @@
-package aws
+package elasticache
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -89,7 +88,7 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	groupID := d.Get("replication_group_id").(string)
 
-	rg, err := finder.FindReplicationGroupByID(conn, groupID)
+	rg, err := FindReplicationGroupByID(conn, groupID)
 	if err != nil {
 		return fmt.Errorf("error reading ElastiCache Replication Group (%s): %w", groupID, err)
 	}

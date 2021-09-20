@@ -1,4 +1,4 @@
-package aws
+package elasticache_test
 
 import (
 	"fmt"
@@ -16,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func init() {
@@ -1268,7 +1268,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
-					if _, err := waiter.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
+					if _, err := tfelasticache.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 				},
@@ -1314,7 +1314,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
-					if _, err := waiter.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
+					if _, err := tfelasticache.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 				},
@@ -1360,7 +1360,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
-					if _, err := waiter.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
+					if _, err := tfelasticache.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 				},
@@ -1406,7 +1406,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
-					if _, err := waiter.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
+					if _, err := tfelasticache.WaitCacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 				},
@@ -1745,7 +1745,7 @@ func testAccCheckAWSElasticacheReplicationGroupExists(n string, v *elasticache.R
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		rg, err := finder.FindReplicationGroupByID(conn, rs.Primary.ID)
+		rg, err := tfelasticache.FindReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache error: %w", err)
 		}
@@ -1763,7 +1763,7 @@ func testAccCheckAWSElasticacheReplicationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_elasticache_replication_group" {
 			continue
 		}
-		_, err := finder.FindReplicationGroupByID(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindReplicationGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -1788,7 +1788,7 @@ func testAccCheckAWSElastiCacheReplicationGroupMemberClusters(n string, v *map[s
 
 		clusters := make(map[string]*elasticache.CacheCluster, len(rg.MemberClusters))
 		for _, clusterID := range rg.MemberClusters {
-			c, err := finder.FindCacheClusterWithNodeInfoByID(conn, aws.StringValue(clusterID))
+			c, err := tfelasticache.FindCacheClusterWithNodeInfoByID(conn, aws.StringValue(clusterID))
 			if err != nil {
 				return fmt.Errorf("could not read ElastiCache replication group (%s) member cluster (%s): %w", n, aws.StringValue(clusterID), err)
 			}

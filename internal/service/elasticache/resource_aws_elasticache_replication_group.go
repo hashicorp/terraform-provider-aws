@@ -1,4 +1,4 @@
-package aws
+package elasticache
 
 import (
 	"context"
@@ -18,11 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,8 +108,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfelasticache.engineRedis,
-				ValidateFunc: validation.StringInSlice([]string{tfelasticache.engineRedis}, true),
+				Default:      engineRedis,
+				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
 			},
 			"engine_version": {
 				Type:         schema.TypeString,
@@ -299,9 +296,9 @@ func ResourceReplicationGroup() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ReplicationGroupDefaultCreatedTimeout),
-			Delete: schema.DefaultTimeout(waiter.ReplicationGroupDefaultDeletedTimeout),
-			Update: schema.DefaultTimeout(waiter.ReplicationGroupDefaultUpdatedTimeout),
+			Create: schema.DefaultTimeout(ReplicationGroupDefaultCreatedTimeout),
+			Delete: schema.DefaultTimeout(ReplicationGroupDefaultDeletedTimeout),
+			Update: schema.DefaultTimeout(ReplicationGroupDefaultUpdatedTimeout),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -437,7 +434,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
 
-	_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Replication Group (%s): waiting for completion: %w", d.Id(), err)
 	}
@@ -447,7 +444,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := waiter.WaitGlobalReplicationGroupAvailable(conn, v.(string), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
 		}
 	}
@@ -460,7 +457,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rgp, err := finder.FindReplicationGroupByID(conn, d.Id())
+	rgp, err := FindReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -470,7 +467,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	if aws.StringValue(rgp.Status) == waiter.ReplicationGroupStatusDeleting {
+	if aws.StringValue(rgp.Status) == ReplicationGroupStatusDeleting {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) is currently in the `deleting` status, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -719,7 +716,7 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, waiter.GlobalReplicationGroupDisassociationReadyTimeout)
+		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -768,7 +765,7 @@ func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, glob
 		return err
 	}
 
-	_, err = waiter.WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
@@ -812,7 +809,7 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		return err
 	}
 
-	_, err = waiter.WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
+	_, err = WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
 	if err != nil {
 		return err
 	}
@@ -878,7 +875,7 @@ func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elas
 		return fmt.Errorf("error modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
-	_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
@@ -901,7 +898,7 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 		if err != nil {
 			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
@@ -915,7 +912,7 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 		if err != nil {
 			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = waiter.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
@@ -949,7 +946,7 @@ func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = waiter.WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
@@ -968,7 +965,7 @@ func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = waiter.WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}
@@ -982,7 +979,7 @@ func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache,
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
 
-	_, err = waiter.WaitReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
+	_, err = WaitReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}

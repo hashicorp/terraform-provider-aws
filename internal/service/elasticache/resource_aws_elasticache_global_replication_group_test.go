@@ -1,4 +1,4 @@
-package aws
+package elasticache_test
 
 import (
 	"fmt"
@@ -15,14 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func init() {
@@ -330,12 +330,12 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		grg, err := finder.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
+		grg, err := tfelasticache.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
 		}
 
-		if aws.StringValue(grg.Status) == waiter.GlobalReplicationGroupStatusDeleting || aws.StringValue(grg.Status) == waiter.GlobalReplicationGroupStatusDeleted {
+		if aws.StringValue(grg.Status) == tfelasticache.GlobalReplicationGroupStatusDeleting || aws.StringValue(grg.Status) == tfelasticache.GlobalReplicationGroupStatusDeleted {
 			return fmt.Errorf("ElastiCache Global Replication Group (%s) exists, but is in a non-available state: %s", rs.Primary.ID, aws.StringValue(grg.Status))
 		}
 
@@ -353,7 +353,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupDestroy(s *terraform.State)
 			continue
 		}
 
-		_, err := finder.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

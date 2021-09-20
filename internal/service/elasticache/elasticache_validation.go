@@ -1,4 +1,4 @@
-package aws
+package elasticache
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfelasticache "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -98,7 +97,7 @@ func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.R
 	}
 
 	var validator schema.SchemaValidateFunc
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.engineMemcached {
+	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineMemcached {
 		validator = validVersionString
 	} else {
 		validator = ValidateElastiCacheRedisVersionString
@@ -113,7 +112,7 @@ func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.R
 
 // CustomizeDiffValidateClusterNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"
 func CustomizeDiffValidateClusterNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.engineMemcached {
+	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineMemcached {
 		return nil
 	}
 
@@ -130,7 +129,7 @@ func CustomizeDiffClusterMemcachedNodeType(_ context.Context, diff *schema.Resou
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.engineRedis {
+	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -138,7 +137,7 @@ func CustomizeDiffClusterMemcachedNodeType(_ context.Context, diff *schema.Resou
 
 // CustomizeDiffValidateClusterMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func CustomizeDiffValidateClusterMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.engineRedis {
+	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {

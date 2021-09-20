@@ -1,4 +1,4 @@
-package aws
+package elasticache_test
 
 import (
 	"fmt"

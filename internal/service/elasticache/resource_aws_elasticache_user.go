@@ -1,4 +1,4 @@
-package aws
+package elasticache
 
 import (
 	"fmt"
@@ -11,10 +11,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -115,7 +113,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.FindElastiCacheUserByID(conn, d.Id())
+	resp, err := FindElastiCacheUserByID(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserNotFoundFault, "")) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -188,7 +186,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating ElastiCache User (%s): %w", d.Id(), err)
 			}
 
-			if err := waiter.WaitUserActive(conn, d.Id()); err != nil {
+			if err := WaitUserActive(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
 			}
 		}
@@ -223,7 +221,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting ElastiCache User (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.WaitUserDeleted(conn, d.Id()); err != nil {
+	if err := WaitUserDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
 			return nil
 		}
