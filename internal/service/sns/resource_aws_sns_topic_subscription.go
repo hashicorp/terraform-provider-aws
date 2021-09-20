@@ -1,4 +1,4 @@
-package aws
+package sns
 
 import (
 	"bytes"
@@ -16,9 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -157,13 +155,13 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		waitForConfirmation = false
 	}
 
-	timeout := waiter.subscriptionPendingConfirmationTimeout
+	timeout := subscriptionPendingConfirmationTimeout
 	if strings.Contains(d.Get("protocol").(string), "http") {
 		timeout = time.Duration(d.Get("confirmation_timeout_in_minutes").(int)) * time.Minute
 	}
 
 	if waitForConfirmation {
-		if _, err := waiter.waitSubscriptionConfirmed(conn, d.Id(), "false", timeout); err != nil {
+		if _, err := waitSubscriptionConfirmed(conn, d.Id(), "false", timeout); err != nil {
 			return fmt.Errorf("waiting for SNS topic subscription (%s) confirmation: %w", d.Id(), err)
 		}
 	}
@@ -176,10 +174,10 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	var output *sns.GetSubscriptionAttributesOutput
 
-	err := resource.Retry(waiter.subscriptionCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(subscriptionCreateTimeout, func() *resource.RetryError {
 		var err error
 
-		output, err = finder.FindSubscriptionByARN(conn, d.Id())
+		output, err = FindSubscriptionByARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -195,7 +193,7 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = finder.FindSubscriptionByARN(conn, d.Id())
+		output, err = FindSubscriptionByARN(conn, d.Id())
 	}
 
 	if err != nil {
@@ -308,7 +306,7 @@ func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	if _, err := waiter.waitSubscriptionDeleted(conn, d.Id()); err != nil {
+	if _, err := waitSubscriptionDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 			return nil
 		}

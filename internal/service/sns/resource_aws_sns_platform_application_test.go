@@ -1,4 +1,4 @@
-package aws
+package sns_test
 
 import (
 	"fmt"
