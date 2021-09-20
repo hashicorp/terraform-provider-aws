@@ -187,7 +187,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.StackId))
 
-	stack, err := waiter.StackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
+	stack, err := waiter.WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		if stack != nil {
 			status := aws.StringValue(stack.StackStatus)
@@ -374,7 +374,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation stack (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.StackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = waiter.WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack update: %w", err)
 	}
@@ -401,7 +401,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	_, err = waiter.StackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack deletion: %w", err)
 	}

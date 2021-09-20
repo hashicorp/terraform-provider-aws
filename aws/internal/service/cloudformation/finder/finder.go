@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func Stack(conn *cloudformation.CloudFormation, stackID string) (*cloudformation.Stack, error) {
+func FindStack(conn *cloudformation.CloudFormation, stackID string) (*cloudformation.Stack, error) {
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(stackID),
 	}
@@ -49,7 +49,7 @@ func Stack(conn *cloudformation.CloudFormation, stackID string) (*cloudformation
 		return nil, &resource.NotFoundError{
 			LastRequest:  input,
 			LastResponse: resp,
-			Message:      "CloudFormation Stack deleted",
+			Message:      "CloudFormation FindStack deleted",
 		}
 	}
 

@@ -89,7 +89,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 				continue
 			}
 
-			if err := waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), waiter.StackSetInstanceDeletedDefaultTimeout); err != nil {
+			if err := waiter.WaitStackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), waiter.StackSetInstanceDeletedDefaultTimeout); err != nil {
 				sweeperErr := fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)

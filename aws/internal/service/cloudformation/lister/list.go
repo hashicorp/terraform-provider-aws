@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ListStackEventsForOperation(conn *cloudformation.CloudFormation, stackID, requestToken string, fn func(*cloudformation.StackEvent)) error {
+func listStackEventsForOperation(conn *cloudformation.CloudFormation, stackID, requestToken string, fn func(*cloudformation.StackEvent)) error {
 	tokenSeen := false
 	err := conn.DescribeStackEventsPages(&cloudformation.DescribeStackEventsInput{
 		StackName: aws.String(stackID),

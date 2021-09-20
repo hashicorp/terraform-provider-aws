@@ -166,7 +166,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): empty response", typeName))
 	}
 
-	registrationOutput, err := waiter.TypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
+	registrationOutput, err := waiter.WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type (%s) registration: %w", typeName, err))

@@ -323,7 +323,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
-	if err := waiter.StackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waiter.WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %s", d.Id(), err)
 	}
 

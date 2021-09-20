@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
+func StatusChangeSet(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
 			ChangeSetName: aws.String(changeSetName),
@@ -35,7 +35,7 @@ func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName
 	}
 }
 
-func StackSetOperationStatus(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
+func StatusStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &cloudformation.DescribeStackSetOperationInput{
 			OperationId:  aws.String(operationID),
@@ -98,7 +98,7 @@ const (
 	stackStatusNotFound = "NotFound"
 )
 
-func StackStatus(conn *cloudformation.CloudFormation, stackName string) resource.StateRefreshFunc {
+func StatusStack(conn *cloudformation.CloudFormation, stackName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
 			StackName: aws.String(stackName),
@@ -115,7 +115,7 @@ func StackStatus(conn *cloudformation.CloudFormation, stackName string) resource
 	}
 }
 
-func TypeRegistrationProgressStatus(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) resource.StateRefreshFunc {
+func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &cloudformation.DescribeTypeRegistrationInput{
 			RegistrationToken: aws.String(registrationToken),
