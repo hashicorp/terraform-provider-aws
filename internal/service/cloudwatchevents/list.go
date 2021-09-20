@@ -1,6 +1,6 @@
 //go:generate go run ../../../generators/listpages/main.go -function=ListEventBuses,ListRules,ListTargetsByRule github.com/aws/aws-sdk-go/service/cloudwatchevents
 
-package lister
+package cloudwatchevents
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

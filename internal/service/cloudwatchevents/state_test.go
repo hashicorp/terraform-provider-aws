@@ -1,4 +1,4 @@
-package cloudwatchevents_test
+package cloudwatchevents
 
 import (
 	"testing"

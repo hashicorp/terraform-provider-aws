@@ -1,4 +1,4 @@
-package waiter
+package cloudwatchevents
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
