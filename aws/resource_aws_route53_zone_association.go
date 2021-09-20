@@ -116,7 +116,7 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 
 	hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
-	if isAWSErr(err, "AccessDenied", "is not owned by you") && !d.IsNewResource() {
+	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") && !d.IsNewResource() {
 		log.Printf("[WARN] Route 53 Zone Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -208,7 +208,7 @@ func resourceAwsRoute53ZoneAssociationRefreshFunc(conn *route53.Route53, changeI
 			Id: aws.String(changeId),
 		}
 		result, state, err := resourceAwsGoRoute53Wait(conn, changeRequest)
-		if isAWSErr(err, "AccessDenied", "") {
+		if tfawserr.ErrMessageContains(err, "AccessDenied", "") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil
 		}
