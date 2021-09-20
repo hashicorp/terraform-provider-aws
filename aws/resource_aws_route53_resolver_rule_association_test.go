@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*conns.AWSClient).Route53ResolverConn
 
 	var errors error
 	err = conn.ListResolverRuleAssociationsPages(&route53resolver.ListResolverRuleAssociationsInput{}, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
@@ -109,7 +110,7 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule_association" {
 			continue
@@ -142,7 +143,7 @@ func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53res
 			return fmt.Errorf("No Route 53 Resolver rule association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(rs.Primary.ID),
 		})

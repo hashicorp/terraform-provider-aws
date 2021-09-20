@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociation() *schema.Resource {
@@ -69,8 +70,8 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
@@ -104,9 +105,9 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationCreate(d *schema.Reso
 }
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ruleGroupAssociation, err := finder.FirewallRuleGroupAssociationByID(conn, d.Id())
 
@@ -158,7 +159,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationRead(d *schema.Resour
 }
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChanges("name", "mutation_protection", "priority") {
 		input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
@@ -195,7 +196,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationUpdate(d *schema.Reso
 }
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	_, err := conn.DisassociateFirewallRuleGroup(&route53resolver.DisassociateFirewallRuleGroupInput{
 		FirewallRuleGroupAssociationId: aws.String(d.Id()),

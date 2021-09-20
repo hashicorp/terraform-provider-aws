@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
@@ -54,8 +55,8 @@ func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverFirewallDomainListCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateFirewallDomainListInput{
@@ -80,9 +81,9 @@ func resourceAwsRoute53ResolverFirewallDomainListCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	firewallDomainList, err := finder.FirewallDomainListByID(conn, d.Id())
 
@@ -143,7 +144,7 @@ func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, me
 }
 
 func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChange("domains") {
 		o, n := d.GetChange("domains")
@@ -192,7 +193,7 @@ func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, 
 }
 
 func resourceAwsRoute53ResolverFirewallDomainListDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	_, err := conn.DeleteFirewallDomainList(&route53resolver.DeleteFirewallDomainListInput{
 		FirewallDomainListId: aws.String(d.Id()),

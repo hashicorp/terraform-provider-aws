@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53ResolverDnssecConfig() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsRoute53ResolverDnssecConfig() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverDnssecConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	req := &route53resolver.UpdateResolverDnssecConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -77,7 +78,7 @@ func resourceAwsRoute53ResolverDnssecConfigCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	config, err := finder.ResolverDnssecConfigByID(conn, d.Id())
 
@@ -97,9 +98,9 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 	d.Set("validation_status", config.ValidationStatus)
 
 	configArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53resolver",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.StringValue(config.OwnerId),
 		Resource:  fmt.Sprintf("resolver-dnssec-config/%s", aws.StringValue(config.ResourceId)),
 	}.String()
@@ -109,7 +110,7 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRoute53ResolverDnssecConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	// To delete a Route 53 ResolverDnssecConfig, it must be:
 	// (1) updated to a "DISABLED" state

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
@@ -71,7 +72,7 @@ func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
 }
 
 func dataSourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 	req := &route53resolver.ListResolverEndpointsInput{}
 
 	resolvers := make([]*route53resolver.ResolverEndpoint, 0)
