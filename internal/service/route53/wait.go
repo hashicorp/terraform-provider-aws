@@ -1,4 +1,4 @@
-package waiter
+package route53
 
 import (
 	"errors"
