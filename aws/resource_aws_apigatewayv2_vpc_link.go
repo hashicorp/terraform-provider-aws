@@ -88,7 +88,7 @@ func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	outputRaw, _, err := waiter.VpcLinkStatus(conn, d.Id())()
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 VPC Link (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -160,7 +160,7 @@ func resourceAwsApiGatewayV2VpcLinkDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -168,7 +168,7 @@ func resourceAwsApiGatewayV2VpcLinkDelete(d *schema.ResourceData, meta interface
 	}
 
 	_, err = waiter.VpcLinkDeleted(conn, d.Id())
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

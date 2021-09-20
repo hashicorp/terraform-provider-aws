@@ -239,7 +239,7 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -395,7 +395,7 @@ func resourceAwsApiGatewayV2IntegrationDelete(d *schema.ResourceData, meta inter
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

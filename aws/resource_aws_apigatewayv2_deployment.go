@@ -76,7 +76,7 @@ func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	outputRaw, _, err := waiter.DeploymentStatus(conn, d.Get("api_id").(string), d.Id())()
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -124,7 +124,7 @@ func resourceAwsApiGatewayV2DeploymentDelete(d *schema.ResourceData, meta interf
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
