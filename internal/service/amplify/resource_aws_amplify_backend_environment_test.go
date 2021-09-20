@@ -127,7 +127,7 @@ func testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName string, v *ampl
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		backendEnvironment, err := finder.BackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
+		backendEnvironment, err := finder.FindBackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
 
 		if err != nil {
 			return err
@@ -153,7 +153,7 @@ func testAccCheckAWSAmplifyBackendEnvironmentDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.BackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
+		_, err = finder.FindBackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
 
 		if tfresource.NotFound(err) {
 			continue

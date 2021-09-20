@@ -110,12 +110,12 @@ func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(id)
 
-	if _, err := waiter.DomainAssociationCreated(conn, appID, domainName); err != nil {
+	if _, err := waiter.waitDomainAssociationCreated(conn, appID, domainName); err != nil {
 		return fmt.Errorf("error waiting for Amplify Domain Association (%s) to create: %w", d.Id(), err)
 	}
 
 	if d.Get("wait_for_verification").(bool) {
-		if _, err := waiter.DomainAssociationVerified(conn, appID, domainName); err != nil {
+		if _, err := waiter.waitDomainAssociationVerified(conn, appID, domainName); err != nil {
 			return fmt.Errorf("error waiting for Amplify Domain Association (%s) to verify: %w", d.Id(), err)
 		}
 	}
@@ -132,7 +132,7 @@ func resourceDomainAssociationRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)
 	}
 
-	domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+	domainAssociation, err := finder.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Domain Association (%s) not found, removing from state", d.Id())
@@ -180,7 +180,7 @@ func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.Get("wait_for_verification").(bool) {
-		if _, err := waiter.DomainAssociationVerified(conn, appID, domainName); err != nil {
+		if _, err := waiter.waitDomainAssociationVerified(conn, appID, domainName); err != nil {
 			return fmt.Errorf("error waiting for Amplify Domain Association (%s) to verify: %w", d.Id(), err)
 		}
 	}

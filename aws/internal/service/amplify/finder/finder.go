@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AppByID(conn *amplify.Amplify, id string) (*amplify.App, error) {
+func FindAppByID(conn *amplify.Amplify, id string) (*amplify.App, error) {
 	input := &amplify.GetAppInput{
 		AppId: aws.String(id),
 	}
@@ -36,7 +36,7 @@ func AppByID(conn *amplify.Amplify, id string) (*amplify.App, error) {
 	return output.App, nil
 }
 
-func BackendEnvironmentByAppIDAndEnvironmentName(conn *amplify.Amplify, appID, environmentName string) (*amplify.BackendEnvironment, error) {
+func FindBackendEnvironmentByAppIDAndEnvironmentName(conn *amplify.Amplify, appID, environmentName string) (*amplify.BackendEnvironment, error) {
 	input := &amplify.GetBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
@@ -65,7 +65,7 @@ func BackendEnvironmentByAppIDAndEnvironmentName(conn *amplify.Amplify, appID, e
 	return output.BackendEnvironment, nil
 }
 
-func BranchByAppIDAndBranchName(conn *amplify.Amplify, appID, branchName string) (*amplify.Branch, error) {
+func FindBranchByAppIDAndBranchName(conn *amplify.Amplify, appID, branchName string) (*amplify.Branch, error) {
 	input := &amplify.GetBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
@@ -94,7 +94,7 @@ func BranchByAppIDAndBranchName(conn *amplify.Amplify, appID, branchName string)
 	return output.Branch, nil
 }
 
-func DomainAssociationByAppIDAndDomainName(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func FindDomainAssociationByAppIDAndDomainName(conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
 	input := &amplify.GetDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
@@ -123,7 +123,7 @@ func DomainAssociationByAppIDAndDomainName(conn *amplify.Amplify, appID, domainN
 	return output.DomainAssociation, nil
 }
 
-func WebhookByID(conn *amplify.Amplify, id string) (*amplify.Webhook, error) {
+func FindWebhookByID(conn *amplify.Amplify, id string) (*amplify.Webhook, error) {
 	input := &amplify.GetWebhookInput{
 		WebhookId: aws.String(id),
 	}

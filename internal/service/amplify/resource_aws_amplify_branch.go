@@ -278,7 +278,7 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
 	}
 
-	branch, err := finder.BranchByAppIDAndBranchName(conn, appID, branchName)
+	branch, err := finder.FindBranchByAppIDAndBranchName(conn, appID, branchName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Branch (%s) not found, removing from state", d.Id())

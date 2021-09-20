@@ -414,7 +414,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	app, err := finder.AppByID(conn, d.Id())
+	app, err := finder.FindAppByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())

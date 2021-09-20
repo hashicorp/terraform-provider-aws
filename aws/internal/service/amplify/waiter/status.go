@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DomainAssociationStatus(conn *amplify.Amplify, appID, domainName string) resource.StateRefreshFunc {
+func statusDomainAssociation(conn *amplify.Amplify, appID, domainName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		domainAssociation, err := finder.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

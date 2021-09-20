@@ -303,7 +303,7 @@ func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		branch, err := finder.BranchByAppIDAndBranchName(conn, appID, branchName)
+		branch, err := finder.FindBranchByAppIDAndBranchName(conn, appID, branchName)
 
 		if err != nil {
 			return err
@@ -329,7 +329,7 @@ func testAccCheckAWSAmplifyBranchDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.BranchByAppIDAndBranchName(conn, appID, branchName)
+		_, err = finder.FindBranchByAppIDAndBranchName(conn, appID, branchName)
 
 		if tfresource.NotFound(err) {
 			continue

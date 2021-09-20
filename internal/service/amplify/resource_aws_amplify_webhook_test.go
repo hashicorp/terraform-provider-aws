@@ -120,7 +120,7 @@ func testAccCheckAWSAmplifyWebhookExists(resourceName string, v *amplify.Webhook
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		webhook, err := finder.WebhookByID(conn, rs.Primary.ID)
+		webhook, err := finder.FindWebhookByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -140,7 +140,7 @@ func testAccCheckAWSAmplifyWebhookDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.WebhookByID(conn, rs.Primary.ID)
+		_, err := finder.FindWebhookByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

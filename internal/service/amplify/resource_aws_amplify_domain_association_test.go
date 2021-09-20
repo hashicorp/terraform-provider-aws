@@ -168,7 +168,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		domainAssociation, err := finder.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 		if err != nil {
 			return err
@@ -194,7 +194,7 @@ func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		_, err = finder.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
 		if tfresource.NotFound(err) {
 			continue
