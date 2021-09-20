@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 )
 
 func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
@@ -57,7 +58,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 				Config: testAccAwsRoute53RecoveryReadinessCellConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCell(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoveryreadiness.ResourceCell(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
