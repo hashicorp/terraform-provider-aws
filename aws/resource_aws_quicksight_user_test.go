@@ -24,7 +24,7 @@ func TestAccAWSQuickSightUser_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +84,7 @@ func TestAccAWSQuickSightUser_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +111,7 @@ func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 
 		input := &quicksight.DescribeUserInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -136,7 +136,7 @@ func testAccCheckQuickSightUserExists(resourceName string, user *quicksight.User
 }
 
 func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_user" {
 			continue
@@ -168,7 +168,7 @@ func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
 
 func testAccCheckQuickSightUserDisappears(v *quicksight.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {
@@ -206,5 +206,5 @@ resource "aws_quicksight_user" %[1]q {
 }
 
 func testAccAWSQuickSightUserConfig(rName string) string {
-	return testAccAWSQuickSightUserConfigWithEmail(rName, testAccDefaultEmailAddress)
+	return testAccAWSQuickSightUserConfigWithEmail(rName, acctest.DefaultEmailAddress)
 }

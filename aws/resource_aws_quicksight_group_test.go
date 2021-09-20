@@ -23,7 +23,7 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func TestAccAWSQuickSightGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 
 		input := &quicksight.DescribeGroupInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -145,7 +145,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 }
 
 func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group" {
 			continue
@@ -177,7 +177,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 
 func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {
