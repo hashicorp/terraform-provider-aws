@@ -135,14 +135,14 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.DescribeEventBus(&input)
 		if output != nil {
 			policyStatement, err = getPolicyStatement(output, statementID)
 		}
 	}
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Events permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -221,7 +221,7 @@ func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Update CloudWatch Events permission: %s", input)
 	_, err = conn.PutPermission(&input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Events permission %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -247,7 +247,7 @@ func resourceAwsCloudWatchEventPermissionDelete(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Delete CloudWatch Events permission: %s", input)
 	_, err = conn.RemovePermission(&input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

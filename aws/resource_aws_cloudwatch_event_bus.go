@@ -88,7 +88,7 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Reading CloudWatch Events event bus (%s)", d.Id())
 	output, err := conn.DescribeEventBus(input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Events event bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -141,7 +141,7 @@ func resourceAwsCloudWatchEventBusDelete(d *schema.ResourceData, meta interface{
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Events event bus (%s) not found", d.Id())
 		return nil
 	}
