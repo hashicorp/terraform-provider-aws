@@ -2,7 +2,6 @@ package backup
 
 import (
 	"time"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
