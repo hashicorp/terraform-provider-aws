@@ -82,7 +82,7 @@ func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) err
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
 		Pattern:           aws.String(d.Get("pattern").(string)),
 		ProtectionGroupId: aws.String(protectionGroupID),
-		Tags:              tags.IgnoreAws().ShieldTags(),
+		Tags:              Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("members"); ok {
@@ -140,7 +140,7 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("resource_type", resp.ProtectionGroup.ResourceType)
 	}
 
-	tags, err := tftags.ShieldListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Shield Protection Group (%s): %w", arn, err)
@@ -186,7 +186,7 @@ func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ShieldUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

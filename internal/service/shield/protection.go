@@ -51,7 +51,7 @@ func resourceProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ShieldUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -68,7 +68,7 @@ func resourceProtectionCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(d.Get("name").(string)),
 		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-		Tags:        tags.IgnoreAws().ShieldTags(),
+		Tags:        Tags(tags.IgnoreAws()),
 	}
 
 	resp, err := conn.CreateProtection(input)
@@ -105,7 +105,7 @@ func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Protection.Name)
 	d.Set("resource_arn", resp.Protection.ResourceArn)
 
-	tags, err := tftags.ShieldListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Shield Protection (%s): %s", arn, err)
