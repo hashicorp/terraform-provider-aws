@@ -2,7 +2,6 @@ package servicecatalog
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidSharePrincipal(t *testing.T) {
