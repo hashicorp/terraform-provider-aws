@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -110,7 +110,7 @@ func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 		imageIds = append(imageIds, *image.ImageId)
 	}
 
-	d.SetId(fmt.Sprintf("%d", hashcode.String(params.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(params.String())))
 	d.Set("ids", imageIds)
 
 	return nil

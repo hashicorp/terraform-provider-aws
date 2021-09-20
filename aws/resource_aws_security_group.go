@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
@@ -263,7 +263,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		securityGroupOpts.Description = aws.String(v.(string))
 	}
 
-	groupName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	securityGroupOpts.GroupName = aws.String(groupName)
 
 	var err error
@@ -379,7 +379,7 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", sgArn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(sg.GroupName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(sg.GroupName)))
 	d.Set("owner_id", sg.OwnerId)
 	d.Set("vpc_id", sg.VpcId)
 
@@ -591,7 +591,7 @@ func resourceAwsSecurityGroupRuleHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", m["description"].(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, ownerId *string) []map[string]interface{} {
@@ -1268,7 +1268,7 @@ func idCollapseHash(rType, protocol string, toPort, fromPort int64, description 
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
 	buf.WriteString(fmt.Sprintf("%s-", description))
 
-	return fmt.Sprintf("rule-%d", hashcode.String(buf.String()))
+	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }
 
 // Creates a unique hash for the type, ports, and protocol, used as a key in
@@ -1281,7 +1281,7 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
 	buf.WriteString(fmt.Sprintf("%t-", self))
 
-	return fmt.Sprintf("rule-%d", hashcode.String(buf.String()))
+	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }
 
 // protocolStateFunc ensures we only store a string in any protocol field

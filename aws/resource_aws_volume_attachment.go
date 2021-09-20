@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -275,5 +275,5 @@ func volumeAttachmentID(name, volumeID, instanceID string) string {
 	buf.WriteString(fmt.Sprintf("%s-", instanceID))
 	buf.WriteString(fmt.Sprintf("%s-", volumeID))
 
-	return fmt.Sprintf("vai-%d", hashcode.String(buf.String()))
+	return fmt.Sprintf("vai-%d", create.StringHashcode(buf.String()))
 }

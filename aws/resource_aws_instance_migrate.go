@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -76,7 +76,7 @@ func readV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]stri
 
 func writeV1BlockDevice(
 	is *terraform.InstanceState, oldBd map[string]string) {
-	code := hashcode.String(oldBd["device_name"])
+	code := create.StringHashcode(oldBd["device_name"])
 	bdType := "ebs_block_device"
 	if vn, ok := oldBd["virtual_name"]; ok && strings.HasPrefix(vn, "ephemeral") {
 		bdType = "ephemeral_block_device"

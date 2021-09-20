@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1728,7 +1728,7 @@ func hashEphemeralBlockDevice(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func hashRootBlockDevice(v interface{}) int {
@@ -1748,7 +1748,7 @@ func hashLaunchSpecification(v interface{}) int {
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func hashLaunchTemplateOverrides(v interface{}) int {
@@ -1773,7 +1773,7 @@ func hashLaunchTemplateOverrides(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%f-", m["priority"].(float64)))
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func hashEbsBlockDevice(v interface{}) int {
@@ -1785,7 +1785,7 @@ func hashEbsBlockDevice(v interface{}) int {
 	if id, ok := m["snapshot_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func flattenFleetLaunchTemplateConfig(ltcs []*ec2.LaunchTemplateConfig) []map[string]interface{} {
