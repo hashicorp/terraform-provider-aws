@@ -119,7 +119,7 @@ func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheck
 			return fmt.Errorf("No ID is set")
 		}
 
-		_, err := finder.ListenerByARN(conn, rs.Primary.ID)
+		_, err := finder.FindListenerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -137,7 +137,7 @@ func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ListenerByARN(conn, rs.Primary.ID)
+		_, err := finder.FindListenerByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

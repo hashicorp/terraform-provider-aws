@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// AcceleratorStatus fetches the Accelerator and its Status
-func AcceleratorStatus(conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+// statusAccelerator fetches the Accelerator and its Status
+func statusAccelerator(conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		accelerator, err := finder.AcceleratorByARN(conn, arn)
+		accelerator, err := finder.FindAcceleratorByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

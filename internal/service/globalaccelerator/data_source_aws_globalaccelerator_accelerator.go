@@ -135,7 +135,7 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets))
 
-	acceleratorAttributes, err := finder.AcceleratorAttributesByARN(conn, d.Id())
+	acceleratorAttributes, err := finder.FindAcceleratorAttributesByARN(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 	}

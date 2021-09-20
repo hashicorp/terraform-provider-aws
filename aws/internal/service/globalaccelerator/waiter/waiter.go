@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// AcceleratorDeployed waits for an Accelerator to return Deployed
-func AcceleratorDeployed(conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.Accelerator, error) {
+// waitAcceleratorDeployed waits for an Accelerator to return Deployed
+func waitAcceleratorDeployed(conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.Accelerator, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: AcceleratorStatus(conn, arn),
+		Refresh: statusAccelerator(conn, arn),
 		Timeout: timeout,
 	}
 

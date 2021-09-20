@@ -434,7 +434,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupExists(name string, v *globalacce
 			return fmt.Errorf("No Global Accelerator endpoint group ID is set")
 		}
 
-		endpointGroup, err := finder.EndpointGroupByARN(conn, rs.Primary.ID)
+		endpointGroup, err := finder.FindEndpointGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -454,7 +454,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error
 			continue
 		}
 
-		_, err := finder.EndpointGroupByARN(conn, rs.Primary.ID)
+		_, err := finder.FindEndpointGroupByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -475,7 +475,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGr
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := ec2finder.SecurityGroupByNameAndVpcID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		sg, err := ec2finder.FindSecurityGroupByNameAndVPCID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
 		if tfresource.NotFound(err) {
 			// Already gone.
 			return nil

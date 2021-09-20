@@ -211,7 +211,7 @@ func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	if _, err := waiter.AcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -221,7 +221,7 @@ func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error
 func resourceEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
-	endpointGroup, err := finder.EndpointGroupByARN(conn, d.Id())
+	endpointGroup, err := finder.FindEndpointGroupByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator endpoint group (%s) not found, removing from state", d.Id())
@@ -315,7 +315,7 @@ func resourceEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	if _, err := waiter.AcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waiter.waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
@@ -346,7 +346,7 @@ func resourceEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	if _, err := waiter.AcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 

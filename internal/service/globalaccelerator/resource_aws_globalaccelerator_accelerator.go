@@ -148,7 +148,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.Accelerator.AcceleratorArn))
 
-	if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 	}
 
@@ -161,7 +161,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waiter.waitAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 		}
 	}
@@ -174,7 +174,7 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	accelerator, err := finder.AcceleratorByARN(conn, d.Id())
+	accelerator, err := finder.FindAcceleratorByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Accelerator (%s) not found, removing from state", d.Id())
@@ -196,7 +196,7 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ip_sets: %w", err)
 	}
 
-	acceleratorAttributes, err := finder.AcceleratorAttributesByARN(conn, d.Id())
+	acceleratorAttributes, err := finder.FindAcceleratorAttributesByARN(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
@@ -244,7 +244,7 @@ func resourceAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating Global Accelerator Accelerator (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.waitAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 		}
 	}
@@ -267,7 +267,7 @@ func resourceAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 						return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 					}
 
-					if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					if _, err := waiter.waitAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 						return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 					}
 				}
@@ -277,7 +277,7 @@ func resourceAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 				}
 
-				if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if _, err := waiter.waitAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 				}
 			}
@@ -315,7 +315,7 @@ func resourceAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error disabling Global Accelerator Accelerator (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.waitAcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 		}
 	}
