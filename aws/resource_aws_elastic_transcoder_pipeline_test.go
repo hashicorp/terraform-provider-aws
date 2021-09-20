@@ -23,7 +23,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +149,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +182,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,14 +208,14 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: awsElasticTranscoderPipelineConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticTranscoderPipeline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticTranscoderPipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -234,7 +234,7 @@ func testAccCheckAWSElasticTranscoderPipelineExists(n string, res *elastictransc
 			return fmt.Errorf("No Pipeline ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+		conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
 
 		out, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
@@ -251,7 +251,7 @@ func testAccCheckAWSElasticTranscoderPipelineExists(n string, res *elastictransc
 }
 
 func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+	conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastictranscoder_pipline" {
@@ -276,7 +276,7 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSElasticTranscoder(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+	conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
 
 	input := &elastictranscoder.ListPipelinesInput{}
 
