@@ -22,7 +22,7 @@ func TestAccAWSIdentityStoreUserDataSource_UserName(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreUserName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func TestAccAWSIdentityStoreUserDataSource_UserID(t *testing.T) {
 			testAccPreCheckAWSIdentityStoreUserID(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +67,7 @@ func TestAccAWSIdentityStoreUserDataSource_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
