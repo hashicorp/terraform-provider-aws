@@ -60,7 +60,7 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 	return nil
 }
 
-func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
+func TestAccConfigAggregateAuthorization_basic(t *testing.T) {
 	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.example"
 	dataSourceName := "data.aws_region.current"
@@ -88,7 +88,7 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
+func TestAccConfigAggregateAuthorization_tags(t *testing.T) {
 	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.example"
 

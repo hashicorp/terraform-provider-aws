@@ -61,7 +61,7 @@ func testSweepConfigConfigurationAggregators(region string) error {
 	return nil
 }
 
-func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
+func TestAccConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	//Name is upper case on purpose to test https://github.com/hashicorp/terraform-provider-aws/issues/8432
 	rName := sdkacctest.RandomWithPrefix("Tf-acc-test")
@@ -97,7 +97,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	})
 }
 
-func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
+func TestAccConfigConfigurationAggregator_organization(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
@@ -128,7 +128,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	})
 }
 
-func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
+func TestAccConfigConfigurationAggregator_switch(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
@@ -156,7 +156,7 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	})
 }
 
-func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
+func TestAccConfigConfigurationAggregator_tags(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
@@ -204,7 +204,7 @@ func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSConfigConfigurationAggregator_disappears(t *testing.T) {
+func TestAccConfigConfigurationAggregator_disappears(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
