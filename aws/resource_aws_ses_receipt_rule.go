@@ -486,7 +486,7 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("enabled", response.Rule.Enabled)
-	d.Set("recipients", flattenStringSet(response.Rule.Recipients))
+	d.Set("recipients", flex.FlattenStringSet(response.Rule.Recipients))
 	d.Set("scan_enabled", response.Rule.ScanEnabled)
 	d.Set("tls_policy", response.Rule.TlsPolicy)
 
@@ -676,7 +676,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 	}
 
 	if v, ok := d.GetOk("recipients"); ok {
-		receiptRule.Recipients = expandStringSet(v.(*schema.Set))
+		receiptRule.Recipients = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("scan_enabled"); ok {
