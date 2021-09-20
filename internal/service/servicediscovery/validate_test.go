@@ -3,7 +3,6 @@ package servicediscovery
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidNamespaceName(t *testing.T) {
