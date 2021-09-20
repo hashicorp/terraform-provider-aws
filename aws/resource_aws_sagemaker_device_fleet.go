@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerDeviceFleet() *schema.Resource {
@@ -83,8 +84,8 @@ func resourceAwsSagemakerDeviceFleet() *schema.Resource {
 }
 
 func resourceAwsSagemakerDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("device_fleet_name").(string)
@@ -119,9 +120,9 @@ func resourceAwsSagemakerDeviceFleetCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	deviceFleet, err := finder.DeviceFleetByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -169,7 +170,7 @@ func resourceAwsSagemakerDeviceFleetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSagemakerDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDeviceFleetInput{
@@ -202,7 +203,7 @@ func resourceAwsSagemakerDeviceFleetUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteDeviceFleetInput{
 		DeviceFleetName: aws.String(d.Id()),

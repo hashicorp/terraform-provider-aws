@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerImage() *schema.Resource {
@@ -65,8 +66,8 @@ func resourceAwsSagemakerImage() *schema.Resource {
 }
 
 func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("image_name").(string)
@@ -104,9 +105,9 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	image, err := finder.ImageByName(conn, d.Id())
 	if err != nil {
@@ -147,7 +148,7 @@ func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 	needsUpdate := false
 
 	input := &sagemaker.UpdateImageInput{
@@ -200,7 +201,7 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSagemakerImageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteImageInput{
 		ImageName: aws.String(d.Id()),

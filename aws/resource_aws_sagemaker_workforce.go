@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerWorkforce() *schema.Resource {
@@ -150,7 +151,7 @@ func resourceAwsSagemakerWorkforce() *schema.Resource {
 }
 
 func resourceAwsSagemakerWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("workforce_name").(string)
 	input := &sagemaker.CreateWorkforceInput{
@@ -182,7 +183,7 @@ func resourceAwsSagemakerWorkforceCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	workforce, err := finder.WorkforceByName(conn, d.Id())
 
@@ -218,7 +219,7 @@ func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.UpdateWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
@@ -243,7 +244,7 @@ func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSagemakerWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
 	_, err := conn.DeleteWorkforce(&sagemaker.DeleteWorkforceInput{
