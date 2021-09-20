@@ -80,7 +80,7 @@ func testAccCheckAWSS3OutpostsEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		endpoint, err := finder.Endpoint(conn, rs.Primary.ID)
+		endpoint, err := finder.FindEndpoint(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -107,7 +107,7 @@ func testAccCheckAWSS3OutpostsEndpointExists(resourceName string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn
 
-		endpoint, err := finder.Endpoint(conn, rs.Primary.ID)
+		endpoint, err := finder.FindEndpoint(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

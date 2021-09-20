@@ -96,7 +96,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.EndpointArn))
 
-	if _, err := waiter.EndpointStatusCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitEndpointStatusCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for S3 Outposts Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -106,7 +106,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3OutpostsConn
 
-	endpoint, err := finder.Endpoint(conn, d.Id())
+	endpoint, err := finder.FindEndpoint(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading S3 Outposts Endpoint (%s): %w", d.Id(), err)
