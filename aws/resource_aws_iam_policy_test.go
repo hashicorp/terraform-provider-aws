@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func testSweepIamPolicies(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*conns.AWSClient).IAMConn
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
 	}
@@ -341,9 +342,9 @@ func testAccCheckAWSIAMPolicyExists(resource string, res *iam.GetPolicyOutput) r
 			return fmt.Errorf("No Policy name is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		resp, err := iamconn.GetPolicy(&iam.GetPolicyInput{
+		resp, err := conn.GetPolicy(&iam.GetPolicyInput{
 			PolicyArn: aws.String(rs.Primary.Attributes["arn"]),
 		})
 		if err != nil {
@@ -357,14 +358,14 @@ func testAccCheckAWSIAMPolicyExists(resource string, res *iam.GetPolicyOutput) r
 }
 
 func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_policy" {
 			continue
 		}
 
-		_, err := iamconn.GetPolicy(&iam.GetPolicyInput{
+		_, err := conn.GetPolicy(&iam.GetPolicyInput{
 			PolicyArn: aws.String(rs.Primary.ID),
 		})
 

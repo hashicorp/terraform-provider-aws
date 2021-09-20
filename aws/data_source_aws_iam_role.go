@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsIAMRole() *schema.Resource {
@@ -58,8 +59,8 @@ func dataSourceAwsIAMRole() *schema.Resource {
 }
 
 func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 
@@ -67,7 +68,7 @@ func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
 		RoleName: aws.String(name),
 	}
 
-	output, err := iamconn.GetRole(input)
+	output, err := conn.GetRole(input)
 	if err != nil {
 		return fmt.Errorf("error reading IAM Role (%s): %w", name, err)
 	}

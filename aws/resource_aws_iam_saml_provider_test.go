@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepIamSamlProvider(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*conns.AWSClient).IAMConn
 
 	var sweeperErrs *multierror.Error
 
@@ -165,7 +166,7 @@ func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckIAMSamlProviderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_saml_provider" {
@@ -204,7 +205,7 @@ func testAccCheckIAMSamlProviderExists(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		_, err := conn.GetSAMLProvider(&iam.GetSAMLProviderInput{
 			SAMLProviderArn: aws.String(rs.Primary.ID),
 		})

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
@@ -61,7 +62,7 @@ func testAccAWSIAMAccountAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIAMAccountAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_alias" {
@@ -96,7 +97,7 @@ func testAccCheckAWSIAMAccountAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		params := &iam.ListAccountAliasesInput{}
 
 		resp, err := conn.ListAccountAliases(params)

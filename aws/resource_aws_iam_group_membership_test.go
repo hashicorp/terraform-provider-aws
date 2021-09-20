@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSGroupMembership_basic(t *testing.T) {
@@ -84,7 +85,7 @@ func TestAccAWSGroupMembership_paginatedUserList(t *testing.T) {
 }
 
 func testAccCheckAWSGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group_membership" {
@@ -121,7 +122,7 @@ func testAccCheckAWSGroupMembershipExists(n string, g *iam.GetGroupOutput) resou
 			return fmt.Errorf("No User name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		gn := rs.Primary.Attributes["group"]
 
 		resp, err := conn.GetGroup(&iam.GetGroupInput{

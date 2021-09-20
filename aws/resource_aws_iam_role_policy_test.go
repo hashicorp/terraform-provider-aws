@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
@@ -218,7 +219,7 @@ func TestAccAWSIAMRolePolicy_Policy_InvalidResource(t *testing.T) {
 }
 
 func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role_policy" {
@@ -235,7 +236,7 @@ func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
 			RoleName:   aws.String(role),
 		}
 
-		getResp, err := iamconn.GetRolePolicy(request)
+		getResp, err := conn.GetRolePolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				// none found, that's good
@@ -254,14 +255,14 @@ func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
 
 func testAccCheckIAMRolePolicyDisappears(out *iam.GetRolePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		params := &iam.DeleteRolePolicyInput{
 			PolicyName: out.PolicyName,
 			RoleName:   out.RoleName,
 		}
 
-		_, err := iamconn.DeleteRolePolicy(params)
+		_, err := conn.DeleteRolePolicy(params)
 		return err
 	}
 }
@@ -285,13 +286,13 @@ func testAccCheckIAMRolePolicyExists(
 			return fmt.Errorf("Not Found: %s", iamRolePolicyResource)
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		role, name, err := resourceAwsIamRolePolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := iamconn.GetRolePolicy(&iam.GetRolePolicyInput{
+		output, err := conn.GetRolePolicy(&iam.GetRolePolicyInput{
 			RoleName:   aws.String(role),
 			PolicyName: aws.String(name),
 		})

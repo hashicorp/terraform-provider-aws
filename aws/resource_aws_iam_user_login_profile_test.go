@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestGenerateIAMPassword(t *testing.T) {
@@ -208,14 +209,14 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 }
 
 func testAccCheckAWSUserLoginProfileDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_login_profile" {
 			continue
 		}
 
-		_, err := iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
+		_, err := conn.GetLoginProfile(&iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 
@@ -304,8 +305,8 @@ func testAccCheckAWSUserLoginProfileExists(n string, res *iam.GetLoginProfileOut
 			return errors.New("No UserName is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
-		resp, err := iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		resp, err := conn.GetLoginProfile(&iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {

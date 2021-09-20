@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamRolePolicyAttachment() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsIamRolePolicyAttachment() *schema.Resource {
 }
 
 func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
@@ -56,7 +57,7 @@ func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsIamRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 	role := d.Get("role").(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -113,7 +114,7 @@ func resourceAwsIamRolePolicyAttachmentRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsIamRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 

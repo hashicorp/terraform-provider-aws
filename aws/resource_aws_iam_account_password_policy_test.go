@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
@@ -45,7 +46,7 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_password_policy" {
@@ -53,7 +54,7 @@ func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
 		}
 
 		// Try to get policy
-		_, err := iamconn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
+		_, err := conn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
 		if err == nil {
 			return fmt.Errorf("still exist.")
 		}
@@ -82,9 +83,9 @@ func testAccCheckAWSIAMAccountPasswordPolicyExists(n string, res *iam.GetAccount
 			return fmt.Errorf("No policy ID is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		resp, err := iamconn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
+		resp, err := conn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
 		if err != nil {
 			return err
 		}

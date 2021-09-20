@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamPolicy() *schema.Resource {
@@ -83,8 +84,8 @@ func resourceAwsIamPolicy() *schema.Resource {
 }
 
 func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -115,9 +116,9 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetPolicyInput{
 		PolicyArn: aws.String(d.Id()),
@@ -232,7 +233,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 
@@ -263,7 +264,7 @@ func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsIamPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if err := iamPolicyDeleteNondefaultVersions(d.Id(), conn); err != nil {
 		return err

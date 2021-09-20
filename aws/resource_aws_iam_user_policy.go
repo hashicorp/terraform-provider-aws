@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamUserPolicy() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsIamUserPolicy() *schema.Resource {
 }
 
 func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.PutUserPolicyInput{
 		UserName:       aws.String(d.Get("user").(string)),
@@ -80,7 +81,7 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 	}
 	request.PolicyName = aws.String(policyName)
 
-	if _, err := iamconn.PutUserPolicy(request); err != nil {
+	if _, err := conn.PutUserPolicy(request); err != nil {
 		return fmt.Errorf("Error putting IAM user policy %s: %s", *request.PolicyName, err)
 	}
 
@@ -89,7 +90,7 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
 	if err != nil {
@@ -106,7 +107,7 @@ func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) erro
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = iamconn.GetUserPolicy(request)
+		getResp, err = conn.GetUserPolicy(request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -120,7 +121,7 @@ func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = iamconn.GetUserPolicy(request)
+		getResp, err = conn.GetUserPolicy(request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -151,7 +152,7 @@ func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsIamUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
 	if err != nil {
@@ -163,7 +164,7 @@ func resourceAwsIamUserPolicyDelete(d *schema.ResourceData, meta interface{}) er
 		UserName:   aws.String(user),
 	}
 
-	if _, err := iamconn.DeleteUserPolicy(request); err != nil {
+	if _, err := conn.DeleteUserPolicy(request); err != nil {
 		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}

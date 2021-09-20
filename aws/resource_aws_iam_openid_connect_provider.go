@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
@@ -59,8 +60,8 @@ func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 }
 
 func resourceAwsIamOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &iam.CreateOpenIDConnectProviderInput{
@@ -81,9 +82,9 @@ func resourceAwsIamOpenIDConnectProviderCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsIamOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(d.Id()),
@@ -118,7 +119,7 @@ func resourceAwsIamOpenIDConnectProviderRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsIamOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("thumbprint_list") {
 		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
@@ -144,7 +145,7 @@ func resourceAwsIamOpenIDConnectProviderUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsIamOpenIDConnectProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.DeleteOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(d.Id()),

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/pquerna/otp/totp"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepIamUsers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*conns.AWSClient).IAMConn
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -601,7 +602,7 @@ func TestAccAWSUser_tags(t *testing.T) {
 }
 
 func testAccCheckAWSUserDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user" {
@@ -609,7 +610,7 @@ func testAccCheckAWSUserDestroy(s *terraform.State) error {
 		}
 
 		// Try to get user
-		_, err := iamconn.GetUser(&iam.GetUserInput{
+		_, err := conn.GetUser(&iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -636,9 +637,9 @@ func testAccCheckAWSUserExists(n string, res *iam.GetUserOutput) resource.TestCh
 			return fmt.Errorf("No User name is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		resp, err := iamconn.GetUser(&iam.GetUserInput{
+		resp, err := conn.GetUser(&iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -667,11 +668,11 @@ func testAccCheckAWSUserAttributes(user *iam.GetUserOutput, name string, path st
 
 func testAccCheckAWSUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		userName := aws.StringValue(getUserOutput.User.UserName)
 
-		_, err := iamconn.DeleteUser(&iam.DeleteUserInput{
+		_, err := conn.DeleteUser(&iam.DeleteUserInput{
 			UserName: aws.String(userName),
 		})
 		if err != nil {
@@ -700,13 +701,13 @@ func testAccCheckAWSUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, ex
 
 func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.CreateAccessKey(input); err != nil {
+		if _, err := conn.CreateAccessKey(input); err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Access Key: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -716,7 +717,7 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		password, err := generateIAMPassword(32)
 		if err != nil {
 			return err
@@ -726,7 +727,7 @@ func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) re
 			UserName: getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.CreateLoginProfile(input); err != nil {
+		if _, err := conn.CreateLoginProfile(input); err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Login Profile: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -736,14 +737,14 @@ func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) re
 
 func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 getUserOutput.User.Path,
 			VirtualMFADeviceName: getUserOutput.User.UserName,
 		}
 
-		createVirtualMFADeviceOutput, err := iamconn.CreateVirtualMFADevice(createVirtualMFADeviceInput)
+		createVirtualMFADeviceOutput, err := conn.CreateVirtualMFADevice(createVirtualMFADeviceInput)
 		if err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
@@ -765,7 +766,7 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 			UserName:            getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.EnableMFADevice(enableVirtualMFADeviceInput); err != nil {
+		if _, err := conn.EnableMFADevice(enableVirtualMFADeviceInput); err != nil {
 			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -782,14 +783,14 @@ func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource
 			return fmt.Errorf("error generating random SSH key: %w", err)
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         getUserOutput.User.UserName,
 			SSHPublicKeyBody: aws.String(publicKey),
 		}
 
-		_, err = iamconn.UploadSSHPublicKey(input)
+		_, err = conn.UploadSSHPublicKey(input)
 		if err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) SSH key: %w", aws.StringValue(getUserOutput.User.UserName), err)
 		}
@@ -800,7 +801,7 @@ func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource
 
 func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
 		if err != nil {
@@ -811,7 +812,7 @@ func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutpu
 			UserName:        getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.UploadSigningCertificate(input); err != nil {
+		if _, err := conn.UploadSigningCertificate(input); err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 

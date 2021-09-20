@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
@@ -245,9 +246,9 @@ func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutp
 			return err
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		resp, err := iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
+		resp, err := conn.GetUserPolicy(&iam.GetUserPolicyInput{
 			PolicyName: aws.String(name),
 			UserName:   aws.String(user),
 		})
@@ -262,7 +263,7 @@ func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutp
 }
 
 func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_policy" {
@@ -279,7 +280,7 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 			UserName:   aws.String(user),
 		}
 
-		getResp, err := iamconn.GetUserPolicy(request)
+		getResp, err := conn.GetUserPolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				// none found, that's good
@@ -298,14 +299,14 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckIAMUserPolicyDisappears(out *iam.GetUserPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		params := &iam.DeleteUserPolicyInput{
 			PolicyName: out.PolicyName,
 			UserName:   out.UserName,
 		}
 
-		_, err := iamconn.DeleteUserPolicy(params)
+		_, err := conn.DeleteUserPolicy(params)
 		return err
 	}
 }
@@ -328,13 +329,13 @@ func testAccCheckIAMUserPolicy(
 			return fmt.Errorf("Not Found: %s", iamUserPolicyResource)
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		username, name, err := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		_, err = iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
+		_, err = conn.GetUserPolicy(&iam.GetUserPolicyInput{
 			UserName:   aws.String(username),
 			PolicyName: aws.String(name),
 		})
@@ -354,8 +355,8 @@ func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected 
 			return fmt.Errorf("No ID is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
-		userPolicies, err := iamconn.ListUserPolicies(&iam.ListUserPoliciesInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		userPolicies, err := conn.ListUserPolicies(&iam.ListUserPoliciesInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 

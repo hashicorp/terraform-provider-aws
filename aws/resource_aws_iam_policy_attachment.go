@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamPolicyAttachment() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsIamPolicyAttachment() *schema.Resource {
 }
 
 func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
@@ -83,7 +84,7 @@ func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsIamPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 	arn := d.Get("policy_arn").(string)
 	name := d.Get("name").(string)
 
@@ -138,7 +139,7 @@ func resourceAwsIamPolicyAttachmentRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 func resourceAwsIamPolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	var userErr, roleErr, groupErr error
 
@@ -158,7 +159,7 @@ func resourceAwsIamPolicyAttachmentUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsIamPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
 	users := expandStringSet(d.Get("users").(*schema.Set))

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamRolePolicy() *schema.Resource {
@@ -59,7 +60,7 @@ func resourceAwsIamRolePolicy() *schema.Resource {
 }
 
 func resourceAwsIamRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(d.Get("role").(string)),
@@ -76,7 +77,7 @@ func resourceAwsIamRolePolicyPut(d *schema.ResourceData, meta interface{}) error
 	}
 	request.PolicyName = aws.String(policyName)
 
-	if _, err := iamconn.PutRolePolicy(request); err != nil {
+	if _, err := conn.PutRolePolicy(request); err != nil {
 		return fmt.Errorf("Error putting IAM role policy %s: %s", *request.PolicyName, err)
 	}
 
@@ -85,7 +86,7 @@ func resourceAwsIamRolePolicyPut(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	role, name, err := resourceAwsIamRolePolicyParseId(d.Id())
 	if err != nil {
@@ -102,7 +103,7 @@ func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) erro
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = iamconn.GetRolePolicy(request)
+		getResp, err = conn.GetRolePolicy(request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -116,7 +117,7 @@ func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = iamconn.GetRolePolicy(request)
+		getResp, err = conn.GetRolePolicy(request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -147,7 +148,7 @@ func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsIamRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	role, name, err := resourceAwsIamRolePolicyParseId(d.Id())
 	if err != nil {
@@ -159,7 +160,7 @@ func resourceAwsIamRolePolicyDelete(d *schema.ResourceData, meta interface{}) er
 		RoleName:   aws.String(role),
 	}
 
-	if _, err := iamconn.DeleteRolePolicy(request); err != nil {
+	if _, err := conn.DeleteRolePolicy(request); err != nil {
 		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}

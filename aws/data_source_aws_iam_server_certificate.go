@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsIAMServerCertificate() *schema.Resource {
@@ -93,7 +94,7 @@ func (m certificateByExpiration) Less(i, j int) bool {
 }
 
 func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	var matcher = func(cert *iam.ServerCertificateMetadata) bool {
 		return strings.HasPrefix(aws.StringValue(cert.ServerCertificateName), d.Get("name_prefix").(string))
@@ -110,7 +111,7 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 		input.PathPrefix = aws.String(v.(string))
 	}
 	log.Printf("[DEBUG] Reading IAM Server Certificate")
-	err := iamconn.ListServerCertificatesPages(input, func(p *iam.ListServerCertificatesOutput, lastPage bool) bool {
+	err := conn.ListServerCertificatesPages(input, func(p *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, cert := range p.ServerCertificateMetadataList {
 			if matcher(cert) {
 				metadatas = append(metadatas, cert)
@@ -143,7 +144,7 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Get Public Key Certificate for %s", *metadata.ServerCertificateName)
-	serverCertificateResp, err := iamconn.GetServerCertificate(&iam.GetServerCertificateInput{
+	serverCertificateResp, err := conn.GetServerCertificate(&iam.GetServerCertificateInput{
 		ServerCertificateName: metadata.ServerCertificateName,
 	})
 	if err != nil {
