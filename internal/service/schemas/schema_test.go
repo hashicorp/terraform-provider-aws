@@ -66,7 +66,7 @@ const (
 `
 )
 
-func TestAccAWSSchemasSchema_basic(t *testing.T) {
+func TestAccSchemasSchema_basic(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
@@ -102,7 +102,7 @@ func TestAccAWSSchemasSchema_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasSchema_disappears(t *testing.T) {
+func TestAccSchemasSchema_disappears(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
@@ -125,7 +125,7 @@ func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
+func TestAccSchemasSchema_contentDescription(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
@@ -171,7 +171,7 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSSchemasSchema_Tags(t *testing.T) {
+func TestAccSchemasSchema_tags(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
