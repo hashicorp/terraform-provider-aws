@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -215,7 +215,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	computeEnvironmentName := naming.Generate(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
+	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
 
 	input := &batch.CreateComputeEnvironmentInput{
@@ -277,7 +277,7 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
-	d.Set("compute_environment_name_prefix", naming.NamePrefixFromName(aws.StringValue(computeEnvironment.ComputeEnvironmentName)))
+	d.Set("compute_environment_name_prefix", create.NamePrefixFromName(aws.StringValue(computeEnvironment.ComputeEnvironmentName)))
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("service_role", computeEnvironment.ServiceRole)
 	d.Set("state", computeEnvironment.State)
