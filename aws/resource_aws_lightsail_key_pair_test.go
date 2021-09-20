@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
@@ -134,7 +135,7 @@ func testAccCheckAWSLightsailKeyPairExists(n string, res *lightsail.KeyPair) res
 			return errors.New("No LightsailKeyPair set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
@@ -158,7 +159,7 @@ func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),

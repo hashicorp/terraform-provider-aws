@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
 }
 
 func resourceAwsRedshiftSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 	clusterIdentifier := d.Get("cluster_identifier").(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 
@@ -72,7 +73,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationCreate(d *schema.ResourceData
 }
 
 func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
@@ -115,7 +116,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, 
 }
 
 func resourceAwsRedshiftSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)

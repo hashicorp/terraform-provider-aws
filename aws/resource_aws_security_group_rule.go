@@ -19,6 +19,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityGroupRule() *schema.Resource {
@@ -152,7 +153,7 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 }
 
 func resourceAwsSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 
 	awsMutexKV.Lock(sg_id)
@@ -279,7 +280,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 }
 
 func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 	sg, err := finder.SecurityGroupByID(conn, sg_id)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -341,7 +342,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("description") {
 		if err := resourceSecurityGroupRuleDescriptionUpdate(conn, d); err != nil {
@@ -353,7 +354,7 @@ func resourceAwsSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 
 	awsMutexKV.Lock(sg_id)

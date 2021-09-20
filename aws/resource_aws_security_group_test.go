@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // add sweeper to delete known test sgs
@@ -39,7 +40,7 @@ func testSweepSecurityGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSecurityGroupsInput{}
 
@@ -2080,7 +2081,7 @@ func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckF
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		// cycle from primary to secondary
 		perm1 := cycleIpPermForGroup(*secondary.GroupId)
@@ -2120,7 +2121,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
 			var err error
 			if sg.IpPermissions != nil {
@@ -2150,7 +2151,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 }
 
 func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_security_group" {
@@ -2172,7 +2173,7 @@ func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSSecurityGroupEc2ClassicDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
+	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_security_group" {
@@ -2204,7 +2205,7 @@ func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) reso
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
@@ -2231,7 +2232,7 @@ func testAccCheckAWSSecurityGroupEc2ClassicExists(n string, group *ec2.SecurityG
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
@@ -2494,7 +2495,7 @@ func testAccCheckAWSSecurityGroupExistsWithoutDefault(n string) resource.TestChe
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		group, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
@@ -2618,7 +2619,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 
 					id := aws.StringValue(group.GroupId)
 
-					conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 					match, err := finder.SecurityGroupByID(conn, id)
 					if tfresource.NotFound(err) {
@@ -2773,7 +2774,7 @@ func testAccCheckAWSSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIng
 }
 
 func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressCount int) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	group, err := finder.SecurityGroupByID(conn, id)
 	if tfresource.NotFound(err) {

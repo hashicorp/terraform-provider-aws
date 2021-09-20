@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
@@ -164,7 +165,7 @@ func testAccCheckAWSEc2TrafficMirrorSessionExists(name string, session *ec2.Traf
 			return fmt.Errorf("No ID set for %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		out, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{
 			TrafficMirrorSessionIds: []*string{
 				aws.String(rs.Primary.ID),
@@ -314,7 +315,7 @@ resource "aws_ec2_traffic_mirror_session" "test" {
 }
 
 func testAccPreCheckAWSEc2TrafficMirrorSession(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{})
 
@@ -328,7 +329,7 @@ func testAccPreCheckAWSEc2TrafficMirrorSession(t *testing.T) {
 }
 
 func testAccCheckAWSEc2TrafficMirrorSessionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_traffic_mirror_session" {

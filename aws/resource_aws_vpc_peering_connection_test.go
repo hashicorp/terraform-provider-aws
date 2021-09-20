@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepEc2VpcPeeringConnections(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
 	err = conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
@@ -125,7 +126,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 
 	// reach out and DELETE the VPC Peering connection outside of Terraform
 	testDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		log.Printf("[DEBUG] Test deleting the VPC Peering Connection.")
 		_, err := conn.DeleteVpcPeeringConnection(
 			&ec2.DeleteVpcPeeringConnectionInput{
@@ -210,7 +211,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		_, err := conn.ModifyVpcPeeringConnectionOptions(
@@ -396,7 +397,7 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 }
 
 func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_peering_connection" {
@@ -454,7 +455,7 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 			return fmt.Errorf("No VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*AWSClient).ec2conn
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeVpcPeeringConnections(
 			&ec2.DescribeVpcPeeringConnectionsInput{
 				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},
@@ -487,7 +488,7 @@ func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, opt
 			return fmt.Errorf("No VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*AWSClient).ec2conn
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeVpcPeeringConnections(
 			&ec2.DescribeVpcPeeringConnectionsInput{
 				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},

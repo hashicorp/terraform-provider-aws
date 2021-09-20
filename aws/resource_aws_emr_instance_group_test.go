@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
@@ -281,7 +282,7 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 }
 
 func testAccCheckAWSEmrInstanceGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).emrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -322,7 +323,7 @@ func testAccCheckAWSEmrInstanceGroupExists(name string, ig *emr.InstanceGroup) r
 		}
 
 		meta := acctest.Provider.Meta()
-		conn := meta.(*AWSClient).emrconn
+		conn := meta.(*conns.AWSClient).EMRConn
 		group, err := fetchEMRInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)

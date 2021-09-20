@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
@@ -23,7 +24,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 			{
 				Config: testAccAWSVPNGatewayRoutePropagation_basic,
 				Check: func(state *terraform.State) error {
-					conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 					rs := state.RootModule().Resources["aws_vpn_gateway_route_propagation.foo"]
 					if rs == nil {
@@ -58,7 +59,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 			},
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 			rt, err := waiter.RouteTableDeleted(conn, rtID)
 

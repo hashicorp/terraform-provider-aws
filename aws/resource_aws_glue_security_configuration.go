@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlueSecurityConfiguration() *schema.Resource {
@@ -117,7 +118,7 @@ func resourceAwsGlueSecurityConfiguration() *schema.Resource {
 }
 
 func resourceAwsGlueSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
@@ -137,7 +138,7 @@ func resourceAwsGlueSecurityConfigurationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -173,7 +174,7 @@ func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlueSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
 	err := deleteGlueSecurityConfiguration(conn, d.Id())

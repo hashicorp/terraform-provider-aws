@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
@@ -68,7 +69,7 @@ func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
 }
 
 func resourceAwsLightsailInstancePublicPortsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 
 	var portInfos []*lightsail.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -97,7 +98,7 @@ func resourceAwsLightsailInstancePublicPortsCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsLightsailInstancePublicPortsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 
 	input := &lightsail.GetInstancePortStatesInput{
 		InstanceName: aws.String(d.Get("instance_name").(string)),
@@ -123,7 +124,7 @@ func resourceAwsLightsailInstancePublicPortsRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsLightsailInstancePublicPortsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 
 	var err *multierror.Error
 

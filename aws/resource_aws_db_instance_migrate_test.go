@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestResourceAwsDbInstanceStateUpgradeV0(t *testing.T) {

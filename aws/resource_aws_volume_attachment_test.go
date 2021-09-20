@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSVolumeAttachment_basic(t *testing.T) {
@@ -85,7 +86,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	stopInstance := func() {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{i.InstanceId},
@@ -242,7 +243,7 @@ func testAccCheckVolumeAttachmentExists(n string, i *ec2.Instance, v *ec2.Volume
 }
 
 func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_volume_attachment" {

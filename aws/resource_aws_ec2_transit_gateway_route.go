@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -76,7 +77,7 @@ func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
 	if err != nil {
@@ -148,7 +149,7 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2TransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
 	if err != nil {

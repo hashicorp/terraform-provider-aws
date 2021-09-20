@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNetworkInterfaceAttachment() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsNetworkInterfaceAttachment() *schema.Resource {
 }
 
 func resourceAwsNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	device_index := d.Get("device_index").(int)
 	instance_id := d.Get("instance_id").(string)
@@ -93,7 +94,7 @@ func resourceAwsNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	interfaceId := d.Get("network_interface_id").(string)
 
@@ -133,7 +134,7 @@ func resourceAwsNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsNetworkInterfaceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	interfaceId := d.Get("network_interface_id").(string)
 

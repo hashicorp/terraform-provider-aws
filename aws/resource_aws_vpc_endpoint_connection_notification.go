@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
@@ -84,7 +85,7 @@ func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeVpcEndpointConnectionNotifications(&ec2.DescribeVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationId: aws.String(d.Id()),
@@ -103,7 +104,7 @@ func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, me
 }
 
 func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.ModifyVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationId: aws.String(d.Id()),
@@ -126,7 +127,7 @@ func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, 
 }
 
 func resourceAwsVpcEndpointConnectionNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint connection notification: %s", d.Id())
 	_, err := conn.DeleteVpcEndpointConnectionNotifications(&ec2.DeleteVpcEndpointConnectionNotificationsInput{

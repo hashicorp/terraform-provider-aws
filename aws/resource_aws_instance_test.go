@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func testSweepInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
@@ -765,7 +766,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 
 	checkDisableApiTermination := func(expected bool) resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 			r, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
 				InstanceId: v.InstanceId,
 				Attribute:  aws.String("disableApiTermination"),
@@ -3810,7 +3811,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).ec2conn
+	conn := provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_instance" {
@@ -3857,7 +3858,7 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 
 		provider := providerF()
 
-		conn := provider.Meta().(*AWSClient).ec2conn
+		conn := provider.Meta().(*conns.AWSClient).EC2Conn
 		instance, err := resourceAwsInstanceFindByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -3874,7 +3875,7 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 
 func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		params := &ec2.StopInstancesInput{
 			InstanceIds: []*string{instance.InstanceId},
@@ -3937,7 +3938,7 @@ func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		_, err := conn.CreateTags(&ec2.CreateTagsInput{
 			Resources: []*string{instance.InstanceId},
 			Tags: []*ec2.Tag{

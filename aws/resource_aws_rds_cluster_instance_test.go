@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
@@ -83,7 +84,7 @@ func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(fmt.Sprintf("tf-cluster-instance-%d", rInt)),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -343,7 +344,7 @@ func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.Test
 
 func testAccAWSClusterInstanceDisappears(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 		opts := &rds.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
@@ -380,7 +381,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 		resp, err := conn.DescribeDBInstances(&rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -909,7 +910,7 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 }
 
 func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine string) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		DefaultOnly: aws.Bool(true),
@@ -929,7 +930,7 @@ func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine st
 }
 
 func testAccRDSPerformanceInsightsPreCheck(t *testing.T, engine string, engineVersion string) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:        aws.String(engine),

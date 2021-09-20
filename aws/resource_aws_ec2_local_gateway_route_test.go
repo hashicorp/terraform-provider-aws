@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
@@ -82,7 +83,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		route, err := getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
@@ -99,7 +100,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 }
 
 func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_local_gateway_route" {

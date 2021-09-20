@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 type XmlVpnConnectionConfig struct {
@@ -519,8 +520,8 @@ func resourceAwsVpnConnection() *schema.Resource {
 }
 
 func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Fill the connection options for the EC2 API
@@ -583,9 +584,9 @@ func vpnConnectionRefreshFunc(conn *ec2.EC2, connectionId string) resource.State
 }
 
 func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 		VpnConnectionIds: []*string{aws.String(d.Id())},
@@ -773,10 +774,10 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
 	}.String()
 
@@ -986,7 +987,7 @@ func flattenTunnelOptions(d *schema.ResourceData, vpnConnection *ec2.VpnConnecti
 }
 
 func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if err := modifyVpnConnectionOptions(d, conn); err != nil {
 		return err
@@ -1009,7 +1010,7 @@ func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsVpnConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),

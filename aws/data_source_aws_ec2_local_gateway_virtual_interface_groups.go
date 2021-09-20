@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups() *schema.Resource {
@@ -30,7 +31,7 @@ func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups() *schema.Resource {
 }
 
 func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
@@ -78,7 +79,7 @@ func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsRead(d *schema.ResourceDa
 		localGatewayVirtualInterfaceIds = append(localGatewayVirtualInterfaceIds, group.LocalGatewayVirtualInterfaceIds...)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	if err := d.Set("ids", ids); err != nil {
 		return fmt.Errorf("error setting ids: %w", err)

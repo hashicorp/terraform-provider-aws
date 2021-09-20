@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
@@ -83,7 +84,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		role, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
@@ -106,7 +107,7 @@ func testAccCheckAWSDbInstanceRoleAssociationExists(resourceName string, dbInsta
 }
 
 func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance_role_association" {
@@ -141,7 +142,7 @@ func testAccCheckAWSDbInstanceRoleAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSDbInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, dbInstanceRole *rds.DBInstanceRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		input := &rds.RemoveRoleFromDBInstanceInput{
 			DBInstanceIdentifier: dbInstance.DBInstanceIdentifier,

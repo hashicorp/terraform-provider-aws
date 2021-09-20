@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
@@ -107,7 +108,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_snapshot_copy_grant" {
@@ -133,7 +134,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantExists(name string) resource.TestCh
 		}
 
 		// retrieve the client from the test provider
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 		input := redshift.DescribeSnapshotCopyGrantsInput{
 			MaxRecords:            aws.Int64(int64(100)),

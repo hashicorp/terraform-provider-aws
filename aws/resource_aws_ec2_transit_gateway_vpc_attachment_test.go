@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepEc2TransitGatewayVpcAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
 	for {
@@ -516,7 +517,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName string, tr
 			return fmt.Errorf("No EC2 Transit Gateway VPC Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		attachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, rs.Primary.ID)
 
@@ -539,7 +540,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName string, tr
 }
 
 func testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route_table" {
@@ -570,7 +571,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy(s *terraform.State) er
 
 func testAccCheckAWSEc2TransitGatewayVpcAttachmentDisappears(transitGatewayVpcAttachment *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
 			TransitGatewayAttachmentId: transitGatewayVpcAttachment.TransitGatewayAttachmentId,

@@ -13,6 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
@@ -303,7 +304,7 @@ func TestAccAwsEc2ManagedPrefixList_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_managed_prefix_list" {
@@ -340,7 +341,7 @@ func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		pl, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
 
@@ -357,7 +358,7 @@ func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestChec
 }
 
 func testAccPreCheckEc2ManagedPrefixList(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 

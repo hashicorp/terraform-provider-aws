@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEc2Fleet_basic(t *testing.T) {
@@ -1082,7 +1083,7 @@ func testAccCheckAWSEc2FleetHistory(resourceName string, errorMsg string) resour
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := &ec2.DescribeFleetHistoryInput{
 			FleetId:   aws.String(rs.Primary.ID),
@@ -1127,7 +1128,7 @@ func testAccCheckAWSEc2FleetExists(resourceName string, fleet *ec2.FleetData) re
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := &ec2.DescribeFleetsInput{
 			FleetIds: []*string{aws.String(rs.Primary.ID)},
@@ -1163,7 +1164,7 @@ func testAccCheckAWSEc2FleetExists(resourceName string, fleet *ec2.FleetData) re
 }
 
 func testAccCheckAWSEc2FleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_fleet" {
@@ -1218,7 +1219,7 @@ func testAccCheckAWSEc2FleetDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEc2FleetDisappears(fleet *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := &ec2.DeleteFleetsInput{
 			FleetIds:           []*string{fleet.FleetId},
@@ -1252,7 +1253,7 @@ func testAccCheckAWSEc2FleetRecreated(i, j *ec2.FleetData) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSEc2Fleet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeFleetsInput{
 		MaxResults: aws.Int64(1),

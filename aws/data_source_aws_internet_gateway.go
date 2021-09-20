@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsInternetGateway() *schema.Resource {
@@ -52,8 +53,8 @@ func dataSourceAwsInternetGateway() *schema.Resource {
 }
 
 func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeInternetGatewaysInput{}
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
@@ -98,9 +99,9 @@ func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.StringValue(igw.OwnerId),
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()

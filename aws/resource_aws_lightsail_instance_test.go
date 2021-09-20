@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepLightsailInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).lightsailconn
+	conn := client.(*conns.AWSClient).LightsailConn
 
 	input := &lightsail.GetInstancesInput{}
 	var sweeperErrs *multierror.Error
@@ -200,7 +201,7 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Instance
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 		_, err := conn.DeleteInstance(&lightsail.DeleteInstanceInput{
 			InstanceName: aws.String(lightsailName),
 		})
@@ -248,7 +249,7 @@ func testAccCheckAWSLightsailInstanceExists(n string, res *lightsail.Instance) r
 			return errors.New("No LightsailInstance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		respInstance, err := conn.GetInstance(&lightsail.GetInstanceInput{
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
@@ -272,7 +273,7 @@ func testAccCheckAWSLightsailInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		respInstance, err := conn.GetInstance(&lightsail.GetInstanceInput{
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
@@ -297,7 +298,7 @@ func testAccCheckAWSLightsailInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSLightsail(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 	input := &lightsail.GetInstancesInput{}
 

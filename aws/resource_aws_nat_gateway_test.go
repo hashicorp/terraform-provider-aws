@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepNatGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeNatGatewaysInput{}
 	resp, err := conn.DescribeNatGateways(req)
@@ -155,7 +156,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 }
 
 func testAccCheckNatGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_nat_gateway" {
@@ -203,7 +204,7 @@ func testAccCheckNatGatewayExists(n string, ng *ec2.NatGateway) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeNatGateways(&ec2.DescribeNatGatewaysInput{
 			NatGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})

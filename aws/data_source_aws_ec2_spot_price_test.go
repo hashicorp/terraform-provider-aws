@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
@@ -51,7 +52,7 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 }
 
 func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
 		MaxResults: aws.Int64(5),

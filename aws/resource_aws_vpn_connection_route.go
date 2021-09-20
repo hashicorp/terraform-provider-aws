@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpnConnectionRoute() *schema.Resource {
@@ -38,7 +39,7 @@ func resourceAwsVpnConnectionRoute() *schema.Resource {
 }
 
 func resourceAwsVpnConnectionRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionId := d.Get("vpn_connection_id").(string)
@@ -78,7 +79,7 @@ func resourceAwsVpnConnectionRouteCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsVpnConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(d.Id())
 
@@ -95,7 +96,7 @@ func resourceAwsVpnConnectionRouteRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsVpnConnectionRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionId := d.Get("vpn_connection_id").(string)

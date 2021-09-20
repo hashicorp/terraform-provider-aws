@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEbsSnapshotIds() *schema.Resource {
@@ -36,7 +37,7 @@ func dataSourceAwsEbsSnapshotIds() *schema.Resource {
 }
 
 func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")
 	filters, filtersOk := d.GetOk("filter")
@@ -73,7 +74,7 @@ func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) e
 		snapshotIds = append(snapshotIds, *snapshot.SnapshotId)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("ids", snapshotIds)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -50,8 +51,8 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociation() *schema.Resource {
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
@@ -76,9 +77,9 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationCreate(d *schema.Resource
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	association, err := getEc2LocalGatewayRouteTableVpcAssociation(conn, d.Id())
 
@@ -118,7 +119,7 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationRead(d *schema.ResourceDa
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -132,7 +133,7 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationUpdate(d *schema.Resource
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableVpcAssociationId: aws.String(d.Id()),

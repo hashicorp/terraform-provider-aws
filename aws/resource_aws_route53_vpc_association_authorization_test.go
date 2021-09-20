@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
@@ -67,7 +68,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_vpc_association_authorization" {
@@ -116,7 +117,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 		req := route53.ListVPCAssociationAuthorizationsInput{
 			HostedZoneId: aws.String(zone_id),

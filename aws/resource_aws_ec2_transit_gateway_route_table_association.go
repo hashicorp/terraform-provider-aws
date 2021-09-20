@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TransitGatewayRouteTableAssociation() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsEc2TransitGatewayRouteTableAssociation() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -70,7 +71,7 @@ func resourceAwsEc2TransitGatewayRouteTableAssociationCreate(d *schema.ResourceD
 }
 
 func resourceAwsEc2TransitGatewayRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTableAssociationID(d.Id())
 	if err != nil {
@@ -110,7 +111,7 @@ func resourceAwsEc2TransitGatewayRouteTableAssociationRead(d *schema.ResourceDat
 }
 
 func resourceAwsEc2TransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTableAssociationID(d.Id())
 	if err != nil {

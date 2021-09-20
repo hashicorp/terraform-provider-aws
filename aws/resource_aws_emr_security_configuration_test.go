@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
@@ -37,7 +38,7 @@ func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
 }
 
 func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).emrconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_security_configuration" {
 			continue
@@ -77,7 +78,7 @@ func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc
 			return fmt.Errorf("No EMR Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).emrconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
 		})

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/encryption"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLightsailKeyPair() *schema.Resource {
@@ -77,7 +78,7 @@ func resourceAwsLightsailKeyPair() *schema.Resource {
 }
 
 func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 
 	var kName string
 	if v, ok := d.GetOk("name"); ok {
@@ -168,7 +169,7 @@ func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsLightsailKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 
 	resp, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
@@ -195,7 +196,7 @@ func resourceAwsLightsailKeyPairRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLightsailKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
+	conn := meta.(*conns.AWSClient).LightsailConn
 	resp, err := conn.DeleteKeyPair(&lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})

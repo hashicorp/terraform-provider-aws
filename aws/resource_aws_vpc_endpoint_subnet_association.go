@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -94,7 +95,7 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -117,7 +118,7 @@ func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsVpcEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)

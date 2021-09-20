@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -133,7 +134,7 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 }
 
 func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	instanceRole := emr.InstanceGroupTypeTask
 	groupConfig := &emr.InstanceGroupConfig{
@@ -195,7 +196,7 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	ig, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 
@@ -282,7 +283,7 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	log.Printf("[DEBUG] Modify EMR task group")
 	if d.HasChanges("instance_count", "configurations_json") {
@@ -344,7 +345,7 @@ func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEMRInstanceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	log.Printf("[WARN] AWS EMR Instance Group does not support DELETE; resizing cluster to zero before removing from state")
 	params := &emr.ModifyInstanceGroupsInput{

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
@@ -204,7 +205,7 @@ func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
 }
 
 func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_customer_gatewah" {
@@ -256,13 +257,13 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 			return fmt.Errorf("Not found: %s", gatewayResource)
 		}
 
-		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		gatewayFilter := &ec2.Filter{
 			Name:   aws.String("customer-gateway-id"),
 			Values: []*string{aws.String(gateway.Primary.ID)},
 		}
 
-		resp, err := ec2conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
+		resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 

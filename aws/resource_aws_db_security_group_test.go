@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
@@ -49,7 +50,7 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAWSDBSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).rdsconn
+	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_security_group" {
@@ -116,7 +117,7 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 			return fmt.Errorf("No DB Security Group ID is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).rdsconn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeDBSecurityGroupsInput{
 			DBSecurityGroupName: aws.String(rs.Primary.ID),

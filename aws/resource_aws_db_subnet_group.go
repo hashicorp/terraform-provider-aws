@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbSubnetGroup() *schema.Resource {
@@ -69,8 +70,8 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 }
 
 func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	rdsconn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
@@ -96,7 +97,7 @@ func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Create DB Subnet Group: %#v", createOpts)
-	_, err := rdsconn.CreateDBSubnetGroup(&createOpts)
+	_, err := conn.CreateDBSubnetGroup(&createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating DB Subnet Group: %s", err)
 	}
@@ -107,15 +108,15 @@ func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	rdsconn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := rds.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
 	}
 
-	describeResp, err := rdsconn.DescribeDBSubnetGroups(&describeOpts)
+	describeResp, err := conn.DescribeDBSubnetGroups(&describeOpts)
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "DBSubnetGroupNotFoundFault" {
 			// Update state to indicate the db subnet no longer exists.
@@ -152,7 +153,7 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.Set("subnet_ids", subnets)
 
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
 	d.Set("arn", arn)
@@ -178,7 +179,7 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDbSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
@@ -228,7 +229,7 @@ func resourceAwsDbSubnetGroupDelete(d *schema.ResourceData, meta interface{}) er
 func resourceAwsDbSubnetGroupDeleteRefreshFunc(
 	d *schema.ResourceData,
 	meta interface{}) resource.StateRefreshFunc {
-	rdsconn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	return func() (interface{}, string, error) {
 
@@ -236,7 +237,7 @@ func resourceAwsDbSubnetGroupDeleteRefreshFunc(
 			DBSubnetGroupName: aws.String(d.Id()),
 		}
 
-		if _, err := rdsconn.DeleteDBSubnetGroup(&deleteOpts); err != nil {
+		if _, err := conn.DeleteDBSubnetGroup(&deleteOpts); err != nil {
 			rdserr, ok := err.(awserr.Error)
 			if !ok {
 				return d, "error", err

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
@@ -145,7 +146,7 @@ func testAccCheckAWSAMILaunchPermissionExists(resourceName string) resource.Test
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
@@ -164,7 +165,7 @@ func testAccCheckAWSAMILaunchPermissionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
@@ -189,7 +190,7 @@ func testAccCheckAWSAMILaunchPermissionAddPublic(resourceName string) resource.T
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		imageID := rs.Primary.Attributes["image_id"]
 
 		input := &ec2.ModifyImageAttributeInput{
@@ -219,7 +220,7 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
@@ -244,7 +245,7 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 // so we can test that Terraform will react properly
 func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		req := &ec2.DeregisterImageInput{
 			ImageId: aws.String(*imageID),
 		}

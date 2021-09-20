@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // ACL Network ACLs all contain explicit deny-all rules that cannot be
@@ -211,7 +212,7 @@ func resourceAwsDefaultNetworkAclCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDefaultNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("ingress") {
 		err := updateNetworkAclEntries(d, "ingress", conn)
@@ -295,7 +296,7 @@ func resourceAwsDefaultNetworkAclDelete(d *schema.ResourceData, meta interface{}
 // revokeAllNetworkACLEntries revoke all ingress and egress rules that the Default
 // Network ACL currently has
 func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
 		NetworkAclIds: []*string{aws.String(netaclId)},

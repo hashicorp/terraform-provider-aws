@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVolumeAttachment() *schema.Resource {
@@ -70,7 +71,7 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 }
 
 func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	name := d.Get("device_name").(string)
 	iID := d.Get("instance_id").(string)
 	vID := d.Get("volume_id").(string)
@@ -187,7 +188,7 @@ func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID 
 }
 
 func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(d.Get("volume_id").(string))},
@@ -226,7 +227,7 @@ func resourceAwsVolumeAttachmentUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
 		return nil

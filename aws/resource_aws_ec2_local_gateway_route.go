@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -47,7 +48,7 @@ func resourceAwsEc2LocalGatewayRoute() *schema.Resource {
 }
 
 func resourceAwsEc2LocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
 	localGatewayRouteTableID := d.Get("local_gateway_route_table_id").(string)
@@ -70,7 +71,7 @@ func resourceAwsEc2LocalGatewayRouteCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
 	if err != nil {
@@ -134,7 +135,7 @@ func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsEc2LocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
 	if err != nil {

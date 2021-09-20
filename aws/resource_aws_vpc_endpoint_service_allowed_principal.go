@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpcEndpointServiceAllowedPrincipal() *schema.Resource {
@@ -32,7 +33,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipal() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcId := d.Get("vpc_endpoint_service_id").(string)
 	arn := d.Get("principal_arn").(string)
@@ -56,7 +57,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData,
 }
 
 func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcId := d.Get("vpc_endpoint_service_id").(string)
 	arn := d.Get("principal_arn").(string)
@@ -89,7 +90,7 @@ func resourceAwsVpcEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, m
 }
 
 func resourceAwsVpcEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcId := d.Get("vpc_endpoint_service_id").(string)
 	arn := d.Get("principal_arn").(string)

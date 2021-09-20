@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -128,8 +129,8 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 }
 
 func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	opts := &ec2.CreateCapacityReservationInput{
@@ -180,9 +181,9 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
 		CapacityReservationIds: []*string{aws.String(d.Id())},
@@ -244,7 +245,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &ec2.ModifyCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
@@ -279,7 +280,7 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2CapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),

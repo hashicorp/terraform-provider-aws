@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var defaultEgressAcl = &ec2.NetworkAclEntry{
@@ -266,7 +267,7 @@ func testAccGetAWSDefaultNetworkAcl(n string, networkAcl *ec2.NetworkAcl) resour
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Network ACL is set")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
 			NetworkAclIds: []*string{aws.String(rs.Primary.ID)},

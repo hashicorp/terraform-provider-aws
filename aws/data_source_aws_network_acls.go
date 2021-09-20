@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsNetworkAcls() *schema.Resource {
@@ -36,7 +37,7 @@ func dataSourceAwsNetworkAcls() *schema.Resource {
 }
 
 func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeNetworkAclsInput{}
 
@@ -84,7 +85,7 @@ func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) erro
 		networkAcls = append(networkAcls, aws.StringValue(networkAcl.NetworkAclId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	if err := d.Set("ids", networkAcls); err != nil {
 		return fmt.Errorf("Error setting network ACL ids: %w", err)

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSpotDataFeedSubscription() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsSpotDataFeedSubscription() *schema.Resource {
 }
 
 func resourceAwsSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.CreateSpotDatafeedSubscriptionInput{
 		Bucket: aws.String(d.Get("bucket").(string)),
@@ -56,7 +57,7 @@ func resourceAwsSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta inte
 	return resourceAwsSpotDataFeedSubscriptionRead(d, meta)
 }
 func resourceAwsSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
 	if err != nil {
@@ -82,7 +83,7 @@ func resourceAwsSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interf
 	return nil
 }
 func resourceAwsSpotDataFeedSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting Spot Datafeed Subscription")
 	_, err := conn.DeleteSpotDatafeedSubscription(&ec2.DeleteSpotDatafeedSubscriptionInput{})

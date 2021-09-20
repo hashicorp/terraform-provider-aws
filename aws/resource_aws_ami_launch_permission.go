@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAmiLaunchPermission() *schema.Resource {
@@ -47,7 +48,7 @@ func resourceAwsAmiLaunchPermission() *schema.Resource {
 }
 
 func resourceAwsAmiLaunchPermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	image_id := d.Get("image_id").(string)
 	account_id := d.Get("account_id").(string)
@@ -70,7 +71,7 @@ func resourceAwsAmiLaunchPermissionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAmiLaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	exists, err := hasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
 	if err != nil {
@@ -90,7 +91,7 @@ func resourceAwsAmiLaunchPermissionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAmiLaunchPermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	image_id := d.Get("image_id").(string)
 	account_id := d.Get("account_id").(string)

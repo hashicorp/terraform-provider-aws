@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEMRSecurityConfiguration() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsEMRSecurityConfiguration() *schema.Resource {
 }
 
 func resourceAwsEmrSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	var emrSCName string
 	if v, ok := d.GetOk("name"); ok {
@@ -80,7 +81,7 @@ func resourceAwsEmrSecurityConfigurationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -102,7 +103,7 @@ func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEmrSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	_, err := conn.DeleteSecurityConfiguration(&emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),

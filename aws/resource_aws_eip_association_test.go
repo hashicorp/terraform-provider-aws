@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEIPAssociation_instance(t *testing.T) {
@@ -193,8 +194,8 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 			return fmt.Errorf("No EIP Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
-		platforms := acctest.Provider.Meta().(*AWSClient).supportedplatforms
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		platforms := acctest.Provider.Meta().(*conns.AWSClient).SupportedPlatforms
 
 		request, err := describeAddressesById(rs.Primary.ID, platforms)
 		if err != nil {
@@ -207,7 +208,7 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 		}
 
 		if len(describe.Addresses) != 1 ||
-			(!hasEc2Classic(platforms) && *describe.Addresses[0].AssociationId != *res.AssociationId) {
+			(!conns.HasEC2Classic(platforms) && *describe.Addresses[0].AssociationId != *res.AssociationId) {
 			return fmt.Errorf("EIP Association not found")
 		}
 
@@ -226,8 +227,8 @@ func testAccCheckAWSEIPAssociationEc2ClassicExists(name string, res *ec2.Address
 			return fmt.Errorf("No EIP Association ID is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
-		platforms := acctest.ProviderEC2Classic.Meta().(*AWSClient).supportedplatforms
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
+		platforms := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).SupportedPlatforms
 
 		request, err := describeAddressesById(rs.Primary.ID, platforms)
 
@@ -280,7 +281,7 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("No EIP Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		request := &ec2.DescribeAddressesInput{
 			Filters: []*ec2.Filter{

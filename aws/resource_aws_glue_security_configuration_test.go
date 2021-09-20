@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepGlueSecurityConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetSecurityConfigurationsInput{}
 
@@ -237,7 +238,7 @@ func testAccCheckAWSGlueSecurityConfigurationExists(resourceName string, securit
 			return fmt.Errorf("No Glue Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetSecurityConfiguration(&glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
@@ -265,7 +266,7 @@ func testAccCheckAWSGlueSecurityConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 		output, err := conn.GetSecurityConfiguration(&glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),

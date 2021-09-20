@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepElasticacheSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*conns.AWSClient).ElastiCacheConn
 
 	err = conn.DescribeCacheSubnetGroupsPages(&elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSubnetGroups) == 0 {
@@ -181,7 +182,7 @@ func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_subnet_group" {
@@ -215,7 +216,7 @@ func testAccCheckAWSElasticacheSubnetGroupExists(n string, csg *elasticache.Cach
 			return fmt.Errorf("No cache subnet group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 		resp, err := conn.DescribeCacheSubnetGroups(&elasticache.DescribeCacheSubnetGroupsInput{
 			CacheSubnetGroupName: aws.String(rs.Primary.ID),
 		})

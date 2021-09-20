@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
@@ -307,7 +308,7 @@ func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 
 func testAccCheckAWSNetworkAclRuleDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		if rs.Type != "aws_network_acl_rule" {
 			continue
 		}
@@ -339,7 +340,7 @@ func testAccCheckAWSNetworkAclRuleDestroy(s *terraform.State) error {
 
 func testAccCheckAWSNetworkAclRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -396,7 +397,7 @@ func testAccCheckAWSNetworkAclRuleDelete(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		_, err = conn.DeleteNetworkAclEntry(&ec2.DeleteNetworkAclEntryInput{
 			NetworkAclId: aws.String(rs.Primary.Attributes["network_acl_id"]),
 			RuleNumber:   aws.Int64(ruleNo),

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*conns.AWSClient).ElastiCacheConn
 
 	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSecurityGroups) == 0 {
@@ -93,7 +94,7 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_security_group" {
@@ -125,7 +126,7 @@ func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckF
 			return fmt.Errorf("No cache security group ID is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).ElastiCacheConn
 		_, err := conn.DescribeCacheSecurityGroups(&elasticache.DescribeCacheSecurityGroupsInput{
 			CacheSecurityGroupName: aws.String(rs.Primary.ID),
 		})

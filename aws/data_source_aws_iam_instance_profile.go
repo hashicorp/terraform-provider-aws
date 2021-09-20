@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsIAMInstanceProfile() *schema.Resource {
@@ -47,7 +48,7 @@ func dataSourceAwsIAMInstanceProfile() *schema.Resource {
 }
 
 func dataSourceAwsIAMInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	name := d.Get("name").(string)
 
@@ -56,7 +57,7 @@ func dataSourceAwsIAMInstanceProfileRead(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Reading IAM Instance Profile: %s", req)
-	resp, err := iamconn.GetInstanceProfile(req)
+	resp, err := conn.GetInstanceProfile(req)
 	if err != nil {
 		return fmt.Errorf("Error getting instance profiles: %w", err)
 	}

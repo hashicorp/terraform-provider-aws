@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSecurityGroups() *schema.Resource {
@@ -39,7 +40,7 @@ func dataSourceAwsSecurityGroups() *schema.Resource {
 }
 
 func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	req := &ec2.DescribeSecurityGroupsInput{}
 
 	filters, filtersOk := d.GetOk("filter")
@@ -73,9 +74,9 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 			vpcIds = append(vpcIds, aws.StringValue(sg.VpcId))
 
 			arn := arn.ARN{
-				Partition: meta.(*AWSClient).partition,
+				Partition: meta.(*conns.AWSClient).Partition,
 				Service:   ec2.ServiceName,
-				Region:    meta.(*AWSClient).region,
+				Region:    meta.(*conns.AWSClient).Region,
 				AccountID: aws.StringValue(sg.OwnerId),
 				Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
 			}.String()
@@ -95,7 +96,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Found %d security groups via given filter: %s", len(ids), req)
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	err := d.Set("ids", ids)
 	if err != nil {

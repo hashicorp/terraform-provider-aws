@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
@@ -184,7 +185,7 @@ func testAccCheckAWSDefaultSecurityGroupExists(n string, group *ec2.SecurityGrou
 			return fmt.Errorf("No EC2 Default Security Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -208,7 +209,7 @@ func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.Se
 			return fmt.Errorf("No EC2 Default Security Group ID is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {

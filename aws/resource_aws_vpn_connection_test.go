@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 type TunnelOptions struct {
@@ -48,7 +49,7 @@ func testSweepEc2VpnConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeVpnConnectionsInput{}
 
 	// DescribeVpnConnections does not currently have any form of pagination
@@ -676,7 +677,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 }
 
 func testAccAwsVpnConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection" {
 			continue
@@ -730,9 +731,9 @@ func testAccAwsVpnConnectionExists(vpnConnectionResource string, vpnConnection *
 			return fmt.Errorf("Not found: %s", vpnConnectionResource)
 		}
 
-		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
+		resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			VpnConnectionIds: []*string{aws.String(connection.Primary.ID)},
 		})
 

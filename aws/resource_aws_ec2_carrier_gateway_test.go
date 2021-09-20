@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepEc2CarrierGateway(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeCarrierGatewaysInput{}
 	var sweeperErrs *multierror.Error
 
@@ -168,7 +169,7 @@ func TestAccAWSEc2CarrierGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckEc2CarrierGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_carrier_gateway" {
@@ -206,7 +207,7 @@ func testAccCheckEc2CarrierGatewayExists(n string, v *ec2.CarrierGateway) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		out, err := finder.CarrierGatewayByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -225,7 +226,7 @@ func testAccCheckEc2CarrierGatewayExists(n string, v *ec2.CarrierGateway) resour
 }
 
 func testAccPreCheckAWSWavelengthZoneAvailable(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(map[string]string{

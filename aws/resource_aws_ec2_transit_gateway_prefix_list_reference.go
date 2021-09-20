@@ -12,6 +12,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TransitGatewayPrefixListReference() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsEc2TransitGatewayPrefixListReference() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.CreateTransitGatewayPrefixListReferenceInput{}
 
@@ -95,7 +96,7 @@ func resourceAwsEc2TransitGatewayPrefixListReferenceCreate(d *schema.ResourceDat
 }
 
 func resourceAwsEc2TransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, d.Id())
 
@@ -137,7 +138,7 @@ func resourceAwsEc2TransitGatewayPrefixListReferenceRead(d *schema.ResourceData,
 }
 
 func resourceAwsEc2TransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ModifyTransitGatewayPrefixListReferenceInput{}
 
@@ -175,7 +176,7 @@ func resourceAwsEc2TransitGatewayPrefixListReferenceUpdate(d *schema.ResourceDat
 }
 
 func resourceAwsEc2TransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(d.Id())
 

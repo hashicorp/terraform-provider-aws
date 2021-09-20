@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNatGateway() *schema.Resource {
@@ -70,8 +71,8 @@ func resourceAwsNatGateway() *schema.Resource {
 }
 
 func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the NAT Gateway
@@ -119,9 +120,9 @@ func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Refresh the NAT Gateway state
 	ngRaw, state, err := NGStateRefreshFunc(conn, d.Id())()
@@ -168,7 +169,7 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -182,7 +183,7 @@ func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsNatGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	deleteOpts := &ec2.DeleteNatGatewayInput{
 		NatGatewayId: aws.String(d.Id()),
 	}

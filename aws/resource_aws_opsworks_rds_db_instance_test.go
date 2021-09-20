@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
@@ -86,7 +87,7 @@ func testAccCheckAWSOpsworksRdsDbExists(
 			return fmt.Errorf("Rds Db stack id is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeRdsDbInstancesInput{
 			StackId: aws.String(rs.Primary.Attributes["stack_id"]),
@@ -121,7 +122,7 @@ func testAccCheckAWSOpsworksCreateRdsDbAttributes(
 }
 
 func testAccCheckAwsOpsworksRdsDbDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_rds_db_instance" {

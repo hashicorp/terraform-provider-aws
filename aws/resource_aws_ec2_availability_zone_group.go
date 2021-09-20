@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2AvailabilityZoneGroup() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsEc2AvailabilityZoneGroup() *schema.Resource {
 }
 
 func resourceAwsEc2AvailabilityZoneGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	configurationOptInStatus := d.Get("opt_in_status").(string)
 
@@ -76,7 +77,7 @@ func resourceAwsEc2AvailabilityZoneGroupCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsEc2AvailabilityZoneGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	availabilityZone, err := ec2DescribeAvailabilityZoneGroup(conn, d.Id())
 
@@ -95,7 +96,7 @@ func resourceAwsEc2AvailabilityZoneGroupRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2AvailabilityZoneGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	optInStatus := d.Get("opt_in_status").(string)
 
 	input := &ec2.ModifyAvailabilityZoneGroupInput{
