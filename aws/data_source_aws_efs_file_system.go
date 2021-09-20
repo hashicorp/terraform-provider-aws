@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceFileSystem() *schema.Resource {
@@ -58,7 +59,7 @@ func DataSourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"throughput_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -91,7 +92,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	describeEfsOpts := &efs.DescribeFileSystemsInput{}
 
@@ -121,7 +122,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 
 		for _, fileSystem := range describeResp.FileSystems {
 
-			tags := keyvaluetags.EfsKeyValueTags(fileSystem.Tags)
+			tags := tftags.EfsKeyValueTags(fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {
 				continue
@@ -165,7 +166,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

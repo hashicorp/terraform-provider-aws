@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceAccessPoint() *schema.Resource {
@@ -24,7 +25,7 @@ func ResourceAccessPoint() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"file_system_arn": {
@@ -114,8 +115,8 @@ func ResourceAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -123,7 +124,7 @@ func ResourceAccessPoint() *schema.Resource {
 func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	fsId := d.Get("file_system_id").(string)
 
@@ -162,7 +163,7 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -216,7 +217,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 
-	tags := keyvaluetags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

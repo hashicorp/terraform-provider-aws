@@ -11,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceFileSystem() *schema.Resource {
@@ -29,7 +30,7 @@ func ResourceFileSystem() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -98,8 +99,8 @@ func ResourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"throughput_mode": {
 				Type:         schema.TypeString,
@@ -154,7 +155,7 @@ func ResourceFileSystem() *schema.Resource {
 func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	creationToken := ""
 	if v, ok := d.GetOk("creation_token"); ok {
@@ -274,7 +275,7 @@ func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -311,7 +312,7 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 
-	tags := keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
