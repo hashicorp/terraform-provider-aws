@@ -126,7 +126,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		if isAWSErr(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
 			log.Printf("[WARN] License Manager license configuration (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -199,7 +199,7 @@ func resourceAwsLicenseManagerLicenseConfigurationDelete(d *schema.ResourceData,
 
 	_, err := conn.DeleteLicenseConfiguration(opts)
 	if err != nil {
-		if isAWSErr(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting License Manager license configuration: %s", err)
