@@ -12,6 +12,7 @@ import (
 	tftransfer "github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsTransferAccess() *schema.Resource {
@@ -114,7 +115,7 @@ func resourceAwsTransferAccess() *schema.Resource {
 }
 
 func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -161,7 +162,7 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
 
@@ -199,7 +200,7 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
 
@@ -247,7 +248,7 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, externalID, err := tftransfer.AccessParseResourceID(d.Id())
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSTransferAccess_s3_basic(t *testing.T) {
@@ -177,7 +178,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 		output, err := finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
 
@@ -192,7 +193,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 }
 
 func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_access" {

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsTransferServer() *schema.Resource {
@@ -193,8 +194,8 @@ func resourceAwsTransferServer() *schema.Resource {
 }
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &transfer.CreateServerInput{}
@@ -311,9 +312,9 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.ServerByID(conn, d.Id())
 
@@ -335,14 +336,14 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("directory_id", "")
 	}
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 
 		// Security Group IDs are not returned for VPC endpoints.
 		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-			output, err := ec2finder.VpcEndpointByID(meta.(*AWSClient).ec2conn, vpcEndpointID)
+			output, err := ec2finder.VpcEndpointByID(meta.(*conns.AWSClient).EC2Conn, vpcEndpointID)
 
 			if err != nil {
 				return fmt.Errorf("error reading Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
@@ -391,7 +392,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var newEndpointTypeVpc bool
@@ -466,7 +467,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			// You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC.
 			// To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
 			if d.HasChange("endpoint_details.0.security_group_ids") && newEndpointTypeVpc && oldEndpointTypeVpc {
-				conn := meta.(*AWSClient).ec2conn
+				conn := meta.(*conns.AWSClient).EC2Conn
 
 				vpcEndpointID := d.Get("endpoint_details.0.vpc_endpoint_id").(string)
 				input := &ec2.ModifyVpcEndpointInput{
@@ -596,7 +597,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
 		input := &transfer.ListUsersInput{
