@@ -43,7 +43,7 @@ func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating WAF Regional Regex Pattern Set: %s", d.Get("name").(string))
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateRegexPatternSetInput{
 			ChangeToken: token,
@@ -125,7 +125,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRegexPatternSetInput{
 			ChangeToken:       token,
@@ -142,7 +142,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func updateWafRegionalRegexPatternSetPatternStringsWR(id string, oldPatterns, newPatterns []interface{}, conn *wafregional.WAFRegional, region string) error {
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,

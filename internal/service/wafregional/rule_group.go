@@ -89,7 +89,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
@@ -173,7 +173,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("activated_rule", flattenWafActivatedRules(rResp.ActivatedRules))
+	d.Set("activated_rule", FlattenWAFActivatedRules(rResp.ActivatedRules))
 	d.Set("name", resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
@@ -210,12 +210,12 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
-	err := deleteWafRegionalRuleGroup(d.Id(), oldRules, conn, region)
+	err := DeleteRuleGroup(d.Id(), oldRules, conn, region)
 
 	return err
 }
 
-func deleteWafRegionalRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
+func DeleteRuleGroup(id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
 	if len(oldRules) > 0 {
 		noRules := []interface{}{}
 		err := updateWafRuleGroupResourceWR(id, oldRules, noRules, conn, region)
@@ -224,7 +224,7 @@ func deleteWafRegionalRuleGroup(id string, oldRules []interface{}, conn *wafregi
 		}
 	}
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRuleGroupInput{
 			ChangeToken: token,
@@ -240,7 +240,7 @@ func deleteWafRegionalRuleGroup(id string, oldRules []interface{}, conn *wafregi
 }
 
 func updateWafRuleGroupResourceWR(id string, oldRules, newRules []interface{}, conn *wafregional.WAFRegional, region string) error {
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,

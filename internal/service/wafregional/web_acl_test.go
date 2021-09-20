@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafRegionalWebAcls(region string) error {
 				WebACLId: webACL.WebACLId,
 			}
 			id := aws.StringValue(webACL.WebACLId)
-			wr := newWafRegionalRetryer(conn, region)
+			wr := tfwafregional.NewRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
@@ -493,7 +494,7 @@ func TestAccAWSWafRegionalWebAcl_LoggingConfiguration(t *testing.T) {
 // Calculates the index which isn't static because ruleId is generated as part of the test
 func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, ruleType string, actionType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := ResourceWebACL().Schema["rule"].Elem.(*schema.Resource)
+		ruleResource := tfwafregional.ResourceWebACL().Schema["rule"].Elem.(*schema.Resource)
 		actionMap := map[string]interface{}{
 			"type": actionType,
 		}
@@ -517,7 +518,7 @@ func testAccCheckAWSWafRegionalWebAclDisappears(v *waf.WebACL) resource.TestChec
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
-		wr := newWafRegionalRetryer(conn, region)
+		wr := tfwafregional.NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken: token,

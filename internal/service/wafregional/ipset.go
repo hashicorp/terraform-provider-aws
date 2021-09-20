@@ -60,7 +60,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateIPSetInput{
 			ChangeToken: token,
@@ -154,7 +154,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteIPSetInput{
 			ChangeToken: token,
@@ -171,8 +171,8 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateIPSetResourceWR(id string, oldD, newD []interface{}, conn *wafregional.WAFRegional, region string) error {
-	for _, ipSetUpdates := range diffIPSetDescriptors(oldD, newD) {
-		wr := newWafRegionalRetryer(conn, region)
+	for _, ipSetUpdates := range DiffIPSetDescriptors(oldD, newD) {
+		wr := NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateIPSetInput{
 				ChangeToken: token,
@@ -191,7 +191,7 @@ func updateIPSetResourceWR(id string, oldD, newD []interface{}, conn *wafregiona
 	return nil
 }
 
-func diffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
+func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 	updates := make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
 	updatesBatches := make([][]*waf.IPSetUpdate, 0)
 

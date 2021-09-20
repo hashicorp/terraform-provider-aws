@@ -182,7 +182,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
@@ -230,7 +230,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 
 	rules := d.Get("rule").(*schema.Set).List()
 	if len(rules) > 0 {
-		wr := newWafRegionalRetryer(conn, region)
+		wr := NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -343,7 +343,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("rule")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		wr := newWafRegionalRetryer(conn, region)
+		wr := NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -400,7 +400,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	// First, need to delete all rules
 	rules := d.Get("rule").(*schema.Set).List()
 	if len(rules) > 0 {
-		wr := newWafRegionalRetryer(conn, region)
+		wr := NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -415,7 +415,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	wr := newWafRegionalRetryer(conn, region)
+	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteWebACLInput{
 			ChangeToken: token,
@@ -510,7 +510,7 @@ func flattenWAFRegionalRedactedFields(fieldToMatches []*waf.FieldToMatch) []inte
 	l := make([]interface{}, len(fieldToMatches))
 
 	for i, fieldToMatch := range fieldToMatches {
-		l[i] = flattenFieldToMatch(fieldToMatch)[0]
+		l[i] = FlattenFieldToMatch(fieldToMatch)[0]
 	}
 
 	m := map[string]interface{}{

@@ -57,6 +57,6 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 	return out, nil
 }
 
-func newWafRegionalRetryer(conn *wafregional.WAFRegional, region string) *WafRegionalRetryer {
+func NewRetryer(conn *wafregional.WAFRegional, region string) *WafRegionalRetryer {
 	return &WafRegionalRetryer{Connection: conn, Region: region}
 }

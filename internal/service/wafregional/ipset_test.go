@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
@@ -330,7 +331,7 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 	}
 	for i, tc := range testCases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			updates := diffIPSetDescriptors(tc.Old, tc.New)
+			updates := tfwafregional.DiffIPSetDescriptors(tc.Old, tc.New)
 			if !reflect.DeepEqual(updates, tc.ExpectedUpdates) {
 				t.Fatalf("IPSet updates don't match.\nGiven: %s\nExpected: %s",
 					updates, tc.ExpectedUpdates)
@@ -344,7 +345,7 @@ func testAccCheckAWSWafRegionalIPSetDisappears(v *waf.IPSet) resource.TestCheckF
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
-		wr := newWafRegionalRetryer(conn, region)
+		wr := tfwafregional.NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateIPSetInput{
 				ChangeToken: token,

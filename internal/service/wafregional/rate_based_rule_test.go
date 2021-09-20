@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func init() {
@@ -53,7 +54,7 @@ func testSweepWafRegionalRateBasedRules(region string) error {
 				RuleId: rule.RuleId,
 			}
 			id := aws.StringValue(rule.RuleId)
-			wr := newWafRegionalRetryer(conn, region)
+			wr := tfwafregional.NewRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
@@ -247,7 +248,7 @@ func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRateBasedRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwafregional.ResourceRateBasedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

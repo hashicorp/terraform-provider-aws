@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
@@ -119,7 +120,7 @@ func testAccCheckWafRegionalWebAclAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(rs.Primary.ID)
+		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
 		input := &wafregional.GetWebACLForResourceInput{
 			ResourceArn: aws.String(resourceArn),
@@ -152,7 +153,7 @@ func testAccCheckWafRegionalWebAclAssociationExists(n string) resource.TestCheck
 			return fmt.Errorf("No WebACL association ID is set")
 		}
 
-		resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(rs.Primary.ID)
+		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 
@@ -179,7 +180,7 @@ func testAccCheckWafRegionalWebAclAssociationDisappears(resourceName string) res
 			return fmt.Errorf("No WebACL association ID is set")
 		}
 
-		resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(rs.Primary.ID)
+		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 
