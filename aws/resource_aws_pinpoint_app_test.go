@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepPinpointApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).pinpointconn
+	conn := client.(*conns.AWSClient).PinpointConn
 
 	input := &pinpoint.GetAppsInput{}
 
@@ -222,7 +223,7 @@ func TestAccAWSPinpointApp_Tags(t *testing.T) {
 }
 
 func testAccPreCheckAWSPinpointApp(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	input := &pinpoint.GetAppsInput{}
 
@@ -248,7 +249,7 @@ func testAccCheckAWSPinpointAppExists(n string, application *pinpoint.Applicatio
 			return fmt.Errorf("No Pinpoint app with that ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetAppInput{
@@ -382,7 +383,7 @@ resource "aws_pinpoint_app" "test" {
 }
 
 func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_app" {
@@ -407,7 +408,7 @@ func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share" {

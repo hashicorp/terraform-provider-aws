@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
@@ -281,7 +282,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_default_target_group" {
@@ -321,7 +322,7 @@ func testAccCheckAWSDBProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		opts := rds.DescribeDBProxyTargetGroupsInput{
 			DBProxyName:     aws.String(rs.Primary.ID),

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLBSSLNegotiationPolicy() *schema.Resource {
@@ -70,7 +71,7 @@ func resourceAwsLBSSLNegotiationPolicy() *schema.Resource {
 }
 
 func resourceAwsLBSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	// Provision the SSLNegotiationPolicy
 	lbspOpts := &elb.CreateLoadBalancerPolicyInput{
@@ -86,7 +87,7 @@ func resourceAwsLBSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Load Balancer Policy opts: %#v", lbspOpts)
-	if _, err := elbconn.CreateLoadBalancerPolicy(lbspOpts); err != nil {
+	if _, err := conn.CreateLoadBalancerPolicy(lbspOpts); err != nil {
 		return fmt.Errorf("Error creating Load Balancer Policy: %s", err)
 	}
 
@@ -97,7 +98,7 @@ func resourceAwsLBSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] SSL Negotiation create configuration: %#v", setLoadBalancerOpts)
-	if _, err := elbconn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
+	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
 		return fmt.Errorf("Error setting SSLNegotiationPolicy: %s", err)
 	}
 
@@ -109,7 +110,7 @@ func resourceAwsLBSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, lbPort, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(d.Id())
 	if err != nil {
@@ -121,7 +122,7 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 		PolicyNames:      []*string{aws.String(policyName)},
 	}
 
-	getResp, err := elbconn.DescribeLoadBalancerPolicies(request)
+	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "PolicyNotFound" {
 			// The policy is gone.
@@ -162,7 +163,7 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsLBSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(d.Id())
 	if err != nil {
@@ -178,7 +179,7 @@ func resourceAwsLBSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interf
 		PolicyNames:      []*string{},
 	}
 
-	if _, err := elbconn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
+	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
 		return fmt.Errorf("Error removing SSLNegotiationPolicy: %s", err)
 	}
 
@@ -187,7 +188,7 @@ func resourceAwsLBSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interf
 		PolicyName:       aws.String(policyName),
 	}
 
-	if _, err := elbconn.DeleteLoadBalancerPolicy(request); err != nil {
+	if _, err := conn.DeleteLoadBalancerPolicy(request); err != nil {
 		return fmt.Errorf("Error deleting SSL negotiation policy %s: %s", d.Id(), err)
 	}
 	return nil

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
@@ -207,7 +208,7 @@ func TestAccAWSDBProxyEndpoint_disappears_proxy(t *testing.T) {
 
 // testAccDBProxyEndpointPreCheck checks if a call to describe db proxies errors out meaning feature not supported
 func testAccDBProxyEndpointPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	_, err := conn.DescribeDBProxyEndpoints(&rds.DescribeDBProxyEndpointsInput{})
 
@@ -221,7 +222,7 @@ func testAccDBProxyEndpointPreCheck(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_endpoint" {
@@ -257,7 +258,7 @@ func testAccCheckAWSDBProxyEndpointExists(n string, v *rds.DBProxyEndpoint) reso
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
 

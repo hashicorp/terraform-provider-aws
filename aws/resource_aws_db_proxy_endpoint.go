@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbProxyEndpoint() *schema.Resource {
@@ -87,8 +88,8 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 }
 
 func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	dbProxyName := d.Get("db_proxy_name").(string)
@@ -122,9 +123,9 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, d.Id())
 
@@ -187,7 +188,7 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDbProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("vpc_security_group_ids") {
 		params := rds.ModifyDBProxyEndpointInput{
@@ -217,7 +218,7 @@ func resourceAwsDbProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDbProxyEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.DeleteDBProxyEndpointInput{
 		DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),

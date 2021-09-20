@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbProxyTarget() *schema.Resource {
@@ -83,7 +84,7 @@ func resourceAwsDbProxyTarget() *schema.Resource {
 }
 
 func resourceAwsDbProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	targetGroupName := d.Get("target_group_name").(string)
@@ -123,7 +124,7 @@ func resourceAwsDbProxyTargetParseID(id string) (string, string, string, string,
 }
 
 func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(d.Id())
 	if err != nil {
@@ -173,7 +174,7 @@ func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDbProxyTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.DeregisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),

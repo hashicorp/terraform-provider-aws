@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerAppImageConfig() *schema.Resource {
@@ -99,7 +100,7 @@ func resourceAwsSagemakerAppImageConfig() *schema.Resource {
 }
 
 func resourceAwsSagemakerAppImageConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("app_image_config_name").(string)
 	input := &sagemaker.CreateAppImageConfigInput{
@@ -121,7 +122,7 @@ func resourceAwsSagemakerAppImageConfigCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	image, err := finder.AppImageConfigByName(conn, d.Id())
 	if err != nil {
@@ -146,7 +147,7 @@ func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("kernel_gateway_image_config") {
 
@@ -170,7 +171,7 @@ func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerAppImageConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteAppImageConfigInput{
 		AppImageConfigName: aws.String(d.Id()),

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
@@ -101,7 +102,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_target" {
@@ -151,7 +152,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
 

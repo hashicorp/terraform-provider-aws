@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepSagemakerApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*conns.AWSClient).SageMakerConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
@@ -203,7 +204,7 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_app" {
@@ -245,7 +246,7 @@ func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutpu
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 		appType := rs.Primary.Attributes["app_type"]

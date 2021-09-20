@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
-	elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -77,7 +78,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 
 		// Check that the ELB is destroyed
 		if rs.Type == "aws_elb" {
-			describe, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+			describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 				LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
 			})
 
@@ -104,7 +105,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 				return err
 			}
 
-			_, err = elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+			_, err = conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 				LoadBalancerName: aws.String(elbName),
 				PolicyNames:      []*string{aws.String(policyName)},
 			})
@@ -134,14 +135,14 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		elbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		resp, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		resp, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})

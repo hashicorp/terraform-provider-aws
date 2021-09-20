@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
@@ -116,7 +117,7 @@ func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescript
 
 		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		input := &elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),
@@ -140,7 +141,7 @@ func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescript
 }
 
 func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_load_balancer_policy" {
@@ -169,7 +170,7 @@ func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSLoadBalancerPolicyDisappears(loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		input := elb.DeleteLoadBalancerPolicyInput{
 			LoadBalancerName: loadBalancer.LoadBalancerName,
@@ -197,9 +198,9 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(policy.Primary.ID)
-		loadBalancerPolicies, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		loadBalancerPolicies, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})
