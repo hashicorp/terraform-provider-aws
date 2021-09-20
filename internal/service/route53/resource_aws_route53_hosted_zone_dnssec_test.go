@@ -1,4 +1,4 @@
-package aws
+package route53_test
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
@@ -123,7 +123,7 @@ func testAccCheckAwsRoute53HostedZoneDnssecDestroy(s *terraform.State) error {
 			continue
 		}
 
-		hostedZoneDnssec, err := finder.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
+		hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, route53.ErrCodeDNSSECNotFound) {
 			continue
@@ -159,7 +159,7 @@ func testAccAwsRoute53HostedZoneDnssecExists(resourceName string) resource.TestC
 
 		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
-		hostedZoneDnssec, err := finder.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
+		hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
