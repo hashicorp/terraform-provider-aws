@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNetworkFirewallLoggingConfiguration() *schema.Resource {
@@ -72,7 +73,7 @@ func resourceAwsNetworkFirewallLoggingConfiguration() *schema.Resource {
 }
 
 func resourceAwsNetworkFirewallLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	firewallArn := d.Get("firewall_arn").(string)
 
 	log.Printf("[DEBUG] Adding Logging Configuration to NetworkFirewall Firewall: %s", firewallArn)
@@ -90,7 +91,7 @@ func resourceAwsNetworkFirewallLoggingConfigurationCreate(ctx context.Context, d
 }
 
 func resourceAwsNetworkFirewallLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Reading Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
@@ -119,7 +120,7 @@ func resourceAwsNetworkFirewallLoggingConfigurationRead(ctx context.Context, d *
 }
 
 func resourceAwsNetworkFirewallLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Updating Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
@@ -148,7 +149,7 @@ func resourceAwsNetworkFirewallLoggingConfigurationUpdate(ctx context.Context, d
 }
 
 func resourceAwsNetworkFirewallLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 

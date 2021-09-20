@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
@@ -157,7 +158,7 @@ func testAccCheckAwsNetworkFirewallResourcePolicyDestroy(s *terraform.State) err
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
 		policy, err := finder.ResourcePolicy(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -184,7 +185,7 @@ func testAccCheckAwsNetworkFirewallResourcePolicyExists(n string) resource.TestC
 			return fmt.Errorf("No NetworkFirewall Resource Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
 		policy, err := finder.ResourcePolicy(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
