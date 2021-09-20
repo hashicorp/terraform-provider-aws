@@ -74,7 +74,7 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 			output, err = conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if isAWSErr(err, "AccessDeniedException", "") {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -83,7 +83,7 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			output, err = conn.RotateSecret(input)
 		}
 
@@ -173,7 +173,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if isAWSErr(err, "AccessDeniedException", "") {
+					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -181,7 +181,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 				return nil
 			})
 
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.RotateSecret(input)
 			}
 

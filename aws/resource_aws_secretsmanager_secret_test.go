@@ -46,7 +46,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 
 			_, err := conn.DeleteSecret(input)
 			if err != nil {
-				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret (%s): %s", name, err)
@@ -526,11 +526,11 @@ func testAccCheckAwsSecretsManagerSecretDestroy(s *terraform.State) error {
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			output, err = conn.DescribeSecret(input)
 		}
 
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 

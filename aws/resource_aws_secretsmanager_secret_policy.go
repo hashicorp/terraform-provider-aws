@@ -65,7 +65,7 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		res, err = conn.PutResourcePolicy(input)
-		if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 			"This resource policy contains an unsupported principal") {
 			return resource.RetryableError(err)
 		}
@@ -74,7 +74,7 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		res, err = conn.PutResourcePolicy(input)
 	}
 	if err != nil {
@@ -160,7 +160,7 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
-			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
 				return resource.RetryableError(err)
 			}
@@ -169,7 +169,7 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.PutResourcePolicy(input)
 		}
 		if err != nil {
@@ -190,7 +190,7 @@ func resourceAwsSecretsManagerSecretPolicyDelete(d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %#v", input)
 	_, err := conn.DeleteResourcePolicy(input)
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error removing Secrets Manager Secret %q policy: %w", d.Id(), err)

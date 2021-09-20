@@ -249,10 +249,10 @@ func resourceAwsSecretsManagerSecretVersionDelete(d *schema.ResourceData, meta i
 			log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
 			_, err := conn.UpdateSecretVersionStage(input)
 			if err != nil {
-				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					return nil
 				}
-				if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
 					return nil
 				}
 				return fmt.Errorf("error updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)

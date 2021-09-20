@@ -187,7 +187,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
 		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
-		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -195,7 +195,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateSecret(input)
 	}
 	if err != nil {
@@ -212,7 +212,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
-			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
 				return resource.RetryableError(err)
 			}
@@ -221,7 +221,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.PutResourcePolicy(input)
 		}
 		if err != nil {
@@ -241,14 +241,14 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			_, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if isAWSErr(err, "AccessDeniedException", "") {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.RotateSecret(input)
 		}
 		if err != nil {
@@ -409,7 +409,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 			err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 				_, err := conn.PutResourcePolicy(input)
-				if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 					"This resource policy contains an unsupported principal") {
 					return resource.RetryableError(err)
 				}
@@ -418,7 +418,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.PutResourcePolicy(input)
 			}
 			if err != nil {
@@ -450,14 +450,14 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if isAWSErr(err, "AccessDeniedException", "") {
+					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.RotateSecret(input)
 			}
 			if err != nil {
@@ -511,7 +511,7 @@ func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", input)
 	_, err := conn.DeleteSecret(input)
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
@@ -548,7 +548,7 @@ func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id 
 	_, err := conn.RemoveRegionsFromReplication(input)
 
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
