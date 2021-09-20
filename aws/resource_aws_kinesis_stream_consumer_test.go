@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesis/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) 
 }
 
 func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_stream_consumer" {
@@ -159,7 +160,7 @@ func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestChe
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kinesisconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
 		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
 
