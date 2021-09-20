@@ -15,7 +15,7 @@ import (
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
-func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -46,7 +46,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -83,7 +83,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -105,7 +105,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminManagedPolicyAttachment_disappears_permissionSet(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.T) {
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -128,7 +128,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears_permissionSet(t *testi
 	})
 }
 
-func TestAccAWSSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T) {
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	otherResourceName := "aws_ssoadmin_managed_policy_attachment.other"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"

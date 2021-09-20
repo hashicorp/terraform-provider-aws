@@ -134,7 +134,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSSOAdminAccountAssignment_Basic_Group(t *testing.T) {
+func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	groupName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
@@ -167,7 +167,7 @@ func TestAccAWSSSOAdminAccountAssignment_Basic_Group(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminAccountAssignment_Basic_User(t *testing.T) {
+func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	userName := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
@@ -200,7 +200,7 @@ func TestAccAWSSSOAdminAccountAssignment_Basic_User(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
+func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	groupName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")

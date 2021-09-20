@@ -101,7 +101,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSSOAdminPermissionSet_basic(t *testing.T) {
+func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -128,7 +128,7 @@ func TestAccAWSSSOAdminPermissionSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminPermissionSet_tags(t *testing.T) {
+func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -182,7 +182,7 @@ func TestAccAWSSSOAdminPermissionSet_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminPermissionSet_updateDescription(t *testing.T) {
+func TestAccSSOAdminPermissionSet_updateDescription(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -215,7 +215,7 @@ func TestAccAWSSSOAdminPermissionSet_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminPermissionSet_updateRelayState(t *testing.T) {
+func TestAccSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -248,7 +248,7 @@ func TestAccAWSSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
+func TestAccSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -280,10 +280,10 @@ func TestAccAWSSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	})
 }
 
-// TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration validates
+// TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration validates
 // the resource's unchanged values (primarily relay_state) after updating the session_duration argument
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17411
-func TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration(t *testing.T) {
+func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -322,7 +322,7 @@ func TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration(t *testing
 	})
 }
 
-func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
+func TestAccSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
