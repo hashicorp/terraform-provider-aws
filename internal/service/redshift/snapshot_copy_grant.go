@@ -67,7 +67,7 @@ func resourceSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) e
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	input.Tags = tags.IgnoreAws().RedshiftTags()
+	input.Tags = Tags(tags.IgnoreAws())
 
 	log.Printf("[DEBUG]: Adding new Redshift SnapshotCopyGrant: %s", input)
 
@@ -137,7 +137,7 @@ func resourceSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
-	tags := tftags.RedshiftKeyValueTags(grant.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(grant.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -157,7 +157,7 @@ func resourceSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
