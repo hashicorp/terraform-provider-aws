@@ -20,7 +20,7 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,7 +116,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,7 +153,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,7 +223,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -305,7 +305,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -346,7 +346,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -387,7 +387,7 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -422,7 +422,7 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -467,7 +467,7 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -496,7 +496,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -536,7 +536,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 
 func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.CreateNamedQueryInput{
 			Name:        aws.String(queryName),
@@ -555,7 +555,7 @@ func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, database
 }
 
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).athenaconn
+	conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_workgroup" {
 			continue
@@ -589,7 +589,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.GetWorkGroupInput{
 			WorkGroup: aws.String(rs.Primary.ID),
@@ -609,7 +609,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 
 func testAccCheckAWSAthenaWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.DeleteWorkGroupInput{
 			WorkGroup: workgroup.Name,

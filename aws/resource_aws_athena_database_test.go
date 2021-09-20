@@ -20,7 +20,7 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +96,7 @@ func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +118,7 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,8 +135,8 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 // StartQueryExecution requires OutputLocation but terraform destroy deleted S3 bucket as well.
 // So temporary S3 bucket as OutputLocation is created to confirm whether the database is actually deleted.
 func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
-	athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
-	s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+	athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
+	s3conn := acctest.Provider.Meta().(*AWSClient).s3conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_database" {
 			continue
@@ -237,7 +237,7 @@ func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc 
 			return err
 		}
 
-		athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
+		athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -267,7 +267,7 @@ func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc
 			return err
 		}
 
-		athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
+		athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -296,7 +296,7 @@ func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFun
 			return err
 		}
 
-		athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
+		athenaconn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
