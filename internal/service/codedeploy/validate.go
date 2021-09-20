@@ -2,7 +2,6 @@ package codedeploy
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // validTagFilters confirms the "value" component of a tag filter is one of
