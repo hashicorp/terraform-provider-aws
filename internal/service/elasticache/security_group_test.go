@@ -67,7 +67,7 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
+func TestAccElastiCacheSecurityGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_security_group.test"
 

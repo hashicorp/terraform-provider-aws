@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsElasticacheReplicationGroup_basic(t *testing.T) {
+func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
+func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
@@ -70,7 +70,7 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsElasticacheReplicationGroup_MultiAZ(t *testing.T) {
+func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
@@ -91,7 +91,7 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_MultiAZ(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsElasticacheReplicationGroup_NonExistent(t *testing.T) {
+func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

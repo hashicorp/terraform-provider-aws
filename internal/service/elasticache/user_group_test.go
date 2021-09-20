@@ -15,7 +15,7 @@ import (
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
-func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
+func TestAccElastiCacheUserGroup_basic(t *testing.T) {
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -44,7 +44,7 @@ func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheUserGroup_update(t *testing.T) {
+func TestAccElastiCacheUserGroup_update(t *testing.T) {
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -86,7 +86,7 @@ func TestAccAWSElasticacheUserGroup_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheUserGroup_tags(t *testing.T) {
+func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
@@ -127,7 +127,7 @@ func TestAccAWSElasticacheUserGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
+func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 	var userGroup elasticache.UserGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user_group.test"

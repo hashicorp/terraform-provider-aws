@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
+func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
 	dataSourceName := "data.aws_elasticache_cluster.test"

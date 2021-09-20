@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSElasticacheUser_basic(t *testing.T) {
+func TestAccElastiCacheUser_basic(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
@@ -50,7 +50,7 @@ func TestAccAWSElasticacheUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheUser_update(t *testing.T) {
+func TestAccElastiCacheUser_update(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
@@ -87,7 +87,7 @@ func TestAccAWSElasticacheUser_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheUser_tags(t *testing.T) {
+func TestAccElastiCacheUser_tags(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
@@ -137,7 +137,7 @@ func TestAccAWSElasticacheUser_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheUser_disappears(t *testing.T) {
+func TestAccElastiCacheUser_disappears(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_elasticache_user.test"
