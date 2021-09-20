@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsQLDBLedger() *schema.Resource {
+func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQLDBLedgerCreate,
-		Read:   resourceAwsQLDBLedgerRead,
-		Update: resourceAwsQLDBLedgerUpdate,
-		Delete: resourceAwsQLDBLedgerDelete,
+		Create: resourceLedgerCreate,
+		Read:   resourceLedgerRead,
+		Update: resourceLedgerUpdate,
+		Delete: resourceLedgerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -63,7 +63,7 @@ func resourceAwsQLDBLedger() *schema.Resource {
 	}
 }
 
-func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -112,10 +112,10 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Update our attributes and return
-	return resourceAwsQLDBLedgerRead(d, meta)
+	return resourceLedgerRead(d, meta)
 }
 
-func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -176,7 +176,7 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 
 	if d.HasChange("permissions_mode") {
@@ -211,10 +211,10 @@ func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsQLDBLedgerRead(d, meta)
+	return resourceLedgerRead(d, meta)
 }
 
-func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	deleteLedgerOpts := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),
