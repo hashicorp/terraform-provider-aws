@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
+func TestAccRedshiftSecurityGroup_basic(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -40,7 +40,7 @@ func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
+func TestAccRedshiftSecurityGroup_ingressCIDR(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -75,7 +75,7 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
+func TestAccRedshiftSecurityGroup_updateIngressCIDR(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -119,7 +119,7 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
+func TestAccRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -151,7 +151,7 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
+func TestAccRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 	var v redshift.ClusterSecurityGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"

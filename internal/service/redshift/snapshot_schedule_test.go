@@ -79,7 +79,7 @@ func testSweepRedshiftSnapshotSchedules(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSRedshiftSnapshotSchedule_basic(t *testing.T) {
+func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -116,7 +116,7 @@ func TestAccAWSRedshiftSnapshotSchedule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
+func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -154,7 +154,7 @@ func TestAccAWSRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 
 }
 
-func TestAccAWSRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
+func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 	var v redshift.SnapshotSchedule
 	resourceName := "aws_redshift_snapshot_schedule.default"
 
@@ -183,7 +183,7 @@ func TestAccAWSRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSnapshotSchedule_withDescription(t *testing.T) {
+func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -214,7 +214,7 @@ func TestAccAWSRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSnapshotSchedule_withTags(t *testing.T) {
+func TestAccRedshiftSnapshotSchedule_withTags(t *testing.T) {
 	var v redshift.SnapshotSchedule
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_redshift_snapshot_schedule.default"
@@ -255,7 +255,7 @@ func TestAccAWSRedshiftSnapshotSchedule_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
+func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 	var snapshotSchedule redshift.SnapshotSchedule
 	var cluster redshift.Cluster
 	rInt := sdkacctest.RandInt()

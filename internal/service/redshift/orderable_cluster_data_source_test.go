@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRedshiftOrderableClusterDataSource_ClusterType(t *testing.T) {
+func TestAccRedshiftOrderableClusterDataSource_clusterType(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccAWSRedshiftOrderableClusterDataSource_ClusterType(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftOrderableClusterDataSource_ClusterVersion(t *testing.T) {
+func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ func TestAccAWSRedshiftOrderableClusterDataSource_ClusterVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftOrderableClusterDataSource_NodeType(t *testing.T) {
+func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 	nodeType := "dc2.8xlarge"
 
@@ -69,7 +69,7 @@ func TestAccAWSRedshiftOrderableClusterDataSource_NodeType(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftOrderableClusterDataSource_PreferredNodeTypes(t *testing.T) {
+func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 	preferredNodeType := "dc2.8xlarge"
 

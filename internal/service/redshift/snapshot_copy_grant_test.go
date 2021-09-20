@@ -14,7 +14,7 @@ import (
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 )
 
-func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
+func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 	resourceName := "aws_redshift_snapshot_copy_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -42,7 +42,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSnapshotCopyGrant_Update(t *testing.T) {
+func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 	resourceName := "aws_redshift_snapshot_copy_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -86,7 +86,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
+func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 	resourceName := "aws_redshift_snapshot_copy_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
