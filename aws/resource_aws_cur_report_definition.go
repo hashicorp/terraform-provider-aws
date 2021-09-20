@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCurReportDefinition() *schema.Resource {
+func ResourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCurReportDefinitionCreate,
-		Read:   resourceAwsCurReportDefinitionRead,
-		Update: resourceAwsCurReportDefinitionUpdate,
-		Delete: resourceAwsCurReportDefinitionDelete,
+		Create: resourceReportDefinitionCreate,
+		Read:   resourceReportDefinitionRead,
+		Update: resourceReportDefinitionUpdate,
+		Delete: resourceReportDefinitionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -100,7 +100,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 	}
 }
 
-func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
@@ -155,10 +155,10 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(reportName)
 
-	return resourceAwsCurReportDefinitionRead(d, meta)
+	return resourceReportDefinitionRead(d, meta)
 }
 
-func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
 	reportDefinition, err := finder.ReportDefinitionByName(conn, d.Id())
@@ -203,7 +203,7 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
@@ -260,10 +260,10 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating Cost And Usage Report Definition (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCurReportDefinitionRead(d, meta)
+	return resourceReportDefinitionRead(d, meta)
 }
 
-func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition (%s)", d.Id())
