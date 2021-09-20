@@ -290,7 +290,7 @@ func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}
 	apiObject := &imagebuilder.AmiDistributionConfiguration{}
 
 	if v, ok := tfMap["ami_tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.AmiTags = expandStringMap(v)
+		apiObject.AmiTags = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
@@ -310,7 +310,7 @@ func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}
 	}
 
 	if v, ok := tfMap["target_account_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.TargetAccountIds = expandStringSet(v)
+		apiObject.TargetAccountIds = flex.ExpandStringSet(v)
 	}
 
 	return apiObject
@@ -328,7 +328,7 @@ func expandImageBuilderDistribution(tfMap map[string]interface{}) *imagebuilder.
 	}
 
 	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.LicenseConfigurationArns = expandStringSet(v)
+		apiObject.LicenseConfigurationArns = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["region"].(string); ok && v != "" {
@@ -379,11 +379,11 @@ func expandImageBuilderLaunchPermissionConfiguration(tfMap map[string]interface{
 	apiObject := &imagebuilder.LaunchPermissionConfiguration{}
 
 	if v, ok := tfMap["user_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.UserIds = expandStringSet(v)
+		apiObject.UserIds = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["user_groups"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.UserGroups = expandStringSet(v)
+		apiObject.UserGroups = flex.ExpandStringSet(v)
 	}
 
 	return apiObject

@@ -143,7 +143,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("instance_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.InstanceTypes = expandStringSet(v.(*schema.Set))
+		input.InstanceTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("key_pair"); ok {
@@ -163,7 +163,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("sns_topic_arn"); ok {
@@ -300,7 +300,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 		}
 
 		if v, ok := d.GetOk("instance_types"); ok && v.(*schema.Set).Len() > 0 {
-			input.InstanceTypes = expandStringSet(v.(*schema.Set))
+			input.InstanceTypes = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("key_pair"); ok {
@@ -316,7 +316,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 		}
 
 		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+			input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("sns_topic_arn"); ok {
