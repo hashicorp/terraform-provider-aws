@@ -91,9 +91,9 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 
 		if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
 			// AWS Account ID Principals need to be accepted to become ASSOCIATED
-			association, err = finder.ResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareARN, principal)
+			association, err = finder.FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareARN, principal)
 		} else {
-			association, err = waiter.ResourceSharePrincipalAssociated(conn, resourceShareARN, principal)
+			association, err = waiter.WaitResourceSharePrincipalAssociated(conn, resourceShareARN, principal)
 		}
 
 		if err != nil {
@@ -128,7 +128,7 @@ func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		association, err := waiter.ResourceSharePrincipalDisassociated(conn, resourceShareARN, principal)
+		association, err := waiter.WaitResourceSharePrincipalDisassociated(conn, resourceShareARN, principal)
 
 		if err != nil {
 			return err

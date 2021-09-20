@@ -78,7 +78,7 @@ func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(createResp.ResourceShare.ResourceShareArn))
 
-	_, err = waiter.ResourceShareOwnedBySelfActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.WaitResourceShareOwnedBySelfActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
 	}
@@ -187,7 +187,7 @@ func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)
 	}
 
-	_, err = waiter.ResourceShareOwnedBySelfDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.WaitResourceShareOwnedBySelfDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)

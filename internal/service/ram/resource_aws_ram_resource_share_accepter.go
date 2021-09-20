@@ -87,7 +87,7 @@ func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{
 
 	shareARN := d.Get("share_arn").(string)
 
-	invitation, err := finder.ResourceShareInvitationByResourceShareArnAndStatus(conn, shareARN, ram.ResourceShareInvitationStatusPending)
+	invitation, err := finder.FindResourceShareInvitationByResourceShareARNAndStatus(conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
 		return err
@@ -114,7 +114,7 @@ func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(shareARN)
 
-	_, err = waiter.ResourceShareInvitationAccepted(
+	_, err = waiter.WaitResourceShareInvitationAccepted(
 		conn,
 		aws.StringValue(output.ResourceShareInvitation.ResourceShareInvitationArn),
 		d.Timeout(schema.TimeoutCreate),
@@ -131,7 +131,7 @@ func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{})
 	accountID := meta.(*conns.AWSClient).AccountID
 	conn := meta.(*conns.AWSClient).RAMConn
 
-	invitation, err := finder.ResourceShareInvitationByResourceShareArnAndStatus(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
+	invitation, err := finder.FindResourceShareInvitationByResourceShareARNAndStatus(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceShareInvitationArnNotFoundException) {
 		return fmt.Errorf("error retrieving invitation for resource share %s: %w", d.Id(), err)
@@ -144,7 +144,7 @@ func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{})
 		d.Set("receiver_account_id", accountID)
 	}
 
-	resourceShare, err := finder.ResourceShareOwnerOtherAccountsByArn(conn, d.Id())
+	resourceShare, err := finder.FindResourceShareOwnerOtherAccountsByARN(conn, d.Id())
 
 	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException) || tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException)) {
 		log.Printf("[WARN] No RAM resource share with ARN (%s) found, removing from state", d.Id())
@@ -218,7 +218,7 @@ func resourceResourceShareAccepterDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error leaving RAM resource share: %s", err)
 	}
 
-	_, err = waiter.ResourceShareOwnedBySelfDisassociated(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.WaitResourceShareOwnedBySelfDisassociated(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) state: %s", d.Id(), err)

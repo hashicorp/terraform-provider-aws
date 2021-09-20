@@ -21,10 +21,10 @@ const (
 	PrincipalAssociationStatusNotFound = "NotFound"
 )
 
-// ResourceShareInvitationStatus fetches the ResourceShareInvitation and its Status
-func ResourceShareInvitationStatus(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+// StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
+func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		invitation, err := finder.ResourceShareInvitationByArn(conn, arn)
+		invitation, err := finder.FindResourceShareInvitationByARN(conn, arn)
 
 		if err != nil {
 			return nil, ResourceShareInvitationStatusUnknown, err
@@ -38,10 +38,10 @@ func ResourceShareInvitationStatus(conn *ram.RAM, arn string) resource.StateRefr
 	}
 }
 
-// ResourceShareOwnerSelfStatus fetches the ResourceShare and its Status
-func ResourceShareOwnerSelfStatus(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+// StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
+func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		share, err := finder.ResourceShareOwnerSelfByArn(conn, arn)
+		share, err := finder.FindResourceShareOwnerSelfByARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, ResourceShareStatusNotFound, nil
@@ -59,9 +59,9 @@ func ResourceShareOwnerSelfStatus(conn *ram.RAM, arn string) resource.StateRefre
 	}
 }
 
-func ResourceSharePrincipalAssociationStatus(conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
+func StatusResourceSharePrincipalAssociation(conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		association, err := finder.ResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
+		association, err := finder.FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, PrincipalAssociationStatusNotFound, err
