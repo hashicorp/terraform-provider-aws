@@ -1,4 +1,4 @@
-package aws
+package autoscaling_test
 
 import "testing"
 

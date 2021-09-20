@@ -1,4 +1,4 @@
-package aws
+package autoscaling
 
 import (
 	"bytes"
@@ -22,16 +22,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfautoscaling "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceGroup() *schema.Resource {
@@ -696,11 +694,11 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = tftags.AutoscalingKeyValueTags(v, asgName, tfautoscaling.TagResourceTypeGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = tftags.AutoscalingKeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tftags.AutoscalingKeyValueTags(v, asgName, tfautoscaling.TagResourceTypeGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = tftags.AutoscalingKeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -750,7 +748,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Auto Scaling Group create configuration: %#v", createOpts)
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -889,23 +887,23 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	// Deprecated: In a future major version, this should always set all tags except those ignored.
 	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := tftags.AutoscalingKeyValueTags(v, d.Id(), tfautoscaling.TagResourceTypeGroup)
+		proposedStateTags := tftags.AutoscalingKeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tag", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := tftags.AutoscalingKeyValueTags(v, d.Id(), tfautoscaling.TagResourceTypeGroup)
+		proposedStateTags := tftags.AutoscalingKeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tags", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
+		if err := d.Set("tags", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", tftags.AutoscalingKeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
@@ -1116,15 +1114,15 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		oTagRaw, nTagRaw := d.GetChange("tag")
 		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := tftags.AutoscalingKeyValueTags(oTagRaw, d.Id(), tfautoscaling.TagResourceTypeGroup)
-		oTags := tftags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), tfautoscaling.TagResourceTypeGroup)
+		oTag := tftags.AutoscalingKeyValueTags(oTagRaw, d.Id(), TagResourceTypeGroup)
+		oTags := tftags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), TagResourceTypeGroup)
 		oldTags := oTag.Merge(oTags).AutoscalingTags()
 
-		nTag := tftags.AutoscalingKeyValueTags(nTagRaw, d.Id(), tfautoscaling.TagResourceTypeGroup)
-		nTags := tftags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), tfautoscaling.TagResourceTypeGroup)
+		nTag := tftags.AutoscalingKeyValueTags(nTagRaw, d.Id(), TagResourceTypeGroup)
+		nTags := tftags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), TagResourceTypeGroup)
 		newTags := nTag.Merge(nTags).AutoscalingTags()
 
-		if err := tftags.AutoscalingUpdateTags(conn, d.Id(), tfautoscaling.TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := tftags.AutoscalingUpdateTags(conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
 	}
@@ -2217,7 +2215,7 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 
 func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
 	input := createAutoScalingGroupInstanceRefreshInput(asgName, refreshConfig)
-	err := resource.Retry(waiter.instanceRefreshStartedTimeout, func() *resource.RetryError {
+	err := resource.Retry(instanceRefreshStartedTimeout, func() *resource.RetryError {
 		_, err := conn.StartInstanceRefresh(input)
 		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {
 			cancelErr := cancelAutoscalingInstanceRefresh(conn, asgName)
@@ -2256,7 +2254,7 @@ func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName str
 		return fmt.Errorf("error cancelling Instance Refresh on Auto Scaling Group (%s): empty result", asgName)
 	}
 
-	_, err = waiter.waitInstanceRefreshCancelled(conn, asgName, aws.StringValue(output.InstanceRefreshId))
+	_, err = waitInstanceRefreshCancelled(conn, asgName, aws.StringValue(output.InstanceRefreshId))
 	if err != nil {
 		return fmt.Errorf("error waiting for cancellation of Instance Refresh (%s) on Auto Scaling Group (%s): %w", aws.StringValue(output.InstanceRefreshId), asgName, err)
 	}
