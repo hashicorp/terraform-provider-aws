@@ -204,7 +204,7 @@ func testAccCheckAppmeshVirtualRouterDestroy(s *terraform.State) error {
 			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["name"]),
 		})
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {

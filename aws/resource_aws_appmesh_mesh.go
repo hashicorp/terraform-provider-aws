@@ -248,7 +248,7 @@ func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

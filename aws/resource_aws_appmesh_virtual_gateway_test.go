@@ -806,7 +806,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 		}
 
 		_, err := finder.VirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
