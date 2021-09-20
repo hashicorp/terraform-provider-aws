@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.TestCheckFunc {
@@ -31,7 +32,7 @@ func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.Te
 			return fmt.Errorf("No result is set")
 		}
 
-		if !suppressEquivalentJsonDiffs("", result, expectedResult, nil) {
+		if !verify.SuppressEquivalentJSONDiffs("", result, expectedResult, nil) {
 			return fmt.Errorf("%s: Attribute 'result' expected %s, got %s", name, expectedResult, result)
 		}
 

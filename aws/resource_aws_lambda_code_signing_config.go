@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCodeSigningConfig() *schema.Resource {
@@ -38,7 +39,7 @@ func ResourceCodeSigningConfig() *schema.Resource {
 							MaxItems: 20,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: verify.ValidARN,
 							},
 							Set: schema.HashString,
 						},

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEventSourceMapping() *schema.Resource {
@@ -90,14 +91,14 @@ func ResourceEventSourceMapping() *schema.Resource {
 									"destination_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
 						},
 					},
 				},
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 
 			"enabled": {

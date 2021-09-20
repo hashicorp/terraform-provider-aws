@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -107,7 +108,7 @@ func ResourceFunction() *schema.Resource {
 			"code_signing_config_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"signing_profile_version_arn": {
 				Type:     schema.TypeString,
@@ -131,7 +132,7 @@ func ResourceFunction() *schema.Resource {
 						"target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -148,7 +149,7 @@ func ResourceFunction() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						// Local mount path inside a lambda function. Must start with "/mnt/".
 						"local_mount_path": {
@@ -175,7 +176,7 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 			"memory_size": {
@@ -315,7 +316,7 @@ func ResourceFunction() *schema.Resource {
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -356,7 +357,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func hasConfigChanges(d resourceDiffer) bool {
+func hasConfigChanges(d verify.ResourceDiffer) bool {
 	return d.HasChange("description") ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
@@ -905,7 +906,7 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func needsFunctionCodeUpdate(d resourceDiffer) bool {
+func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
 		d.HasChange("source_code_hash") ||
 		d.HasChange("s3_bucket") ||

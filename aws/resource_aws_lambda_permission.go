@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
@@ -34,19 +35,19 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLambdaPermissionAction,
+				ValidateFunc: validPermissionAction,
 			},
 			"event_source_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLambdaPermissionEventSourceToken,
+				ValidateFunc: validPermissionEventSourceToken,
 			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLambdaFunctionName,
+				ValidateFunc: validFunctionName,
 			},
 			"principal": {
 				Type:     schema.TypeString,
@@ -57,19 +58,19 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLambdaQualifier,
+				ValidateFunc: validQualifier,
 			},
 			"source_account": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"source_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"statement_id": {
 				Type:          schema.TypeString,
@@ -77,14 +78,14 @@ func ResourcePermission() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc:  validatePolicyStatementId,
+				ValidateFunc:  validPolicyStatementID,
 			},
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id"},
-				ValidateFunc:  validatePolicyStatementId,
+				ValidateFunc:  validPolicyStatementID,
 			},
 		},
 	}
