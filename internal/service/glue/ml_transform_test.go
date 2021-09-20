@@ -68,7 +68,7 @@ func testSweepGlueMLTransforms(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSGlueMLTransform_basic(t *testing.T) {
+func TestAccGlueMlTransform_ML_basic(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -118,7 +118,7 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_typeFindMatchesFull(t *testing.T) {
+func TestAccGlueMlTransform_ML_typeFindMatchesFull(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -178,7 +178,7 @@ func TestAccAWSGlueMLTransform_typeFindMatchesFull(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_description(t *testing.T) {
+func TestAccGlueMlTransform_ML_description(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -213,7 +213,7 @@ func TestAccAWSGlueMLTransform_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_glueVersion(t *testing.T) {
+func TestAccGlueMlTransform_ML_glueVersion(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -248,7 +248,7 @@ func TestAccAWSGlueMLTransform_glueVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_maxRetries(t *testing.T) {
+func TestAccGlueMlTransform_ML_maxRetries(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -287,7 +287,7 @@ func TestAccAWSGlueMLTransform_maxRetries(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_Tags(t *testing.T) {
+func TestAccGlueMlTransform_ML_tags(t *testing.T) {
 	var transform1, transform2, transform3 glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -333,7 +333,7 @@ func TestAccAWSGlueMLTransform_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_timeout(t *testing.T) {
+func TestAccGlueMlTransform_ML_timeout(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -368,7 +368,7 @@ func TestAccAWSGlueMLTransform_timeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_workerType(t *testing.T) {
+func TestAccGlueMlTransform_ML_workerType(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -405,7 +405,7 @@ func TestAccAWSGlueMLTransform_workerType(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_maxCapacity(t *testing.T) {
+func TestAccGlueMlTransform_ML_maxCapacity(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -440,7 +440,7 @@ func TestAccAWSGlueMLTransform_maxCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_disappears(t *testing.T) {
+func TestAccGlueMlTransform_ML_disappears(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

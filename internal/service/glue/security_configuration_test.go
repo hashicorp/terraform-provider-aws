@@ -64,7 +64,7 @@ func testSweepGlueSecurityConfigurations(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueSecurityConfiguration_basic(t *testing.T) {
+func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -102,7 +102,7 @@ func TestAccAWSGlueSecurityConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSecurityConfiguration_CloudWatchEncryption_CloudWatchEncryptionMode_SSEKMS(t *testing.T) {
+func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMode_sseKMS(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -134,7 +134,7 @@ func TestAccAWSGlueSecurityConfiguration_CloudWatchEncryption_CloudWatchEncrypti
 	})
 }
 
-func TestAccAWSGlueSecurityConfiguration_JobBookmarksEncryption_JobBookmarksEncryptionMode_CSEKMS(t *testing.T) {
+func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncryptionMode_cseKMS(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -166,7 +166,7 @@ func TestAccAWSGlueSecurityConfiguration_JobBookmarksEncryption_JobBookmarksEncr
 	})
 }
 
-func TestAccAWSGlueSecurityConfiguration_S3Encryption_S3EncryptionMode_SSEKMS(t *testing.T) {
+func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -198,7 +198,7 @@ func TestAccAWSGlueSecurityConfiguration_S3Encryption_S3EncryptionMode_SSEKMS(t 
 	})
 }
 
-func TestAccAWSGlueSecurityConfiguration_S3Encryption_S3EncryptionMode_SSES3(t *testing.T) {
+func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

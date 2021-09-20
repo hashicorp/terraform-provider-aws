@@ -25,7 +25,7 @@ func testAccErrorCheckSkipGlue(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
+func TestAccGlueCatalogTable_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -59,7 +59,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_columnParameters(t *testing.T) {
+func TestAccGlueCatalogTable_columnParameters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -89,7 +89,7 @@ func TestAccAWSGlueCatalogTable_columnParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_full(t *testing.T) {
+func TestAccGlueCatalogTable_full(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := "A test table from terraform"
 	resourceName := "aws_glue_catalog_table.test"
@@ -153,7 +153,7 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
+func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := "A test table from terraform"
 	resourceName := "aws_glue_catalog_table.test"
@@ -226,7 +226,7 @@ func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
+func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := "A test table from terraform"
 	resourceName := "aws_glue_catalog_table.test"
@@ -341,7 +341,7 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
-func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *testing.T) {
+func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -362,7 +362,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *tes
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
-func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBlock(t *testing.T) {
+func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_emptyBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -384,7 +384,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBl
 	})
 }
 
-func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *testing.T) {
+func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -425,7 +425,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *test
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
-func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationBlock(t *testing.T) {
+func TestAccGlueCatalogTable_StorageDescriptorSkewedInfo_emptyBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -447,7 +447,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationB
 	})
 }
 
-func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
+func TestAccGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -489,7 +489,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) 
 	})
 }
 
-func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.T) {
+func TestAccGlueCatalogTable_StorageDescriptor_schemaReferenceARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -519,7 +519,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.
 	})
 }
 
-func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
+func TestAccGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -550,7 +550,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
+func TestAccGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -584,7 +584,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
+func TestAccGlueCatalogTable_Disappears_database(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -607,7 +607,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_targetTable(t *testing.T) {
+func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 
@@ -637,7 +637,7 @@ func TestAccAWSGlueCatalogTable_targetTable(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
+func TestAccGlueCatalogTable_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
 

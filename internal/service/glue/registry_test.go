@@ -53,7 +53,7 @@ func testSweepGlueRegistry(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueRegistry_basic(t *testing.T) {
+func TestAccGlueRegistry_basic(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -84,7 +84,7 @@ func TestAccAWSGlueRegistry_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueRegistry_Description(t *testing.T) {
+func TestAccGlueRegistry_description(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -119,7 +119,7 @@ func TestAccAWSGlueRegistry_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueRegistry_Tags(t *testing.T) {
+func TestAccGlueRegistry_tags(t *testing.T) {
 	var registry glue.GetRegistryOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_registry.test"
@@ -164,7 +164,7 @@ func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueRegistry_disappears(t *testing.T) {
+func TestAccGlueRegistry_disappears(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

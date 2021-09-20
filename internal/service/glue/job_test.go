@@ -59,7 +59,7 @@ func testSweepGlueJobs(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueJob_basic(t *testing.T) {
+func TestAccGlueJob_basic(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -96,7 +96,7 @@ func TestAccAWSGlueJob_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_Command(t *testing.T) {
+func TestAccGlueJob_command(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -133,7 +133,7 @@ func TestAccAWSGlueJob_Command(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
+func TestAccGlueJob_defaultArguments(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -172,7 +172,7 @@ func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
+func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -211,7 +211,7 @@ func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_Description(t *testing.T) {
+func TestAccGlueJob_description(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -246,7 +246,7 @@ func TestAccAWSGlueJob_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
+func TestAccGlueJob_glueVersion(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -288,7 +288,7 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
+func TestAccGlueJob_executionProperty(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -329,7 +329,7 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
+func TestAccGlueJob_maxRetries(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -368,7 +368,7 @@ func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_NotificationProperty(t *testing.T) {
+func TestAccGlueJob_notificationProperty(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -409,7 +409,7 @@ func TestAccAWSGlueJob_NotificationProperty(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_Tags(t *testing.T) {
+func TestAccGlueJob_tags(t *testing.T) {
 	var job1, job2, job3 glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -455,7 +455,7 @@ func TestAccAWSGlueJob_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_Timeout(t *testing.T) {
+func TestAccGlueJob_timeout(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -490,7 +490,7 @@ func TestAccAWSGlueJob_Timeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
+func TestAccGlueJob_security(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -525,7 +525,7 @@ func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_WorkerType(t *testing.T) {
+func TestAccGlueJob_workerType(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -567,7 +567,7 @@ func TestAccAWSGlueJob_WorkerType(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_PythonShell(t *testing.T) {
+func TestAccGlueJob_pythonShell(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -623,7 +623,7 @@ func TestAccAWSGlueJob_PythonShell(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
+func TestAccGlueJob_maxCapacity(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
@@ -661,7 +661,7 @@ func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueJob_disappears(t *testing.T) {
+func TestAccGlueJob_disappears(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))

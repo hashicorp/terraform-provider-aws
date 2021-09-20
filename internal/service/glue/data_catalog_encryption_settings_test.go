@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
+func TestAccGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	var settings glue.DataCatalogEncryptionSettings
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

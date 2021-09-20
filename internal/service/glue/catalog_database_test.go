@@ -65,7 +65,7 @@ func testSweepGlueCatalogDatabases(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
+func TestAccGlueCatalogDatabase_full(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -120,7 +120,7 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogDatabase_targetDatabase(t *testing.T) {
+func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -159,7 +159,7 @@ func TestAccAWSGlueCatalogDatabase_targetDatabase(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCatalogDatabase_disappears(t *testing.T) {
+func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

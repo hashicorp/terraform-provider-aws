@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsGlueConnection_basic(t *testing.T) {
+func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

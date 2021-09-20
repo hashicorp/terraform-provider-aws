@@ -65,7 +65,7 @@ func testSweepGlueCrawlers(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
+func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -133,7 +133,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_DynamodbTarget_scanAll(t *testing.T) {
+func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -177,7 +177,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget_scanAll(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_DynamodbTarget_scanRate(t *testing.T) {
+func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -221,7 +221,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget_scanRate(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
+func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -293,7 +293,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
+func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -336,7 +336,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
+func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -397,7 +397,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
+func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -439,7 +439,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
+func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -491,7 +491,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
+func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -549,7 +549,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
+func TestAccGlueCrawler_s3Target(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -617,7 +617,7 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_S3Target_ConnectionName(t *testing.T) {
+func TestAccGlueCrawler_S3Target_connectionName(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -647,7 +647,7 @@ func TestAccAWSGlueCrawler_S3Target_ConnectionName(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_S3Target_SampleSize(t *testing.T) {
+func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -683,7 +683,7 @@ func TestAccAWSGlueCrawler_S3Target_SampleSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
+func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -724,7 +724,7 @@ func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
+func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -778,7 +778,7 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
+func TestAccGlueCrawler_catalogTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -851,7 +851,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
+func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -907,7 +907,7 @@ func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_disappears(t *testing.T) {
+func TestAccGlueCrawler_disappears(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -930,7 +930,7 @@ func TestAccAWSGlueCrawler_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Classifiers(t *testing.T) {
+func TestAccGlueCrawler_classifiers(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -975,7 +975,7 @@ func TestAccAWSGlueCrawler_Classifiers(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Configuration(t *testing.T) {
+func TestAccGlueCrawler(t *testing.T) {
 	var crawler glue.Crawler
 	configuration1 := `{"Version": 1.0, "CrawlerOutput": {"Tables": { "AddOrUpdateBehavior": "MergeNewColumns" }}}`
 	configuration2 := `{"Version": 1.0, "CrawlerOutput": {"Partitions": { "AddOrUpdateBehavior": "InheritFromTable" }}}`
@@ -1018,7 +1018,7 @@ func TestAccAWSGlueCrawler_Configuration(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Description(t *testing.T) {
+func TestAccGlueCrawler_description(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1052,7 +1052,7 @@ func TestAccAWSGlueCrawler_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Role_ARN_NoPath(t *testing.T) {
+func TestAccGlueCrawler_RoleARN_noPath(t *testing.T) {
 	var crawler glue.Crawler
 	iamRoleResourceName := "aws_iam_role.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1080,7 +1080,7 @@ func TestAccAWSGlueCrawler_Role_ARN_NoPath(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Role_ARN_Path(t *testing.T) {
+func TestAccGlueCrawler_RoleARN_path(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1107,7 +1107,7 @@ func TestAccAWSGlueCrawler_Role_ARN_Path(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Role_Name_Path(t *testing.T) {
+func TestAccGlueCrawler_RoleName_path(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1134,7 +1134,7 @@ func TestAccAWSGlueCrawler_Role_Name_Path(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Schedule(t *testing.T) {
+func TestAccGlueCrawler_schedule(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1175,7 +1175,7 @@ func TestAccAWSGlueCrawler_Schedule(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_SchemaChangePolicy(t *testing.T) {
+func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1213,7 +1213,7 @@ func TestAccAWSGlueCrawler_SchemaChangePolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_TablePrefix(t *testing.T) {
+func TestAccGlueCrawler_tablePrefix(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1247,7 +1247,7 @@ func TestAccAWSGlueCrawler_TablePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_RemoveTablePrefix(t *testing.T) {
+func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1281,7 +1281,7 @@ func TestAccAWSGlueCrawler_RemoveTablePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_Tags(t *testing.T) {
+func TestAccGlueCrawler_tags(t *testing.T) {
 	var crawler1, crawler2, crawler3 glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1326,7 +1326,7 @@ func TestAccAWSGlueCrawler_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
+func TestAccGlueCrawler_security(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -1360,7 +1360,7 @@ func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_lineageConfig(t *testing.T) {
+func TestAccGlueCrawler_lineage(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"

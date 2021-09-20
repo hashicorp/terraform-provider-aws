@@ -61,7 +61,7 @@ func testSweepGlueConnections(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueConnection_basic(t *testing.T) {
+func TestAccGlueConnection_basic(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -97,7 +97,7 @@ func TestAccAWSGlueConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
+func TestAccGlueConnection_mongoDB(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -133,7 +133,7 @@ func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_Kafka(t *testing.T) {
+func TestAccGlueConnection_kafka(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -167,7 +167,7 @@ func TestAccAWSGlueConnection_Kafka(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_Network(t *testing.T) {
+func TestAccGlueConnection_network(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -201,7 +201,7 @@ func TestAccAWSGlueConnection_Network(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_Description(t *testing.T) {
+func TestAccGlueConnection_description(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -238,7 +238,7 @@ func TestAccAWSGlueConnection_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
+func TestAccGlueConnection_matchCriteria(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -290,7 +290,7 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
+func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -327,7 +327,7 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_disappears(t *testing.T) {
+func TestAccGlueConnection_disappears(t *testing.T) {
 	var connection glue.Connection
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

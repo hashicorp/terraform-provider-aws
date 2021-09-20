@@ -71,7 +71,7 @@ func testSweepGlueClassifiers(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
+func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -126,7 +126,7 @@ func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_CsvClassifier_quoteSymbol(t *testing.T) {
+func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -163,7 +163,7 @@ func TestAccAWSGlueClassifier_CsvClassifier_quoteSymbol(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_GrokClassifier(t *testing.T) {
+func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -212,7 +212,7 @@ func TestAccAWSGlueClassifier_GrokClassifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_GrokClassifier_CustomPatterns(t *testing.T) {
+func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -261,7 +261,7 @@ func TestAccAWSGlueClassifier_GrokClassifier_CustomPatterns(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_JsonClassifier(t *testing.T) {
+func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -306,7 +306,7 @@ func TestAccAWSGlueClassifier_JsonClassifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_TypeChange(t *testing.T) {
+func TestAccGlueClassifier_typeChange(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -375,7 +375,7 @@ func TestAccAWSGlueClassifier_TypeChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_XmlClassifier(t *testing.T) {
+func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -422,7 +422,7 @@ func TestAccAWSGlueClassifier_XmlClassifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueClassifier_disappears(t *testing.T) {
+func TestAccGlueClassifier_disappears(t *testing.T) {
 	var classifier glue.Classifier
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

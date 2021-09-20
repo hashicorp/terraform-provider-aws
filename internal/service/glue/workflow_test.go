@@ -48,7 +48,7 @@ func testSweepGlueWorkflow(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueWorkflow_basic(t *testing.T) {
+func TestAccGlueWorkflow_basic(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -78,7 +78,7 @@ func TestAccAWSGlueWorkflow_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueWorkflow_maxConcurrentRuns(t *testing.T) {
+func TestAccGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -120,7 +120,7 @@ func TestAccAWSGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueWorkflow_DefaultRunProperties(t *testing.T) {
+func TestAccGlueWorkflow_defaultRunProperties(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -150,7 +150,7 @@ func TestAccAWSGlueWorkflow_DefaultRunProperties(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueWorkflow_Description(t *testing.T) {
+func TestAccGlueWorkflow_description(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -185,7 +185,7 @@ func TestAccAWSGlueWorkflow_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueWorkflow_Tags(t *testing.T) {
+func TestAccGlueWorkflow_tags(t *testing.T) {
 	var workflow glue.Workflow
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_workflow.test"
@@ -230,7 +230,7 @@ func TestAccAWSGlueWorkflow_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueWorkflow_disappears(t *testing.T) {
+func TestAccGlueWorkflow_disappears(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

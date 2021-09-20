@@ -15,7 +15,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
-func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
+func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updated := "test"
 	resourceName := "aws_glue_user_defined_function.test"
@@ -56,7 +56,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
+func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_user_defined_function.test"
 
@@ -96,7 +96,7 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
+func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_user_defined_function.test"
 

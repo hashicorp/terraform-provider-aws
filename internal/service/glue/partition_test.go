@@ -14,7 +14,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
-func TestAccAWSGluePartition_basic(t *testing.T) {
+func TestAccGluePartition_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
@@ -46,7 +46,7 @@ func TestAccAWSGluePartition_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartition_multipleValues(t *testing.T) {
+func TestAccGluePartition_multipleValues(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parValue := sdkacctest.RandString(10)
 	parValue2 := sdkacctest.RandString(11)
@@ -76,7 +76,7 @@ func TestAccAWSGluePartition_multipleValues(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartition_parameters(t *testing.T) {
+func TestAccGluePartition_parameters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
@@ -121,7 +121,7 @@ func TestAccAWSGluePartition_parameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartition_disappears(t *testing.T) {
+func TestAccGluePartition_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
@@ -144,7 +144,7 @@ func TestAccAWSGluePartition_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartition_disappears_table(t *testing.T) {
+func TestAccGluePartition_Disappears_table(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
