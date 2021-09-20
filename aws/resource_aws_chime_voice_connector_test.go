@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 	var voiceConnector *chime.VoiceConnector
 
-	vcName := acctest.RandomWithPrefix("tf-acc-test")
+	vcName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
@@ -44,12 +45,12 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 func TestAccAWSChimeVoiceConnector_disappears(t *testing.T) {
 	var voiceConnector *chime.VoiceConnector
 
-	vcName := acctest.RandomWithPrefix("tf-acc-test")
+	vcName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +58,7 @@ func TestAccAWSChimeVoiceConnector_disappears(t *testing.T) {
 				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnector(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,12 +69,12 @@ func TestAccAWSChimeVoiceConnector_disappears(t *testing.T) {
 func TestAccAWSChimeVoiceConnector_update(t *testing.T) {
 	var voiceConnector *chime.VoiceConnector
 
-	vcName := acctest.RandomWithPrefix("tf-acc-test")
+	vcName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
