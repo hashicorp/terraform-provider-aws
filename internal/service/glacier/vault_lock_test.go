@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
+func TestAccGlacierVaultLock_basic(t *testing.T) {
 	var vaultLock1 glacier.GetVaultLockOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	glacierVaultResourceName := "aws_glacier_vault.test"
@@ -46,7 +46,7 @@ func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlacierVaultLock_CompleteLock(t *testing.T) {
+func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 	var vaultLock1 glacier.GetVaultLockOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	glacierVaultResourceName := "aws_glacier_vault.test"
