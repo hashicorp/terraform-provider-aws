@@ -1,4 +1,4 @@
-package aws
+package mwaa
 
 import (
 	"fmt"
@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -313,7 +311,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(input.Name))
 
-	if _, err := waiter.waitEnvironmentCreated(conn, d.Id()); err != nil {
+	if _, err := waitEnvironmentCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MWAA Environment (%s) creation: %w", d.Id(), err)
 	}
 
@@ -327,7 +325,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Reading MWAA Environment: %s", d.Id())
 
-	environment, err := finder.findEnvironmentByName(conn, d.Id())
+	environment, err := findEnvironmentByName(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
@@ -472,7 +470,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.waitEnvironmentUpdated(conn, d.Id()); err != nil {
+		if _, err := waitEnvironmentUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for MWAA Environment (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -503,7 +501,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting MWAA Environment (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitEnvironmentDeleted(conn, d.Id())
+	_, err = waitEnvironmentDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for MWAA Environment (%s) deletion: %w", d.Id(), err)
