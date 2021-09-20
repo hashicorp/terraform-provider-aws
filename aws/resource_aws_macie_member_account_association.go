@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
@@ -27,7 +28,7 @@ func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
 }
 
 func resourceAwsMacieMemberAccountAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	memberAccountId := d.Get("member_account_id").(string)
 	req := &macie.AssociateMemberAccountInput{
@@ -45,7 +46,7 @@ func resourceAwsMacieMemberAccountAssociationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsMacieMemberAccountAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	req := &macie.ListMemberAccountsInput{}
 
@@ -74,7 +75,7 @@ func resourceAwsMacieMemberAccountAssociationRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsMacieMemberAccountAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	log.Printf("[DEBUG] Deleting Macie member account association: %s", d.Id())
 
