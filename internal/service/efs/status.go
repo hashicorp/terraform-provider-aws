@@ -1,4 +1,4 @@
-package waiter
+package efs
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
