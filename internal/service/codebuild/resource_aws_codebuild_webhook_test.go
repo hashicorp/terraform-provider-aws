@@ -1,4 +1,4 @@
-package aws
+package codebuild_test
 
 import (
 	"fmt"
