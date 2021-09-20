@@ -7,20 +7,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 	var conf apigateway.UpdateGatewayResponseOutput
 
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 	resourceName := "aws_api_gateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
 		Steps: []resource.TestStep{
@@ -58,12 +59,12 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 func TestAccAWSAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	var conf apigateway.UpdateGatewayResponseOutput
 
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 	resourceName := "aws_api_gateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func TestAccAWSAPIGatewayGatewayResponse_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayGatewayResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayGatewayResponseExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayGatewayResponse(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayGatewayResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

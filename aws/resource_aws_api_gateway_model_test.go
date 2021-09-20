@@ -7,21 +7,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	var conf apigateway.Model
-	rInt := acctest.RandString(10)
+	rInt := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
 	modelName := fmt.Sprintf("tfacctest%s", rInt)
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{
@@ -50,14 +51,14 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
 	var conf apigateway.Model
-	rInt := acctest.RandString(10)
+	rInt := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
 	modelName := fmt.Sprintf("tfacctest%s", rInt)
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{
@@ -65,7 +66,7 @@ func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayModel(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

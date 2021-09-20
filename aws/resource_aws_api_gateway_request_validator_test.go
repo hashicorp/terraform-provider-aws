@@ -7,19 +7,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
-	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
@@ -59,12 +60,12 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
-	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRequestValidator(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRequestValidator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

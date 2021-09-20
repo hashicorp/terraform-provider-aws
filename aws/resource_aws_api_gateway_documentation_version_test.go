@@ -6,23 +6,24 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +47,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_method_%s", rString)
 	stageName := fmt.Sprintf("tf-acc-test_stage_%s", rString)
@@ -56,8 +57,8 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -91,15 +92,15 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

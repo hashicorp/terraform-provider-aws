@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
@@ -71,19 +72,19 @@ func testSweepCloudWatchEventApiDestination(region string) error {
 
 func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeApiDestinationOutput
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationEndpoint := "https://www.hashicorp.com/"
 	httpMethod := "GET"
 
-	nameModified := acctest.RandomWithPrefix("tf-acc-test")
+	nameModified := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationEndpointModified := "https://www.hashicorp.com/products/terraform"
 	httpMethodModified := "POST"
 
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
 				),
@@ -115,7 +116,7 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
 					testAccCheckCloudWatchEventApiDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -140,23 +141,23 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchEventApiDestination_optional(t *testing.T) {
 	var v1, v2, v3 events.DescribeApiDestinationOutput
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationEndpoint := "https://www.hashicorp.com/"
 	httpMethod := "GET"
-	description := acctest.RandomWithPrefix("tf-acc-test")
+	description := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationRateLimitPerSecond := 10
 
-	nameModified := acctest.RandomWithPrefix("tf-acc-test")
+	nameModified := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationEndpointModified := "https://www.hashicorp.com/products/terraform"
 	httpMethodModified := "POST"
-	descriptionModified := acctest.RandomWithPrefix("tf-acc-test")
+	descriptionModified := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationRateLimitPerSecondModified := 12
 
 	resourceName := "aws_cloudwatch_event_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -224,15 +225,15 @@ func TestAccAWSCloudWatchEventApiDestination_optional(t *testing.T) {
 
 func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 	var v events.DescribeApiDestinationOutput
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	invocationEndpoint := "https://www.hashicorp.com/"
 	httpMethod := "GET"
 
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -244,7 +245,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventApiDestination(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventApiDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

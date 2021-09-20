@@ -7,15 +7,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
@@ -23,8 +24,8 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_method_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
@@ -68,8 +69,8 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_resp_header_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
@@ -117,8 +118,8 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
@@ -162,15 +163,15 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +179,7 @@ func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationPart(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -8,19 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -131,12 +132,12 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -207,12 +208,12 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 
 func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -250,12 +251,12 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 
 func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -295,12 +296,12 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 
 func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testing.T) {
 	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -332,12 +333,12 @@ func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testi
 
 func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 	var conf apigateway.Integration
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -345,7 +346,7 @@ func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayIntegration(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

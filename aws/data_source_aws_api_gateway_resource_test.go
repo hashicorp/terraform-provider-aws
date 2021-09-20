@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsApiGatewayResource_basic(t *testing.T) {
-	rName := acctest.RandString(8)
+	rName := sdkacctest.RandString(8)
 	resourceName1 := "aws_api_gateway_resource.example_v1"
 	dataSourceName1 := "data.aws_api_gateway_resource.example_v1"
 	resourceName2 := "aws_api_gateway_resource.example_v1_endpoint"
 	dataSourceName2 := "data.aws_api_gateway_resource.example_v1_endpoint"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

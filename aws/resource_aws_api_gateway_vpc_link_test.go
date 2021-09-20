@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -60,14 +61,14 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 }
 
 func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
 	vpcLinkNameUpdated := fmt.Sprintf("tf-apigateway-update-%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
@@ -75,7 +76,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
@@ -90,7 +91,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfig_Update(rName, "test update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", "test update"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
@@ -101,14 +102,14 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 }
 
 func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
@@ -156,12 +157,12 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 }
 
 func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayVpcLink(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayVpcLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
