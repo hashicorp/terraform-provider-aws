@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsInspectorRulesPackages() *schema.Resource {
+func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsInspectorRulesPackagesRead,
+		Read: dataSourceRulesPackagesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -25,7 +25,7 @@ func dataSourceAwsInspectorRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceAwsInspectorRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	log.Printf("[DEBUG] Reading Rules Packages.")

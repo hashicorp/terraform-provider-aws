@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAWSInspectorAssessmentTarget() *schema.Resource {
+func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsInspectorAssessmentTargetCreate,
 		Read:   resourceAwsInspectorAssessmentTargetRead,
