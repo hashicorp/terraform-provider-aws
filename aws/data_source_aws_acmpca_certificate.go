@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsAcmpcaCertificate() *schema.Resource {
@@ -37,7 +38,7 @@ func dataSourceAwsAcmpcaCertificate() *schema.Resource {
 }
 
 func dataSourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*conns.AWSClient).ACMPCAConn
 	certificateArn := d.Get("arn").(string)
 
 	getCertificateInput := &acmpca.GetCertificateInput{

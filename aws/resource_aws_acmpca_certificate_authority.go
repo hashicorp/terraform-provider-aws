@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
@@ -281,8 +282,8 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 }
 
 func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ACMPCAConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &acmpca.CreateCertificateAuthorityInput{
@@ -329,9 +330,9 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ACMPCAConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	certificateAuthority, err := finder.CertificateAuthorityByARN(conn, d.Id())
 
@@ -446,7 +447,7 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*conns.AWSClient).ACMPCAConn
 	updateCertificateAuthority := false
 
 	input := &acmpca.UpdateCertificateAuthorityInput{
@@ -486,7 +487,7 @@ func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsAcmpcaCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
 	updateInput := &acmpca.UpdateCertificateAuthorityInput{

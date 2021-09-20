@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsAcmpcaCertificateAuthority() *schema.Resource {
@@ -99,8 +100,8 @@ func dataSourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 }
 
 func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ACMPCAConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	certificateAuthorityArn := d.Get("arn").(string)
 
 	describeCertificateAuthorityInput := &acmpca.DescribeCertificateAuthorityInput{
