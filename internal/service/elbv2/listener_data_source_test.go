@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
+func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lb_listener.test"
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
@@ -45,7 +45,7 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2ListenerDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_alb_listener.test"
 	dataSourceName2 := "data.aws_alb_listener.from_lb_and_port"
@@ -78,7 +78,7 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBListener_https(t *testing.T) {
+func TestAccELBV2ListenerDataSource_https(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -117,7 +117,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBListener_DefaultAction_Forward(t *testing.T) {
+func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lb_listener.test"
 	resourceName := "aws_lb_listener.test"

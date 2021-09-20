@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSLBTargetGroup_basic(t *testing.T) {
+func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
 	resourceName := "data.aws_lb_target_group.alb_tg_test_with_name"
@@ -71,7 +71,7 @@ func TestAccDataSourceAWSLBTargetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBTargetGroup_appCookie(t *testing.T) {
+func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
 
@@ -112,7 +112,7 @@ func TestAccDataSourceAWSLBTargetGroup_appCookie(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
 	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"

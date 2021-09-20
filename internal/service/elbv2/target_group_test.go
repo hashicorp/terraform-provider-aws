@@ -95,7 +95,7 @@ func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSLBTargetGroup_basic(t *testing.T) {
+func TestAccELBV2TargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -140,7 +140,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
+func TestAccELBV2TargetGroup_basicUdp(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -171,7 +171,7 @@ func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_ProtocolVersion(t *testing.T) {
+func TestAccELBV2TargetGroup_protocolVersion(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -241,7 +241,7 @@ func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
+func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 	var targetGroup1, targetGroup2, targetGroup3 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -313,7 +313,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_Protocol_Geneve(t *testing.T) {
+func TestAccELBV2TargetGroup_Protocol_geneve(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -346,7 +346,7 @@ func TestAccAWSLBTargetGroup_Protocol_Geneve(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
+func TestAccELBV2TargetGroup_ProtocolTCPHealthCheck_protocol(t *testing.T) {
 	var targetGroup1, targetGroup2 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -378,7 +378,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
+func TestAccELBV2TargetGroup_Protocol_tls(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -400,7 +400,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_ProtocolVersionGRPC_healthCheck(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -424,7 +424,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
+func TestAccELBV2TargetGroup_ProtocolVersionHTTPGRPC_update(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -455,7 +455,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
+func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -484,7 +484,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -543,7 +543,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_alb_target_group.test"
@@ -586,7 +586,7 @@ func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
+func TestAccELBV2TargetGroup_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -608,7 +608,7 @@ func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
+func TestAccELBV2TargetGroup_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -629,7 +629,7 @@ func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rNameBefore := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rNameAfter := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -659,7 +659,7 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -688,7 +688,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -717,7 +717,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changeVPCForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -744,7 +744,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_tags(t *testing.T) {
+func TestAccELBV2TargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -784,7 +784,7 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_enableHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -819,7 +819,7 @@ func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1058,7 +1058,7 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
+func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1096,7 +1096,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
+func TestAccELBV2TargetGroup_Defaults_network(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1168,7 +1168,7 @@ protocol = "TCP"
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessDefaultNLB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessDefaultNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1210,7 +1210,7 @@ func TestAccAWSLBTargetGroup_stickinessDefaultNLB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessDefaultALB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessDefaultALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1234,7 +1234,7 @@ func TestAccAWSLBTargetGroup_stickinessDefaultALB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessValidNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1294,7 +1294,7 @@ func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessValidALB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessValidALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
@@ -1329,7 +1329,7 @@ func TestAccAWSLBTargetGroup_stickinessValidALB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessInvalidNLB(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1354,7 +1354,7 @@ func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessInvalidALB(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1384,7 +1384,7 @@ func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_preserveClientIPValid(t *testing.T) {
+func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 	var conf elbv2.TargetGroup
 	resourceName := "aws_lb_target_group.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

@@ -17,7 +17,7 @@ import (
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
-func TestAccAWSLBListener_basic(t *testing.T) {
+func TestAccELBV2Listener_basic(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -54,7 +54,7 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_tags(t *testing.T) {
+func TestAccELBV2Listener_tags(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -99,7 +99,7 @@ func TestAccAWSLBListener_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
+func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -179,7 +179,7 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_basicUdp(t *testing.T) {
+func TestAccELBV2Listener_basicUdp(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -215,7 +215,7 @@ func TestAccAWSLBListener_basicUdp(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_alb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -251,7 +251,7 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_https(t *testing.T) {
+func TestAccELBV2Listener_https(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
@@ -291,7 +291,7 @@ func TestAccAWSLBListener_https(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_LoadBalancerArn_GatewayLoadBalancer(t *testing.T) {
+func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 	var conf elbv2.Listener
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	lbResourceName := "aws_lb.test"
@@ -316,7 +316,7 @@ func TestAccAWSLBListener_LoadBalancerArn_GatewayLoadBalancer(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
+func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	var listener1 elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -346,7 +346,7 @@ func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_redirect(t *testing.T) {
+func TestAccELBV2Listener_redirect(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -388,7 +388,7 @@ func TestAccAWSLBListener_redirect(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_fixedResponse(t *testing.T) {
+func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -427,7 +427,7 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_cognito(t *testing.T) {
+func TestAccELBV2Listener_cognito(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
@@ -471,7 +471,7 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_oidc(t *testing.T) {
+func TestAccELBV2Listener_oidc(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
@@ -519,7 +519,7 @@ func TestAccAWSLBListener_oidc(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
+func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 	var listener elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -552,7 +552,7 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
+func TestAccELBV2Listener_DefaultActionOrder_recreates(t *testing.T) {
 	var listener elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")

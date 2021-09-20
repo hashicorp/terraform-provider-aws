@@ -59,7 +59,7 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSLBListenerRule_basic(t *testing.T) {
+func TestAccELBV2ListenerRule_basic(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -107,7 +107,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_tags(t *testing.T) {
+func TestAccELBV2ListenerRule_tags(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -149,7 +149,7 @@ func TestAccAWSLBListenerRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
+func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-weighted-%s", sdkacctest.RandString(13))
 	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -229,7 +229,7 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -276,7 +276,7 @@ func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_redirect(t *testing.T) {
+func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
 
@@ -365,7 +365,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
+func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-fixedresponse-%s", sdkacctest.RandString(9))
 
@@ -404,7 +404,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 }
 
 // Updating Action breaks Condition change logic GH-11323 and GH-11362
-func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
+func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 	var rule elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 
@@ -434,7 +434,7 @@ func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
+func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 	var rule elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -465,7 +465,7 @@ func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
+func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 	var before, after elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -495,7 +495,7 @@ func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_priority(t *testing.T) {
+func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	var rule elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -569,7 +569,7 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_cognito(t *testing.T) {
+func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	var conf elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -613,7 +613,7 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_oidc(t *testing.T) {
+func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	var conf elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -657,7 +657,7 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
+func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 	var rule elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -684,7 +684,7 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
+func TestAccELBV2ListenerRule_ActionOrder_recreates(t *testing.T) {
 	var rule elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
@@ -712,7 +712,7 @@ func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
 	err_many := regexp.MustCompile("Only one of host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be set in a condition block")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -745,7 +745,7 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
 
@@ -784,7 +784,7 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
 
@@ -835,7 +835,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
+func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -850,7 +850,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-httpRequest-%s", sdkacctest.RandString(11))
 
@@ -889,7 +889,7 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
 
@@ -928,7 +928,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-queryString-%s", sdkacctest.RandString(11))
 
@@ -991,7 +991,7 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-sourceIp-%s", sdkacctest.RandString(14))
 
@@ -1030,7 +1030,7 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-mixed-%s", sdkacctest.RandString(17))
 
@@ -1104,7 +1104,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
 
@@ -1187,7 +1187,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
 

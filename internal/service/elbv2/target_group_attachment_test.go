@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,7 +35,7 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -55,7 +55,7 @@ func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,7 +74,7 @@ func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachment_Port(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -93,7 +93,7 @@ func TestAccAWSLBTargetGroupAttachment_Port(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,7 +112,7 @@ func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachment_lambda(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{

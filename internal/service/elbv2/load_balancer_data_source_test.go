@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSLB_basic(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
@@ -76,7 +76,7 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLB_outpost(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	resourceName := "aws_lb.test"
@@ -111,7 +111,7 @@ func TestAccDataSourceAWSLB_outpost(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
