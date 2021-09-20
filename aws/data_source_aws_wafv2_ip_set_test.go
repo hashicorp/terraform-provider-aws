@@ -6,18 +6,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsWafv2IPSet_basic(t *testing.T) {
-	name := acctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_ip_set.test"
 	datasourceName := "data.aws_wafv2_ip_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck: testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck: acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -29,7 +30,7 @@ func TestAccDataSourceAwsWafv2IPSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "addresses", resourceName, "addresses"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/ipset/%v/.+$", name))),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/ipset/%v/.+$", name))),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ip_address_version", resourceName, "ip_address_version"),

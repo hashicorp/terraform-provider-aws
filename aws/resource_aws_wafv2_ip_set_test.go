@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -80,12 +81,12 @@ func testSweepWafv2IpSets(region string) error {
 
 func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 	var v wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -108,7 +109,7 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigUpdate(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -128,12 +129,12 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 
 func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 	var r wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &r),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2IPSet(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafv2IPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,12 +152,12 @@ func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 
 func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
 	var v wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -164,7 +165,7 @@ func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigIPv6(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -187,12 +188,12 @@ func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
 
 func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
 	var v wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -200,7 +201,7 @@ func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigMinimal(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -220,13 +221,13 @@ func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
 
 func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
 	var before, after wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
-	ipSetNewName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipSetNewName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -234,7 +235,7 @@ func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &before),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -246,7 +247,7 @@ func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfig(ipSetNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &after),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
@@ -260,12 +261,12 @@ func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
 
 func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 	var v wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -273,7 +274,7 @@ func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigOneTag(ipSetName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
 				),
@@ -288,7 +289,7 @@ func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigTwoTags(ipSetName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
@@ -298,7 +299,7 @@ func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigOneTag(ipSetName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
@@ -309,12 +310,12 @@ func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 
 func TestAccAwsWafv2IPSet_Large(t *testing.T) {
 	var v wafv2.IPSet
-	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
 		Steps: []resource.TestStep{
@@ -322,7 +323,7 @@ func TestAccAwsWafv2IPSet_Large(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfigLarge(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),

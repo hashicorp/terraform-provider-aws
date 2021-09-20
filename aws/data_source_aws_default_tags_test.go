@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDefaultTagsDataSource_basic(t *testing.T) {
@@ -14,14 +15,14 @@ func TestAccAWSDefaultTagsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("first", "value"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("first", "value"),
 					testAccAWSDefaultTagsDataSource(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -39,14 +40,14 @@ func TestAccAWSDefaultTagsDataSource_empty(t *testing.T) {
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags0(),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags0(),
 					testAccAWSDefaultTagsDataSource(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -63,14 +64,14 @@ func TestAccAWSDefaultTagsDataSource_multiple(t *testing.T) {
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags2("nuera", "hijo", "escalofrios", "calambres"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("nuera", "hijo", "escalofrios", "calambres"),
 					testAccAWSDefaultTagsDataSource(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -89,14 +90,14 @@ func TestAccAWSDefaultTagsDataSource_ignore(t *testing.T) {
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("Tabac", "Louis Chiron"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("Tabac", "Louis Chiron"),
 					testAccAWSDefaultTagsDataSource(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -105,8 +106,8 @@ func TestAccAWSDefaultTagsDataSource_ignore(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccProviderConfigDefaultAndIgnoreTagsKeys1("Tabac", "Louis Chiron"),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultAndIgnoreTagsKeys1("Tabac", "Louis Chiron"),
 					testAccAWSDefaultTagsDataSource(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
