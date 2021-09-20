@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -75,13 +76,13 @@ func testSweepBudgetsBudgetActionss(region string) error {
 }
 
 func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_budgets_budget_action.test"
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetActionDestroy,
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
@@ -115,13 +116,13 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 }
 
 func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_budgets_budget_action.test"
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetActionDestroy,
 		Steps: []resource.TestStep{
@@ -129,7 +130,7 @@ func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudgetAction(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

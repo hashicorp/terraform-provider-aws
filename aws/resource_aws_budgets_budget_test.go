@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -79,12 +80,12 @@ func testSweepBudgetsBudgets(region string) error {
 
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	var budget budgets.Budget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -92,8 +93,8 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, &budget),
-					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "budgets", fmt.Sprintf(`budget/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
@@ -126,8 +127,8 @@ func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -168,8 +169,8 @@ func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -201,12 +202,12 @@ func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
 
 func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 	var budget budgets.Budget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -214,7 +215,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, &budget),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -224,7 +225,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 
 func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 	var budget budgets.Budget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_budgets_budget.test"
 
 	now := time.Now().UTC()
@@ -238,8 +239,8 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 	endDate2 := tfbudgets.TimePeriodTimestampToString(&ts4)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -252,11 +253,11 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						"name":     "AZ",
 						"values.#": "2",
-						"values.0": testAccGetRegion(),
-						"values.1": testAccGetAlternateRegion(),
+						"values.0": acctest.Region(),
+						"values.1": acctest.AlternateRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{testAccGetRegion(), testAccGetAlternateRegion()}, ",")),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{acctest.Region(), acctest.AlternateRegion()}, ",")),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", "false"),
@@ -292,11 +293,11 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						"name":     "AZ",
 						"values.#": "2",
-						"values.0": testAccGetAlternateRegion(),
-						"values.1": testAccGetThirdRegion(),
+						"values.0": acctest.AlternateRegion(),
+						"values.1": acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{testAccGetAlternateRegion(), testAccGetThirdRegion()}, ",")),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{acctest.AlternateRegion(), acctest.ThirdRegion()}, ",")),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", "true"),
@@ -324,18 +325,18 @@ func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
 
 func TestAccAWSBudgetsBudget_Notifications(t *testing.T) {
 	var budget budgets.Budget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_budgets_budget.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	domain := testAccRandomDomainName()
-	emailAddress1 := testAccRandomEmailAddress(domain)
-	emailAddress2 := testAccRandomEmailAddress(domain)
-	emailAddress3 := testAccRandomEmailAddress(domain)
+	domain := acctest.RandomDomainName()
+	emailAddress1 := acctest.RandomEmailAddress(domain)
+	emailAddress2 := acctest.RandomEmailAddress(domain)
+	emailAddress3 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -533,7 +534,7 @@ resource "aws_budgets_budget" "test" {
     use_blended          = true
   }
 }
-`, rName, startDate, endDate, testAccGetRegion(), testAccGetAlternateRegion())
+`, rName, startDate, endDate, acctest.Region(), acctest.AlternateRegion())
 }
 
 func testAccAWSBudgetsBudgetConfigCostTypesUpdated(rName, startDate, endDate string) string {
@@ -562,7 +563,7 @@ resource "aws_budgets_budget" "test" {
     use_blended          = false
   }
 }
-`, rName, startDate, endDate, testAccGetAlternateRegion(), testAccGetThirdRegion())
+`, rName, startDate, endDate, acctest.AlternateRegion(), acctest.ThirdRegion())
 }
 
 func testAccAWSBudgetsBudgetConfigNotifications(rName, emailAddress1, emailAddress2 string) string {
