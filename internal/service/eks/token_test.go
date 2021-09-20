@@ -9,7 +9,7 @@ With the following modifications:
  - Refactor deprecated io/ioutil in Go 1.16
 */
 
-package token
+package eks
 
 import (
 	"bytes"

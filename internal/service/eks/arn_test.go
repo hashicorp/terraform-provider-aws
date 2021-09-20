@@ -3,10 +3,10 @@ This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/arn/arn_test.go
 
 With the following modifications:
- - Rename package from arn to token for simplication
+ - Rename package eks
 */
 
-package token
+package eks
 
 import (
 	"fmt"
