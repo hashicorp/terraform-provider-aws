@@ -108,10 +108,10 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", SortClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", SortClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", SortClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", SortClusterEndpoints(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
 	d.Set("cluster_name", cluster.ClusterName)
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
@@ -120,7 +120,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("zookeeper_connect_string", sortMskClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string", SortClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 

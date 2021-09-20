@@ -106,7 +106,7 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 				Config: testAccMskScramSecretAssociation_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskScramSecretAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceScramSecretAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceScramSecretAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
 				Config: testAccMskScramSecretAssociation_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskScramSecretAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

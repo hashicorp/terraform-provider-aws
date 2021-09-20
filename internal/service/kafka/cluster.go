@@ -481,10 +481,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	cluster := out.ClusterInfo
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", SortClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", SortClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", SortClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", SortClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %s", err)
@@ -529,7 +529,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting logging_info: %s", err)
 	}
 
-	d.Set("zookeeper_connect_string", sortMskClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string", SortClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	return nil
 }
@@ -719,7 +719,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
 
-	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
+	return ClusterDeleteWaiter(conn, d.Id())
 }
 
 func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
@@ -1216,7 +1216,7 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
+func ClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
@@ -1286,7 +1286,7 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 	return err
 }
 
-func sortMskClusterEndpoints(s string) string {
+func SortClusterEndpoints(s string) string {
 	splitBootstrapBrokers := strings.Split(s, ",")
 	sort.Strings(splitBootstrapBrokers)
 	return strings.Join(splitBootstrapBrokers, ",")

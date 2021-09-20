@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -50,7 +51,7 @@ func testSweepMskClusters(region string) error {
 			log.Printf("[ERROR] Failed to delete MSK cluster %s: %s", *cluster.ClusterName, err)
 			continue
 		}
-		err = resourceAwsMskClusterDeleteWaiter(conn, *cluster.ClusterArn)
+		err = tfkafka.ClusterDeleteWaiter(conn, *cluster.ClusterArn)
 		if err != nil {
 			log.Printf("[ERROR] failed to wait for deletion of MSK cluster %s: %s", *cluster.ClusterName, err)
 		}
@@ -1612,7 +1613,7 @@ resource "aws_msk_cluster" "test" {
 
 func TestSortMskClusterEndpoints(t *testing.T) {
 	testString := "this:123,is:147,just.a.test:443"
-	if "is:147,just.a.test:443,this:123" != sortMskClusterEndpoints(testString) {
+	if "is:147,just.a.test:443,this:123" != tfkafka.SortClusterEndpoints(testString) {
 		t.Fail()
 	}
 }
