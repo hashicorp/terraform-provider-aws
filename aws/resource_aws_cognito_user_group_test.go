@@ -23,7 +23,7 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +58,7 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf(fmt.Sprintf("ID should be user_pool_id/name. ID was %s. name was %s, user_pool_id was %s", id, name, userPoolId))
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
 
 		params := &cognitoidentityprovider.GetGroupInput{
 			GroupName:  aws.String(rs.Primary.Attributes["name"]),
@@ -159,7 +159,7 @@ func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSCognitoUserGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+	conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_group" {

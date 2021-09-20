@@ -25,7 +25,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,14 +75,14 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -221,7 +221,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,14 +271,14 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -298,7 +298,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -353,7 +353,7 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -425,7 +425,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -464,7 +464,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -493,7 +493,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 }
 
 func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+	conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_ui_customization" {
@@ -547,7 +547,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.T
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		conn := acctest.Provider.Meta().(*AWSClient).cognitoidpconn
 
 		output, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
 

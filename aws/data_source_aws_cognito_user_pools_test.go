@@ -16,7 +16,7 @@ func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		ErrorCheck: acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsCognitoUserPoolsConfig_basic(rName),
