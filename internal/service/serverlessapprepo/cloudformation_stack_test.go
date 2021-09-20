@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfserverlessapprepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
 )
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
@@ -89,7 +90,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_disappears(t *
 				Config: testAccAwsServerlessApplicationRepositoryCloudFormationStackConfig(stackName, appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCloudFormationStack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfserverlessapprepo.ResourceCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -296,7 +297,7 @@ func testAccAwsServerlessApplicationRepositoryCloudFormationStackNameImportState
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s%s", serverlessApplicationRepositoryCloudFormationStackNamePrefix, rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s%s", tfserverlessapprepo.CloudFormationStackNamePrefix, rs.Primary.Attributes["name"]), nil
 	}
 }
 

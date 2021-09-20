@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	serverlessApplicationRepositoryCloudFormationStackNamePrefix = "serverlessrepo-"
+	CloudFormationStackNamePrefix = "serverlessrepo-"
 
 	serverlessApplicationRepositoryCloudFormationStackTagApplicationID   = "serverlessrepo:applicationId"
 	serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion = "serverlessrepo:semanticVersion"
@@ -140,7 +140,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// Serverless Application Repo prefixes the stack name with "serverlessrepo-", so remove it from the saved string
-	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), serverlessApplicationRepositoryCloudFormationStackNamePrefix)
+	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), CloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
 	tags := tftags.CloudformationKeyValueTags(stack.Tags)
@@ -279,8 +279,8 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 
 	// If this isn't an ARN, it's the stack name
 	if _, err := arn.Parse(stackID); err != nil {
-		if !strings.HasPrefix(stackID, serverlessApplicationRepositoryCloudFormationStackNamePrefix) {
-			stackID = serverlessApplicationRepositoryCloudFormationStackNamePrefix + stackID
+		if !strings.HasPrefix(stackID, CloudFormationStackNamePrefix) {
+			stackID = CloudFormationStackNamePrefix + stackID
 		}
 	}
 
