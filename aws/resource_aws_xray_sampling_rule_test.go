@@ -19,7 +19,7 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,7 +116,7 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,14 +161,14 @@ func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSXray(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsXraySamplingRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsXraySamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,7 +186,7 @@ func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRul
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
 
 		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
@@ -206,7 +206,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
 
 		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
@@ -223,7 +223,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSXray(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).xrayconn
+	conn := acctest.Provider.Meta().(*AWSClient).xrayconn
 
 	input := &xray.GetSamplingRulesInput{}
 

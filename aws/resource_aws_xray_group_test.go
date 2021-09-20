@@ -21,7 +21,7 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSXrayGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,14 +103,14 @@ func TestAccAWSXrayGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSXrayGroupBasicConfig(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsXrayGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsXrayGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,7 +128,7 @@ func testAccCheckXrayGroupExists(n string, Group *xray.Group) resource.TestCheck
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Group ID is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),
@@ -152,7 +152,7 @@ func testAccCheckAWSXrayGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),
