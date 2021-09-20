@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestBranchParseResourceID(t *testing.T) {
