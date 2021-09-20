@@ -1320,5 +1320,5 @@ func resourceAwsQuickSightDataSourceParseID(id string) (string, string, error) {
 }
 
 func quicksightDataSourceArn(awsRegion string, awsAccountId string, dataSourceId string) string {
-	return fmt.Sprintf("arn:${data.aws_partition.current.partition}:quicksight:%s:%s:datasource/%s", awsRegion, awsAccountId, dataSourceId)
+	return fmt.Sprintf("arn:aws:quicksight:%s:%s:datasource/%s", awsRegion, awsAccountId, dataSourceId)
 }
