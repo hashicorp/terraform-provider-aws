@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestSubdirectoryFromLocationURI(t *testing.T) {

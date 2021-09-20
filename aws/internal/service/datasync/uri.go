@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (
