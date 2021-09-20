@@ -14,7 +14,7 @@ import (
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
-func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
+func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 	resourceName := "aws_directory_service_conditional_forwarder.fwd"
 
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"

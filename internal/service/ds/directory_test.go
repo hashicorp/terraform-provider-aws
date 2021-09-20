@@ -84,7 +84,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
+func TestAccDirectoryServiceDirectory_basic(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
@@ -117,7 +117,7 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
+func TestAccDirectoryServiceDirectory_tags(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
@@ -170,7 +170,7 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
+func TestAccDirectoryServiceDirectory_microsoft(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
@@ -199,7 +199,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 	})
 }
 
-func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
+func TestAccDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
@@ -228,7 +228,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	})
 }
 
-func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
+func TestAccDirectoryServiceDirectory_connector(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
@@ -262,7 +262,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 	})
 }
 
-func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
+func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	alias := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_directory_service_directory.test"
@@ -342,7 +342,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccAWSDirectoryServiceDirectory_disappears(t *testing.T) {
+func TestAccDirectoryServiceDirectory_disappears(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 
