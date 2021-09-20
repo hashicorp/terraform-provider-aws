@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
@@ -73,7 +74,7 @@ func TestAccAWSAPIGatewayGatewayResponse_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayGatewayResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayGatewayResponseExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayGatewayResponse(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

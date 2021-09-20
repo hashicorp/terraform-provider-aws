@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayRestApiPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRestAPIPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +88,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayRestApi(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

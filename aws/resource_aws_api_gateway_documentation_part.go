@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
+func ResourceDocumentationPart() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDocumentationPartCreate,
-		Read:   resourceAwsApiGatewayDocumentationPartRead,
-		Update: resourceAwsApiGatewayDocumentationPartUpdate,
-		Delete: resourceAwsApiGatewayDocumentationPartDelete,
+		Create: resourceDocumentationPartCreate,
+		Read:   resourceDocumentationPartRead,
+		Update: resourceDocumentationPartUpdate,
+		Delete: resourceDocumentationPartDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -71,7 +71,7 @@ func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationPartCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	apiId := d.Get("rest_api_id").(string)
@@ -88,7 +88,7 @@ func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
@@ -120,7 +120,7 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
@@ -154,10 +154,10 @@ func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] API Gateway Documentation Part updated: %s", out)
 
-	return resourceAwsApiGatewayDocumentationPartRead(d, meta)
+	return resourceDocumentationPartRead(d, meta)
 }
 
-func resourceAwsApiGatewayDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())

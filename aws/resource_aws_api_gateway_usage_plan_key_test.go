@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 				Config: testAccAWSApiGatewayUsagePlanKeyConfigKeyTypeApiKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayUsagePlanKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUsagePlanKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,9 +16,9 @@ import (
 // is used to set the zone_id attribute.
 const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
-func dataSourceAwsApiGatewayDomainName() *schema.Resource {
+func DataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayDomainNameRead,
+		Read: dataSourceDomainNameRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -86,7 +86,7 @@ func dataSourceAwsApiGatewayDomainName() *schema.Resource {
 	}
 }
 
-func dataSourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

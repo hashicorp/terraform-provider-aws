@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsApiGatewayResource() *schema.Resource {
+func DataSourceResource() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayResourceRead,
+		Read: dataSourceResourceRead,
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
 				Type:     schema.TypeString,
@@ -34,7 +34,7 @@ func dataSourceAwsApiGatewayResource() *schema.Resource {
 	}
 }
 
-func dataSourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceResourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	restApiId := d.Get("rest_api_id").(string)

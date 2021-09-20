@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayDocumentationVersion() *schema.Resource {
+func ResourceDocumentationVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDocumentationVersionCreate,
-		Read:   resourceAwsApiGatewayDocumentationVersionRead,
-		Update: resourceAwsApiGatewayDocumentationVersionUpdate,
-		Delete: resourceAwsApiGatewayDocumentationVersionDelete,
+		Create: resourceDocumentationVersionCreate,
+		Read:   resourceDocumentationVersionRead,
+		Update: resourceDocumentationVersionUpdate,
+		Delete: resourceDocumentationVersionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -41,7 +41,7 @@ func resourceAwsApiGatewayDocumentationVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayDocumentationVersionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	restApiId := d.Get("rest_api_id").(string)
@@ -63,10 +63,10 @@ func resourceAwsApiGatewayDocumentationVersionCreate(d *schema.ResourceData, met
 
 	d.SetId(restApiId + "/" + *version.Version)
 
-	return resourceAwsApiGatewayDocumentationVersionRead(d, meta)
+	return resourceDocumentationVersionRead(d, meta)
 }
 
-func resourceAwsApiGatewayDocumentationVersionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Reading API Gateway Documentation Version %s", d.Id())
 
@@ -95,7 +95,7 @@ func resourceAwsApiGatewayDocumentationVersionRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsApiGatewayDocumentationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating API Gateway Documentation Version %s", d.Id())
 
@@ -115,10 +115,10 @@ func resourceAwsApiGatewayDocumentationVersionUpdate(d *schema.ResourceData, met
 	}
 	log.Printf("[DEBUG] Updated API Gateway Documentation Version %s", d.Id())
 
-	return resourceAwsApiGatewayDocumentationVersionRead(d, meta)
+	return resourceDocumentationVersionRead(d, meta)
 }
 
-func resourceAwsApiGatewayDocumentationVersionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDocumentationVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
 

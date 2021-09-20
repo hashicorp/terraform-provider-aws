@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayStage() *schema.Resource {
+func ResourceStage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayStageCreate,
-		Read:   resourceAwsApiGatewayStageRead,
-		Update: resourceAwsApiGatewayStageUpdate,
-		Delete: resourceAwsApiGatewayStageDelete,
+		Create: resourceStageCreate,
+		Read:   resourceStageRead,
+		Update: resourceStageUpdate,
+		Delete: resourceStageDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -128,7 +128,7 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -196,15 +196,15 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, ok := d.GetOk("client_certificate_id"); ok {
-		return resourceAwsApiGatewayStageUpdate(d, meta)
+		return resourceStageUpdate(d, meta)
 	}
 	if _, ok := d.GetOk("access_log_settings"); ok {
-		return resourceAwsApiGatewayStageUpdate(d, meta)
+		return resourceStageUpdate(d, meta)
 	}
-	return resourceAwsApiGatewayStageRead(d, meta)
+	return resourceStageRead(d, meta)
 }
 
-func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -286,7 +286,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	stageArn := arn.ARN{
@@ -417,7 +417,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsApiGatewayStageRead(d, meta)
+	return resourceStageRead(d, meta)
 }
 
 func diffVariablesOps(oldVars, newVars map[string]interface{}) []*apigateway.PatchOperation {
@@ -467,7 +467,7 @@ func apiGatewayStageCacheRefreshFunc(conn *apigateway.APIGateway, apiId, stageNa
 	}
 }
 
-func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
 	input := apigateway.DeleteStageInput{

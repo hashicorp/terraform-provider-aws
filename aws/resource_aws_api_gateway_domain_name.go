@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayDomainName() *schema.Resource {
+func ResourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDomainNameCreate,
-		Read:   resourceAwsApiGatewayDomainNameRead,
-		Update: resourceAwsApiGatewayDomainNameUpdate,
-		Delete: resourceAwsApiGatewayDomainNameDelete,
+		Create: resourceDomainNameCreate,
+		Read:   resourceDomainNameRead,
+		Update: resourceDomainNameUpdate,
+		Delete: resourceDomainNameDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -172,7 +172,7 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -230,10 +230,10 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(domainName.DomainName))
 
-	return resourceAwsApiGatewayDomainNameRead(d, meta)
+	return resourceDomainNameRead(d, meta)
 }
 
-func resourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -376,7 +376,7 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 	return operations
 }
 
-func resourceAwsApiGatewayDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating API Gateway Domain Name %s", d.Id())
 
@@ -396,10 +396,10 @@ func resourceAwsApiGatewayDomainNameUpdate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	return resourceAwsApiGatewayDomainNameRead(d, meta)
+	return resourceDomainNameRead(d, meta)
 }
 
-func resourceAwsApiGatewayDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 

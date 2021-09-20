@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2ApiMapping() *schema.Resource {
+func ResourceAPIMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2ApiMappingCreate,
-		Read:   resourceAwsApiGatewayV2ApiMappingRead,
-		Update: resourceAwsApiGatewayV2ApiMappingUpdate,
-		Delete: resourceAwsApiGatewayV2ApiMappingDelete,
+		Create: resourceAPIMappingCreate,
+		Read:   resourceAPIMappingRead,
+		Update: resourceAPIMappingUpdate,
+		Delete: resourceAPIMappingDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2ApiMappingImport,
 		},
@@ -44,7 +44,7 @@ func resourceAwsApiGatewayV2ApiMapping() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2ApiMappingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateApiMappingInput{
@@ -64,10 +64,10 @@ func resourceAwsApiGatewayV2ApiMappingCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.ApiMappingId))
 
-	return resourceAwsApiGatewayV2ApiMappingRead(d, meta)
+	return resourceAPIMappingRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{
@@ -90,7 +90,7 @@ func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGatewayV2ApiMappingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateApiMappingInput{
@@ -111,10 +111,10 @@ func resourceAwsApiGatewayV2ApiMappingUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating API Gateway v2 API mapping: %s", err)
 	}
 
-	return resourceAwsApiGatewayV2ApiMappingRead(d, meta)
+	return resourceAPIMappingRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2ApiMappingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIMappingDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API mapping (%s)", d.Id())

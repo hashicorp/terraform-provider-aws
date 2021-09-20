@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
+func ResourceAPIDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventApiDestinationCreate,
-		Read:   resourceAwsCloudWatchEventApiDestinationRead,
-		Update: resourceAwsCloudWatchEventApiDestinationUpdate,
-		Delete: resourceAwsCloudWatchEventApiDestinationDelete,
+		Create: resourceAPIDestinationCreate,
+		Read:   resourceAPIDestinationRead,
+		Update: resourceAPIDestinationUpdate,
+		Delete: resourceAPIDestinationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventApiDestinationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.CreateApiDestinationInput{}
@@ -100,10 +100,10 @@ func resourceAwsCloudWatchEventApiDestinationCreate(d *schema.ResourceData, meta
 
 	log.Printf("[INFO] CloudWatchEvent API Destination (%s) created", d.Id())
 
-	return resourceAwsCloudWatchEventApiDestinationRead(d, meta)
+	return resourceAPIDestinationRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.DescribeApiDestinationInput{
@@ -134,7 +134,7 @@ func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.UpdateApiDestinationInput{}
@@ -163,10 +163,10 @@ func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta
 	if err != nil {
 		return fmt.Errorf("error updating CloudWatchEvent API Destination (%s): %w", d.Id(), err)
 	}
-	return resourceAwsCloudWatchEventApiDestinationRead(d, meta)
+	return resourceAPIDestinationRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventApiDestinationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	log.Printf("[INFO] Deleting CloudWatchEvent API Destination (%s)", d.Id())

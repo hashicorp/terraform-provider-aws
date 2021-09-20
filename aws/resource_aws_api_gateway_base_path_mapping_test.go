@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -192,7 +193,7 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayBasePathMapping(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

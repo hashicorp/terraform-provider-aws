@@ -13,13 +13,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppsyncApiKey() *schema.Resource {
+func ResourceAPIKey() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsAppsyncApiKeyCreate,
-		Read:   resourceAwsAppsyncApiKeyRead,
-		Update: resourceAwsAppsyncApiKeyUpdate,
-		Delete: resourceAwsAppsyncApiKeyDelete,
+		Create: resourceAPIKeyCreate,
+		Read:   resourceAPIKeyRead,
+		Update: resourceAPIKeyUpdate,
+		Delete: resourceAPIKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -55,7 +55,7 @@ func resourceAwsAppsyncApiKey() *schema.Resource {
 	}
 }
 
-func resourceAwsAppsyncApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID := d.Get("api_id").(string)
@@ -74,10 +74,10 @@ func resourceAwsAppsyncApiKeyCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", apiID, aws.StringValue(resp.ApiKey.Id)))
-	return resourceAwsAppsyncApiKeyRead(d, meta)
+	return resourceAPIKeyRead(d, meta)
 }
 
-func resourceAwsAppsyncApiKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
@@ -102,7 +102,7 @@ func resourceAwsAppsyncApiKeyRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
@@ -127,11 +127,11 @@ func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	return resourceAwsAppsyncApiKeyRead(d, meta)
+	return resourceAPIKeyRead(d, meta)
 
 }
 
-func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())

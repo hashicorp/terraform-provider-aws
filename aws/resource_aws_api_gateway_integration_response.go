@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
+func ResourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayIntegrationResponseCreate,
-		Read:   resourceAwsApiGatewayIntegrationResponseRead,
-		Update: resourceAwsApiGatewayIntegrationResponseCreate,
-		Delete: resourceAwsApiGatewayIntegrationResponseDelete,
+		Create: resourceIntegrationResponseCreate,
+		Read:   resourceIntegrationResponseRead,
+		Update: resourceIntegrationResponseCreate,
+		Delete: resourceIntegrationResponseDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -87,7 +87,7 @@ func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	templates := make(map[string]string)
@@ -128,10 +128,10 @@ func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta
 	d.SetId(fmt.Sprintf("agir-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string), d.Get("status_code").(string)))
 	log.Printf("[DEBUG] API Gateway Integration Response ID: %s", d.Id())
 
-	return resourceAwsApiGatewayIntegrationResponseRead(d, meta)
+	return resourceIntegrationResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Integration Response %s", d.Id())
@@ -172,7 +172,7 @@ func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsApiGatewayIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 
