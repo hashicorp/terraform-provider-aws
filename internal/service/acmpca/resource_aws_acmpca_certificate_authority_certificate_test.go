@@ -120,7 +120,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName str
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
-		output, err := finder.CertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
+		output, err := finder.FindCertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

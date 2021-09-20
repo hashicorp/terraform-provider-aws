@@ -74,7 +74,7 @@ func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta 
 func resourceCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	output, err := finder.CertificateAuthorityCertificateByARN(conn, d.Id())
+	output, err := finder.FindCertificateAuthorityCertificateByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")

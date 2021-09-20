@@ -14,10 +14,10 @@ const (
 	certificateAuthorityStatusUnknown  = "Unknown"
 )
 
-// CertificateAuthorityStatus fetches the Deployment and its Status
-func CertificateAuthorityStatus(conn *acmpca.ACMPCA, arn string) resource.StateRefreshFunc {
+// statusCertificateAuthority fetches the Deployment and its Status
+func statusCertificateAuthority(conn *acmpca.ACMPCA, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificateAuthority, err := finder.CertificateAuthorityByARN(conn, arn)
+		certificateAuthority, err := finder.FindCertificateAuthorityByARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 			return nil, certificateAuthorityStatusNotFound, nil

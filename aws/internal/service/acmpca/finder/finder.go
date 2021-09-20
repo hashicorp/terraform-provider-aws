@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// CertificateAuthorityByARN returns the certificate authority corresponding to the specified ARN.
+// FindCertificateAuthorityByARN returns the certificate authority corresponding to the specified ARN.
 // Returns nil if no certificate authority is found.
-func CertificateAuthorityByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.CertificateAuthority, error) {
+func FindCertificateAuthorityByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.CertificateAuthority, error) {
 	input := &acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(arn),
 	}
@@ -27,9 +27,9 @@ func CertificateAuthorityByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.Certifi
 	return output.CertificateAuthority, nil
 }
 
-// CertificateAuthorityCertificateByARN returns the certificate for the certificate authority corresponding to the specified ARN.
+// FindCertificateAuthorityCertificateByARN returns the certificate for the certificate authority corresponding to the specified ARN.
 // Returns a resource.NotFoundError if no certificate authority is found or the certificate authority does not have a certificate assigned.
-func CertificateAuthorityCertificateByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
+func FindCertificateAuthorityCertificateByARN(conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
 	input := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(arn),
 	}

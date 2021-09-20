@@ -322,7 +322,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(output.CertificateAuthorityArn))
 
-	_, err = waiter.CertificateAuthorityCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.waitCertificateAuthorityCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for ACM PCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
@@ -336,7 +336,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	certificateAuthority, err := finder.CertificateAuthorityByARN(conn, d.Id())
+	certificateAuthority, err := finder.FindCertificateAuthorityByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())

@@ -127,7 +127,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *acmpca.IssueCertificateOutput
-	err = resource.Retry(waiter.CertificateAuthorityActiveTimeout, func() *resource.RetryError {
+	err = resource.Retry(waiter.certificateAuthorityActiveTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.IssueCertificate(input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
