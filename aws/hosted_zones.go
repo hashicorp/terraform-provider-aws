@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // This list is copied from
@@ -44,5 +45,5 @@ func HostedZoneIDForRegion(region string) (string, error) {
 	if v, ok := hostedZoneIDsMap[region]; ok {
 		return v, nil
 	}
-	return "", fmt.Errorf("S3 hosted zone ID not found for region: %s", region)
+	return "", fmt.Errorf("S3 hosted zone ID not found for Region: %s", region)
 }

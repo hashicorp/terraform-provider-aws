@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRoute53Zone() *schema.Resource {
@@ -72,8 +73,8 @@ func dataSourceAwsRoute53Zone() *schema.Resource {
 }
 
 func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, nameExists := d.GetOk("name")
 	name = name.(string)
@@ -196,7 +197,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
 		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
 	}.String()

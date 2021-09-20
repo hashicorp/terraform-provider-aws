@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRoute() *schema.Resource {
@@ -94,7 +95,7 @@ func dataSourceAwsRoute() *schema.Resource {
 }
 
 func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID := d.Get("route_table_id").(string)
 

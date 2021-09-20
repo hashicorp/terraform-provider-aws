@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var routeValidDestinations = []string{
@@ -170,7 +171,7 @@ func resourceAwsRoute() *schema.Resource {
 }
 
 func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -256,7 +257,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -318,7 +319,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -395,7 +396,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 

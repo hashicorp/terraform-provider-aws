@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	testingiface "github.com/mitchellh/go-testing-interface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestGetWithDefault(t *testing.T) {

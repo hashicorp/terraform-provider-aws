@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsAmi() *schema.Resource {
@@ -200,7 +201,7 @@ func dataSourceAwsAmi() *schema.Resource {
 
 // dataSourceAwsAmiDescriptionRead performs the AMI lookup.
 func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{
 		Owners: expandStringList(d.Get("owners").([]interface{})),
@@ -261,7 +262,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 
 // populate the numerous fields that the image description returns.
 func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta interface{}) error {
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Simple attributes first
 	d.SetId(aws.StringValue(image.ImageId))
@@ -318,8 +319,8 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	}
 
 	imageArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()

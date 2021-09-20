@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -350,8 +351,8 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 }
 
 func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
-	ec2conn := meta.(*AWSClient).ec2conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
 	lcName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -559,8 +560,8 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
-	ec2conn := meta.(*AWSClient).ec2conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
 	describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
 		LaunchConfigurationNames: []*string{aws.String(d.Id())},
@@ -628,7 +629,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	input := &autoscaling.DeleteLaunchConfigurationInput{
 		LaunchConfigurationName: aws.String(d.Id()),
 	}

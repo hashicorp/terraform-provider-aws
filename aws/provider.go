@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/mutexkv"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Provider returns a *schema.Provider.
@@ -1500,7 +1501,7 @@ func init() {
 }
 
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	config := Config{
+	config := conns.Config{
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
 		Profile:                 d.Get("profile").(string),
@@ -1518,7 +1519,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
 		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
-		terraformVersion:        terraformVersion,
+		TerraformVersion:        terraformVersion,
 	}
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {

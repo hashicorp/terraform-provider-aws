@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEip() *schema.Resource {
@@ -80,8 +81,8 @@ func dataSourceAwsEip() *schema.Resource {
 }
 
 func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeAddressesInput{}
 
@@ -145,7 +146,7 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("public_ip", eip.PublicIp)
 	if eip.PublicIp != nil {
-		d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(aws.StringValue(eip.PublicIp)), resourceAwsEc2RegionalPublicDnsSuffix(region))))
+		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(aws.StringValue(eip.PublicIp)), resourceAwsEc2RegionalPublicDnsSuffix(region))))
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("carrier_ip", eip.CarrierIp)

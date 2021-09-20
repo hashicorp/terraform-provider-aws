@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"strings"
 	"time"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (

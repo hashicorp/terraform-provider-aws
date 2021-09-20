@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -23,11 +24,11 @@ const (
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
-// sweeperAwsClients is a shared cache of regional AWSClient
+// sweeperAwsClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
 var sweeperAwsClients map[string]interface{}
 
-// SharedRegionalSweeperClient returns a common AWSClient setup needed for the sweeper
+// SharedRegionalSweeperClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
 func SharedRegionalSweeperClient(region string) (interface{}, error) {
 	if client, ok := sweeperAwsClients[region]; ok {
@@ -46,7 +47,7 @@ func SharedRegionalSweeperClient(region string) (interface{}, error) {
 		}
 	}
 
-	conf := &Config{
+	conf := &conns.Config{
 		MaxRetries: 5,
 		Region:     region,
 	}

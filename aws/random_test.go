@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // RandSSHKeyPair generates a public and private SSH key pair. The public key is

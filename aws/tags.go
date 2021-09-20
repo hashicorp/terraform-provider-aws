@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // tagsSchema returns the schema to use for tags.
@@ -100,8 +101,8 @@ func ec2TagSpecificationsFromKeyValueTags(tags keyvaluetags.KeyValueTags, t stri
 // after resource READ operations as resource and provider-level tags
 // will be indistinguishable when returned from an AWS API.
 func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resourceTags := keyvaluetags.New(diff.Get("tags").(map[string]interface{}))
 

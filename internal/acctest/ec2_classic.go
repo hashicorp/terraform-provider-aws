@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -47,10 +48,10 @@ func PreCheckEC2Classic(t *testing.T) {
 		}
 	})
 
-	client := ProviderEC2Classic.Meta().(*AWSClient)
-	platforms := client.supportedplatforms
-	region := client.region
-	if !hasEc2Classic(platforms) {
+	client := ProviderEC2Classic.Meta().(*conns.AWSClient)
+	platforms := client.SupportedPlatforms
+	region := client.Region
+	if !conns.HasEC2Classic(platforms) {
 		t.Skipf("this test can only run in EC2-Classic, platforms available in %s: %q", region, platforms)
 	}
 }

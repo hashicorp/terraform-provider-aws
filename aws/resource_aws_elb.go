@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElb() *schema.Resource {
@@ -256,8 +257,8 @@ func resourceAwsElb() *schema.Resource {
 }
 
 func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	elbconn := meta.(*conns.AWSClient).ELBConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
@@ -335,17 +336,17 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	elbconn := meta.(*conns.AWSClient).ELBConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	elbName := d.Id()
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -369,7 +370,7 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
+	return flattenAwsELbResource(d, meta.(*conns.AWSClient).EC2Conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
 // flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
@@ -474,7 +475,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 }
 
 func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	elbconn := meta.(*conns.AWSClient).ELBConn
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -782,7 +783,7 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsElbDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	elbconn := meta.(*conns.AWSClient).ELBConn
 
 	log.Printf("[INFO] Deleting ELB: %s", d.Id())
 
@@ -796,7 +797,7 @@ func resourceAwsElbDelete(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	err := cleanupELBNetworkInterfaces(meta.(*AWSClient).ec2conn, name)
+	err := cleanupELBNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
 	}

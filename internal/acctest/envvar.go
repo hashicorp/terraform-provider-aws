@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mitchellh/go-testing-interface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Standard AWS environment variables used in the Terraform AWS Provider testing.

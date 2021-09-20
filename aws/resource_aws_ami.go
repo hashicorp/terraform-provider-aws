@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -250,8 +251,8 @@ func resourceAwsAmi() *schema.Resource {
 }
 
 func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	client := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.RegisterImageInput{
@@ -327,9 +328,9 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	client := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Id()
 
@@ -423,8 +424,8 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("virtualization_type", image.VirtualizationType)
 
 	imageArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
@@ -454,7 +455,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
+	client := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -480,7 +481,7 @@ func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmiDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
+	client := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),

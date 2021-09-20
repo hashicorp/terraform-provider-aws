@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCognitoIdentityProvider() *schema.Resource {
@@ -79,7 +80,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 }
 
 func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
 	providerName := d.Get("provider_name").(string)
@@ -113,7 +114,7 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
@@ -162,7 +163,7 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
 	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
@@ -196,7 +197,7 @@ func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCognitoIdentityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())

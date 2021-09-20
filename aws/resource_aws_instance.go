@@ -29,6 +29,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -643,7 +644,7 @@ func resourceAwsInstance() *schema.Resource {
 				_, ok := diff.GetOk("launch_template")
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
-					conn := meta.(*AWSClient).ec2conn
+					conn := meta.(*conns.AWSClient).EC2Conn
 
 					stateVersion := diff.Get("launch_template.0.version")
 
@@ -712,8 +713,8 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 }
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
@@ -883,9 +884,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instance, err := resourceAwsInstanceFindByID(conn, d.Id())
 	if err != nil {
@@ -1113,10 +1114,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// ARN
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   ec2.ServiceName,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -1189,7 +1190,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
@@ -1716,7 +1717,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
@@ -2562,7 +2563,7 @@ type awsInstanceOpts struct {
 }
 
 func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),

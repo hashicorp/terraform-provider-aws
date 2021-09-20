@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsPartition() *schema.Resource {
@@ -30,19 +31,19 @@ func dataSourceAwsPartition() *schema.Resource {
 }
 
 func dataSourceAwsPartitionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient)
+	client := meta.(*conns.AWSClient)
 
 	log.Printf("[DEBUG] Reading Partition.")
-	d.SetId(meta.(*AWSClient).partition)
+	d.SetId(meta.(*conns.AWSClient).Partition)
 
-	log.Printf("[DEBUG] Setting AWS Partition to %s.", client.partition)
-	d.Set("partition", meta.(*AWSClient).partition)
+	log.Printf("[DEBUG] Setting AWS Partition to %s.", client.Partition)
+	d.Set("partition", meta.(*conns.AWSClient).Partition)
 
-	log.Printf("[DEBUG] Setting AWS URL Suffix to %s.", client.dnsSuffix)
-	d.Set("dns_suffix", meta.(*AWSClient).dnsSuffix)
+	log.Printf("[DEBUG] Setting AWS URL Suffix to %s.", client.DNSSuffix)
+	d.Set("dns_suffix", meta.(*conns.AWSClient).DNSSuffix)
 
-	d.Set("reverse_dns_prefix", meta.(*AWSClient).reverseDnsPrefix)
-	log.Printf("[DEBUG] Setting service prefix to %s.", meta.(*AWSClient).reverseDnsPrefix)
+	d.Set("reverse_dns_prefix", meta.(*conns.AWSClient).ReverseDNSPrefix)
+	log.Printf("[DEBUG] Setting service prefix to %s.", meta.(*conns.AWSClient).ReverseDNSPrefix)
 
 	return nil
 }

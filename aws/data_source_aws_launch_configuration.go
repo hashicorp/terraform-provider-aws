@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsLaunchConfiguration() *schema.Resource {
@@ -224,8 +225,8 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 }
 
 func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
-	ec2conn := meta.(*AWSClient).ec2conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
 	if v, ok := d.GetOk("name"); ok {
 		d.SetId(v.(string))

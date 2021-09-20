@@ -32,6 +32,7 @@ import (
 	organizationsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/organizations/finder"
 	stsfinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sts/finder"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -223,12 +224,12 @@ func ProviderAccountID(provo *schema.Provider) string {
 		log.Print("[DEBUG] Unable to read account ID from test provider: unconfigured provider")
 		return ""
 	}
-	client, ok := provo.Meta().(*AWSClient)
+	client, ok := provo.Meta().(*conns.AWSClient)
 	if !ok {
 		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured AWS provider")
 		return ""
 	}
-	return client.accountid
+	return client.AccountID
 }
 
 // CheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
@@ -674,10 +675,10 @@ func PreCheckAlternateAccount(t *testing.T) {
 }
 
 func PreCheckEC2VPCOnly(t *testing.T) {
-	client := Provider.Meta().(*AWSClient)
-	platforms := client.supportedplatforms
-	region := client.region
-	if hasEc2Classic(platforms) {
+	client := Provider.Meta().(*conns.AWSClient)
+	platforms := client.SupportedPlatforms
+	region := client.Region
+	if conns.HasEC2Classic(platforms) {
 		t.Skipf("This test can only in regions without EC2 Classic, platforms available in %s: %q",
 			region, platforms)
 	}
@@ -736,7 +737,7 @@ func PreCheckPartition(partition string, t *testing.T) {
 }
 
 func PreCheckOrganizationsAccount(t *testing.T) {
-	conn := Provider.Meta().(*AWSClient).organizationsconn
+	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
 	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
@@ -749,7 +750,7 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 }
 
 func PreCheckOrganizationsEnabled(t *testing.T) {
-	conn := Provider.Meta().(*AWSClient).organizationsconn
+	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
 	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
@@ -761,13 +762,13 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(t *testing.T) {
-	organization, err := organizationsfinder.Organization(Provider.Meta().(*AWSClient).organizationsconn)
+	organization, err := organizationsfinder.Organization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
 
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := stsfinder.CallerIdentity(Provider.Meta().(*AWSClient).stsconn)
+	callerIdentity, err := stsfinder.CallerIdentity(Provider.Meta().(*conns.AWSClient).STSConn)
 
 	if err != nil {
 		t.Fatalf("error getting current identity: %s", err)
@@ -779,7 +780,7 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 }
 
 func PreCheckHasIAMRole(t *testing.T, roleName string) {
-	conn := Provider.Meta().(*AWSClient).iamconn
+	conn := Provider.Meta().(*conns.AWSClient).IAMConn
 
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
@@ -798,7 +799,7 @@ func PreCheckHasIAMRole(t *testing.T, roleName string) {
 }
 
 func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
-	conn := Provider.Meta().(*AWSClient).iamconn
+	conn := Provider.Meta().(*conns.AWSClient).IAMConn
 
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
@@ -981,7 +982,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 			return nil
 		}
 
-		log.Printf("[DEBUG] Checking providers for AWS region: %s", region)
+		log.Printf("[DEBUG] Checking providers for AWS Region: %s", region)
 		for _, provo := range *providers {
 			// Ignore if Meta is empty, this can happen for validation providers
 			if provo == nil || provo.Meta() == nil {
@@ -989,17 +990,17 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 				continue
 			}
 
-			// Ignore if Meta is not AWSClient, this will happen for other providers
-			client, ok := provo.Meta().(*AWSClient)
+			// Ignore if Meta is not conns.AWSClient, this will happen for other providers
+			client, ok := provo.Meta().(*conns.AWSClient)
 			if !ok {
 				log.Printf("[DEBUG] Skipping non-AWS provider")
 				continue
 			}
 
-			clientRegion := client.region
+			clientRegion := client.Region
 			log.Printf("[DEBUG] Checking AWS provider region %q against %q", clientRegion, region)
 			if clientRegion == region {
-				log.Printf("[DEBUG] Found AWS provider with region: %s", region)
+				log.Printf("[DEBUG] Found AWS provider with Region: %s", region)
 				return provo
 			}
 		}
@@ -1194,11 +1195,11 @@ func CheckDNSSuffix(providers *[]*schema.Provider, expectedDnsSuffix string) res
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerDnsSuffix := provo.Meta().(*AWSClient).dnsSuffix
+			providerDnsSuffix := provo.Meta().(*conns.AWSClient).DNSSuffix
 
 			if providerDnsSuffix != expectedDnsSuffix {
 				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedDnsSuffix, providerDnsSuffix)
@@ -1215,7 +1216,7 @@ func CheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
 			return fmt.Errorf("no providers initialized")
 		}
 
-		// Match AWSClient struct field names to endpoint configuration names
+		// Match conns.AWSClient struct field names to endpoint configuration names
 		endpointFieldNameF := func(endpoint string) func(string) bool {
 			return func(name string) bool {
 				switch endpoint {
@@ -1256,17 +1257,17 @@ func CheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerClient := provo.Meta().(*AWSClient)
+			providerClient := provo.Meta().(*conns.AWSClient)
 
 			for _, endpointServiceName := range endpointServiceNames {
 				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(endpointServiceName))
 
 				if !providerClientField.IsValid() {
-					return fmt.Errorf("unable to match AWSClient struct field name for endpoint name: %s", endpointServiceName)
+					return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", endpointServiceName)
 				}
 
 				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
@@ -1289,11 +1290,11 @@ func CheckIgnoreTagsKeyPrefixes(providers *[]*schema.Provider, expectedKeyPrefix
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerClient := provo.Meta().(*AWSClient)
+			providerClient := provo.Meta().(*conns.AWSClient)
 			ignoreTagsConfig := providerClient.IgnoreTagsConfig
 
 			if ignoreTagsConfig == nil || ignoreTagsConfig.KeyPrefixes == nil {
@@ -1352,11 +1353,11 @@ func CheckIgnoreTagsKeys(providers *[]*schema.Provider, expectedKeys []string) r
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerClient := provo.Meta().(*AWSClient)
+			providerClient := provo.Meta().(*conns.AWSClient)
 			ignoreTagsConfig := providerClient.IgnoreTagsConfig
 
 			if ignoreTagsConfig == nil || ignoreTagsConfig.Keys == nil {
@@ -1415,11 +1416,11 @@ func CheckProviderDefaultTags_Tags(providers *[]*schema.Provider, expectedTags m
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerClient := provo.Meta().(*AWSClient)
+			providerClient := provo.Meta().(*conns.AWSClient)
 			defaultTagsConfig := providerClient.DefaultTagsConfig
 
 			if defaultTagsConfig == nil || len(defaultTagsConfig.Tags) == 0 {
@@ -1478,11 +1479,11 @@ func CheckPartition(providers *[]*schema.Provider, expectedPartition string) res
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerPartition := provo.Meta().(*AWSClient).partition
+			providerPartition := provo.Meta().(*conns.AWSClient).Partition
 
 			if providerPartition != expectedPartition {
 				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
@@ -1500,11 +1501,11 @@ func CheckReverseDNSPrefix(providers *[]*schema.Provider, expectedReverseDnsPref
 		}
 
 		for _, provo := range *providers {
-			if provo == nil || provo.Meta() == nil || provo.Meta().(*AWSClient) == nil {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
 				continue
 			}
 
-			providerReverseDnsPrefix := provo.Meta().(*AWSClient).reverseDnsPrefix
+			providerReverseDnsPrefix := provo.Meta().(*conns.AWSClient).ReverseDNSPrefix
 
 			if providerReverseDnsPrefix != expectedReverseDnsPrefix {
 				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedReverseDnsPrefix, providerReverseDnsPrefix)
@@ -1520,16 +1521,16 @@ func CheckReverseDNSPrefix(providers *[]*schema.Provider, expectedReverseDnsPref
 // - A default VPC with default subnets.
 // This check is useful to ensure that an instance can be launched without specifying a subnet.
 func PreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
-	client := Provider.Meta().(*AWSClient)
+	client := Provider.Meta().(*conns.AWSClient)
 
-	if !hasEc2Classic(client.supportedplatforms) && !(HasDefaultVPC(t) && DefaultSubnetCount(t) > 0) {
-		t.Skipf("skipping tests; %s does not have EC2-Classic or a default VPC with default subnets", client.region)
+	if !conns.HasEC2Classic(client.SupportedPlatforms) && !(HasDefaultVPC(t) && DefaultSubnetCount(t) > 0) {
+		t.Skipf("skipping tests; %s does not have EC2-Classic or a default VPC with default subnets", client.Region)
 	}
 }
 
 // HasDefaultVPC returns whether the current AWS region has a default VPC.
 func HasDefaultVPC(t *testing.T) bool {
-	conn := Provider.Meta().(*AWSClient).ec2conn
+	conn := Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
@@ -1549,7 +1550,7 @@ func HasDefaultVPC(t *testing.T) bool {
 
 // DefaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func DefaultSubnetCount(t *testing.T) int {
-	conn := Provider.Meta().(*AWSClient).ec2conn
+	conn := Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: buildAttributeFilterList(map[string]string{
@@ -1960,7 +1961,7 @@ func MatchCheckPolicy(resource, attr, expectedPolicy string) resource.TestCheckF
 }
 
 func PreCheckOutpostsOutposts(t *testing.T) {
-	conn := Provider.Meta().(*AWSClient).outpostsconn
+	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn
 
 	input := &outposts.ListOutpostsInput{}
 
@@ -2016,7 +2017,7 @@ func ACMCertificateRandomSubDomain(rootDomain string) string {
 
 func CheckACMPCACertificateAuthorityActivateCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*AWSClient).acmpcaconn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 		arn := aws.StringValue(certificateAuthority.Arn)
 
@@ -2073,7 +2074,7 @@ func CheckACMPCACertificateAuthorityActivateCA(certificateAuthority *acmpca.Cert
 
 func CheckACMPCACertificateAuthorityDisableCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*AWSClient).acmpcaconn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 		_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: certificateAuthority.Arn,
@@ -2091,7 +2092,7 @@ func CheckACMPCACertificateAuthorityExists(resourceName string, certificateAutho
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := Provider.Meta().(*AWSClient).acmpcaconn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
 		input := &acmpca.DescribeCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(rs.Primary.ID),
 		}
@@ -2120,7 +2121,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 }
 
 func PreCheckDirectoryService(t *testing.T) {
-	conn := Provider.Meta().(*AWSClient).dsconn
+	conn := Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
@@ -2139,7 +2140,7 @@ func PreCheckDirectoryService(t *testing.T) {
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
 func PreCheckDirectoryServiceSimpleDirectory(t *testing.T) {
-	conn := Provider.Meta().(*AWSClient).dsconn
+	conn := Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
@@ -2412,7 +2413,7 @@ func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 			return fmt.Errorf("No VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*AWSClient).ec2conn
+		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
 		DescribeVpcOpts := &ec2.DescribeVpcsInput{
 			VpcIds: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -2441,7 +2442,7 @@ func CheckAwsCallerIdentityAccountId(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Account Id resource ID not set.")
 		}
 
-		expected := Provider.Meta().(*AWSClient).accountid
+		expected := Provider.Meta().(*conns.AWSClient).AccountID
 		if rs.Primary.Attributes["account_id"] != expected {
 			return fmt.Errorf("Incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
 		}

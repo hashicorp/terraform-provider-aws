@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsInstance() *schema.Resource {
@@ -354,8 +355,8 @@ func dataSourceAwsInstance() *schema.Resource {
 
 // dataSourceAwsInstanceRead performs the instanceID lookup
 func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	instanceID, instanceIDOk := d.GetOk("instance_id")
@@ -428,10 +429,10 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// ARN
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   ec2.ServiceName,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())

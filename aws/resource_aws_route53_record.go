@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var r53NoRecordsFound = errors.New("No matching records found")
@@ -263,7 +264,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 
 	// Otherwise, we delete the existing record and create a new record within
 	// a transactional change.
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
 	var err error
@@ -390,7 +391,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
 	var err error
@@ -623,7 +624,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 // If there are other errors, it returns a nil recordset and passes on the
 // error.
 func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceRecordSet, error) {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 	// Scan for a
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
@@ -725,7 +726,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 }
 
 func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 	// Get the records
 	rec, err := findRecord(d, meta)
 	if err != nil {

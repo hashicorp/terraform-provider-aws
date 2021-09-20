@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsInstances() *schema.Resource {
@@ -54,7 +55,7 @@ func dataSourceAwsInstances() *schema.Resource {
 }
 
 func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("instance_tags")
@@ -113,7 +114,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Found %d instances via given filter", len(instanceIds))
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	err = d.Set("ids", instanceIds)
 	if err != nil {

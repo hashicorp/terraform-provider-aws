@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
@@ -376,7 +377,7 @@ func TestValidateArn(t *testing.T) {
 		"123456789012",
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
-		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
+		"arn:aws:logs:Region:*:*", //lintignore:AWSAT005
 	}
 	for _, v := range invalidNames {
 		_, errors := validateArn(v, "arn")
@@ -420,7 +421,7 @@ func TestValidatePrincipal(t *testing.T) {
 		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
-		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
+		"arn:aws:logs:Region:*:*", //lintignore:AWSAT005
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // not a user or role
 		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // not a user or role
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // not a user or role
@@ -465,7 +466,7 @@ func TestValidateServiceCatalogSharePrincipal(t *testing.T) {
 		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
-		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
+		"arn:aws:logs:Region:*:*", //lintignore:AWSAT005
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // not a user or role
 		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // not a user or role
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // not a user or role

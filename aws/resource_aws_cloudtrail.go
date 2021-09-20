@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudtrail"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -233,8 +234,8 @@ func resourceAwsCloudTrail() *schema.Resource {
 }
 
 func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CloudTrailConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := cloudtrail.CreateTrailInput{
@@ -331,9 +332,9 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudTrailConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -439,7 +440,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
+	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	input := cloudtrail.UpdateTrailInput{
 		Name: aws.String(d.Id()),
@@ -542,7 +543,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCloudTrailDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
+	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
 	_, err := conn.DeleteTrail(&cloudtrail.DeleteTrailInput{

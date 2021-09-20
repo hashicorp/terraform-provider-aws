@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func decodeEc2TransitGatewayRouteID(id string) (string, string, error) {

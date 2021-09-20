@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSubnet() *schema.Resource {
@@ -127,8 +128,8 @@ func resourceAwsSubnet() *schema.Resource {
 }
 
 func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &ec2.CreateSubnetInput{
@@ -231,9 +232,9 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var subnet *ec2.Subnet
 
@@ -324,7 +325,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -482,7 +483,7 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting subnet: %s", d.Id())
 

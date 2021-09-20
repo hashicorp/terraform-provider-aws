@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // testAccCurRegion is the chosen Cost and Usage Reporting testing region
@@ -55,7 +56,7 @@ func testAccPreCheckCur(t *testing.T) {
 		}
 	})
 
-	conn := testAccProviderCur.Meta().(*AWSClient).costandusagereportconn
+	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
 
 	input := &costandusagereportservice.DescribeReportDefinitionsInput{
 		MaxResults: aws.Int64(5),

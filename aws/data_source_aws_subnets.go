@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSubnets() *schema.Resource {
@@ -26,7 +27,7 @@ func dataSourceAwsSubnets() *schema.Resource {
 }
 
 func dataSourceAwsSubnetsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSubnetsInput{}
 
@@ -62,7 +63,7 @@ func dataSourceAwsSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Subnets: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", aws.StringValueSlice(subnetIDs))
 
 	return nil
