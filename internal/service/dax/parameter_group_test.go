@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
+func TestAccDAXParameterGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dax_parameter_group.test"
 

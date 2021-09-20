@@ -61,7 +61,7 @@ func testSweepDAXClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSDAXCluster_basic(t *testing.T) {
+func TestAccDAXCluster_basic(t *testing.T) {
 	var dc dax.Cluster
 	rString := sdkacctest.RandString(10)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -116,7 +116,7 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDAXCluster_resize(t *testing.T) {
+func TestAccDAXCluster_resize(t *testing.T) {
 	var dc dax.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
@@ -160,7 +160,7 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 	})
 }
 
-func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
+func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
@@ -194,7 +194,7 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
+func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
