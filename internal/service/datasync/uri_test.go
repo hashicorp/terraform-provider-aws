@@ -1,4 +1,4 @@
-package datasync_test
+package datasync
 
 import (
 	"testing"
