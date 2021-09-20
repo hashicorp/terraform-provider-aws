@@ -75,7 +75,7 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().FsxTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	result, err := conn.CreateBackup(input)
@@ -99,7 +99,7 @@ func resourceBackupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating FSx Backup (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
@@ -133,7 +133,7 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("owner_id", backup.OwnerId)
 
-	tags := tftags.FsxKeyValueTags(backup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(backup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
