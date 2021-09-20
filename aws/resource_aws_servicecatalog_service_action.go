@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceServiceAction() *schema.Resource {
@@ -53,7 +54,7 @@ func ResourceServiceAction() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateFunc:     validation.StringIsJSON,
-							DiffSuppressFunc: suppressEquivalentJsonEmptyNilDiffs,
+							DiffSuppressFunc: suppressEquivalentJSONEmptyNilDiffs,
 						},
 						"type": {
 							Type:         schema.TypeString,
