@@ -1102,7 +1102,7 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *appmesh.DescribeVirtualNodeOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.DescribeVirtualNode(req)

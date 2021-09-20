@@ -336,10 +336,10 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	var gatewayRoute *appmesh.GatewayRouteData
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		gatewayRoute, err = finder.GatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		gatewayRoute, err = finder.FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -353,7 +353,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		gatewayRoute, err = finder.GatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		gatewayRoute, err = finder.FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
@@ -488,7 +488,7 @@ func resourceAwsAppmeshGatewayRouteImport(d *schema.ResourceData, meta interface
 
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
-	gatewayRoute, err := finder.GatewayRoute(conn, mesh, vgName, name, "")
+	gatewayRoute, err := finder.FindGatewayRoute(conn, mesh, vgName, name, "")
 
 	if err != nil {
 		return nil, err

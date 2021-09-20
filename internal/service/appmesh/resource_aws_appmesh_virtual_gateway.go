@@ -722,10 +722,10 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 
 	var virtualGateway *appmesh.VirtualGatewayData
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		virtualGateway, err = finder.VirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		virtualGateway, err = finder.FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -739,7 +739,7 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		virtualGateway, err = finder.VirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		virtualGateway, err = finder.FindVirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
@@ -870,7 +870,7 @@ func resourceAwsAppmeshVirtualGatewayImport(d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).AppMeshConn
 
-	virtualGateway, err := finder.VirtualGateway(conn, mesh, name, "")
+	virtualGateway, err := finder.FindVirtualGateway(conn, mesh, name, "")
 
 	if err != nil {
 		return nil, err

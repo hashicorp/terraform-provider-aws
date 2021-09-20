@@ -810,7 +810,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.VirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
+		_, err := finder.FindVirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
 		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
@@ -836,7 +836,7 @@ func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGate
 			return fmt.Errorf("No App Mesh virtual gateway ID is set")
 		}
 
-		out, err := finder.VirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
+		out, err := finder.FindVirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
 		if err != nil {
 			return err
 		}
