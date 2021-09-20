@@ -100,7 +100,7 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 	params := &ssm.RegisterTargetWithMaintenanceWindowInput{
 		WindowId:     aws.String(d.Get("window_id").(string)),
 		ResourceType: aws.String(d.Get("resource_type").(string)),
-		Targets:      expandAwsSsmTargets(d.Get("targets").([]interface{})),
+		Targets:      expandTargets(d.Get("targets").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -160,7 +160,7 @@ func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta inte
 			d.Set("name", t.Name)
 			d.Set("description", t.Description)
 
-			if err := d.Set("targets", flattenAwsSsmTargets(t.Targets)); err != nil {
+			if err := d.Set("targets", flattenAwsSSMTargets(t.Targets)); err != nil {
 				return fmt.Errorf("Error setting targets: %w", err)
 			}
 		}
@@ -181,7 +181,7 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
 	params := &ssm.UpdateMaintenanceWindowTargetInput{
-		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+		Targets:        expandTargets(d.Get("targets").([]interface{})),
 		WindowId:       aws.String(d.Get("window_id").(string)),
 		WindowTargetId: aws.String(d.Id()),
 	}

@@ -164,7 +164,7 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, ok := d.GetOk("targets"); ok {
-		associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
+		associationInput.Targets = expandTargets(d.Get("targets").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
@@ -237,11 +237,11 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("max_errors", association.MaxErrors)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 
-	if err := d.Set("parameters", flattenAwsSsmParameters(association.Parameters)); err != nil {
+	if err := d.Set("parameters", flattenAwsSSMParameters(association.Parameters)); err != nil {
 		return err
 	}
 
-	if err := d.Set("targets", flattenAwsSsmTargets(association.Targets)); err != nil {
+	if err := d.Set("targets", flattenAwsSSMTargets(association.Targets)); err != nil {
 		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
@@ -283,7 +283,7 @@ func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, ok := d.GetOk("targets"); ok {
-		associationInput.Targets = expandAwsSsmTargets(d.Get("targets").([]interface{}))
+		associationInput.Targets = expandTargets(d.Get("targets").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {

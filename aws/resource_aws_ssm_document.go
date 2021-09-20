@@ -308,7 +308,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("version_name", doc.VersionName)
 	d.Set("name", doc.Name)
 	d.Set("owner", doc.Owner)
-	d.Set("platform_types", flattenStringList(doc.PlatformTypes))
+	d.Set("platform_types", flex.FlattenStringList(doc.PlatformTypes))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ssm",
@@ -466,7 +466,7 @@ func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 			s.Name = aws.String(val.(string))
 		}
 		if val, ok := at["values"]; ok {
-			s.Values = expandStringList(val.([]interface{}))
+			s.Values = flex.ExpandStringList(val.([]interface{}))
 		}
 
 		results = append(results, s)
