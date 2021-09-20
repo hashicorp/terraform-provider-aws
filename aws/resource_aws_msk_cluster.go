@@ -728,9 +728,9 @@ func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroup
 
 	bngi := &kafka.BrokerNodeGroupInfo{
 		BrokerAZDistribution: aws.String(m["az_distribution"].(string)),
-		ClientSubnets:        expandStringList(m["client_subnets"].([]interface{})),
+		ClientSubnets:        flex.ExpandStringList(m["client_subnets"].([]interface{})),
 		InstanceType:         aws.String(m["instance_type"].(string)),
-		SecurityGroups:       expandStringList(m["security_groups"].([]interface{})),
+		SecurityGroups:       flex.ExpandStringList(m["security_groups"].([]interface{})),
 		StorageInfo: &kafka.StorageInfo{
 			EbsStorageInfo: &kafka.EBSStorageInfo{
 				VolumeSize: aws.Int64(int64(m["ebs_volume_size"].(int))),
@@ -846,7 +846,7 @@ func expandMskClusterTls(l []interface{}) *kafka.Tls {
 	m := l[0].(map[string]interface{})
 
 	tls := &kafka.Tls{
-		CertificateAuthorityArnList: expandStringSet(m["certificate_authority_arns"].(*schema.Set)),
+		CertificateAuthorityArnList: flex.ExpandStringSet(m["certificate_authority_arns"].(*schema.Set)),
 	}
 
 	return tls
@@ -993,9 +993,9 @@ func flattenMskBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]in
 
 	m := map[string]interface{}{
 		"az_distribution": aws.StringValue(b.BrokerAZDistribution),
-		"client_subnets":  flattenStringList(b.ClientSubnets),
+		"client_subnets":  flex.FlattenStringList(b.ClientSubnets),
 		"instance_type":   aws.StringValue(b.InstanceType),
-		"security_groups": flattenStringList(b.SecurityGroups),
+		"security_groups": flex.FlattenStringList(b.SecurityGroups),
 	}
 	if b.StorageInfo != nil {
 		if b.StorageInfo.EbsStorageInfo != nil {
