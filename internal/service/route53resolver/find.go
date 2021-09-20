@@ -1,4 +1,4 @@
-package finder
+package route53resolver
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

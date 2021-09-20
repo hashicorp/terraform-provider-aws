@@ -1,4 +1,4 @@
-package waiter
+package route53resolver
 
 import (
 	"fmt"
