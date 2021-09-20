@@ -28,6 +28,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -2821,7 +2822,7 @@ func getAwsInstanceVolumeIds(conn *ec2.EC2, instanceId string) ([]string, error)
 	volumeIds := []string{}
 
 	resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})

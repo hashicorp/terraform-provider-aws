@@ -1,4 +1,4 @@
-package aws
+package acctest
 
 import (
 	"context"
@@ -7,14 +7,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -29,14 +27,9 @@ const defaultSweeperAssumeRoleDurationSeconds = 3600
 // This prevents client re-initialization for every resource with no benefit.
 var sweeperAwsClients map[string]interface{}
 
-func TestMain(m *testing.M) {
-	sweeperAwsClients = make(map[string]interface{})
-	resource.TestMain(m)
-}
-
-// sharedClientForRegion returns a common AWSClient setup needed for the sweeper
+// SharedRegionalSweeperClient returns a common AWSClient setup needed for the sweeper
 // functions for a given region
-func sharedClientForRegion(region string) (interface{}, error) {
+func SharedRegionalSweeperClient(region string) (interface{}, error) {
 	if client, ok := sweeperAwsClients[region]; ok {
 		return client, nil
 	}
@@ -90,25 +83,25 @@ func sharedClientForRegion(region string) (interface{}, error) {
 	return client, nil
 }
 
-type testSweepResource struct {
+type SweepResource struct {
 	d        *schema.ResourceData
 	meta     interface{}
 	resource *schema.Resource
 }
 
-func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *testSweepResource {
-	return &testSweepResource{
+func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *SweepResource {
+	return &SweepResource{
 		d:        d,
 		meta:     meta,
 		resource: resource,
 	}
 }
 
-func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
-	return testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+func SweepOrchestrator(sweepResources []*SweepResource) error {
+	return SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
 }
 
-func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []*testSweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+func SweepOrchestratorContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {
@@ -143,7 +136,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
-func testSweepSkipSweepError(err error) bool {
+func SkipSweepError(err error) bool {
 	// Ignore missing API endpoints
 	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
@@ -190,5 +183,3 @@ func testSweepSkipSweepError(err error) bool {
 	}
 	return false
 }
-
-

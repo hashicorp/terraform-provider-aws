@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsVpc() *schema.Resource {
@@ -140,7 +141,7 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		isDefaultStr = "true"
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"cidr":            d.Get("cidr_block").(string),
 			"dhcp-options-id": d.Get("dhcp_options_id").(string),
