@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVaultLock() *schema.Resource {
@@ -40,8 +41,8 @@ func ResourceVaultLock() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-				ValidateFunc:     validateIAMPolicyJson,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				ValidateFunc:     verify.ValidIAMPolicyJSON,
 			},
 			"vault_name": {
 				Type:         schema.TypeString,
