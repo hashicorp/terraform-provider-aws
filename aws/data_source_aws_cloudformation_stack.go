@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFormationStack() *schema.Resource {
+func DataSourceStack() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFormationStackRead,
+		Read: dataSourceStackRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +67,7 @@ func dataSourceAwsCloudFormationStack() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

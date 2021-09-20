@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFormationType() *schema.Resource {
+func DataSourceType() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceAwsCloudFormationTypeRead,
+		ReadWithoutTimeout: dataSourceTypeRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -106,7 +106,7 @@ func dataSourceAwsCloudFormationType() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DescribeTypeInput{}

@@ -29,12 +29,12 @@ const (
 	serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion = "serverlessrepo:semanticVersion"
 )
 
-func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Resource {
+func ResourceCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate,
-		Read:   resourceAwsServerlessApplicationRepositoryCloudFormationStackRead,
-		Update: resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate,
-		Delete: resourceAwsServerlessApplicationRepositoryCloudFormationStackDelete,
+		Create: resourceCloudFormationStackCreate,
+		Read:   resourceCloudFormationStackRead,
+		Update: resourceCloudFormationStackUpdate,
+		Delete: resourceCloudFormationStackDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsServerlessApplicationRepositoryCloudFormationStackImport,
@@ -91,7 +91,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 	}
 }
 
-func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
 
 	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*conns.AWSClient))
@@ -121,10 +121,10 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *sche
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) created", d.Id())
 
-	return resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d, meta)
+	return resourceCloudFormationStackRead(d, meta)
 }
 
-func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
 	serverlessConn := meta.(*conns.AWSClient).ServerlessAppRepoConn
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -217,7 +217,7 @@ func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*ser
 	return result
 }
 
-func resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
 
 	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*conns.AWSClient))
@@ -245,10 +245,10 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate(d *sche
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) updated", d.Id())
 
-	return resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d, meta)
+	return resourceCloudFormationStackRead(d, meta)
 }
 
-func resourceAwsServerlessApplicationRepositoryCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	requestToken := resource.UniqueId()

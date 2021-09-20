@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFormationStack() *schema.Resource {
+func ResourceStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFormationStackCreate,
-		Read:   resourceAwsCloudFormationStackRead,
-		Update: resourceAwsCloudFormationStackUpdate,
-		Delete: resourceAwsCloudFormationStackDelete,
+		Create: resourceStackCreate,
+		Read:   resourceStackRead,
+		Update: resourceStackUpdate,
+		Delete: resourceStackDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -121,7 +121,7 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -199,10 +199,10 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] CloudFormation Stack %q created", d.Id())
 
-	return resourceAwsCloudFormationStackRead(d, meta)
+	return resourceStackRead(d, meta)
 }
 
-func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -308,7 +308,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -379,10 +379,10 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] CloudFormation stack (%s) updated", d.Id())
 
-	return resourceAwsCloudFormationStackRead(d, meta)
+	return resourceStackRead(d, meta)
 }
 
-func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	requestToken := resource.UniqueId()

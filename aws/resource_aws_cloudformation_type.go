@@ -18,11 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFormationType() *schema.Resource {
+func ResourceType() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsCloudFormationTypeCreate,
-		DeleteWithoutTimeout: resourceAwsCloudFormationTypeDelete,
-		ReadWithoutTimeout:   resourceAwsCloudFormationTypeRead,
+		CreateWithoutTimeout: resourceTypeCreate,
+		DeleteWithoutTimeout: resourceTypeDelete,
+		ReadWithoutTimeout:   resourceTypeRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -130,7 +130,7 @@ func resourceAwsCloudFormationType() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
@@ -173,10 +173,10 @@ func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.Resource
 	// Type Version ARN is not available until after registration is complete
 	d.SetId(aws.StringValue(registrationOutput.TypeVersionArn))
 
-	return resourceAwsCloudFormationTypeRead(ctx, d, meta)
+	return resourceTypeRead(ctx, d, meta)
 }
 
-func resourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DescribeTypeInput{
@@ -241,7 +241,7 @@ func resourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceAwsCloudFormationTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DeregisterTypeInput{
