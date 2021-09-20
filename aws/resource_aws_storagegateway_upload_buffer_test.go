@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
@@ -69,14 +70,14 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 }
 
 func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
@@ -102,14 +103,14 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809
 func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
