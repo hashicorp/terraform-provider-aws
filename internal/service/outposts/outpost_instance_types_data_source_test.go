@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSOutpostsOutpostInstanceTypesDataSource_basic(t *testing.T) {
+func TestAccOutpostsOutpostInstanceTypesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost_instance_types.test"
 
 	resource.ParallelTest(t, resource.TestCase{

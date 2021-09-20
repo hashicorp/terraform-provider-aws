@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSOutpostsSitesDataSource_basic(t *testing.T) {
+func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_sites.test"
 
 	resource.ParallelTest(t, resource.TestCase{
