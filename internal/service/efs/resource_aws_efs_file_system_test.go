@@ -425,7 +425,7 @@ func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		_, err := finder.FindFileSystemByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -454,7 +454,7 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		fs, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		fs, err := finder.FindFileSystemByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

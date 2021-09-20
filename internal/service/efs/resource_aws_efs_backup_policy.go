@@ -72,7 +72,7 @@ func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	output, err := finder.BackupPolicyByID(conn, d.Id())
+	output, err := finder.FindBackupPolicyByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
@@ -137,11 +137,11 @@ func efsBackupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}
 	}
 
 	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
-		if _, err := waiter.BackupPolicyEnabled(conn, fsID); err != nil {
+		if _, err := waiter.waitBackupPolicyEnabled(conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
 	} else {
-		if _, err := waiter.BackupPolicyDisabled(conn, fsID); err != nil {
+		if _, err := waiter.waitBackupPolicyDisabled(conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
 		}
 	}

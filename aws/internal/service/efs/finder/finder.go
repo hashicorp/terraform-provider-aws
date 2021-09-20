@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func BackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func FindBackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	input := &efs.DescribeBackupPolicyInput{
 		FileSystemId: aws.String(id),
 	}
@@ -34,7 +34,7 @@ func BackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	return output.BackupPolicy, nil
 }
 
-func FileSystemByID(conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
+func FindFileSystemByID(conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
 	input := &efs.DescribeFileSystemsInput{
 		FileSystemId: aws.String(id),
 	}
@@ -59,7 +59,7 @@ func FileSystemByID(conn *efs.EFS, id string) (*efs.FileSystemDescription, error
 	return output.FileSystems[0], nil
 }
 
-func FileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
+func FindFileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
 	input := &efs.DescribeFileSystemPolicyInput{
 		FileSystemId: aws.String(id),
 	}

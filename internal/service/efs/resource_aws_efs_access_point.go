@@ -151,7 +151,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(ap.AccessPointId))
 
-	if _, err := waiter.AccessPointCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitAccessPointCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EFS access point (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -246,7 +246,7 @@ func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EFS Access Point (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.AccessPointDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitAccessPointDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			return nil
 		}

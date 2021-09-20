@@ -118,7 +118,7 @@ func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FileSystemPolicyByID(conn, rs.Primary.ID)
+		_, err := finder.FindFileSystemPolicyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -147,7 +147,7 @@ func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		output, err := finder.FileSystemPolicyByID(conn, rs.Primary.ID)
+		output, err := finder.FindFileSystemPolicyByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

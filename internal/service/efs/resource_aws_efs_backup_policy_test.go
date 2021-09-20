@@ -127,7 +127,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		output, err := finder.BackupPolicyByID(conn, rs.Primary.ID)
+		output, err := finder.FindBackupPolicyByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -147,7 +147,7 @@ func testAccCheckEfsBackupPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := finder.BackupPolicyByID(conn, rs.Primary.ID)
+		output, err := finder.FindBackupPolicyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

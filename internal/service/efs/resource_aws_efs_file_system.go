@@ -208,7 +208,7 @@ func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
 
-	if _, err := waiter.FileSystemAvailable(conn, d.Id()); err != nil {
+	if _, err := waiter.waitFileSystemAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -248,7 +248,7 @@ func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.FileSystemAvailable(conn, d.Id()); err != nil {
+		if _, err := waiter.waitFileSystemAvailable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
 		}
 	}
@@ -289,7 +289,7 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	fs, err := finder.FileSystemByID(conn, d.Id())
+	fs, err := finder.FindFileSystemByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS file system (%s) not found, removing from state", d.Id())
@@ -361,7 +361,7 @@ func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EFS file system (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.FileSystemDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitFileSystemDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
 			return nil
 		}
