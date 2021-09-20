@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSimpleDBDomain() *schema.Resource {
@@ -30,7 +31,7 @@ func resourceAwsSimpleDBDomain() *schema.Resource {
 }
 
 func resourceAwsSimpleDBDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).simpledbconn
+	conn := meta.(*conns.AWSClient).SimpleDBConn
 
 	name := d.Get("name").(string)
 	input := &simpledb.CreateDomainInput{
@@ -46,7 +47,7 @@ func resourceAwsSimpleDBDomainCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSimpleDBDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).simpledbconn
+	conn := meta.(*conns.AWSClient).SimpleDBConn
 
 	input := &simpledb.DomainMetadataInput{
 		DomainName: aws.String(d.Id()),
@@ -68,7 +69,7 @@ func resourceAwsSimpleDBDomainRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSimpleDBDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).simpledbconn
+	conn := meta.(*conns.AWSClient).SimpleDBConn
 
 	input := &simpledb.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
