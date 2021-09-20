@@ -316,7 +316,7 @@ func ResourceBroker() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
-							ValidateFunc: validateMqBrokerPassword,
+							ValidateFunc: ValidBrokerPassword,
 						},
 						"username": {
 							Type:         schema.TypeString,
@@ -612,7 +612,7 @@ func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interf
 	// If there are any user creates/deletes/updates, updatedUsers will be set to true
 	updatedUsers := false
 
-	createL, deleteL, updateL, err := diffAwsMqBrokerUsers(bId, oldUsers, newUsers)
+	createL, deleteL, updateL, err := DiffBrokerUsers(bId, oldUsers, newUsers)
 	if err != nil {
 		return updatedUsers, err
 	}
@@ -642,7 +642,7 @@ func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interf
 	return updatedUsers, nil
 }
 
-func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
+func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 	cr []*mq.CreateUserRequest, di []*mq.DeleteUserInput, ur []*mq.UpdateUserRequest, e error) {
 
 	existingUsers := make(map[string]interface{})
@@ -751,7 +751,7 @@ func flattenMqEncryptionOptions(encryptionOptions *mq.EncryptionOptions) []inter
 	return []interface{}{m}
 }
 
-func validateMqBrokerPassword(v interface{}, k string) (ws []string, errors []error) {
+func ValidBrokerPassword(v interface{}, k string) (ws []string, errors []error) {
 	min := 12
 	max := 250
 	value := v.(string)

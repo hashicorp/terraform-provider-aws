@@ -215,12 +215,12 @@ func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func suppressXMLEquivalentConfig(k, old, new string, d *schema.ResourceData) bool {
-	os, err := canonicalXML(old)
+	os, err := CanonicalXML(old)
 	if err != nil {
 		log.Printf("[ERR] Error getting cannonicalXML from state (%s): %s", k, err)
 		return false
 	}
-	ns, err := canonicalXML(new)
+	ns, err := CanonicalXML(new)
 	if err != nil {
 		log.Printf("[ERR] Error getting cannonicalXML from config (%s): %s", k, err)
 		return false
