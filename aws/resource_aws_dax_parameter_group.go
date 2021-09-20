@@ -117,7 +117,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 		*desc = ""
 	}
 	d.Set("description", desc)
-	d.Set("parameters", flattenDaxParameterGroupParameters(paramresp.Parameters))
+	d.Set("parameters", flattenDAXParameterGroupParameters(paramresp.Parameters))
 	return nil
 }
 
@@ -129,7 +129,7 @@ func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("parameters") {
-		input.ParameterNameValues = expandDaxParameterGroupParameterNameValue(
+		input.ParameterNameValues = expandParameterGroupParameterNameValue(
 			d.Get("parameters").(*schema.Set).List(),
 		)
 	}

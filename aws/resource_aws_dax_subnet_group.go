@@ -49,7 +49,7 @@ func resourceAwsDaxSubnetGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
-		SubnetIds:       expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -86,7 +86,7 @@ func resourceAwsDaxSubnetGroupRead(d *schema.ResourceData, meta interface{}) err
 	for _, v := range sg.Subnets {
 		subnetIDs = append(subnetIDs, v.SubnetIdentifier)
 	}
-	d.Set("subnet_ids", flattenStringList(subnetIDs))
+	d.Set("subnet_ids", flex.FlattenStringList(subnetIDs))
 	d.Set("vpc_id", sg.VpcId)
 	return nil
 }
@@ -103,7 +103,7 @@ func resourceAwsDaxSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("subnet_ids") {
-		input.SubnetIds = expandStringSet(d.Get("subnet_ids").(*schema.Set))
+		input.SubnetIds = flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
 	}
 
 	_, err := conn.UpdateSubnetGroup(input)
