@@ -230,7 +230,7 @@ func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().SsmTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -332,7 +332,7 @@ func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Patch Baseline (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -388,7 +388,7 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("arn", arn.String())
 
-	tags, err := tftags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
+	tags, err := ListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)

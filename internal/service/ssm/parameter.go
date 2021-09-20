@@ -146,7 +146,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	// iff Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
 	if len(tags) > 0 && !aws.BoolValue(paramInput.Overwrite) {
-		paramInput.Tags = tags.IgnoreAws().SsmTags()
+		paramInput.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.PutParameter(paramInput)
@@ -166,7 +166,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && paramInput.Tags == nil {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+		if err := UpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
 		}
 	}
@@ -253,7 +253,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
 
-	tags, err := tftags.SsmListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
+	tags, err := ListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Parameter (%s): %w", name, err)
@@ -315,7 +315,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", d.Id(), err)
 		}
 	}
