@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
@@ -17,8 +18,8 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 	resourceName := "aws_securityhub_standards_subscription.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -42,8 +43,8 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_standards_subscription.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -51,7 +52,7 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubStandardsSubscriptionExists(resourceName, &standardsSubscription),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubStandardsSubscription(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecurityHubStandardsSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -7,14 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsSecurityHubOrganizationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{

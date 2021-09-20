@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
@@ -18,11 +19,11 @@ func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSSecurityHubInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,8 +95,8 @@ func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
 }
 
 func testAccAWSSecurityHubInviteAccepterConfig_basic(email string) string {
-	return composeConfig(
-		testAccAlternateAccountProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
 resource "aws_securityhub_invite_accepter" "test" {
   master_id = aws_securityhub_member.source.master_id

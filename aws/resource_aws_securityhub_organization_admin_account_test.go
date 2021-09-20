@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
@@ -17,10 +18,10 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +29,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -45,10 +46,10 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,12 +74,12 @@ func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 3)
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        testAccErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,8 +169,8 @@ resource "aws_securityhub_organization_admin_account" "test" {
 }
 
 func testAccSecurityHubOrganizationAdminAccountConfigMultiRegion() string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3),
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
 		`
 data "aws_caller_identity" "current" {}
 
