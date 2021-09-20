@@ -12,19 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var v waf.IPSet
-	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -37,7 +38,7 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile("ipset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile("ipset/.+$")),
 				),
 			},
 			{
@@ -52,10 +53,10 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var v waf.IPSet
-	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -74,12 +75,12 @@ func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var before, after waf.IPSet
-	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
-	ipsetNewName := fmt.Sprintf("ip-set-new-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
+	ipsetNewName := fmt.Sprintf("ip-set-new-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -117,11 +118,11 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var before, after waf.IPSet
-	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -160,7 +161,7 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 
 func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	var ipset waf.IPSet
-	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_ipset.ipset"
 
 	incrementIP := func(ip net.IP) {
@@ -183,8 +184,8 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -207,11 +208,11 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 	resourceName := "aws_wafregional_ipset.ipset"
 	var ipset waf.IPSet
-	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{

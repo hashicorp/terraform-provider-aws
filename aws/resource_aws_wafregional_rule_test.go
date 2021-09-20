@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -119,12 +120,12 @@ func testSweepWafRegionalRules(region string) error {
 
 func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 	var v waf.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
 		Steps: []resource.TestStep{
@@ -132,7 +133,7 @@ func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 				Config: testAccAWSWafRegionalRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`rule/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`rule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
@@ -149,12 +150,12 @@ func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 
 func TestAccAWSWafRegionalRule_tags(t *testing.T) {
 	var v waf.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
 		Steps: []resource.TestStep{
@@ -194,13 +195,13 @@ func TestAccAWSWafRegionalRule_tags(t *testing.T) {
 
 func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -233,12 +234,12 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 	var v waf.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
 		Steps: []resource.TestStep{
@@ -256,12 +257,12 @@ func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 
 func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
 	var v waf.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
 		Steps: []resource.TestStep{
@@ -288,12 +289,12 @@ func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
 
 	var before, after waf.Rule
 	var idx int
-	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -613,3 +614,31 @@ resource "aws_wafregional_rule" "wafrule" {
 }
 `, name)
 }
+func testAccCheckAWSWafRuleDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_waf_rule" {
+			continue
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		resp, err := conn.GetRule(
+			&waf.GetRuleInput{
+				RuleId: aws.String(rs.Primary.ID),
+			})
+
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error reading WAF Rule (%s): %w", rs.Primary.ID, err)
+		}
+
+		if resp != nil && resp.Rule != nil {
+			return fmt.Errorf("WAF Rule (%s) still exists", rs.Primary.ID)
+		}
+	}
+
+	return nil
+}
+
