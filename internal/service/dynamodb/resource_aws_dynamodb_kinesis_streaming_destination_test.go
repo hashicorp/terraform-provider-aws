@@ -137,7 +137,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
-		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+		output, err := finder.FindDynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
 		if err != nil {
 			return err
@@ -165,7 +165,7 @@ func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.Stat
 			return err
 		}
 
-		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+		output, err := finder.FindDynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			continue

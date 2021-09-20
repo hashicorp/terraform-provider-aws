@@ -36,9 +36,9 @@ func ResourceTable() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.CreateTableTimeout),
-			Delete: schema.DefaultTimeout(waiter.DeleteTableTimeout),
-			Update: schema.DefaultTimeout(waiter.UpdateTableTimeoutTotal),
+			Create: schema.DefaultTimeout(waiter.createTableTimeout),
+			Delete: schema.DefaultTimeout(waiter.deleteTableTimeout),
+			Update: schema.DefaultTimeout(waiter.updateTableTimeoutTotal),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -394,7 +394,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var output *dynamodb.CreateTableOutput
 	var requiresTagging bool
-	err := resource.Retry(waiter.CreateTableTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.createTableTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
 		if err != nil {
@@ -441,7 +441,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.TableDescription.TableName))
 	d.Set("arn", output.TableDescription.TableArn)
 
-	if _, err := waiter.DynamoDBTableActive(conn, d.Id()); err != nil {
+	if _, err := waiter.waitDynamoDBTableActive(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
 	}
 
@@ -643,7 +643,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if _, err := waiter.DynamoDBGSIDeleted(conn, d.Id(), idxName); err != nil {
+		if _, err := waiter.waitDynamoDBGSIDeleted(conn, d.Id(), idxName); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %w", d.Id(), idxName, err)
 		}
 	}
@@ -703,7 +703,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating DynamoDB Table (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.DynamoDBTableActive(conn, d.Id()); err != nil {
+		if _, err := waiter.waitDynamoDBTableActive(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %w", d.Id(), err)
 		}
 
@@ -714,7 +714,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			idxName := aws.StringValue(gsiUpdate.Update.IndexName)
 
-			if _, err := waiter.DynamoDBGSIActive(conn, d.Id(), idxName); err != nil {
+			if _, err := waiter.waitDynamoDBGSIActive(conn, d.Id(), idxName); err != nil {
 				return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) update: %w", d.Id(), idxName, err)
 			}
 		}
@@ -738,7 +738,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if _, err := waiter.DynamoDBGSIActive(conn, d.Id(), idxName); err != nil {
+		if _, err := waiter.waitDynamoDBGSIActive(conn, d.Id(), idxName); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) creation: %w", d.Id(), idxName, err)
 		}
 	}
@@ -753,7 +753,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
 		}
 
-		if _, err := waiter.DynamoDBSSEUpdated(conn, d.Id()); err != nil {
+		if _, err := waiter.waitDynamoDBSSEUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
 		}
 	}
@@ -805,7 +805,7 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.DynamoDBTableDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.waitDynamoDBTableDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -852,7 +852,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			},
 		}
 
-		err := resource.Retry(waiter.ReplicaUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(waiter.replicaUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
@@ -878,7 +878,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %w", tableName, tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waiter.DynamoDBReplicaActive(conn, tableName, tfMap["region_name"].(string)); err != nil {
+		if _, err := waiter.waitDynamoDBReplicaActive(conn, tableName, tfMap["region_name"].(string)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %w", tableName, tfMap["region_name"].(string), err)
 		}
 	}
@@ -904,7 +904,7 @@ func updateDynamoDbTimeToLive(tableName string, ttlList []interface{}, conn *dyn
 
 	log.Printf("[DEBUG] Waiting for DynamoDB Table (%s) Time to Live update to complete", tableName)
 
-	if _, err := waiter.DynamoDBTTLUpdated(conn, tableName, ttlMap["enabled"].(bool)); err != nil {
+	if _, err := waiter.waitDynamoDBTTLUpdated(conn, tableName, ttlMap["enabled"].(bool)); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) Time To Live update: %w", tableName, err)
 	}
 
@@ -923,7 +923,7 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 
 	log.Printf("[DEBUG] Updating DynamoDB point in time recovery status to %v", toEnable)
 
-	err := resource.Retry(waiter.UpdateTableContinuousBackupsTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.updateTableContinuousBackupsTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateContinuousBackups(input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
@@ -941,7 +941,7 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		return fmt.Errorf("error updating DynamoDB PITR status: %w", err)
 	}
 
-	if _, err := waiter.DynamoDBPITRUpdated(conn, d.Id(), toEnable); err != nil {
+	if _, err := waiter.waitDynamoDBPITRUpdated(conn, d.Id(), toEnable); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB PITR update: %w", err)
 	}
 
@@ -1084,7 +1084,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(waiter.DeleteTableTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.deleteTableTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -1146,7 +1146,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 				},
 			}
 
-			err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
+			err := resource.Retry(waiter.updateTableTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateTable(input)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
@@ -1172,7 +1172,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 				return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %w", tableName, regionName, err)
 			}
 
-			if _, err := waiter.DynamoDBReplicaDeleted(conn, tableName, regionName); err != nil {
+			if _, err := waiter.waitDynamoDBReplicaDeleted(conn, tableName, regionName); err != nil {
 				return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %w", tableName, regionName, err)
 			}
 
