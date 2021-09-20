@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validEndpointID(v interface{}, k string) (ws []string, es []error) {

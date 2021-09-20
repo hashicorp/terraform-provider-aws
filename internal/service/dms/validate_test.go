@@ -2,7 +2,6 @@ package dms
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidEndpointID(t *testing.T) {
