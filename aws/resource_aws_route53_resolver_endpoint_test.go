@@ -44,7 +44,7 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 			_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
 				ResolverEndpointId: aws.String(id),
 			})
-			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -158,7 +158,7 @@ func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
 			ResolverEndpointId: aws.String(rs.Primary.ID),
 		})
 		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {

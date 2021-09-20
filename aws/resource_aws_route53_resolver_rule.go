@@ -253,7 +253,7 @@ func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 		ResolverRuleId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -289,7 +289,7 @@ func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId st
 		resp, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(ruleId),
 		})
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			return "", route53ResolverRuleStatusDeleted, nil
 		}
 		if err != nil {

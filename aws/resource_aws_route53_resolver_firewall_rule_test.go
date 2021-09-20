@@ -192,7 +192,7 @@ func testAccCheckRoute53ResolverFirewallRuleDestroy(s *terraform.State) error {
 		// Try to find the resource
 		_, err := finder.FirewallRuleByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {

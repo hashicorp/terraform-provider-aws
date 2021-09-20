@@ -290,7 +290,7 @@ func resourceAwsRoute53ResolverEndpointDelete(d *schema.ResourceData, meta inter
 	_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
 		ResolverEndpointId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -312,7 +312,7 @@ func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId 
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(epId),
 		})
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			return &route53resolver.ResolverEndpoint{}, route53ResolverEndpointStatusDeleted, nil
 		}
 		if err != nil {

@@ -89,7 +89,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroupRead(d *schema.ResourceData, met
 
 	ruleGroup, err := finder.FirewallRuleGroupByID(conn, d.Id())
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -151,7 +151,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroupDelete(d *schema.ResourceData, m
 		FirewallRuleGroupId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
