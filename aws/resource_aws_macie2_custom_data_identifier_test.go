@@ -22,7 +22,7 @@ func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -53,7 +53,7 @@ func testAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Account(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func testAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -179,7 +179,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -217,7 +217,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 		input := &macie2.GetCustomDataIdentifierInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetCustomDataIdentifier(input)
@@ -237,7 +237,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2
 }
 
 func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_custom_data_identifier" {

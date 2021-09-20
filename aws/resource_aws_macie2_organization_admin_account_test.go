@@ -19,7 +19,7 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
 		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
 		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Account(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,7 +76,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 
 		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
 
@@ -93,7 +93,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 }
 
 func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_organization_admin_account" {

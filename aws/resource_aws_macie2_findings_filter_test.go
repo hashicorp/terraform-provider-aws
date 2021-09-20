@@ -20,7 +20,7 @@ func testAccAwsMacie2FindingsFilter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func testAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func testAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -104,7 +104,7 @@ func testAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func testAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Account(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,7 +131,7 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -212,7 +212,7 @@ func testAccAwsMacie2FindingsFilter_WithDate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -287,7 +287,7 @@ func testAccAwsMacie2FindingsFilter_WithNumber(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -355,7 +355,7 @@ func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
@@ -396,7 +396,7 @@ func testAccCheckAwsMacie2FindingsFilterExists(resourceName string, macie2Sessio
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 		input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetFindingsFilter(input)
@@ -416,7 +416,7 @@ func testAccCheckAwsMacie2FindingsFilterExists(resourceName string, macie2Sessio
 }
 
 func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_findings_filter" {
