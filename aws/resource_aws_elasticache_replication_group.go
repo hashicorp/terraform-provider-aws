@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceReplicationGroup() *schema.Resource {
@@ -269,8 +270,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -310,7 +311,7 @@ func ResourceReplicationGroup() *schema.Resource {
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
 					diff.HasChange("cluster_mode.0.replicas_per_node_group")
 			}),
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 	}
 }
@@ -318,7 +319,7 @@ func ResourceReplicationGroup() *schema.Resource {
 func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
@@ -566,7 +567,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			Resource:  fmt.Sprintf("cluster:%s", aws.StringValue(c.CacheClusterId)),
 		}.String()
 
-		tags, err := keyvaluetags.ElasticacheListTags(conn, arn)
+		tags, err := tftags.ElasticacheListTags(conn, arn)
 
 		if err != nil {
 			return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
@@ -704,7 +705,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			}.String()
 
 			o, n := d.GetChange("tags_all")
-			if err := keyvaluetags.ElasticacheUpdateTags(conn, arn, o, n); err != nil {
+			if err := tftags.ElasticacheUpdateTags(conn, arn, o, n); err != nil {
 				return fmt.Errorf("error updating tags: %w", err)
 			}
 		}
