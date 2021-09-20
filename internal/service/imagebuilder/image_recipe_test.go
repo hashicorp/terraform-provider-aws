@@ -79,7 +79,7 @@ func testSweepImageBuilderImageRecipes(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsImageBuilderImageRecipe_basic(t *testing.T) {
+func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -115,7 +115,7 @@ func TestAccAwsImageBuilderImageRecipe_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_disappears(t *testing.T) {
+func TestAccImageBuilderImageRecipe_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -137,7 +137,7 @@ func TestAccAwsImageBuilderImageRecipe_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_DeviceName(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMapping_deviceName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -166,7 +166,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_DeviceName(t *testing.
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_DeleteOnTermination(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_deleteOnTermination(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -195,7 +195,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_DeleteOnTerminatio
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_Encrypted(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_encrypted(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -224,7 +224,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_Encrypted(t *testi
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_Iops(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_iops(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -253,7 +253,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_Iops(t *testing.T)
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_KmsKeyId(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_kmsKeyID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_imagebuilder_image_recipe.test"
@@ -281,7 +281,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_KmsKeyId(t *testin
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_SnapshotId(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_snapshotID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	ebsSnapshotResourceName := "aws_ebs_snapshot.test"
 	resourceName := "aws_imagebuilder_image_recipe.test"
@@ -309,7 +309,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_SnapshotId(t *test
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeSize(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeSize(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -338,7 +338,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeSize(t *test
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp2(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -367,7 +367,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp2(t *t
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp3(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -396,7 +396,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp3(t *t
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_NoDevice(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMapping_noDevice(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -425,7 +425,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_NoDevice(t *testing.T)
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_VirtualName(t *testing.T) {
+func TestAccImageBuilderImageRecipe_BlockDeviceMapping_virtualName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -454,7 +454,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_VirtualName(t *testing
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_Component(t *testing.T) {
+func TestAccImageBuilderImageRecipe_component(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -483,7 +483,7 @@ func TestAccAwsImageBuilderImageRecipe_Component(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_Description(t *testing.T) {
+func TestAccImageBuilderImageRecipe_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -509,7 +509,7 @@ func TestAccAwsImageBuilderImageRecipe_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_Tags(t *testing.T) {
+func TestAccImageBuilderImageRecipe_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -553,7 +553,7 @@ func TestAccAwsImageBuilderImageRecipe_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_WorkingDirectory(t *testing.T) {
+func TestAccImageBuilderImageRecipe_workingDirectory(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 

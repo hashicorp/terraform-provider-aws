@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
+func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) {
 	dataSourceName := "data.aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -44,7 +44,7 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 }
 
 // Verify additional fields returned by Self owned Images
-func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
+func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_imagebuilder_image.test"
 	resourceName := "aws_imagebuilder_image.test"

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsImageBuilderInfrastructureConfigurationDataSource_Arn(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfigurationDataSource_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_imagebuilder_infrastructure_configuration.test"
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"

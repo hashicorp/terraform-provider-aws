@@ -76,7 +76,7 @@ func testSweepImageBuilderInfrastructureConfigurations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	iamInstanceProfileResourceName := "aws_iam_instance_profile.test"
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
@@ -117,7 +117,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_disappears(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
@@ -139,7 +139,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_disappears(t *testing.T) 
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_Description(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
@@ -173,7 +173,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Description(t *testing.T)
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceProfileName(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_instanceProfileName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	iamInstanceProfileResourceName := "aws_iam_instance_profile.test"
 	iamInstanceProfileResourceName2 := "aws_iam_instance_profile.test2"
@@ -209,7 +209,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceProfileName(t *te
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceTypes(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_instanceTypes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
@@ -243,7 +243,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceTypes(t *testing.
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_KeyPair(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_keyPair(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	keyPairResourceName := "aws_key_pair.test"
 	keyPairResourceName2 := "aws_key_pair.test2"
@@ -288,7 +288,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_KeyPair(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3BucketName(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	s3BucketResourceName := "aws_s3_bucket.test"
 	s3BucketResourceName2 := "aws_s3_bucket.test2"
@@ -328,7 +328,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3BucketNa
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3KeyPrefix(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
@@ -366,7 +366,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3KeyPrefi
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_ResourceTags(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_resourceTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
@@ -402,7 +402,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_ResourceTags(t *testing.T
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_SecurityGroupIds(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	securityGroupResourceName := "aws_security_group.test"
 	securityGroupResourceName2 := "aws_security_group.test2"
@@ -440,7 +440,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SecurityGroupIds(t *testi
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_SnsTopicArn(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	snsTopicResourceName := "aws_sns_topic.test"
 	snsTopicResourceName2 := "aws_sns_topic.test2"
@@ -476,7 +476,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SnsTopicArn(t *testing.T)
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_SubnetId(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	subnetResourceName := "aws_subnet.test"
 	subnetResourceName2 := "aws_subnet.test2"
@@ -512,7 +512,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SubnetId(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_Tags(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
@@ -556,7 +556,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailure(t *testing.T) {
+func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
