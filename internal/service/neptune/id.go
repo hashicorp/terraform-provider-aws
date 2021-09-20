@@ -3,7 +3,6 @@ package neptune
 import (
 	"fmt"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func readAwsClusterEndpointID(id string) (clusterIdentifier string, endpointIndetifer string, err error) {
