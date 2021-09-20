@@ -290,7 +290,7 @@ func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
 
 		resp, err := shieldconn.DescribeProtection(input)
 
-		if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -336,7 +336,7 @@ func testAccPreCheckAWSShield(t *testing.T) {
 
 	_, err := conn.ListProtections(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

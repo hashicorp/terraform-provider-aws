@@ -87,7 +87,7 @@ func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.DescribeProtection(input)
 
-	if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Shield Protection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -131,7 +131,7 @@ func resourceAwsShieldProtectionDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteProtection(input)
 
-	if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
