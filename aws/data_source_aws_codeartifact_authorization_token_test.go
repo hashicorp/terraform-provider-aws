@@ -5,17 +5,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -23,7 +24,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -31,12 +32,12 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +45,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -52,12 +53,12 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -66,7 +67,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
 					resource.TestCheckResourceAttr(dataSourceName, "duration_seconds", "900"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -88,7 +89,7 @@ resource "aws_codeartifact_domain" "test" {
 }
 
 func testAccCheckAWSCodeArtifactAuthorizationTokenBasicConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName),
 		`
 data "aws_codeartifact_authorization_token" "test" {
@@ -98,7 +99,7 @@ data "aws_codeartifact_authorization_token" "test" {
 }
 
 func testAccCheckAWSCodeArtifactAuthorizationTokenOwnerConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName),
 		`
 data "aws_codeartifact_authorization_token" "test" {
@@ -109,7 +110,7 @@ data "aws_codeartifact_authorization_token" "test" {
 }
 
 func testAccCheckAWSCodeArtifactAuthorizationTokenDurationConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName),
 		`
 data "aws_codeartifact_authorization_token" "test" {
