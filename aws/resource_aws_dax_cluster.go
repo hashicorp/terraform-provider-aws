@@ -17,6 +17,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -59,7 +60,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -97,7 +98,7 @@ func ResourceCluster() *schema.Resource {
 				StateFunc: func(val interface{}) string {
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
