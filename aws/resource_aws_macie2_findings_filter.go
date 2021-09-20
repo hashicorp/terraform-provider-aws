@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,8 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 func resourceAwsMacie2FindingsFilter() *schema.Resource {
@@ -391,4 +393,26 @@ func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteri
 			"criterion": flatCriteria,
 		},
 	}
+}
+
+func expandConditionIntField(field, v string) (int64, error) {
+	if field == "updatedAt" {
+		date, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return 0, err
+		}
+		return date.UnixNano() / 1000000, nil
+	}
+
+	return strconv.ParseInt(v, 10, 64)
+}
+
+func flattenConditionIntField(field string, v int64) string {
+	if field == "updatedAt" {
+		seconds := v / 1000
+		nanoseconds := v % 1000
+		date := time.Unix(seconds, nanoseconds).UTC()
+		return date.Format(time.RFC3339)
+	}
+	return strconv.FormatInt(v, 10)
 }
