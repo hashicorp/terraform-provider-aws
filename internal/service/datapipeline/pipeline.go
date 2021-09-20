@@ -79,7 +79,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := resourceAwsDataPipelinePipelineRetrieve(d.Id(), conn)
+	v, err := PipelineRetrieve(d.Id(), conn)
 	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -134,10 +134,10 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting Data Pipeline %s: %s", d.Id(), err.Error())
 	}
 
-	return waitForDataPipelineDeletion(conn, d.Id())
+	return WaitForDeletion(conn, d.Id())
 }
 
-func resourceAwsDataPipelinePipelineRetrieve(id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {
+func PipelineRetrieve(id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {
 	opts := datapipeline.DescribePipelinesInput{
 		PipelineIds: []*string{aws.String(id)},
 	}
@@ -163,7 +163,7 @@ func resourceAwsDataPipelinePipelineRetrieve(id string, conn *datapipeline.DataP
 	return pipeline, nil
 }
 
-func waitForDataPipelineDeletion(conn *datapipeline.DataPipeline, pipelineID string) error {
+func WaitForDeletion(conn *datapipeline.DataPipeline, pipelineID string) error {
 	params := &datapipeline.DescribePipelinesInput{
 		PipelineIds: []*string{aws.String(pipelineID)},
 	}
