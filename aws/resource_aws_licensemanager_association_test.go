@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
@@ -39,7 +40,7 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 
 func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -70,7 +71,7 @@ func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpe
 }
 
 func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_licensemanager_association" {

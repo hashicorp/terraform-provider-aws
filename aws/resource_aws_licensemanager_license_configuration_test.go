@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepLicenseManagerLicenseConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).licensemanagerconn
+	conn := client.(*conns.AWSClient).LicenseManagerConn
 
 	resp, err := conn.ListLicenseConfigurations(&licensemanager.ListLicenseConfigurationsInput{})
 
@@ -146,7 +147,7 @@ func testAccCheckLicenseManagerLicenseConfigurationExists(resourceName string, l
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 		resp, err := conn.ListLicenseConfigurations(&licensemanager.ListLicenseConfigurationsInput{
 			LicenseConfigurationArns: [](*string){aws.String(rs.Primary.ID)},
 		})
@@ -165,7 +166,7 @@ func testAccCheckLicenseManagerLicenseConfigurationExists(resourceName string, l
 }
 
 func testAccCheckLicenseManagerLicenseConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).licensemanagerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_licensemanager_license_configuration" {
