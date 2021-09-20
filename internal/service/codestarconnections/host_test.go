@@ -17,7 +17,7 @@ import (
 	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 )
 
-func TestAccAWSCodeStarConnectionsHost_basic(t *testing.T) {
+func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -48,7 +48,7 @@ func TestAccAWSCodeStarConnectionsHost_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarConnectionsHost_disappears(t *testing.T) {
+func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -71,7 +71,7 @@ func TestAccAWSCodeStarConnectionsHost_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarConnectionsHost_vpcConfig(t *testing.T) {
+func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

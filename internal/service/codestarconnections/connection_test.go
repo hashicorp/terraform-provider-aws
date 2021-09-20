@@ -17,7 +17,7 @@ import (
 	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 )
 
-func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
+func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -48,7 +48,7 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
+func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -80,7 +80,7 @@ func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
+func TestAccCodeStarConnectionsConnection_disappears(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -103,7 +103,7 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
+func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
