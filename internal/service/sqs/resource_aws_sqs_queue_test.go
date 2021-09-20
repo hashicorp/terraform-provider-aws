@@ -1,4 +1,4 @@
-package aws
+package sqs_test
 
 import (
 	"fmt"
@@ -15,14 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
 func init() {
@@ -735,7 +735,7 @@ func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
 
-		output, err := finder.FindQueueAttributesByURL(conn, rs.Primary.ID)
+		output, err := tfsqs.FindQueueAttributesByURL(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -755,7 +755,7 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindQueueAttributesByURL(conn, rs.Primary.ID)
+		_, err := tfsqs.FindQueueAttributesByURL(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

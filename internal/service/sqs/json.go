@@ -1,4 +1,4 @@
-package json
+package sqs
 
 import (
 	"bytes"

@@ -1,4 +1,4 @@
-package aws
+package sqs
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +72,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(url)
 
-	err = waiter.waitQueueAttributesPropagated(conn, d.Id(), policyAttributes)
+	err = waitQueueAttributesPropagated(conn, d.Id(), policyAttributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue Policy (%s) to be set: %w", d.Id(), err)
@@ -86,7 +84,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
-	policy, err := finder.FindQueuePolicyByURL(conn, d.Id())
+	policy, err := FindQueuePolicyByURL(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue Policy (%s) not found, removing from state", d.Id())
@@ -121,7 +119,7 @@ func resourceQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting SQS Queue Policy (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.waitQueueAttributesPropagated(conn, d.Id(), sqsQueueEmptyPolicyAttributes)
+	err = waitQueueAttributesPropagated(conn, d.Id(), sqsQueueEmptyPolicyAttributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue Policy (%s) to delete: %w", d.Id(), err)

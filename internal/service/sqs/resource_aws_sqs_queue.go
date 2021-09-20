@@ -1,4 +1,4 @@
-package aws
+package sqs
 
 import (
 	"context"
@@ -15,13 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/attrmap"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,13 +41,13 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(tfsqs.DeduplicationScope_Values(), false),
+			ValidateFunc: validation.StringInSlice(DeduplicationScope_Values(), false),
 		},
 
 		"delay_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      tfsqs.DefaultQueueDelaySeconds,
+			Default:      DefaultQueueDelaySeconds,
 			ValidateFunc: validation.IntBetween(0, 900),
 		},
 
@@ -65,7 +62,7 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(tfsqs.FIFOThroughputLimit_Values(), false),
+			ValidateFunc: validation.StringInSlice(FIFOThroughputLimit_Values(), false),
 		},
 
 		"kms_data_key_reuse_period_seconds": {
@@ -83,14 +80,14 @@ var (
 		"max_message_size": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      tfsqs.DefaultQueueMaximumMessageSize,
+			Default:      DefaultQueueMaximumMessageSize,
 			ValidateFunc: validation.IntBetween(1024, 262_144),
 		},
 
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      tfsqs.DefaultQueueMessageRetentionPeriod,
+			Default:      DefaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
 
@@ -121,7 +118,7 @@ var (
 		"receive_wait_time_seconds": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Default:  tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds,
+			Default:  DefaultQueueReceiveMessageWaitTimeSeconds,
 		},
 
 		"redrive_policy": {
@@ -142,7 +139,7 @@ var (
 		"visibility_timeout_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			Default:      tfsqs.DefaultQueueVisibilityTimeout,
+			Default:      DefaultQueueVisibilityTimeout,
 			ValidateFunc: validation.IntBetween(0, 43_200),
 		},
 
@@ -198,7 +195,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoQueue := d.Get("fifo_queue").(bool)
 
 	if fifoQueue {
-		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsqs.FIFOQueueNameSuffix)
+		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOQueueNameSuffix)
 	} else {
 		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
@@ -222,7 +219,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
 	var output *sqs.CreateQueueOutput
-	err = resource.Retry(waiter.queueCreatedTimeout, func() *resource.RetryError {
+	err = resource.Retry(queueCreatedTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateQueue(input)
@@ -248,7 +245,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.QueueUrl))
 
-	err = waiter.waitQueueAttributesPropagated(conn, d.Id(), attributes)
+	err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue (%s) attributes to create: %w", d.Id(), err)
@@ -269,7 +266,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.FindQueueAttributesByURL(conn, d.Id())
+	output, err := FindQueueAttributesByURL(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
@@ -281,7 +278,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading SQS Queue (%s): %w", d.Id(), err)
 	}
 
-	name, err := tfsqs.QueueNameFromURL(d.Id())
+	name, err := QueueNameFromURL(d.Id())
 
 	if err != nil {
 		return err
@@ -295,12 +292,12 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 	if d.Get("kms_data_key_reuse_period_seconds").(int) == 0 {
-		d.Set("kms_data_key_reuse_period_seconds", tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)
+		d.Set("kms_data_key_reuse_period_seconds", DefaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
 	d.Set("name", name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsqs.FIFOQueueNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOQueueNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -312,7 +309,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		// Non-standard partitions (e.g. US Gov) and some local development
 		// solutions do not yet support this API call. Depending on the
 		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
-		if !tfawserr.ErrCodeEquals(err, tfsqs.ErrCodeInvalidAction) && !tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
+		if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) && !tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
 			return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
 		}
 	}
@@ -353,7 +350,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating SQS Queue (%s) attributes: %w", d.Id(), err)
 		}
 
-		err = waiter.waitQueueAttributesPropagated(conn, d.Id(), attributes)
+		err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
 		if err != nil {
 			return fmt.Errorf("error waiting for SQS Queue (%s) attributes to update: %w", d.Id(), err)
@@ -386,7 +383,7 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting SQS Queue (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.waitQueueDeleted(conn, d.Id())
+	err = waitQueueDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue (%s) to delete: %w", d.Id(), err)
@@ -405,7 +402,7 @@ func resourceAwsSqsQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		var name string
 
 		if fifoQueue {
-			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsqs.FIFOQueueNameSuffix)
+			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), FIFOQueueNameSuffix)
 		} else {
 			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}
