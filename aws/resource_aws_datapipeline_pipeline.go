@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDataPipelinePipeline() *schema.Resource {
@@ -44,8 +45,8 @@ func resourceAwsDataPipelinePipeline() *schema.Resource {
 }
 
 func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DataPipelineConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	uniqueID := resource.UniqueId()
@@ -72,9 +73,9 @@ func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataPipelineConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDataPipelinePipelineRetrieve(d.Id(), conn)
 	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
@@ -103,7 +104,7 @@ func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
+	conn := meta.(*conns.AWSClient).DataPipelineConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -117,7 +118,7 @@ func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDataPipelinePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
+	conn := meta.(*conns.AWSClient).DataPipelineConn
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),
