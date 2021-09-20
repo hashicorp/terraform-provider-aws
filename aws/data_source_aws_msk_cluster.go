@@ -74,7 +74,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 		}
 
 		for _, clusterInfo := range page.ClusterInfoList {
-			if aws.StringValue(cluster.ClusterName) == clusterName {
+			if aws.StringValue(clusterInfo.ClusterName) == clusterName {
 				cluster = clusterInfo
 
 				return false
