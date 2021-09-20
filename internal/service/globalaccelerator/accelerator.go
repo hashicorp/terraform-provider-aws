@@ -129,7 +129,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(name),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             tags.IgnoreAws().GlobalacceleratorTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -203,7 +203,7 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 
-	tags, err := tftags.GlobalacceleratorListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for Global Accelerator Accelerator (%s): %w", d.Id(), err)
 	}
@@ -284,7 +284,7 @@ func resourceAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GlobalacceleratorUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Global Accelerator Accelerator (%s) tags: %w", d.Id(), err)
 		}
 	}
