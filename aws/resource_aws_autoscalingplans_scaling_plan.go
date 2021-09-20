@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
+func ResourceScalingPlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoScalingPlansScalingPlanCreate,
-		Read:   resourceAwsAutoScalingPlansScalingPlanRead,
-		Update: resourceAwsAutoScalingPlansScalingPlanUpdate,
-		Delete: resourceAwsAutoScalingPlansScalingPlanDelete,
+		Create: resourceScalingPlanCreate,
+		Read:   resourceScalingPlanRead,
+		Update: resourceScalingPlanUpdate,
+		Delete: resourceScalingPlanDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoScalingPlansScalingPlanImport,
 		},
@@ -317,7 +317,7 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 	}
 }
 
-func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
@@ -343,10 +343,10 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be created: %w", d.Id(), err)
 	}
 
-	return resourceAwsAutoScalingPlansScalingPlanRead(d, meta)
+	return resourceScalingPlanRead(d, meta)
 }
 
-func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
+func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlan, err := finder.ScalingPlan(conn, d.Get("name").(string), d.Get("scaling_plan_version").(int))
@@ -373,7 +373,7 @@ func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
@@ -397,10 +397,10 @@ func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be updated: %w", d.Id(), err)
 	}
 
-	return resourceAwsAutoScalingPlansScalingPlanRead(d, meta)
+	return resourceScalingPlanRead(d, meta)
 }
 
-func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
