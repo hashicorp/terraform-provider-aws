@@ -25,7 +25,7 @@ func init() {
 }
 
 func testSweepDbOptionGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -35,7 +35,7 @@ func testSweepDbOptionGroups(region string) error {
 	opts := rds.DescribeOptionGroupsInput{}
 	resp, err := conn.DescribeOptionGroups(&opts)
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping RDS DB Option Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -79,7 +79,7 @@ func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +112,7 @@ func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +166,7 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,7 +193,7 @@ func TestAccAWSDBOptionGroup_OptionGroupDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,7 +219,7 @@ func TestAccAWSDBOptionGroup_basicDestroyWithInstance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -242,7 +242,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -297,7 +297,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_IAMRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -328,7 +328,7 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -366,7 +366,7 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -411,7 +411,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -445,7 +445,7 @@ func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -476,7 +476,7 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -523,7 +523,7 @@ func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -617,7 +617,7 @@ func testAccCheckAWSDBOptionGroupExists(n string, v *rds.OptionGroup) resource.T
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
@@ -641,7 +641,7 @@ func testAccCheckAWSDBOptionGroupExists(n string, v *rds.OptionGroup) resource.T
 }
 
 func testAccCheckAWSDBOptionGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_option_group" {

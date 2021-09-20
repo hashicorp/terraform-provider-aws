@@ -29,7 +29,7 @@ func init() {
 }
 
 func testSweepRdsClusterParameterGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -40,7 +40,7 @@ func testSweepRdsClusterParameterGroups(region string) error {
 	for {
 		output, err := conn.DescribeDBClusterParameterGroups(input)
 
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping RDS DB Cluster Parameter Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -92,7 +92,7 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +189,7 @@ func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -229,7 +229,7 @@ func TestAccAWSDBClusterParameterGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,7 +257,7 @@ func TestAccAWSDBClusterParameterGroup_namePrefix_Parameter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -310,7 +310,7 @@ func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,7 +336,7 @@ func TestAccAWSDBClusterParameterGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -359,7 +359,7 @@ func TestAccAWSDBClusterParameterGroup_only(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -392,7 +392,7 @@ func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -452,7 +452,7 @@ func TestAccAWSDBClusterParameterGroup_caseParameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -481,7 +481,7 @@ func TestAccAWSDBClusterParameterGroup_caseParameters(t *testing.T) {
 }
 
 func testAccCheckAWSDBClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_parameter_group" {
@@ -525,7 +525,7 @@ func testAccCheckAWSRDSClusterParameterNotUserDefined(n, paramName string) resou
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
@@ -563,7 +563,7 @@ func testAccCheckAWSDBClusterParameterGroupAttributes(v *rds.DBClusterParameterG
 
 func testAccAWSDBClusterParameterGroupDisappears(v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 		opts := &rds.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: v.DBClusterParameterGroupName,
 		}
@@ -600,7 +600,7 @@ func testAccCheckAWSDBClusterParameterGroupExists(n string, v *rds.DBClusterPara
 			return errors.New("No DB Cluster Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

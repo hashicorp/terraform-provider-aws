@@ -28,7 +28,7 @@ func init() {
 }
 
 func testSweepRdsDbParameterGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -63,7 +63,7 @@ func testSweepRdsDbParameterGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -83,7 +83,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -175,7 +175,7 @@ func TestAccAWSDBParameterGroup_caseWithMixedParameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +194,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -562,7 +562,7 @@ func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -583,7 +583,7 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -603,7 +603,7 @@ func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -624,7 +624,7 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -664,7 +664,7 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -693,7 +693,7 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -722,7 +722,7 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -782,7 +782,7 @@ func TestAccAWSDBParameterGroup_caseParameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1039,7 +1039,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 
 func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1055,7 +1055,7 @@ func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource
 }
 
 func testAccCheckAWSDBParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_parameter_group" {
@@ -1114,7 +1114,7 @@ func testAccCheckAWSDBParameterGroupExists(rName string, v *rds.DBParameterGroup
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBParameterGroupsInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),
@@ -1148,7 +1148,7 @@ func testAccCheckAWSDBParameterNotUserDefined(rName, paramName string) resource.
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBParametersInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),
