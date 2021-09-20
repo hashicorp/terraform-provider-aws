@@ -16,7 +16,7 @@ import (
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 )
 
-func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
+func TestAccSNSTopicPolicy_basic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -46,7 +46,7 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
+func TestAccSNSTopicPolicy_updated(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -84,7 +84,7 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
+func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 	attributes := make(map[string]string)
 	topicResourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -107,7 +107,7 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
+func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

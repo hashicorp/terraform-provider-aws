@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSnsTopic_basic(t *testing.T) {
+func TestAccSNSTopicDataSource_basic(t *testing.T) {
 	resourceName := "aws_sns_topic.test"
 	datasourceName := "data.aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

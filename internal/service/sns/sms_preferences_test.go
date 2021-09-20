@@ -15,7 +15,7 @@ import (
 )
 
 // The preferences are account-wide, so the tests must be serialized
-func TestAccAWSSNSSMSPreferences_serial(t *testing.T) {
+func TestAccSNSSMSPreferences_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"almostAll":      testAccAWSSNSSMSPreferences_almostAll,
 		"defaultSMSType": testAccAWSSNSSMSPreferences_defaultSMSType,

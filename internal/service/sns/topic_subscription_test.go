@@ -67,7 +67,7 @@ func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
 	}
 }
 
-func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
+func TestAccSNSTopicSubscription_basic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -106,7 +106,7 @@ func TestAccAWSSNSTopicSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
+func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
@@ -155,7 +155,7 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
+func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -214,7 +214,7 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
+func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	dlqName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -272,7 +272,7 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
+func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -319,7 +319,7 @@ func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
+func TestAccSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -349,7 +349,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
+func TestAccSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -379,7 +379,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
+func TestAccSNSTopicSubscription_email(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -409,7 +409,7 @@ func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
+func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -438,7 +438,7 @@ func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_disappears(t *testing.T) {
+func TestAccSNSTopicSubscription_disappears(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -461,7 +461,7 @@ func TestAccAWSSNSTopicSubscription_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
+func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
