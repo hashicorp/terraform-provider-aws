@@ -2,9 +2,10 @@ package kinesis_test
 
 import (
 	"context"
-	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"reflect"
 	"testing"
+
+	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 )
 
 func testResourceAwsKinesisStreamStateDataV0() map[string]interface{} {
