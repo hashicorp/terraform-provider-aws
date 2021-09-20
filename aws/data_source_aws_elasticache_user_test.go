@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAWSElasticacheUser_basic(t *testing.T) {
 	resourceName := "aws_elasticache_user.test-basic"
 	dataSourceName := "data.aws_elasticache_user.test-basic"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
+		PreCheck:   func() { acctest.PreCheck(t) },
 		Providers:  testAccProviders,
-		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElastiCacheUserConfigWithDataSource(rName),
