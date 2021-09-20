@@ -65,7 +65,7 @@ func testSweepGameliftGameSessionQueue(region string) error {
 	return nil
 }
 
-func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
+func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
@@ -153,7 +153,7 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftGameSessionQueue_tags(t *testing.T) {
+func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
@@ -203,7 +203,7 @@ func TestAccAWSGameliftGameSessionQueue_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftGameSessionQueue_disappears(t *testing.T) {
+func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"

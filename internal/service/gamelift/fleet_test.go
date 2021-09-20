@@ -236,7 +236,7 @@ func TestDiffGameliftPortSettings(t *testing.T) {
 	}
 }
 
-func TestAccAWSGameliftFleet_basic(t *testing.T) {
+func TestAccGameLiftFleet_basic(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
 	fleetName := sdkacctest.RandomWithPrefix("tf-acc-fleet")
@@ -321,7 +321,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftFleet_tags(t *testing.T) {
+func TestAccGameLiftFleet_tags(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
 	fleetName := sdkacctest.RandomWithPrefix("tf-acc-fleet")
@@ -386,7 +386,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftFleet_allFields(t *testing.T) {
+func TestAccGameLiftFleet_allFields(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
 	fleetName := sdkacctest.RandomWithPrefix("tf-acc-fleet")
@@ -509,7 +509,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftFleet_disappears(t *testing.T) {
+func TestAccGameLiftFleet_disappears(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
 	fleetName := sdkacctest.RandomWithPrefix("tf-acc-fleet")

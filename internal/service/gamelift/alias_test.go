@@ -81,7 +81,7 @@ func listGameliftAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLi
 	return nil
 }
 
-func TestAccAWSGameliftAlias_basic(t *testing.T) {
+func TestAccGameLiftAlias_basic(t *testing.T) {
 	var conf gamelift.Alias
 
 	rString := sdkacctest.RandString(8)
@@ -140,7 +140,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftAlias_tags(t *testing.T) {
+func TestAccGameLiftAlias_tags(t *testing.T) {
 	var conf gamelift.Alias
 
 	resourceName := "aws_gamelift_alias.test"
@@ -190,7 +190,7 @@ func TestAccAWSGameliftAlias_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
+func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 	var conf gamelift.Alias
 
 	rString := sdkacctest.RandString(8)
@@ -252,7 +252,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 	})
 }
 
-func TestAccAWSGameliftAlias_disappears(t *testing.T) {
+func TestAccGameLiftAlias_disappears(t *testing.T) {
 	var conf gamelift.Alias
 
 	rString := sdkacctest.RandString(8)
