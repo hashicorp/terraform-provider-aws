@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
+func TestAccMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
+func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
