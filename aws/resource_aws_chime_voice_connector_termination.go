@@ -77,8 +77,8 @@ func resourceAwsChimeVoiceConnectorTerminationCreate(ctx context.Context, d *sch
 	}
 
 	termination := &chime.Termination{
-		CidrAllowedList: expandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
-		CallingRegions:  expandStringSet(d.Get("calling_regions").(*schema.Set)),
+		CidrAllowedList: flex.ExpandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
+		CallingRegions:  flex.ExpandStringSet(d.Get("calling_regions").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("disabled"); ok {
@@ -131,10 +131,10 @@ func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schem
 	d.Set("disabled", resp.Termination.Disabled)
 	d.Set("default_phone_number", resp.Termination.DefaultPhoneNumber)
 
-	if err := d.Set("calling_regions", flattenStringList(resp.Termination.CallingRegions)); err != nil {
+	if err := d.Set("calling_regions", flex.FlattenStringList(resp.Termination.CallingRegions)); err != nil {
 		return diag.Errorf("error setting termination calling regions (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("cidr_allow_list", flattenStringList(resp.Termination.CidrAllowedList)); err != nil {
+	if err := d.Set("cidr_allow_list", flex.FlattenStringList(resp.Termination.CidrAllowedList)); err != nil {
 		return diag.Errorf("error setting termination cidr allow list (%s): %s", d.Id(), err)
 	}
 
@@ -148,8 +148,8 @@ func resourceAwsChimeVoiceConnectorTerminationUpdate(ctx context.Context, d *sch
 
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
 		termination := &chime.Termination{
-			CallingRegions:  expandStringSet(d.Get("calling_regions").(*schema.Set)),
-			CidrAllowedList: expandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
+			CallingRegions:  flex.ExpandStringSet(d.Get("calling_regions").(*schema.Set)),
+			CidrAllowedList: flex.ExpandStringSet(d.Get("cidr_allow_list").(*schema.Set)),
 			CpsLimit:        aws.Int64(int64(d.Get("cps_limit").(int))),
 		}
 
