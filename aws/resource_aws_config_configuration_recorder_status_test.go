@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
@@ -114,7 +115,7 @@ func testAccCheckConfigConfigurationRecorderStatusExists(n string, obj *configse
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 		out, err := conn.DescribeConfigurationRecorderStatus(&configservice.DescribeConfigurationRecorderStatusInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -149,7 +150,7 @@ func testAccCheckConfigConfigurationRecorderStatus(n string, desired bool, obj *
 }
 
 func testAccCheckConfigConfigurationRecorderStatusDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {

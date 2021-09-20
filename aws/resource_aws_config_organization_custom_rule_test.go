@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccConfigOrganizationCustomRule_basic(t *testing.T) {
@@ -443,7 +444,7 @@ func testAccCheckConfigOrganizationCustomRuleExists(resourceName string, ocr *co
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
@@ -462,7 +463,7 @@ func testAccCheckConfigOrganizationCustomRuleExists(resourceName string, ocr *co
 }
 
 func testAccCheckConfigOrganizationCustomRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_organization_custom_rule" {

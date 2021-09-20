@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigAggregateAuthorization() *schema.Resource {
@@ -47,8 +48,8 @@ func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 }
 
 func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	accountId := d.Get("account_id").(string)
@@ -71,9 +72,9 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 }
 
 func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())
 	if err != nil {
@@ -125,7 +126,7 @@ func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsConfigAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -139,7 +140,7 @@ func resourceAwsConfigAggregateAuthorizationUpdate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsConfigAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())
 	if err != nil {

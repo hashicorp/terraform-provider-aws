@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.Enc
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 		config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 

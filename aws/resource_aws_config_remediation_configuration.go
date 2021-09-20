@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -133,7 +134,7 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 }
 
 func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("config_rule_name").(string)
 	remediationConfigurationInput := configservice.RemediationConfiguration{
@@ -177,7 +178,7 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 }
 
 func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
@@ -213,7 +214,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsConfigRemediationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("config_rule_name").(string)
 

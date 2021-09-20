@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigConformancePack() *schema.Resource {
@@ -92,7 +93,7 @@ func resourceAwsConfigConformancePack() *schema.Resource {
 }
 
 func resourceAwsConfigConformancePackPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 
@@ -135,7 +136,7 @@ func resourceAwsConfigConformancePackPut(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsConfigConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	pack, err := configDescribeConformancePack(conn, d.Id())
 
@@ -172,7 +173,7 @@ func resourceAwsConfigConformancePackRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsConfigConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.DeleteConformancePackInput{
 		ConformancePackName: aws.String(d.Id()),

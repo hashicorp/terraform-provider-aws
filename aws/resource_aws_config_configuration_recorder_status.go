@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigConfigurationRecorderStatus() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsConfigConfigurationRecorderStatus() *schema.Resource {
 }
 
 func resourceAwsConfigConfigurationRecorderStatusPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 	d.SetId(name)
@@ -69,7 +70,7 @@ func resourceAwsConfigConfigurationRecorderStatusPut(d *schema.ResourceData, met
 }
 
 func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Id()
 	statusInput := configservice.DescribeConfigurationRecorderStatusInput{
@@ -104,7 +105,7 @@ func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, me
 }
 
 func resourceAwsConfigConfigurationRecorderStatusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Get("name").(string)),
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigConfigRule() *schema.Resource {
@@ -146,8 +147,8 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 }
 
 func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -210,9 +211,9 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeConfigRules(&configservice.DescribeConfigRulesInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
@@ -275,7 +276,7 @@ func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 

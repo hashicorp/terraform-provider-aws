@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
@@ -453,7 +454,7 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_Latest(t *testing.T) {
 }
 
 func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function_event_invoke_config" {
@@ -504,7 +505,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigDisappears(resourceName strin
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
 
@@ -537,7 +538,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName string) r
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 		functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(rs.Primary.ID)
 

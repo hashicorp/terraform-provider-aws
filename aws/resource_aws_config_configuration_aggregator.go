@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigConfigurationAggregator() *schema.Resource {
@@ -114,8 +115,8 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 }
 
 func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &configservice.PutConfigurationAggregatorInput{
@@ -152,9 +153,9 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 }
 
 func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
@@ -210,7 +211,7 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsConfigConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	req := &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),

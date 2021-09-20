@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
@@ -63,7 +64,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationCreate(d *schema.Resourc
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	queryLogConfigAssociation, err := finder.ResolverQueryLogConfigAssociationByID(conn, d.Id())
 
@@ -90,7 +91,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d *schema.ResourceD
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association (%s)", d.Id())
 	_, err := conn.DisassociateResolverQueryLogConfig(&route53resolver.DisassociateResolverQueryLogConfigInput{

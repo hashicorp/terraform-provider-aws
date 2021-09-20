@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepRoute53ResolverFirewallConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*conns.AWSClient).Route53ResolverConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListFirewallConfigsPages(&route53resolver.ListFirewallConfigsInput{}, func(page *route53resolver.ListFirewallConfigsOutput, lastPage bool) bool {
@@ -120,7 +121,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_config" {
@@ -158,7 +159,7 @@ func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolve
 			return fmt.Errorf("No Route 53 Resolver DNS Firewall config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 		out, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigDeliveryChannel() *schema.Resource {
@@ -70,7 +71,7 @@ func resourceAwsConfigDeliveryChannel() *schema.Resource {
 }
 
 func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 	channel := configservice.DeliveryChannel{
@@ -126,7 +127,7 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []*string{aws.String(d.Id())},
@@ -170,7 +171,7 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 	input := configservice.DeleteDeliveryChannelInput{
 		DeliveryChannelName: aws.String(d.Id()),
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
@@ -412,7 +413,7 @@ func testAccConfigOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 }
 
 func testAccCheckConfigOrganizationConformancePackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_organization_conformance_pack" {
@@ -450,7 +451,7 @@ func testAccCheckConfigOrganizationConformancePackExists(resourceName string, oc
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 		pack, err := configDescribeOrganizationConformancePack(conn, rs.Primary.ID)
 

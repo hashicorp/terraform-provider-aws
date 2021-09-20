@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func testSweepConfigConfigurationRecorder(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).configconn
+	conn := client.(*conns.AWSClient).ConfigConn
 
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecorders(req)
@@ -171,7 +172,7 @@ func testAccCheckConfigConfigurationRecorderExists(n string, obj *configservice.
 			return fmt.Errorf("No configuration recorder ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 		out, err := conn.DescribeConfigurationRecorders(&configservice.DescribeConfigurationRecordersInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -190,7 +191,7 @@ func testAccCheckConfigConfigurationRecorderExists(n string, obj *configservice.
 }
 
 func testAccCheckConfigConfigurationRecorderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {
