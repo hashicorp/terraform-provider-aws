@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -132,7 +132,7 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(resource.UniqueId()),
-		Name:        aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
 	}
 
@@ -204,7 +204,7 @@ func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie FindingsFilter (%s): %w", "finding_criteria", d.Id(), err))
 	}
 	d.Set("name", resp.Name)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set("description", resp.Description)
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
@@ -238,10 +238,10 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 	if d.HasChange("name") {
-		input.Name = aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string)))
+		input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
 	}
 	if d.HasChange("name_prefix") {
-		input.Name = aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string)))
+		input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
 	}
 	if d.HasChange("description") {
 		input.Description = aws.String(d.Get("description").(string))
