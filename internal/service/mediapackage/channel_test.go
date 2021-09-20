@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
+func TestAccMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaPackageChannel_description(t *testing.T) {
+func TestAccMediaPackageChannel_description(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -79,7 +79,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
+func TestAccMediaPackageChannel_tags(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
