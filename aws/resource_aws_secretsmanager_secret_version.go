@@ -92,7 +92,7 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("version_stages"); ok {
-		input.VersionStages = expandStringSet(v.(*schema.Set))
+		input.VersionStages = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Putting Secrets Manager Secret %q value", secretID)
@@ -171,7 +171,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 	d.Set("version_id", output.VersionId)
 	d.Set("arn", output.ARN)
 
-	if err := d.Set("version_stages", flattenStringList(output.VersionStages)); err != nil {
+	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
 		return fmt.Errorf("error setting version_stages: %s", err)
 	}
 
