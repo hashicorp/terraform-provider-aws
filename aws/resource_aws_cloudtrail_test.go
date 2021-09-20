@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepCloudTrails(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudtrailconn
+	conn := client.(*conns.AWSClient).CloudTrailConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListTrailsPages(&cloudtrail.ListTrailsInput{}, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
@@ -715,7 +716,7 @@ func testAccCheckCloudTrailExists(n string, trail *cloudtrail.Trail) resource.Te
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
 		params := cloudtrail.DescribeTrailsInput{
 			TrailNameList: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -739,7 +740,7 @@ func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
 		params := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
@@ -788,7 +789,7 @@ func testAccCheckCloudTrailLogValidationEnabled(n string, desired bool, trail *c
 }
 
 func testAccCheckAWSCloudTrailDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudtrail" {
@@ -814,7 +815,7 @@ func testAccCheckAWSCloudTrailDestroy(s *terraform.State) error {
 
 func testAccCheckCloudTrailLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloudtrailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
 		input := cloudtrail.ListTagsInput{
 			ResourceIdList: []*string{trail.TrailARN},
 		}
