@@ -62,7 +62,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(d.Get("name").(string)),
 		TargetArns: flex.ExpandStringList(d.Get("target_arns").([]interface{})),
-		Tags:       tags.IgnoreAws().ApigatewayTags(),
+		Tags:       Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -101,7 +101,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := tftags.ApigatewayKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -149,7 +149,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

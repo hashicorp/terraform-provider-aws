@@ -70,7 +70,7 @@ func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled", apiKey.Enabled)
 	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
 
-	if err := d.Set("tags", tftags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 	return nil

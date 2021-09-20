@@ -132,7 +132,7 @@ func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
 	d.Set("security_policy", domainName.SecurityPolicy)
 
-	if err := d.Set("tags", tftags.ApigatewayKeyValueTags(domainName.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(domainName.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

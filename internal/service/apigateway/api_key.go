@@ -86,7 +86,7 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
 		Value:       aws.String(d.Get("value").(string)),
-		Tags:        tags.IgnoreAws().ApigatewayTags(),
+		Tags:        Tags(tags.IgnoreAws()),
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
@@ -118,7 +118,7 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := tftags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -185,7 +185,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
