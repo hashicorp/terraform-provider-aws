@@ -19,7 +19,7 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigBasic(rName),
@@ -60,7 +60,7 @@ func TestAccDataSourceAWSLambdaFunction_version(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigVersion(rName),
@@ -84,7 +84,7 @@ func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigAlias(rName),
@@ -107,7 +107,7 @@ func TestAccDataSourceAWSLambdaFunction_layers(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigLayers(rName),
@@ -128,7 +128,7 @@ func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigVPC(rName),
@@ -151,7 +151,7 @@ func TestAccDataSourceAWSLambdaFunction_environment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigEnvironment(rName),
@@ -175,7 +175,7 @@ func TestAccDataSourceAWSLambdaFunction_fileSystemConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigFileSystemConfigs(rName),
@@ -200,7 +200,7 @@ func TestAccDataSourceAWSLambdaFunction_imageConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccDataSourceLambdaImagePreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaFunctionConfigImageConfig(rName, imageLatestID),

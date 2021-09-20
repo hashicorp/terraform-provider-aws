@@ -180,7 +180,7 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -211,7 +211,7 @@ func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -270,7 +270,7 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,7 +308,7 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -342,7 +342,7 @@ func TestAccAWSLambdaPermission_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			// Here we delete the Lambda permission to verify the follow-on refresh after this step
@@ -378,7 +378,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -452,7 +452,7 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -491,7 +491,7 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -529,7 +529,7 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -559,7 +559,7 @@ func testAccAWSLambdaPermissionDisappears(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No resource ID is set")
@@ -594,7 +594,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStateme
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		// IAM is eventually consistent
 		var foundStatement *LambdaPolicyStatement
@@ -626,7 +626,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStateme
 }
 
 func testAccCheckAWSLambdaPermissionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_permission" {

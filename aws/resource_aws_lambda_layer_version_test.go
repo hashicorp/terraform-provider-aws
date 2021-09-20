@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepLambdaLayerVersions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -30,7 +30,7 @@ func testSweepLambdaLayerVersions(region string) error {
 	lambdaconn := client.(*AWSClient).lambdaconn
 	resp, err := lambdaconn.ListLayers(&lambda.ListLayersInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Lambda Layer sweep for %s: %s", region, err)
 			return nil
 		}
@@ -71,7 +71,7 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,7 +165,7 @@ func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +195,7 @@ func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +247,7 @@ func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
 }
 
 func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_layer_version" {
@@ -296,7 +296,7 @@ func testAccCheckAwsLambdaLayerVersionExists(res, layerName string) resource.Tes
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 		_, err = conn.GetLayerVersion(&lambda.GetLayerVersionInput{
 			LayerName:     aws.String(layerName),
 			VersionNumber: aws.Int64(int64(version)),

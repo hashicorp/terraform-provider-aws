@@ -28,7 +28,7 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +64,7 @@ func TestAccAWSLambdaAlias_FunctionName_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +105,7 @@ func TestAccAWSLambdaAlias_nameupdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,7 +150,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 }
 
 func testAccCheckAwsLambdaAliasDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_alias" {
@@ -221,7 +221,7 @@ func testAccCheckAwsLambdaAliasExists(n string, mapping *lambda.AliasConfigurati
 			return fmt.Errorf("Lambda alias not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := acctest.Provider.Meta().(*AWSClient).lambdaconn
 
 		params := &lambda.GetAliasInput{
 			FunctionName: aws.String(rs.Primary.ID),
