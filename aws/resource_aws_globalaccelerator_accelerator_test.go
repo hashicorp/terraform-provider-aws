@@ -25,7 +25,7 @@ func init() {
 }
 
 func testSweepGlobalAcceleratorAccelerators(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -37,7 +37,7 @@ func testSweepGlobalAcceleratorAccelerators(region string) error {
 	for {
 		output, err := conn.ListAccelerators(input)
 
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
 			return nil
 		}
@@ -159,7 +159,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -198,14 +198,14 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorAcceleratorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorAccelerator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlobalAcceleratorAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -221,7 +221,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -265,7 +265,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -324,7 +324,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -363,7 +363,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 }
 
 func testAccPreCheckGlobalAccelerator(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+	conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
 
@@ -380,7 +380,7 @@ func testAccPreCheckGlobalAccelerator(t *testing.T) {
 
 func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+		conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -402,7 +402,7 @@ func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCh
 }
 
 func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+	conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_accelerator" {
