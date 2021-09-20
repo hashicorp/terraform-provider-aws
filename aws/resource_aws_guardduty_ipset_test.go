@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsGuardDutyIpset_basic(t *testing.T) {
@@ -101,7 +102,7 @@ func testAccAwsGuardDutyIpset_tags(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_ipset" {
@@ -152,7 +153,7 @@ func testAccCheckAwsGuardDutyIpsetExists(name string) resource.TestCheckFunc {
 			IpSetId:    aws.String(ipSetId),
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 		_, err = conn.GetIPSet(input)
 		return err
 	}

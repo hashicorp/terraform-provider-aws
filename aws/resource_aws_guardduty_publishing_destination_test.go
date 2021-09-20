@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).guarddutyconn
+	conn := client.(*conns.AWSClient).GuardDutyConn
 	var sweeperErrs *multierror.Error
 
 	detect_input := &guardduty.ListDetectorsInput{}
@@ -261,7 +262,7 @@ func testAccCheckAwsGuardDutyPublishingDestinationExists(name string) resource.T
 			DestinationId: aws.String(destination_id),
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 		_, err := conn.DescribePublishingDestination(input)
 		return err
 	}
@@ -269,7 +270,7 @@ func testAccCheckAwsGuardDutyPublishingDestinationExists(name string) resource.T
 
 func testAccCheckAwsGuardDutyPublishingDestinationDestroy(s *terraform.State) error {
 
-	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_publishing_destination" {

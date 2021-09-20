@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsGuardDutyMember_basic(t *testing.T) {
@@ -156,7 +157,7 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_member" {
@@ -208,7 +209,7 @@ func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
 			DetectorId: aws.String(detectorID),
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 		gmo, err := conn.GetMembers(input)
 		if err != nil {
 			return err

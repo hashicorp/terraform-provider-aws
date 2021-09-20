@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyThreatintelset() *schema.Resource {
@@ -71,8 +72,8 @@ func resourceAwsGuardDutyThreatintelset() *schema.Resource {
 }
 
 func resourceAwsGuardDutyThreatintelsetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	detectorID := d.Get("detector_id").(string)
@@ -112,9 +113,9 @@ func resourceAwsGuardDutyThreatintelsetCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGuardDutyThreatintelsetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	threatIntelSetId, detectorId, err := decodeGuardDutyThreatintelsetID(d.Id())
 	if err != nil {
@@ -136,10 +137,10 @@ func resourceAwsGuardDutyThreatintelsetRead(d *schema.ResourceData, meta interfa
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s/threatintelset/%s", detectorId, threatIntelSetId),
 	}.String()
 	d.Set("arn", arn)
@@ -165,7 +166,7 @@ func resourceAwsGuardDutyThreatintelsetRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsGuardDutyThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	threatIntelSetID, detectorId, err := decodeGuardDutyThreatintelsetID(d.Id())
 	if err != nil {
@@ -206,7 +207,7 @@ func resourceAwsGuardDutyThreatintelsetUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGuardDutyThreatintelsetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	threatIntelSetID, detectorId, err := decodeGuardDutyThreatintelsetID(d.Id())
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyIpset() *schema.Resource {
@@ -71,8 +72,8 @@ func resourceAwsGuardDutyIpset() *schema.Resource {
 }
 
 func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	detectorID := d.Get("detector_id").(string)
@@ -111,9 +112,9 @@ func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
 	if err != nil {
@@ -135,10 +136,10 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s/ipset/%s", detectorId, ipSetId),
 	}.String()
 	d.Set("arn", arn)
@@ -164,7 +165,7 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
 	if err != nil {
@@ -205,7 +206,7 @@ func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGuardDutyIpsetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
 	if err != nil {

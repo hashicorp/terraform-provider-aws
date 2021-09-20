@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
@@ -192,7 +193,7 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_filter" {
@@ -239,7 +240,7 @@ func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilt
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 		input := guardduty.GetFilterInput{
 			DetectorId: aws.String(detectorID),
 			FilterName: aws.String(name),
@@ -411,7 +412,7 @@ resource "aws_guardduty_detector" "test" {
 }
 
 func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate_authority" {

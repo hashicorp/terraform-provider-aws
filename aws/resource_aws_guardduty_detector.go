@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyDetector() *schema.Resource {
@@ -83,8 +84,8 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 }
 
 func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateDetectorInput{
@@ -114,9 +115,9 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := guardduty.GetDetectorInput{
 		DetectorId: aws.String(d.Id()),
@@ -134,15 +135,15 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
 
-	d.Set("account_id", meta.(*AWSClient).accountid)
+	d.Set("account_id", meta.(*conns.AWSClient).AccountID)
 
 	if gdo.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenGuardDutyDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
@@ -170,7 +171,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := guardduty.UpdateDetectorInput{
@@ -202,7 +203,7 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),

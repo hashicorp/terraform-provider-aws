@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepGuarddutyDetectors(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).guarddutyconn
+	conn := client.(*conns.AWSClient).GuardDutyConn
 	input := &guardduty.ListDetectorsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -198,7 +199,7 @@ func testAccAwsGuardDutyDetector_datasources_s3logs(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyDetectorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).guarddutyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_detector" {

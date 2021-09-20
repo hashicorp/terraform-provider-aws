@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
@@ -63,7 +64,7 @@ func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
 }
 
 func resourceAwsGuardDutyOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
 
@@ -88,7 +89,7 @@ func resourceAwsGuardDutyOrganizationConfigurationUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsGuardDutyOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DescribeOrganizationConfigurationInput{
 		DetectorId: aws.String(d.Id()),

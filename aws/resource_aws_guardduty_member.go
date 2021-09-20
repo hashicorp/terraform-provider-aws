@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyMember() *schema.Resource {
@@ -67,7 +68,7 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 }
 
 func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
 
@@ -113,7 +114,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
 	if err != nil {
@@ -160,7 +161,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGuardDutyMemberUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
 	if err != nil {
@@ -208,7 +209,7 @@ func resourceAwsGuardDutyMemberUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
 	if err != nil {
