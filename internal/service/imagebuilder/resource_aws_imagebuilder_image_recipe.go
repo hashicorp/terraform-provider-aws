@@ -1,4 +1,4 @@
-package aws
+package imagebuilder
 
 import (
 	"fmt"
@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/imagebuilder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -102,7 +101,7 @@ func ResourceImageRecipe() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										// https://github.com/hashicorp/terraform-provider-aws/issues/17274.
-										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), tfimagebuilder.EBSVolumeTypeGP3), false),
+										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), EBSVolumeTypeGP3), false),
 									},
 								},
 							},
