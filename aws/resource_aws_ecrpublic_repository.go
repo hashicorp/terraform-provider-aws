@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcrPublicRepository() *schema.Resource {
+func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrPublicRepositoryCreate,
-		Read:   resourceAwsEcrPublicRepositoryRead,
-		Update: resourceAwsEcrPublicRepositoryUpdate,
-		Delete: resourceAwsEcrPublicRepositoryDelete,
+		Create: resourceRepositoryCreate,
+		Read:   resourceRepositoryRead,
+		Update: resourceRepositoryUpdate,
+		Delete: resourceRepositoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -106,7 +106,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	input := ecrpublic.CreateRepositoryInput{
@@ -134,10 +134,10 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
 
-	return resourceAwsEcrPublicRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	log.Printf("[DEBUG] Reading ECR Public repository %s", d.Id())
@@ -217,7 +217,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	deleteInput := &ecrpublic.DeleteRepositoryInput{
@@ -270,7 +270,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsEcrPublicRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 
 	if d.HasChange("catalog_data") {
@@ -279,7 +279,7 @@ func resourceAwsEcrPublicRepositoryUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsEcrPublicRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
 func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
