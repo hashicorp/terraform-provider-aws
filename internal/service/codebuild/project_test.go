@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 )
 
 func init() {
@@ -2264,7 +2265,7 @@ func TestAWSCodeBuildProject_nameValidation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validateAwsCodeBuildProjectName(tc.Value, "aws_codebuild_project")
+		_, errors := tfcodebuild.ValidProjectName(tc.Value, "aws_codebuild_project")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS CodeBuild project name to trigger a validation error - %s", errors)
