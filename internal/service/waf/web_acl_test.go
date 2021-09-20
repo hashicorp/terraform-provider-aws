@@ -104,7 +104,7 @@ func testSweepWafWebAcls(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafWebAcl_basic(t *testing.T) {
+func TestAccWAFWebACL_basic(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -137,7 +137,7 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
+func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 	var webACL waf.WebACL
 	rName1 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	rName2 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
@@ -182,7 +182,7 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
+func TestAccWAFWebACL_defaultAction(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -218,7 +218,7 @@ func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafWebAcl_Rules(t *testing.T) {
+func TestAccWAFWebACL_rules(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -263,7 +263,7 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
+func TestAccWAFWebACL_logging(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -315,7 +315,7 @@ func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafWebAcl_disappears(t *testing.T) {
+func TestAccWAFWebACL_disappears(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -338,7 +338,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafWebAcl_Tags(t *testing.T) {
+func TestAccWAFWebACL_tags(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsWafRateBasedRule_basic(t *testing.T) {
+func TestAccWAFRateBasedRuleDataSource_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 	datasourceName := "data.aws_waf_rate_based_rule.wafrule"

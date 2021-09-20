@@ -104,7 +104,7 @@ func testSweepWafRateBasedRules(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
+func TestAccWAFRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
@@ -134,7 +134,7 @@ func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRateBasedRule_changeNameForceNew(t *testing.T) {
+func TestAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
@@ -173,7 +173,7 @@ func TestAccAWSWafRateBasedRule_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRateBasedRule_disappears(t *testing.T) {
+func TestAccWAFRateBasedRule_disappears(t *testing.T) {
 	var v waf.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
@@ -196,7 +196,7 @@ func TestAccAWSWafRateBasedRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
+func TestAccWAFRateBasedRule_changePredicates(t *testing.T) {
 	var ipset waf.IPSet
 	var byteMatchSet waf.ByteMatchSet
 
@@ -246,7 +246,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/9659
-func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
+func TestAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 	var ipset waf.IPSet
 	var before, after waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
@@ -295,7 +295,7 @@ func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRateBasedRule_noPredicates(t *testing.T) {
+func TestAccWAFRateBasedRule_noPredicates(t *testing.T) {
 	var rule waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
@@ -323,7 +323,7 @@ func TestAccAWSWafRateBasedRule_noPredicates(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRateBasedRule_Tags(t *testing.T) {
+func TestAccWAFRateBasedRule_tags(t *testing.T) {
 	var rule waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"

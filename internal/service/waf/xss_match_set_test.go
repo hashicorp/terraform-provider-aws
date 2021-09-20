@@ -105,7 +105,7 @@ func testSweepWafXssMatchSet(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
+func TestAccWAFXSSMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
@@ -146,7 +146,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFXSSMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", sdkacctest.RandString(5))
@@ -183,7 +183,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
+func TestAccWAFXSSMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
@@ -206,7 +206,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
+func TestAccWAFXSSMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
 	setName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
@@ -266,7 +266,7 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
+func TestAccWAFXSSMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
 	setName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"

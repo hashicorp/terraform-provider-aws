@@ -104,7 +104,7 @@ func testSweepWafSqlInjectionMatchSet(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
+func TestAccWAFSQLInjectionMatchSet_basic(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
@@ -138,7 +138,7 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rNameNew := sdkacctest.RandomWithPrefix("tf-acc-test-new")
@@ -175,7 +175,7 @@ func TestAccAWSWafSqlInjectionMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSqlInjectionMatchSet_disappears(t *testing.T) {
+func TestAccWAFSQLInjectionMatchSet_disappears(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
@@ -198,7 +198,7 @@ func TestAccAWSWafSqlInjectionMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
+func TestAccWAFSQLInjectionMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.SqlInjectionMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
@@ -240,7 +240,7 @@ func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSqlInjectionMatchSet_noTuples(t *testing.T) {
+func TestAccWAFSQLInjectionMatchSet_noTuples(t *testing.T) {
 	var sqlSet waf.SqlInjectionMatchSet
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_sql_injection_match_set.test"
