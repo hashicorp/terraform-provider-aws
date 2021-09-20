@@ -1794,7 +1794,7 @@ func flattenKinesisAnalyticsInputDescriptions(inputDescriptions []*kinesisanalyt
 	mInput := map[string]interface{}{
 		"id":           aws.StringValue(inputDescription.InputId),
 		"name_prefix":  aws.StringValue(inputDescription.NamePrefix),
-		"stream_names": flattenStringList(inputDescription.InAppStreamNames),
+		"stream_names": flex.FlattenStringList(inputDescription.InAppStreamNames),
 	}
 
 	if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
