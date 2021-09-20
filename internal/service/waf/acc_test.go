@@ -1,4 +1,4 @@
-package aws
+package waf_test
 
 import (
 	"context"
