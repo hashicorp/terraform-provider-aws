@@ -108,7 +108,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		GroupName:    aws.String(groupName),
 	}
 
-	found, err := finder.GroupMembership(conn, listInput, userName)
+	found, err := finder.FindGroupMembership(conn, listInput, userName)
 	if err != nil {
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}

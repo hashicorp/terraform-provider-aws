@@ -84,7 +84,7 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 			GroupName:    aws.String(groupName),
 		}
 
-		found, err := finder.GroupMembership(conn, listInput, userName)
+		found, err := finder.FindGroupMembership(conn, listInput, userName)
 
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
@@ -120,7 +120,7 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			GroupName:    aws.String(groupName),
 		}
 
-		found, err := finder.GroupMembership(conn, listInput, userName)
+		found, err := finder.FindGroupMembership(conn, listInput, userName)
 		if err != nil {
 			return fmt.Errorf("Error listing QuickSight Group Memberships: %s", err)
 		}
