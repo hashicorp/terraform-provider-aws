@@ -225,7 +225,7 @@ func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if isAWSErr(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
 			return nil
 		}
 	}
