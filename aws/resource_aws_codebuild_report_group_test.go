@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codebuild/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -70,12 +71,12 @@ func testSweepCodeBuildReportGroups(region string) error {
 
 func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
@@ -86,7 +87,7 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "NO_EXPORT"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -102,12 +103,12 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 
 func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some"),
 					resource.TestCheckResourceAttrPair(resourceName, "export_config.0.s3_destination.0.encryption_key", "aws_kms_key.test", "arn"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
 				),
 			},
 			{
@@ -143,7 +144,7 @@ func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some2"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
 				),
 			},
 		},
@@ -152,12 +153,12 @@ func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 
 func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
@@ -198,12 +199,12 @@ func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
 
 func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
@@ -226,12 +227,12 @@ func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
 
 func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
@@ -239,7 +240,7 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeBuildReportGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeBuildReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,7 +255,7 @@ func testAccPreCheckAWSCodeBuildReportGroup(t *testing.T) {
 
 	_, err := conn.ListReportGroups(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

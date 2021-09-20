@@ -8,17 +8,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkipCodebuild)
+	acctest.RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkipCodebuild)
 }
 
 func testAccErrorCheckSkipCodebuild(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidInputException: Region",
 	)
 }
@@ -49,14 +50,14 @@ func testAccAWSCodeBuildGitHubSourceLocationFromEnv() string {
 
 func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resourceName := "aws_codebuild_project.test"
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -64,7 +65,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", "60"),
@@ -72,7 +73,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", codebuild.CacheTypeNoCache),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					testAccCheckResourceAttrRegionalARN(resourceName, "encryption_key", "kms", "alias/aws/s3"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "encryption_key", "kms", "alias/aws/s3"),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", codebuild.ComputeTypeBuildGeneral1Small),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
@@ -105,12 +106,12 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_BadgeEnabled(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -133,12 +134,12 @@ func TestAccAWSCodeBuildProject_BadgeEnabled(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_BuildTimeout(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -167,12 +168,12 @@ func TestAccAWSCodeBuildProject_BuildTimeout(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_QueuedTimeout(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -201,14 +202,14 @@ func TestAccAWSCodeBuildProject_QueuedTimeout(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 	s3Location1 := rName + "-1"
 	s3Location2 := rName + "-2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -278,12 +279,12 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -312,12 +313,12 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID, "efs"), //using efs.EndpointsID will import efs and make linters sad
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID, "efs"), //using efs.EndpointsID will import efs and make linters sad
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -362,12 +363,12 @@ func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SourceVersion(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -384,12 +385,12 @@ func TestAccAWSCodeBuildProject_SourceVersion(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -411,12 +412,12 @@ func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
 	var project1, project2, project3 codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -460,12 +461,12 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -504,12 +505,12 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 
 func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Value(t *testing.T) {
 	var project1, project2, project3 codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -552,13 +553,13 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Value(t *testing
 
 func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	oName := "certificate.pem"
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -580,12 +581,12 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_LogsConfig_CloudWatchLogs(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -625,12 +626,12 @@ func TestAccAWSCodeBuildProject_LogsConfig_CloudWatchLogs(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_LogsConfig_S3Logs(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -670,16 +671,16 @@ func TestAccAWSCodeBuildProject_LogsConfig_S3Logs(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_BuildBatchConfig(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
-	if testAccGetPartition() == "aws-us-gov" {
+	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("CodeBuild Project build batch config is not supported in GovCloud partition")
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -718,12 +719,12 @@ func TestAccAWSCodeBuildProject_BuildBatchConfig(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -752,12 +753,12 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_CodeCommit(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -788,12 +789,12 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_CodeCommit(t *testing
 
 func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHub(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -820,12 +821,12 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHub(t *testing.T) 
 
 func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -852,12 +853,12 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHubEnterprise(t *t
 
 func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -913,12 +914,12 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 
 func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHub(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -945,12 +946,12 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHub(t *t
 
 func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -977,16 +978,16 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHubEnter
 
 func TestAccAWSCodeBuildProject_Source_BuildStatusConfig_GitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
-	if testAccGetPartition() == "aws-us-gov" {
+	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("CodeBuild Project build status config is not supported in GovCloud partition")
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1007,12 +1008,12 @@ func TestAccAWSCodeBuildProject_Source_BuildStatusConfig_GitHubEnterprise(t *tes
 
 func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1041,14 +1042,14 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	sourceLocation := testAccAWSCodeBuildBitbucketSourceLocationFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1077,12 +1078,12 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T)
 
 func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1111,12 +1112,12 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1145,14 +1146,14 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *tes
 
 func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	sourceLocation := testAccAWSCodeBuildBitbucketSourceLocationFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1175,12 +1176,12 @@ func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1202,12 +1203,12 @@ func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1229,12 +1230,12 @@ func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1256,12 +1257,12 @@ func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1282,7 +1283,7 @@ func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Source_Type_NoSource(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 	rBuildspec := `
 version: 0.2
@@ -1293,8 +1294,8 @@ phases:
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1315,7 +1316,7 @@ phases:
 }
 
 func TestAccAWSCodeBuildProject_Source_Type_NoSourceInvalid(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rBuildspec := `
 version: 0.2
 phases:
@@ -1325,8 +1326,8 @@ phases:
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1344,12 +1345,12 @@ phases:
 
 func TestAccAWSCodeBuildProject_Tags(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1382,12 +1383,12 @@ func TestAccAWSCodeBuildProject_Tags(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1429,12 +1430,12 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_WindowsServer2019Container(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1462,12 +1463,12 @@ func TestAccAWSCodeBuildProject_WindowsServer2019Container(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_ARMContainer(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1488,15 +1489,15 @@ func TestAccAWSCodeBuildProject_ARMContainer(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_ArtifactIdentifier(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	artifactIdentifier1 := "artifactIdentifier1"
 	artifactIdentifier2 := "artifactIdentifier2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1527,12 +1528,12 @@ func TestAccAWSCodeBuildProject_Artifacts_ArtifactIdentifier(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1563,13 +1564,13 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_Location(t *testing.T) {
 	var project codebuild.Project
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1600,15 +1601,15 @@ func TestAccAWSCodeBuildProject_Artifacts_Location(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_Name(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	name1 := "name1"
 	name2 := "name2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1639,12 +1640,12 @@ func TestAccAWSCodeBuildProject_Artifacts_Name(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_NamespaceType(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1675,12 +1676,12 @@ func TestAccAWSCodeBuildProject_Artifacts_NamespaceType(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1711,12 +1712,12 @@ func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_Packaging(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1747,12 +1748,12 @@ func TestAccAWSCodeBuildProject_Artifacts_Packaging(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_Path(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1783,15 +1784,15 @@ func TestAccAWSCodeBuildProject_Artifacts_Path(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Artifacts_Type(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	type1 := codebuild.ArtifactsTypeS3
 	type2 := codebuild.ArtifactsTypeCodepipeline
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1822,12 +1823,12 @@ func TestAccAWSCodeBuildProject_Artifacts_Type(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1856,15 +1857,15 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	artifactIdentifier1 := "artifactIdentifier1"
 	artifactIdentifier2 := "artifactIdentifier2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1899,12 +1900,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1939,12 +1940,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testi
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -1979,13 +1980,13 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
 	var project codebuild.Project
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2019,18 +2020,18 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
 }
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
-	TestAccSkip(t, "Currently no solution to allow updates on name attribute")
+	acctest.Skip(t, "Currently no solution to allow updates on name attribute")
 
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	name1 := "name1"
 	name2 := "name2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2065,12 +2066,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2105,12 +2106,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2145,15 +2146,15 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	path1 := "path1"
 	path2 := "path2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2188,12 +2189,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_Type(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2218,12 +2219,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Type(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2258,7 +2259,7 @@ func TestAWSCodeBuildProject_nameValidation(t *testing.T) {
 		{Value: "test", ErrCount: 0},
 		{Value: "1_test", ErrCount: 0},
 		{Value: "test**1", ErrCount: 1},
-		{Value: acctest.RandString(256), ErrCount: 1},
+		{Value: sdkacctest.RandString(256), ErrCount: 1},
 	}
 
 	for _, tc := range cases {
@@ -2272,13 +2273,13 @@ func TestAWSCodeBuildProject_nameValidation(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_ConcurrentBuildLimit(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2306,12 +2307,12 @@ func TestAccAWSCodeBuildProject_ConcurrentBuildLimit(t *testing.T) {
 
 func TestAccAWSCodeBuildProject_Environment_RegistryCredential(t *testing.T) {
 	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -2415,7 +2416,7 @@ func testAccPreCheckAWSCodeBuild(t *testing.T) {
 
 	_, err := conn.BatchGetProjects(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -2504,7 +2505,7 @@ POLICY
 }
 
 func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2528,7 +2529,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_BadgeEnabled(rName string, badgeEnabled bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   badge_enabled = %[1]t
   name          = %[2]q
@@ -2553,7 +2554,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_BuildTimeout(rName string, buildTimeout int) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   build_timeout = %[1]d
   name          = %[2]q
@@ -2578,7 +2579,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_QueuedTimeout(rName string, queuedTimeout int) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   queued_timeout = %[1]d
   name           = %[2]q
@@ -2603,7 +2604,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Cache(rName, cacheLocation, cacheType string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test1" {
   bucket        = "%[1]s-1"
   force_destroy = true
@@ -2644,7 +2645,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_LocalCache(rName, modeType string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2673,7 +2674,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Description(rName, description string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   description  = %[1]q
   name         = %[2]q
@@ -2698,7 +2699,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_SourceVersion(rName, sourceVersion string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2724,7 +2725,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_EncryptionKey(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -2754,7 +2755,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName, key1, value1 string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2783,7 +2784,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Two(rName, key1, value1, key2, value2 string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2817,7 +2818,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Zero(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2841,7 +2842,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName, environmentVariableType string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2876,7 +2877,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_Certificate(rName string, oName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2914,7 +2915,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_RegistryCredential1(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2954,7 +2955,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_RegistryCredential2(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2994,7 +2995,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_LogsConfig_CloudWatchLogs(rName, status, gName, sName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3026,7 +3027,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_BuildBatchConfig(rName string, combineArtifacts bool, computeTypesAllowed string, maximumBuildsAllowed, timeoutInMins int) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3062,7 +3063,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_LogsConfig_S3Logs(rName, status, location string, encryptionDisabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3101,7 +3102,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName string, gitCloneDepth int) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3126,7 +3127,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig_CodeCommit(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3154,7 +3155,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig_GitHub(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3182,7 +3183,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig_GitHubEnterprise(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3210,7 +3211,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3258,7 +3259,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_SecondarySources_none(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3286,7 +3287,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_GitHub(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3334,7 +3335,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(rName string, fetchSubmodules bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3382,7 +3383,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName string, insecureSSL bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3407,7 +3408,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, sourceLocation string, reportBuildStatus bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3432,7 +3433,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHub(rName string, reportBuildStatus bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3457,7 +3458,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName string, reportBuildStatus bool) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3482,7 +3483,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName, sourceLocation string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3506,7 +3507,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_CodeCommit(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3530,7 +3531,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_CodePipeline(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3553,7 +3554,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_GitHubEnterprise(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3577,7 +3578,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -3611,7 +3612,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_NoSource(rName string, rLocation string, rBuildspec string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3636,7 +3637,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Tags(rName, tagKey, tagValue string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3666,9 +3667,9 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_VpcConfig1(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
-		testAccAvailableAZsNoOptInConfig(),
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -3724,9 +3725,9 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_VpcConfig2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
-		testAccAvailableAZsNoOptInConfig(),
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -3782,7 +3783,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_WindowsServer2019Container(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3806,7 +3807,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_ARMContainer(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3830,7 +3831,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_ArtifactIdentifier(rName string, artifactIdentifier string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3863,7 +3864,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_EncryptionDisabled(rName string, encryptionDisabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3896,7 +3897,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_Location(rName, bucketName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3928,7 +3929,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_Name(rName string, name string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3961,7 +3962,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_NamespaceType(rName, namespaceType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3994,7 +3995,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_OverrideArtifactName(rName string, overrideArtifactName bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4027,7 +4028,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_Packaging(rName, packaging string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4060,7 +4061,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_Path(rName, path string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4093,7 +4094,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_Type(rName string, artifactType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4125,7 +4126,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4169,7 +4170,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_none(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4201,7 +4202,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName string, artifactIdentifier string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4239,7 +4240,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName string, encryptionDisabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4278,7 +4279,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Location(rName, bucketName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4316,7 +4317,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName string, name string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4355,7 +4356,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_NamespaceType(rName, namespaceType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4394,7 +4395,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName string, overrideArtifactName bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4433,7 +4434,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Packaging(rName, packaging string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4472,7 +4473,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4511,7 +4512,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Type(rName string, artifactType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4549,7 +4550,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_SecondarySources_CodeCommit(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4585,7 +4586,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_BuildStatusConfig_GitHubEnterprise(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4614,7 +4615,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_ConcurrentBuildLimit(rName string, concurrentBuildLimit int) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   concurrent_build_limit = %[1]d
   name                   = %[2]q
@@ -4639,9 +4640,9 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName, mountPoint string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
-		testAccAvailableAZsNoOptInConfig(),
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   tags = {
