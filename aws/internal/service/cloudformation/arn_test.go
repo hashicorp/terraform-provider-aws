@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {

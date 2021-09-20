@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceStackSet() *schema.Resource {
@@ -36,7 +37,7 @@ func ResourceStackSet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"auto_deployment"},
-				ValidateFunc:  validateArn,
+				ValidateFunc:  verify.ValidARN,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -116,8 +117,8 @@ func ResourceStackSet() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ConflictsWith:    []string{"template_url"},
-				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
-				ValidateFunc:     validateStringIsJsonOrYaml,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
+				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 			},
 			"template_url": {
 				Type:          schema.TypeString,

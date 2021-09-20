@@ -3,6 +3,7 @@ package cloudformation
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func expandParameters(params map[string]interface{}) []*cloudformation.Parameter {
