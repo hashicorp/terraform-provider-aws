@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePermissionSetInlinePolicy() *schema.Resource {
@@ -25,22 +26,22 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 			"inline_policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validateIAMPolicyJson,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 
 			"instance_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"permission_set_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
