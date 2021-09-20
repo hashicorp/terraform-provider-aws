@@ -233,7 +233,7 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		resp, err = conn.CreateCluster(req)
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
 				log.Print("[DEBUG] Retrying create of DAX cluster")
 				return resource.RetryableError(err)
 			}
@@ -241,7 +241,7 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreateCluster(req)
 	}
 	if err != nil {
@@ -284,7 +284,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	res, err := conn.DescribeClusters(req)
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
 			log.Printf("[WARN] DAX cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -503,14 +503,14 @@ func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(req)
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeInvalidClusterStateFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidClusterStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCluster(req)
 	}
 	if err != nil {
@@ -541,7 +541,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 			ClusterNames: []*string{aws.String(clusterID)},
 		})
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}

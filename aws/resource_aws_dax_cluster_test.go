@@ -31,7 +31,7 @@ func testSweepDAXClusters(region string) error {
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 			log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
 			return nil
 		}
@@ -237,7 +237,7 @@ func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
 		})
 		if err != nil {
 			// Verify the error is what we want
-			if isAWSErr(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
 				continue
 			}
 			return err
@@ -285,7 +285,7 @@ func testAccPreCheckAWSDax(t *testing.T) {
 
 	_, err := conn.DescribeClusters(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

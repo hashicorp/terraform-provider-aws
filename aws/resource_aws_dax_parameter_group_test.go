@@ -56,7 +56,7 @@ func testAccCheckAwsDaxParameterGroupDestroy(s *terraform.State) error {
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 				return nil
 			}
 			return err
