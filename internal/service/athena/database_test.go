@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 )
 
 func TestAccAWSAthenaDatabase_basic(t *testing.T) {
@@ -164,7 +165,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			return err
 		}
 
-		ers, err := queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		ers, err := tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
 		if err != nil {
 			return err
 		}
@@ -256,7 +257,7 @@ func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc 
 			return err
 		}
 
-		_, err = queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
 		return err
 	}
 }
@@ -285,7 +286,7 @@ func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc
 			return err
 		}
 
-		_, err = queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
 		return err
 	}
 }
@@ -314,7 +315,7 @@ func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFun
 			return err
 		}
 
-		_, err = queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
 		if err == nil {
 			return fmt.Errorf("drop database unexpectedly succeeded for a database with tables")
 		}

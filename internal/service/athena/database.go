@@ -156,7 +156,7 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func executeAndExpectNoRowsWhenCreate(qeid string, conn *athena.Athena) error {
-	rs, err := queryExecutionResult(qeid, conn)
+	rs, err := QueryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func executeAndExpectNoRowsWhenCreate(qeid string, conn *athena.Athena) error {
 }
 
 func executeAndExpectNoRowsWhenDrop(qeid string, conn *athena.Athena) error {
-	rs, err := queryExecutionResult(qeid, conn)
+	rs, err := QueryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func executeAndExpectNoRowsWhenDrop(qeid string, conn *athena.Athena) error {
 	return nil
 }
 
-func queryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, error) {
+func QueryExecutionResult(qeid string, conn *athena.Athena) (*athena.ResultSet, error) {
 	executionStateConf := &resource.StateChangeConf{
 		Pending:    []string{athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning},
 		Target:     []string{athena.QueryExecutionStateSucceeded},
