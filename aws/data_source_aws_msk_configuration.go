@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsMskConfiguration() *schema.Resource {
+func DataSourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMskConfigurationRead,
+		Read: dataSourceConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -47,7 +47,7 @@ func dataSourceAwsMskConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	listConfigurationsInput := &kafka.ListConfigurationsInput{}

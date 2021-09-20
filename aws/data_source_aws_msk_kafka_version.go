@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsMskKafkaVersion() *schema.Resource {
+func DataSourceVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMskKafkaVersionRead,
+		Read: dataSourceVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"preferred_versions": {
@@ -60,7 +60,7 @@ func findMskKafkaVersion(preferredVersions []interface{}, versions []*kafka.Kafk
 	return found
 }
 
-func dataSourceAwsMskKafkaVersionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	var kafkaVersions []*kafka.KafkaVersion

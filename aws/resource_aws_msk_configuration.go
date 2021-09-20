@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMskConfiguration() *schema.Resource {
+func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMskConfigurationCreate,
-		Read:   resourceAwsMskConfigurationRead,
-		Update: resourceAwsMskConfigurationUpdate,
-		Delete: resourceAwsMskConfigurationDelete,
+		Create: resourceConfigurationCreate,
+		Read:   resourceConfigurationRead,
+		Update: resourceConfigurationUpdate,
+		Delete: resourceConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -56,7 +56,7 @@ func resourceAwsMskConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	input := &kafka.CreateConfigurationInput{
@@ -80,10 +80,10 @@ func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(output.Arn))
 
-	return resourceAwsMskConfigurationRead(d, meta)
+	return resourceConfigurationRead(d, meta)
 }
 
-func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	configurationInput := &kafka.DescribeConfigurationInput{
@@ -140,7 +140,7 @@ func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsMskConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	input := &kafka.UpdateConfigurationInput{
@@ -158,10 +158,10 @@ func resourceAwsMskConfigurationUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error updating MSK Configuration (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsMskConfigurationRead(d, meta)
+	return resourceConfigurationRead(d, meta)
 }
 
-func resourceAwsMskConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	input := &kafka.DeleteConfigurationInput{
