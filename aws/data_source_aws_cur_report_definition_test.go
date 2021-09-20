@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
@@ -147,7 +148,7 @@ resource "aws_cur_report_definition" "test" {
   additional_schema_elements = ["RESOURCES"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
-  s3_region                  = aws_s3_bucket.test.region
+  s3_region                  = aws_s3_bucket.test.Region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
 
@@ -215,7 +216,7 @@ resource "aws_cur_report_definition" "test" {
   additional_schema_elements = ["RESOURCES"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
-  s3_region                  = aws_s3_bucket.test.region
+  s3_region                  = aws_s3_bucket.test.Region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
   refresh_closed_reports     = true
   report_versioning          = "CREATE_NEW_REPORT"

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,13 +29,13 @@ func testSweepCurReportDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	client := c.(*AWSClient)
-	if !testAccRegionSupportsCur(client.region, client.partition) {
+	client := c.(*conns.AWSClient)
+	if !testAccRegionSupportsCur(client.Region, client.Partition) {
 		log.Printf("[WARN] Skipping Cost and Usage Report Definitions sweep for %s: not supported in this region", region)
 		return nil
 	}
 
-	conn := client.costandusagereportconn
+	conn := client.CURConn
 
 	input := &cur.DescribeReportDefinitionsInput{}
 	var sweeperErrs *multierror.Error
@@ -367,7 +368,7 @@ func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProviderCur.Meta().(*AWSClient).costandusagereportconn
+	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cur_report_definition" {
@@ -391,7 +392,7 @@ func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
 
 func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderCur.Meta().(*AWSClient).costandusagereportconn
+		conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -467,7 +468,7 @@ resource "aws_cur_report_definition" "test" {
   additional_schema_elements = ["RESOURCES"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = %[3]q
-  s3_region                  = aws_s3_bucket.test.region
+  s3_region                  = aws_s3_bucket.test.Region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
 `, reportName, bucketName, prefix))
@@ -537,7 +538,7 @@ resource "aws_cur_report_definition" "test" {
   additional_schema_elements = ["RESOURCES"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = "%[3]s"
-  s3_region                  = aws_s3_bucket.test.region
+  s3_region                  = aws_s3_bucket.test.Region
 	%[6]s
   refresh_closed_reports = %[7]t
   report_versioning      = "%[8]s"
