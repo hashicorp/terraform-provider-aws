@@ -396,7 +396,7 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 		input.InitialRun = aws.Bool(v.(bool))
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().Macie2Tags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Macie ClassificationJob: %v", input)
@@ -467,7 +467,7 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "s3_job_definition", d.Id(), err))
 	}
-	tags := tftags.Macie2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "tags", d.Id(), err))

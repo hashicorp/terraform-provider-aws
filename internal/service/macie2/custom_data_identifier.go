@@ -127,7 +127,7 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 		input.MaximumMatchDistance = aws.Int64(int64(v.(int)))
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().Macie2Tags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	var err error
@@ -191,7 +191,7 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set("description", resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
-	tags := tftags.Macie2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags", d.Id(), err))
