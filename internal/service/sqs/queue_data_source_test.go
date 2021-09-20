@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSqsQueue_basic(t *testing.T) {
+func TestAccSQSQueueDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
@@ -32,7 +32,7 @@ func TestAccDataSourceAwsSqsQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSqsQueue_tags(t *testing.T) {
+func TestAccSQSQueueDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
