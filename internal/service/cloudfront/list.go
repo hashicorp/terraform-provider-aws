@@ -1,4 +1,4 @@
-package lister
+package cloudfront
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
