@@ -219,7 +219,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("managed_policy_arns"); ok && v.(*schema.Set).Len() > 0 {
-		managedPolicies := expandStringSet(v.(*schema.Set))
+		managedPolicies := flex.ExpandStringSet(v.(*schema.Set))
 		if err := addIamManagedPolicies(roleName, managedPolicies, meta); err != nil {
 			return err
 		}
@@ -438,8 +438,8 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringSet(os.Difference(ns))
-		add := expandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringSet(os.Difference(ns))
+		add := flex.ExpandStringSet(ns.Difference(os))
 
 		if err := deleteIamRolePolicyAttachments(conn, roleName, remove); err != nil {
 			return fmt.Errorf("unable to detach policies: %w", err)

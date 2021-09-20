@@ -58,9 +58,9 @@ func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
-	users := expandStringSet(d.Get("users").(*schema.Set))
-	roles := expandStringSet(d.Get("roles").(*schema.Set))
-	groups := expandStringSet(d.Get("groups").(*schema.Set))
+	users := flex.ExpandStringSet(d.Get("users").(*schema.Set))
+	roles := flex.ExpandStringSet(d.Get("roles").(*schema.Set))
+	groups := flex.ExpandStringSet(d.Get("groups").(*schema.Set))
 
 	if len(users) == 0 && len(roles) == 0 && len(groups) == 0 {
 		return fmt.Errorf("No Users, Roles, or Groups specified for IAM Policy Attachment %s", name)
@@ -162,9 +162,9 @@ func resourceAwsIamPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
-	users := expandStringSet(d.Get("users").(*schema.Set))
-	roles := expandStringSet(d.Get("roles").(*schema.Set))
-	groups := expandStringSet(d.Get("groups").(*schema.Set))
+	users := flex.ExpandStringSet(d.Get("users").(*schema.Set))
+	roles := flex.ExpandStringSet(d.Get("roles").(*schema.Set))
+	groups := flex.ExpandStringSet(d.Get("groups").(*schema.Set))
 
 	var userErr, roleErr, groupErr error
 	if len(users) != 0 {
@@ -240,8 +240,8 @@ func updateUsers(conn *iam.IAM, d *schema.ResourceData) error {
 	}
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
-	remove := expandStringSet(os.Difference(ns))
-	add := expandStringSet(ns.Difference(os))
+	remove := flex.ExpandStringSet(os.Difference(ns))
+	add := flex.ExpandStringSet(ns.Difference(os))
 
 	if rErr := detachPolicyFromUsers(conn, remove, arn); rErr != nil {
 		return rErr
@@ -262,8 +262,8 @@ func updateRoles(conn *iam.IAM, d *schema.ResourceData) error {
 	}
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
-	remove := expandStringSet(os.Difference(ns))
-	add := expandStringSet(ns.Difference(os))
+	remove := flex.ExpandStringSet(os.Difference(ns))
+	add := flex.ExpandStringSet(ns.Difference(os))
 
 	if rErr := detachPolicyFromRoles(conn, remove, arn); rErr != nil {
 		return rErr
@@ -284,8 +284,8 @@ func updateGroups(conn *iam.IAM, d *schema.ResourceData) error {
 	}
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
-	remove := expandStringSet(os.Difference(ns))
-	add := expandStringSet(ns.Difference(os))
+	remove := flex.ExpandStringSet(os.Difference(ns))
+	add := flex.ExpandStringSet(ns.Difference(os))
 
 	if rErr := detachPolicyFromGroups(conn, remove, arn); rErr != nil {
 		return rErr

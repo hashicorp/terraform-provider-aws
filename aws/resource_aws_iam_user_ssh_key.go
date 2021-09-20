@@ -47,8 +47,8 @@ func resourceAwsIamUserSshKey() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Get("encoding").(string) == "SSH" {
-						old = cleanSshKey(old)
-						new = cleanSshKey(new)
+						old = cleanSSHKey(old)
+						new = cleanSSHKey(new)
 					}
 					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
 				},
@@ -142,7 +142,7 @@ func resourceAwsIamUserSshKeyRead(d *schema.ResourceData, meta interface{}) erro
 
 	publicKey := *getResp.SSHPublicKey.SSHPublicKeyBody
 	if encoding == "SSH" {
-		publicKey = cleanSshKey(publicKey)
+		publicKey = cleanSSHKey(publicKey)
 	}
 
 	d.Set("fingerprint", getResp.SSHPublicKey.Fingerprint)
@@ -210,7 +210,7 @@ func resourceAwsIamUserSshKeyImport(d *schema.ResourceData, meta interface{}) ([
 	return []*schema.ResourceData{d}, nil
 }
 
-func cleanSshKey(key string) string {
+func cleanSSHKey(key string) string {
 	// Remove comments from SSH Keys
 	// Comments are anything after "ssh-rsa XXXX" where XXXX is the key.
 	parts := strings.Split(key, " ")
