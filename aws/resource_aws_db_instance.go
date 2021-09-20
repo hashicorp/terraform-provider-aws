@@ -14,10 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -114,7 +117,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 			"ca_cert_identifier": {
 				Type:     schema.TypeString,
@@ -224,14 +227,14 @@ func ResourceInstance() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validateRdsIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 			"identifier_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRdsIdentifierPrefix,
+				ValidateFunc: validIdentifierPrefix,
 			},
 			"instance_class": {
 				Type:     schema.TypeString,
@@ -246,7 +249,7 @@ func ResourceInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"latest_restorable_time": {
 				Type:     schema.TypeString,
@@ -268,7 +271,7 @@ func ResourceInstance() *schema.Resource {
 					}
 					return ""
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
@@ -331,7 +334,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"performance_insights_retention_period": {
 				Type:     schema.TypeInt,
@@ -376,7 +379,7 @@ func ResourceInstance() *schema.Resource {
 						"restore_time": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ValidateFunc:  validateUTCTimestamp,
+							ValidateFunc:  verify.ValidUTCTimestamp,
 							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
 						},
 
@@ -1873,25 +1876,6 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 
 		return v, *v.DBInstanceStatus, nil
 	}
-}
-
-func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
-	add := make([]interface{}, 0)
-	disable := make([]interface{}, 0)
-
-	for _, n := range new {
-		if _, contains := sliceContainsString(old, n.(string)); !contains {
-			add = append(add, n)
-		}
-	}
-
-	for _, o := range old {
-		if _, contains := sliceContainsString(new, o.(string)); !contains {
-			disable = append(disable, o)
-		}
-	}
-
-	return add, disable
 }
 
 // Database instance status: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html

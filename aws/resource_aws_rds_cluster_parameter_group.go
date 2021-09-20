@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const rdsClusterParameterGroupMaxParamsBulkEdit = 20
@@ -39,7 +40,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDbParamGroupName,
+				ValidateFunc:  validParamGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -47,7 +48,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateDbParamGroupNamePrefix,
+				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"family": {
 				Type:     schema.TypeString,

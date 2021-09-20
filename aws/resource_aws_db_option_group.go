@@ -16,6 +16,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOptionGroup() *schema.Resource {
@@ -43,7 +44,7 @@ func ResourceOptionGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDbOptionGroupName,
+				ValidateFunc:  validOptionGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -51,7 +52,7 @@ func ResourceOptionGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateDbOptionGroupNamePrefix,
+				ValidateFunc:  validOptionGroupNamePrefix,
 			},
 			"engine_name": {
 				Type:     schema.TypeString,
