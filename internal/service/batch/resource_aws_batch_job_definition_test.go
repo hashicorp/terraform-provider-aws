@@ -1,4 +1,4 @@
-package aws
+package batch_test
 
 import (
 	"fmt"
@@ -14,13 +14,13 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
 func init() {
@@ -441,7 +441,7 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
-		jobDefinition, err := finder.FindJobDefinitionByARN(conn, rs.Primary.ID)
+		jobDefinition, err := tfbatch.FindJobDefinitionByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -498,7 +498,7 @@ func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindJobDefinitionByARN(conn, rs.Primary.ID)
+		_, err := tfbatch.FindJobDefinitionByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

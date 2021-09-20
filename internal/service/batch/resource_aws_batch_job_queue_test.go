@@ -1,4 +1,4 @@
-package aws
+package batch_test
 
 import (
 	"fmt"

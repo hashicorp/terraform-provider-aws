@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfbatch "github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -59,7 +58,7 @@ func FindJobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition
 		return nil, err
 	}
 
-	if status := aws.StringValue(jobDefinition.Status); status == tfbatch.jobDefinitionStatusInactive {
+	if status := aws.StringValue(jobDefinition.Status); status == jobDefinitionStatusInactive {
 		return nil, &resource.NotFoundError{
 			Message:     status,
 			LastRequest: input,

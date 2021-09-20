@@ -1,4 +1,4 @@
-package aws
+package batch
 
 import (
 	"context"
@@ -11,11 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -251,7 +249,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.ComputeEnvironmentName))
 
-	if _, err := waiter.waitComputeEnvironmentCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitComputeEnvironmentCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Batch Compute Environment (%s) create: %w", d.Id(), err)
 	}
 
@@ -263,7 +261,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	computeEnvironment, err := finder.FindComputeEnvironmentDetailByName(conn, d.Id())
+	computeEnvironment, err := FindComputeEnvironmentDetailByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
@@ -359,7 +357,7 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error updating Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.waitComputeEnvironmentUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitComputeEnvironmentUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -389,7 +387,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error disabling Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) disable: %w", d.Id(), err)
 		}
 	}
@@ -404,7 +402,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error deleting Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.waitComputeEnvironmentDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waitComputeEnvironmentDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) delete: %w", d.Id(), err)
 		}
 	}
