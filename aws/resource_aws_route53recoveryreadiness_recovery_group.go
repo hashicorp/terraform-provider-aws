@@ -60,7 +60,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupCreate(d *schema.ResourceDa
 
 	input := &route53recoveryreadiness.CreateRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Get("recovery_group_name").(string)),
-		Cells:             expandStringList(d.Get("cells").([]interface{})),
+		Cells:             flex.ExpandStringList(d.Get("cells").([]interface{})),
 	}
 
 	resp, err := conn.CreateRecoveryGroup(input)
@@ -129,7 +129,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupUpdate(d *schema.ResourceDa
 
 	input := &route53recoveryreadiness.UpdateRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Id()),
-		Cells:             expandStringList(d.Get("cells").([]interface{})),
+		Cells:             flex.ExpandStringList(d.Get("cells").([]interface{})),
 	}
 
 	_, err := conn.UpdateRecoveryGroup(input)
