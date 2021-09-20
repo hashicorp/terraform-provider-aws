@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSignerSigningProfilePermission() *schema.Resource {
@@ -75,7 +76,7 @@ func resourceAwsSignerSigningProfilePermission() *schema.Resource {
 }
 
 func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 
 	profileName := d.Get("profile_name").(string)
 
@@ -163,7 +164,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsSignerSigningProfilePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(d.Get("profile_name").(string)),
@@ -237,7 +238,7 @@ func getProfilePermission(permissions []*signer.Permission, statementId string) 
 }
 
 func resourceAwsSignerSigningProfilePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*conns.AWSClient).SignerConn
 
 	profileName := d.Get("profile_name").(string)
 
