@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -85,8 +86,8 @@ func TestAccAWSDataSyncLocationEfs_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAWSDataSyncLocationEfs_basic(t *testing.T) {
 				Config: testAccAWSDataSyncLocationEfsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationEfsExists(resourceName, &locationEfs1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_config.0.subnet_arn", subnetResourceName, "arn"),
@@ -119,8 +120,8 @@ func TestAccAWSDataSyncLocationEfs_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -141,8 +142,8 @@ func TestAccAWSDataSyncLocationEfs_Subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -168,8 +169,8 @@ func TestAccAWSDataSyncLocationEfs_Tags(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{

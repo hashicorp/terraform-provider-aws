@@ -9,11 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -79,12 +80,12 @@ func testSweepDataSyncAgents(region string) error {
 
 func TestAccAWSDataSyncAgent_basic(t *testing.T) {
 	var agent1 datasync.DescribeAgentOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +93,7 @@ func TestAccAWSDataSyncAgent_basic(t *testing.T) {
 				Config: testAccAWSDataSyncAgentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncAgentExists(resourceName, &agent1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`agent/agent-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`agent/agent-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_link_endpoint", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "0"),
@@ -113,12 +114,12 @@ func TestAccAWSDataSyncAgent_basic(t *testing.T) {
 
 func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 	var agent1 datasync.DescribeAgentOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +127,7 @@ func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncAgentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncAgentExists(resourceName, &agent1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDataSyncAgent(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDataSyncAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,13 +137,13 @@ func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 
 func TestAccAWSDataSyncAgent_AgentName(t *testing.T) {
 	var agent1, agent2 datasync.DescribeAgentOutput
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -172,12 +173,12 @@ func TestAccAWSDataSyncAgent_AgentName(t *testing.T) {
 
 func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
 	var agent1, agent2, agent3 datasync.DescribeAgentOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -220,15 +221,15 @@ func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
 
 func TestAccAWSDataSyncAgent_VpcEndpointId(t *testing.T) {
 	var agent datasync.DescribeAgentOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_agent.test"
 	securityGroupResourceName := "aws_security_group.test"
 	subnetResourceName := "aws_subnet.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -400,7 +401,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccAWSDataSyncAgentConfig(rName string) string {
-	return composeConfig(testAccAWSDataSyncAgentConfigAgentBase(rName), `
+	return acctest.ConfigCompose(testAccAWSDataSyncAgentConfigAgentBase(rName), `
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 }
@@ -408,7 +409,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAWSDataSyncAgentConfigName(rName, agentName string) string {
-	return composeConfig(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q
@@ -417,7 +418,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAWSDataSyncAgentConfigTags1(rName, key1, value1 string) string {
-	return composeConfig(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 
@@ -429,7 +430,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAWSDataSyncAgentConfigTags2(rName, key1, value1, key2, value2 string) string {
-	return composeConfig(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 
@@ -442,7 +443,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAWSDataSyncAgentConfigVpcEndpointId(rName string) string {
-	return composeConfig(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSDataSyncAgentConfigAgentBase(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   name                  = %[1]q
   security_group_arns   = [aws_security_group.test.arn]

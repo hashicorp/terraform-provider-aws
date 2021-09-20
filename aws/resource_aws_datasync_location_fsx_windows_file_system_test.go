@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -85,11 +86,11 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -122,11 +123,11 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,11 +149,11 @@ func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -180,11 +181,11 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -290,7 +291,7 @@ func testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName string) r
 }
 
 func testAccAWSDataSyncLocationFsxWindowsConfig() string {
-	return composeConfig(testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1(), `
+	return acctest.ConfigCompose(testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1(), `
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
@@ -342,3 +343,76 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 }
 `, key1, value1, key2, value2)
 }
+func testAccAwsFsxWindowsFileSystemConfigBase() string {
+	return `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+}
+
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    vpc_id     = aws_vpc.test.id
+  }
+}
+`
+}
+
+func testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+resource "aws_security_group" "test1" {
+  description = "security group for FSx testing"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    cidr_blocks = [aws_vpc.test.cidr_block]
+    from_port   = 0
+    protocol    = -1
+    to_port     = 0
+  }
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+}
+
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  security_group_ids  = [aws_security_group.test1.id]
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test1.id]
+  throughput_capacity = 8
+}
+`
+}
+
