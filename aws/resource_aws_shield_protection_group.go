@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsShieldProtectionGroup() *schema.Resource {
@@ -70,8 +71,8 @@ func resourceAwsShieldProtectionGroup() *schema.Resource {
 }
 
 func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ShieldConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	protectionGroupID := d.Get("protection_group_id").(string)
@@ -103,9 +104,9 @@ func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsShieldProtectionGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ShieldConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &shield.DescribeProtectionGroupInput{
 		ProtectionGroupId: aws.String(d.Id()),
@@ -158,7 +159,7 @@ func resourceAwsShieldProtectionGroupRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*conns.AWSClient).ShieldConn
 
 	input := &shield.UpdateProtectionGroupInput{
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
@@ -192,7 +193,7 @@ func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsShieldProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*conns.AWSClient).ShieldConn
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
 	_, err := conn.DeleteProtectionGroup(&shield.DeleteProtectionGroupInput{

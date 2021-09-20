@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
@@ -278,7 +279,7 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 }
 
 func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
-	shieldconn := acctest.Provider.Meta().(*AWSClient).shieldconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection" {
@@ -289,7 +290,7 @@ func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
 			ProtectionId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := shieldconn.DescribeProtection(input)
+		resp, err := conn.DescribeProtection(input)
 
 		if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 			continue
@@ -314,7 +315,7 @@ func testAccCheckAWSShieldProtectionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).shieldconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(rs.Primary.ID),
@@ -331,7 +332,7 @@ func testAccCheckAWSShieldProtectionExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSShield(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).shieldconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 	input := &shield.ListProtectionsInput{}
 

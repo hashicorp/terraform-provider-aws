@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsShieldProtection() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsShieldProtection() *schema.Resource {
 }
 
 func resourceAwsShieldProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*conns.AWSClient).ShieldConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -57,9 +58,9 @@ func resourceAwsShieldProtectionUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*conns.AWSClient).ShieldConn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &shield.CreateProtectionInput{
@@ -77,9 +78,9 @@ func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ShieldConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &shield.DescribeProtectionInput{
 		ProtectionId: aws.String(d.Id()),
@@ -123,7 +124,7 @@ func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsShieldProtectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*conns.AWSClient).ShieldConn
 
 	input := &shield.DeleteProtectionInput{
 		ProtectionId: aws.String(d.Id()),
