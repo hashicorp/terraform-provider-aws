@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDirectory() *schema.Resource {
@@ -40,7 +41,7 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 			"vpc_settings": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -190,7 +191,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("security_group_id", securityGroupId)
 
-	tags, err := keyvaluetags.DirectoryserviceListTags(conn, d.Id())
+	tags, err := tftags.DirectoryserviceListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %w", d.Id(), err)
 	}
