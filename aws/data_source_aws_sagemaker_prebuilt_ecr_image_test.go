@@ -16,7 +16,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSageMakerPrebuiltECRImageConfig,
@@ -38,7 +38,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_region(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSageMakerPrebuiltECRImageExplicitRegionConfig,
