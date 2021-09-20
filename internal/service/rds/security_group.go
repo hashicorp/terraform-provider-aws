@@ -98,7 +98,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	opts := rds.CreateDBSecurityGroupInput{
 		DBSecurityGroupName:        aws.String(d.Get("name").(string)),
 		DBSecurityGroupDescription: aws.String(d.Get("description").(string)),
-		Tags:                       tags.IgnoreAws().RdsTags(),
+		Tags:                       Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] DB Security Group create configuration: %#v", opts)
@@ -190,7 +190,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	arn := aws.StringValue(sg.DBSecurityGroupArn)
 	d.Set("arn", arn)
 
-	tags, err := tftags.RdsListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Security Group (%s): %s", d.Get("arn").(string), err)
@@ -216,7 +216,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Security Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

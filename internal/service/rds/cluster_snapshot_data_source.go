@@ -182,7 +182,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := tftags.RdsListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
+	tags, err := ListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %w", d.Get("db_cluster_snapshot_arn").(string), err)

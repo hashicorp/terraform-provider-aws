@@ -242,7 +242,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags.IgnoreAws().RdsTags(),
+		Tags:                    Tags(tags.IgnoreAws()),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -477,7 +477,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	tags, err := tftags.RdsListTags(conn, aws.StringValue(db.DBInstanceArn))
+	tags, err := ListTags(conn, aws.StringValue(db.DBInstanceArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
@@ -610,7 +610,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
 		}
 	}

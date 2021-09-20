@@ -318,7 +318,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %w", vpcSecurityGroups, err)
 	}
 
-	tags, err := tftags.RdsListTags(conn, d.Get("db_instance_arn").(string))
+	tags, err := ListTags(conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)

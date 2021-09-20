@@ -124,7 +124,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		SourceIds:        sourceIds,
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		EventCategories:  eventCategories,
-		Tags:             tags.IgnoreAws().RdsTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	log.Println("[DEBUG] Create RDS Event Subscription:", request)
@@ -203,7 +203,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	tags, err := tftags.RdsListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %s", d.Get("arn").(string), err)
@@ -316,7 +316,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

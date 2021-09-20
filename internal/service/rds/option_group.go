@@ -149,7 +149,7 @@ func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
 		OptionGroupDescription: aws.String(d.Get("option_group_description").(string)),
 		OptionGroupName:        aws.String(groupName),
-		Tags:                   tags.IgnoreAws().RdsTags(),
+		Tags:                   Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create DB Option Group: %#v", createOpts)
@@ -213,7 +213,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting option: %s", err)
 	}
 
-	tags, err := tftags.RdsListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Option Group (%s): %s", d.Get("arn").(string), err)
@@ -308,7 +308,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Option Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

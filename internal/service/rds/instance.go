@@ -539,7 +539,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(v.(string)),
-			Tags:                       tags.IgnoreAws().RdsTags(),
+			Tags:                       Tags(tags.IgnoreAws()),
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
@@ -703,7 +703,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                    tags.IgnoreAws().RdsTags(),
+			Tags:                    Tags(tags.IgnoreAws()),
 		}
 
 		if attr, ok := d.GetOk("multi_az"); ok {
@@ -856,7 +856,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    tags.IgnoreAws().RdsTags(),
+			Tags:                    Tags(tags.IgnoreAws()),
 		}
 
 		if attr, ok := d.GetOk("name"); ok {
@@ -1048,7 +1048,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-			input.Tags = tags.IgnoreAws().RdsTags()
+			input.Tags = Tags(tags.IgnoreAws())
 			input.TargetDBInstanceIdentifier = aws.String(d.Get("identifier").(string))
 
 			if v, ok := d.GetOk("availability_zone"); ok {
@@ -1161,7 +1161,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    tags.IgnoreAws().RdsTags(),
+			Tags:                    Tags(tags.IgnoreAws()),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
@@ -1451,7 +1451,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	arn := aws.StringValue(v.DBInstanceArn)
 	d.Set("arn", arn)
 
-	tags, err := tftags.RdsListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
@@ -1811,7 +1811,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 
