@@ -1,4 +1,4 @@
-package finder
+package dynamodb
 
 import (
 	"context"
