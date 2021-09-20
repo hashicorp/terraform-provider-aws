@@ -61,7 +61,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3outposts.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
