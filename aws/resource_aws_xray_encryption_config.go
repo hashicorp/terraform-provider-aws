@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsXrayEncryptionConfig() *schema.Resource {
+func ResourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsXrayEncryptionConfigPut,
-		Read:   resourceAwsXrayEncryptionConfigRead,
+		Read:   resourceEncryptionConfigRead,
 		Update: resourceAwsXrayEncryptionConfigPut,
 		Delete: schema.Noop,
 
@@ -62,10 +62,10 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsXrayEncryptionConfigRead(d, meta)
+	return resourceEncryptionConfigRead(d, meta)
 }
 
-func resourceAwsXrayEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsXraySamplingRule() *schema.Resource {
+func ResourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsXraySamplingRuleCreate,
-		Read:   resourceAwsXraySamplingRuleRead,
-		Update: resourceAwsXraySamplingRuleUpdate,
-		Delete: resourceAwsXraySamplingRuleDelete,
+		Create: resourceSamplingRuleCreate,
+		Read:   resourceSamplingRuleRead,
+		Update: resourceSamplingRuleUpdate,
+		Delete: resourceSamplingRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -99,7 +99,7 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 	}
 }
 
-func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSamplingRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -134,10 +134,10 @@ func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(out.SamplingRuleRecord.SamplingRule.RuleName))
 
-	return resourceAwsXraySamplingRuleRead(d, meta)
+	return resourceSamplingRuleRead(d, meta)
 }
 
-func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -188,7 +188,7 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	if d.HasChange("tags_all") {
@@ -233,10 +233,10 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsXraySamplingRuleRead(d, meta)
+	return resourceSamplingRuleRead(d, meta)
 }
 
-func resourceAwsXraySamplingRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSamplingRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	log.Printf("[INFO] Deleting XRay Sampling Rule: %s", d.Id())

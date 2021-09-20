@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSXraySamplingRule_basic(t *testing.T) {
@@ -169,7 +170,7 @@ func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsXraySamplingRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
