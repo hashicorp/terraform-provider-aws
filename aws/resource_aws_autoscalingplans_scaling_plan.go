@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
@@ -317,7 +318,7 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 }
 
 func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
 
@@ -346,7 +347,7 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlan, err := finder.ScalingPlan(conn, d.Get("name").(string), d.Get("scaling_plan_version").(int))
 	if err != nil {
@@ -373,7 +374,7 @@ func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
 	scalingPlanVersion := d.Get("scaling_plan_version").(int)
@@ -400,7 +401,7 @@ func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingplansconn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
 
 	scalingPlanName := d.Get("name").(string)
 	scalingPlanVersion := d.Get("scaling_plan_version").(int)
