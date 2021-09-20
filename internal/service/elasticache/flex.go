@@ -2,7 +2,6 @@ package elasticache
 
 import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func flattenSecurityGroupIDs(securityGroups []*elasticache.SecurityGroupMembership) []string {
