@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
@@ -14,8 +15,8 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_association.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, licensemanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLicenseManagerAssociationDestroy,
 		Steps: []resource.TestStep{

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -65,8 +66,8 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, licensemanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 				Config: testAccLicenseManagerLicenseConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", "Example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Example"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "10"),
@@ -82,7 +83,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_counting_type", "Socket"),
 					resource.TestCheckResourceAttr(resourceName, "license_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "license_rules.0", "#minimumSockets=3"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "barr"),
 				),
@@ -101,8 +102,8 @@ func TestAccAWSLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, licensemanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
