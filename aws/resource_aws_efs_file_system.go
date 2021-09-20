@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -151,8 +152,8 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 }
 
 func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EFSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	creationToken := ""
@@ -225,7 +226,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
@@ -282,9 +283,9 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EFSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	fs, err := finder.FileSystemByID(conn, d.Id())
 
@@ -325,7 +326,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting size_in_bytes: %w", err)
 	}
 
-	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
 	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
@@ -343,7 +344,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{

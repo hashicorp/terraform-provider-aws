@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEfsMountTarget() *schema.Resource {
@@ -75,7 +76,7 @@ func dataSourceAwsEfsMountTarget() *schema.Resource {
 }
 
 func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*conns.AWSClient).EFSConn
 
 	input := &efs.DescribeMountTargetsInput{}
 
@@ -109,20 +110,20 @@ func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(aws.StringValue(mt.MountTargetId))
 
 	fsARN := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(mt.FileSystemId)),
 		Service:   "elasticfilesystem",
 	}.String()
 
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
 	d.Set("file_system_arn", fsARN)
 	d.Set("file_system_id", mt.FileSystemId)
 	d.Set("ip_address", mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set("mount_target_id", mt.MountTargetId)
 	d.Set("network_interface_id", mt.NetworkInterfaceId)
 	d.Set("owner_id", mt.OwnerId)
