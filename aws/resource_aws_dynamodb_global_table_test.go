@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
@@ -110,7 +111,7 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 }
 
 func testAccCheckAwsDynamoDbGlobalTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_global_table" {
@@ -147,7 +148,7 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).dynamodbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	input := &dynamodb.ListGlobalTablesInput{}
 

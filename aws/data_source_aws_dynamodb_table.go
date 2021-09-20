@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDynamoDbTable() *schema.Resource {
@@ -218,8 +219,8 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 }
 
 func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DynamoDBConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 

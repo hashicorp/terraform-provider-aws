@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDynamoDbKinesisStreamingDestination() *schema.Resource {
@@ -42,7 +43,7 @@ func resourceAwsDynamoDbKinesisStreamingDestination() *schema.Resource {
 }
 
 func resourceAwsDynamoDbKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	streamArn := d.Get("stream_arn").(string)
 	tableName := d.Get("table_name").(string)
@@ -72,7 +73,7 @@ func resourceAwsDynamoDbKinesisStreamingDestinationCreate(ctx context.Context, d
 }
 
 func resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
 
@@ -108,7 +109,7 @@ func resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx context.Context, d *
 }
 
 func resourceAwsDynamoDbKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tagresource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDynamodbTag() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsDynamodbTag() *schema.Resource {
 }
 
 func resourceAwsDynamodbTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	identifier := d.Get("resource_arn").(string)
 	key := d.Get("key").(string)
@@ -59,7 +60,7 @@ func resourceAwsDynamodbTagCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDynamodbTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
@@ -86,7 +87,7 @@ func resourceAwsDynamodbTagRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsDynamodbTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
@@ -101,7 +102,7 @@ func resourceAwsDynamodbTagUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDynamodbTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {

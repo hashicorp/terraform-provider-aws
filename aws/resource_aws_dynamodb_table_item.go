@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDynamoDbTableItem() *schema.Resource {
@@ -52,7 +53,7 @@ func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []e
 }
 
 func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
@@ -88,7 +89,7 @@ func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	if d.HasChange("item") {
 		tableName := d.Get("table_name").(string)
@@ -153,7 +154,7 @@ func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
 
@@ -203,7 +204,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDynamoDbTableItemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	attributes, err := expandDynamoDbTableItemAttributes(d.Get("item").(string))
 	if err != nil {
