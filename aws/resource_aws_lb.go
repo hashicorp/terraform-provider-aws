@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/waiter"
@@ -150,7 +150,7 @@ func resourceAwsLb() *schema.Resource {
 					if m["private_ipv4_address"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
 					}
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 

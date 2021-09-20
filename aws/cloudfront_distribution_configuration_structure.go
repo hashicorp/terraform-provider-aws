@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -445,7 +445,7 @@ func lambdaFunctionAssociationHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
 	buf.WriteString(m["lambda_arn"].(string))
 	buf.WriteString(fmt.Sprintf("%t", m["include_body"].(bool)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func functionAssociationHash(v interface{}) int {
@@ -453,7 +453,7 @@ func functionAssociationHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
 	buf.WriteString(m["function_arn"].(string))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandLambdaFunctionAssociations(v interface{}) *cloudfront.LambdaFunctionAssociations {
@@ -904,7 +904,7 @@ func originHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%d-", s3OriginConfigHash((s[0].(map[string]interface{})))))
 		}
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 // Assemble the hash for the aws_cloudfront_distribution origin group
@@ -925,13 +925,13 @@ func originGroupHash(v interface{}) int {
 			}
 		}
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func memberHash(v interface{}) int {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", v.(map[string]interface{})["origin_id"]))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func failoverCriteriaHash(v interface{}) int {
@@ -942,7 +942,7 @@ func failoverCriteriaHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%d-", w))
 		}
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandCustomHeaders(s *schema.Set) *cloudfront.CustomHeaders {
@@ -987,7 +987,7 @@ func customHeadersHash(s *schema.Set) int {
 	for _, v := range s.List() {
 		buf.WriteString(fmt.Sprintf("%d-", originCustomHeaderHash(v)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 // Assemble the hash for the aws_cloudfront_distribution custom_header
@@ -997,7 +997,7 @@ func originCustomHeaderHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOriginConfig {
@@ -1042,7 +1042,7 @@ func customOriginConfigHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", m["origin_keepalive_timeout"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["origin_read_timeout"].(int)))
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandCustomOriginConfigSSL(s []interface{}) *cloudfront.OriginSslProtocols {
@@ -1089,7 +1089,7 @@ func s3OriginConfigHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_access_identity"].(string)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func originShieldHash(v interface{}) int {
@@ -1097,7 +1097,7 @@ func originShieldHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_shield_region"].(string)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandCustomErrorResponses(s *schema.Set) *cloudfront.CustomErrorResponses {
@@ -1170,7 +1170,7 @@ func customErrorResponseHash(v interface{}) int {
 	if v, ok := m["response_page_path"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandLoggingConfig(m map[string]interface{}) *cloudfront.LoggingConfig {
@@ -1219,7 +1219,7 @@ func flattenAliases(aliases *cloudfront.Aliases) *schema.Set {
 // Assemble the hash for the aws_cloudfront_distribution aliases
 // TypeSet attribute.
 func aliasesHash(v interface{}) int {
-	return hashcode.String(v.(string))
+	return create.StringHashcode(v.(string))
 }
 
 func expandRestrictions(m map[string]interface{}) *cloudfront.Restrictions {

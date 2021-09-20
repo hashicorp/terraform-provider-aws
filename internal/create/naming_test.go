@@ -1,4 +1,4 @@
-package naming
+package create
 
 import (
 	"regexp"
@@ -9,7 +9,7 @@ func strPtr(str string) *string {
 	return &str
 }
 
-func TestGenerate(t *testing.T) {
+func TestName(t *testing.T) {
 	testCases := []struct {
 		TestName              string
 		Name                  string
@@ -44,7 +44,7 @@ func TestGenerate(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got := Generate(testCase.Name, testCase.NamePrefix)
+			got := Name(testCase.Name, testCase.NamePrefix)
 
 			expectedRegexp, err := regexp.Compile(testCase.ExpectedRegexpPattern)
 
@@ -59,7 +59,7 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
-func TestGenerateWithSuffix(t *testing.T) {
+func TestNameWithSuffix(t *testing.T) {
 	testCases := []struct {
 		TestName              string
 		Name                  string
@@ -113,7 +113,7 @@ func TestGenerateWithSuffix(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got := GenerateWithSuffix(testCase.Name, testCase.NamePrefix, testCase.NameSuffix)
+			got := NameWithSuffix(testCase.Name, testCase.NamePrefix, testCase.NameSuffix)
 
 			expectedRegexp, err := regexp.Compile(testCase.ExpectedRegexpPattern)
 
@@ -282,7 +282,7 @@ func TestNamePrefixFromName(t *testing.T) {
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
-			input := Generate("", prefix)
+			input := Name("", prefix)
 			got := NamePrefixFromName(input)
 
 			if got == nil {
@@ -377,7 +377,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
-			input := GenerateWithSuffix("", prefix, "suffix")
+			input := NameWithSuffix("", prefix, "suffix")
 			got := NamePrefixFromNameWithSuffix(input, "suffix")
 
 			if got == nil {

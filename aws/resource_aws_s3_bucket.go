@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
@@ -262,7 +262,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["target_bucket"]))
 					buf.WriteString(fmt.Sprintf("%s-", m["target_prefix"]))
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -2534,7 +2534,7 @@ func grantHash(v interface{}) int {
 	if p, ok := m["permissions"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func transitionHash(v interface{}) int {
@@ -2554,7 +2554,7 @@ func transitionHash(v interface{}) int {
 	if v, ok := m["storage_class"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func rulesHash(v interface{}) int {
@@ -2590,7 +2590,7 @@ func rulesHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func replicationRuleFilterHash(v interface{}) int {
@@ -2607,7 +2607,7 @@ func replicationRuleFilterHash(v interface{}) int {
 	if v, ok := m["tags"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(v).Hash()))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func destinationHash(v interface{}) int {
@@ -2633,7 +2633,7 @@ func destinationHash(v interface{}) int {
 	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func accessControlTranslationHash(v interface{}) int {
@@ -2647,7 +2647,7 @@ func accessControlTranslationHash(v interface{}) int {
 	if v, ok := m["owner"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func sourceSelectionCriteriaHash(v interface{}) int {
@@ -2661,7 +2661,7 @@ func sourceSelectionCriteriaHash(v interface{}) int {
 	if v, ok := m["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v[0])))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func sourceSseKmsObjectsHash(v interface{}) int {
@@ -2675,7 +2675,7 @@ func sourceSseKmsObjectsHash(v interface{}) int {
 	if v, ok := m["enabled"]; ok {
 		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 type S3Website struct {

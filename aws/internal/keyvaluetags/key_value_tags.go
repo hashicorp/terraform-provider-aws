@@ -14,7 +14,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 const (
@@ -463,11 +463,11 @@ func (tags KeyValueTags) Hash() int {
 
 	for k, v := range tags {
 		if v == nil || v.Value == nil {
-			hash = hash ^ hashcode.String(k)
+			hash = hash ^ create.StringHashcode(k)
 			continue
 		}
 
-		hash = hash ^ hashcode.String(fmt.Sprintf("%s-%s", k, *v.Value))
+		hash = hash ^ create.StringHashcode(fmt.Sprintf("%s-%s", k, *v.Value))
 	}
 
 	return hash
