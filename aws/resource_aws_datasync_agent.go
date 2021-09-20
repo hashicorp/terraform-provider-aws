@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDataSyncAgent() *schema.Resource {
@@ -87,8 +88,8 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 }
 
 func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	activationKey := d.Get("activation_key").(string)
@@ -102,7 +103,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 			},
 			Timeout: time.Second * 10,
 		}
-		region := meta.(*AWSClient).region
+		region := meta.(*conns.AWSClient).Region
 
 		var requestURL string
 		if v, ok := d.GetOk("private_link_endpoint"); ok {
@@ -205,9 +206,9 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.AgentByARN(conn, d.Id())
 
@@ -256,7 +257,7 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("name") {
 		input := &datasync.UpdateAgentInput{
@@ -284,7 +285,7 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
 	_, err := conn.DeleteAgent(&datasync.DeleteAgentInput{

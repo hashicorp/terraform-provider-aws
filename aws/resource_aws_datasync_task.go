@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDataSyncTask() *schema.Resource {
@@ -189,8 +190,8 @@ func resourceAwsDataSyncTask() *schema.Resource {
 }
 
 func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateTaskInput{
@@ -233,9 +234,9 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.TaskByARN(conn, d.Id())
 
@@ -285,7 +286,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateTaskInput{
@@ -330,7 +331,7 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDataSyncTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),

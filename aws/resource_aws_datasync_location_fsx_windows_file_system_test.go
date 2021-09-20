@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).datasyncconn
+	conn := client.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -227,7 +228,7 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_fsx_windows_file_system" {
@@ -259,7 +260,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).datasyncconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 		input := &datasync.DescribeLocationFsxWindowsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}

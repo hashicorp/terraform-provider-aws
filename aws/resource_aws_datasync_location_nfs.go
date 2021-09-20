@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDataSyncLocationNfs() *schema.Resource {
@@ -97,8 +98,8 @@ func resourceAwsDataSyncLocationNfs() *schema.Resource {
 }
 
 func resourceAwsDataSyncLocationNfsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationNfsInput{
@@ -124,9 +125,9 @@ func resourceAwsDataSyncLocationNfsCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationNfsInput{
 		LocationArn: aws.String(d.Id()),
@@ -185,7 +186,7 @@ func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDataSyncLocationNfsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationNfsInput{
@@ -216,7 +217,7 @@ func resourceAwsDataSyncLocationNfsUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDataSyncLocationNfsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDataSyncLocationS3() *schema.Resource {
@@ -93,8 +94,8 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 }
 
 func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationS3Input{
@@ -152,9 +153,9 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationS3Input{
 		LocationArn: aws.String(d.Id()),
@@ -209,7 +210,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDataSyncLocationS3Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -223,7 +224,7 @@ func resourceAwsDataSyncLocationS3Update(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDataSyncLocationS3Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
