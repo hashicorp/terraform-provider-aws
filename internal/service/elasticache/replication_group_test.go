@@ -50,7 +50,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
-			r := ResourceReplicationGroup()
+			r := tfelasticache.ResourceReplicationGroup()
 			d := r.Data(nil)
 
 			if replicationGroup.GlobalReplicationGroupInfo != nil {
@@ -232,7 +232,7 @@ func TestAccAWSElasticacheReplicationGroup_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1260,7 +1260,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
 
-					if err := deleteElasticacheCacheCluster(conn, cacheClusterID, ""); err != nil {
+					if err := tfelasticache.DeleteCacheCluster(conn, cacheClusterID, ""); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
@@ -1306,7 +1306,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
 
-					if err := deleteElasticacheCacheCluster(conn, cacheClusterID, ""); err != nil {
+					if err := tfelasticache.DeleteCacheCluster(conn, cacheClusterID, ""); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
@@ -1352,7 +1352,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
 
-					if err := deleteElasticacheCacheCluster(conn, cacheClusterID, ""); err != nil {
+					if err := tfelasticache.DeleteCacheCluster(conn, cacheClusterID, ""); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
@@ -1398,7 +1398,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
 
-					if err := deleteElasticacheCacheCluster(conn, cacheClusterID, ""); err != nil {
+					if err := tfelasticache.DeleteCacheCluster(conn, cacheClusterID, ""); err != nil {
 						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
 					}
 
@@ -1700,7 +1700,7 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_disappears(t
 				Config: testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3059,7 +3059,7 @@ resource "aws_elasticache_replication_group" "primary" {
 }
 
 func resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
-	return resourceAwsElasticacheReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
+	return tfelasticache.ReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
 		ApplyImmediately:         aws.Bool(true),
 		AutomaticFailoverEnabled: aws.Bool(false),
@@ -3068,7 +3068,7 @@ func resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn *elasti
 }
 
 func resourceAwsElasticacheReplicationGroupEnableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, multiAZEnabled bool, timeout time.Duration) error {
-	return resourceAwsElasticacheReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
+	return tfelasticache.ReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
 		ApplyImmediately:         aws.Bool(true),
 		AutomaticFailoverEnabled: aws.Bool(true),
@@ -3077,7 +3077,7 @@ func resourceAwsElasticacheReplicationGroupEnableAutomaticFailover(conn *elastic
 }
 
 func resourceAwsElasticacheReplicationGroupSetPrimaryClusterID(conn *elasticache.ElastiCache, replicationGroupID, primaryClusterID string, timeout time.Duration) error {
-	return resourceAwsElasticacheReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
+	return tfelasticache.ReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
 		ApplyImmediately:   aws.Bool(true),
 		PrimaryClusterId:   aws.String(primaryClusterID),

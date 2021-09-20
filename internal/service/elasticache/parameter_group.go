@@ -68,7 +68,7 @@ func ResourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsElasticacheParameterHash,
+				Set: ParameterHash,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -154,7 +154,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.Set("parameter", flattenElastiCacheParameters(describeParametersResp.Parameters))
+	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
 
 	return nil
 }
@@ -172,7 +172,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
-		toRemove, toAdd := elastiCacheParameterChanges(o, n)
+		toRemove, toAdd := ParameterChanges(o, n)
 
 		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
 		log.Printf("[DEBUG] Parameters to add or update: %#v", toAdd)
@@ -322,7 +322,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsElasticacheParameterHash(v interface{}) int {
+func ParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
@@ -331,7 +331,7 @@ func resourceAwsElasticacheParameterHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func elastiCacheParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.ParameterNameValue) {
+func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.ParameterNameValue) {
 	if o == nil {
 		o = new(schema.Set)
 	}
@@ -400,7 +400,7 @@ func resourceAwsElastiCacheModifyParameterGroup(conn *elasticache.ElastiCache, n
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]interface{} {
+func FlattenParameters(list []*elasticache.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterValue != nil {
@@ -415,7 +415,7 @@ func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]in
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
+func ExpandParameters(configured []interface{}) []*elasticache.ParameterNameValue {
 	parameters := make([]*elasticache.ParameterNameValue, len(configured))
 
 	// Loop over our configured parameters and create

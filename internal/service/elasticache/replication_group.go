@@ -683,7 +683,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if requestUpdate {
-		err := resourceAwsElasticacheReplicationGroupModify(conn, d.Timeout(schema.TimeoutUpdate), params)
+		err := ReplicationGroupModify(conn, d.Timeout(schema.TimeoutUpdate), params)
 		if err != nil {
 			return fmt.Errorf("error updating ElastiCache Replication Group (%s): %w", d.Id(), err)
 		}
@@ -716,7 +716,7 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
+		err := DisassociateReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -731,7 +731,7 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string, readyTimeout time.Duration) error {
+func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string, readyTimeout time.Duration) error {
 	input := &elasticache.DisassociateGlobalReplicationGroupInput{
 		GlobalReplicationGroupId: aws.String(globalReplicationGroupID),
 		ReplicationGroupId:       aws.String(id),
@@ -973,7 +973,7 @@ func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.Elast
 	return nil
 }
 
-func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
+func ReplicationGroupModify(conn *elasticache.ElastiCache, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
 	_, err := conn.ModifyReplicationGroup(input)
 	if err != nil {
 		return fmt.Errorf("error requesting modification: %w", err)

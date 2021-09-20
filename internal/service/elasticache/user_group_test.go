@@ -136,13 +136,13 @@ func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
+		CheckDestroy: testAccCheckAWSElasticacheUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticacheUserGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheUserGroupExists(resourceName, &userGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
