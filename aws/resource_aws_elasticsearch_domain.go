@@ -577,29 +577,29 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		var err error
 		out, err = conn.CreateElasticsearchDomain(&input)
 		if err != nil {
-			if isAWSErr(err, "InvalidTypeException", "Error setting policy") {
+			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
 				log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s", aws.StringValue(input.DomainName))
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Domain is still being deleted") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Authentication error") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
 				return resource.RetryableError(err)
 			}
 
@@ -607,7 +607,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.CreateElasticsearchDomain(&input)
 	}
 	if err != nil {
@@ -656,7 +656,7 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for the domain to be created", arn))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
 			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
@@ -922,7 +922,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeElasticsearchDomain(descInput)
 		if err != nil {
 			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
@@ -988,7 +988,7 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 		DomainName: aws.String(domainName),
 	})
 	if err != nil {
-		if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return err
@@ -1010,7 +1010,7 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 		out, err = conn.DescribeElasticsearchDomain(input)
 
 		if err != nil {
-			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1022,10 +1022,10 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 
 		return resource.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
-			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)

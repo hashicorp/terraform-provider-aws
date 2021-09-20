@@ -172,7 +172,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta i
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err == nil && !*out.DomainStatus.Processing {
 			return nil
@@ -220,7 +220,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsDelete(d *schema.ResourceData, met
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for SAML Options to be deleted", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err := conn.DescribeElasticsearchDomain(input)
 		if err == nil && !*out.DomainStatus.Processing {
 			return nil
