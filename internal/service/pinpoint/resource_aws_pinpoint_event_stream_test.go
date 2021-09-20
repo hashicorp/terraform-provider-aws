@@ -1,4 +1,4 @@
-package aws
+package pinpoint_test
 
 import (
 	"fmt"
