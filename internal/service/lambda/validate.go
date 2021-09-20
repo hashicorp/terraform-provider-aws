@@ -3,7 +3,6 @@ package lambda
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validFunctionName(v interface{}, k string) (ws []string, errors []error) {

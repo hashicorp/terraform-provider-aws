@@ -3,7 +3,6 @@ package lambda
 import (
 	"strings"
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidFunctionName(t *testing.T) {
