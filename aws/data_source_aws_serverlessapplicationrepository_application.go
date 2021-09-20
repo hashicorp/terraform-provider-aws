@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceApplication() *schema.Resource {
@@ -17,7 +18,7 @@ func DataSourceApplication() *schema.Resource {
 			"application_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"semantic_version": {
 				Type:     schema.TypeString,
