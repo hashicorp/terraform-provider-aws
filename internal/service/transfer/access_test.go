@@ -125,7 +125,7 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 				Config: testAccAWSTransferAccessS3BasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferAccessExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccess(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

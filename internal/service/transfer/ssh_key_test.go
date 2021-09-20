@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 )
 
 func testAccAWSTransferSshKey_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) r
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
-		serverID, userName, sshKeyID, err := decodeTransferSshKeyId(rs.Primary.ID)
+		serverID, userName, sshKeyID, err := tftransfer.DecodeSSHKeyID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
 		}
@@ -93,7 +94,7 @@ func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
 		if rs.Type != "aws_transfer_ssh_key" {
 			continue
 		}
-		serverID, userName, sshKeyID, err := decodeTransferSshKeyId(rs.Primary.ID)
+		serverID, userName, sshKeyID, err := tftransfer.DecodeSSHKeyID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %w", err)
 		}
