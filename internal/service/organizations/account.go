@@ -106,7 +106,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = tags.IgnoreAws().OrganizationsTags()
+		createOpts.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", createOpts)
@@ -224,7 +224,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("parent_id", parentId)
 	d.Set("status", account.Status)
 
-	tags, err := tftags.OrganizationsListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for AWS Organizations Account (%s): %s", d.Id(), err)
@@ -264,7 +264,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating AWS Organizations Account (%s) tags: %s", d.Id(), err)
 		}
 	}

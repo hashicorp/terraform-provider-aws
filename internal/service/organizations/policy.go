@@ -75,7 +75,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get("type").(string)),
-		Tags:        tags.IgnoreAws().OrganizationsTags(),
+		Tags:        Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Creating Organizations Policy (%s): %v", name, input)
@@ -151,7 +151,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	tags, err := tftags.OrganizationsListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Organizations policy (%s): %w", d.Id(), err))
 	}
@@ -197,7 +197,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags for Organizations policy (%s): %w", d.Id(), err))
 		}
 	}
