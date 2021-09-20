@@ -413,7 +413,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := finder.SecurityGroupByNameAndVpcID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := finder.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {

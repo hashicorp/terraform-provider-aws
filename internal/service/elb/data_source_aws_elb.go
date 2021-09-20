@@ -265,7 +265,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := finder.SecurityGroupByNameAndVpcID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sg, err := finder.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
 			if err != nil {
 				return fmt.Errorf("error looking up ELB Security Group ID: %w", err)
 			} else {
