@@ -19,7 +19,7 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDaxSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := acctest.Provider.Meta().(*AWSClient).daxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_subnet_group" {
@@ -76,7 +76,7 @@ func testAccCheckAwsDaxSubnetGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).daxconn
+		conn := acctest.Provider.Meta().(*AWSClient).daxconn
 
 		_, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},

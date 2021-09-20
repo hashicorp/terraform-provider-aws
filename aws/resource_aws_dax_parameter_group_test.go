@@ -19,7 +19,7 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDax(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDaxParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := acctest.Provider.Meta().(*AWSClient).daxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_parameter_group" {
@@ -73,7 +73,7 @@ func testAccCheckAwsDaxParameterGroupExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).daxconn
+		conn := acctest.Provider.Meta().(*AWSClient).daxconn
 
 		_, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
