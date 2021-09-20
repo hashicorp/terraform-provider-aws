@@ -9,18 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -42,12 +43,12 @@ func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -55,7 +56,7 @@ func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
 				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucketPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,12 +65,12 @@ func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
 		Steps: []resource.TestStep{

@@ -9,18 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3ControlBucket_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +29,7 @@ func TestAccAWSS3ControlBucket_basic(t *testing.T) {
 				Config: testAccAWSS3ControlBucketConfig_Bucket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", "id"),
@@ -46,12 +47,12 @@ func TestAccAWSS3ControlBucket_basic(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +60,7 @@ func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
 				Config: testAccAWSS3ControlBucketConfig_Bucket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucket(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3ControlBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,14 +69,14 @@ func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
-	TestAccSkip(t, "S3 Control Bucket resource tagging requires additional eventual consistency handling, see also: https://github.com/hashicorp/terraform-provider-aws/issues/15572")
+	acctest.Skip(t, "S3 Control Bucket resource tagging requires additional eventual consistency handling, see also: https://github.com/hashicorp/terraform-provider-aws/issues/15572")
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3ControlBucketDestroy,
 		Steps: []resource.TestStep{
