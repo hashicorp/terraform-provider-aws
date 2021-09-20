@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourcePermissions() *schema.Resource {
@@ -23,7 +24,7 @@ func DataSourcePermissions() *schema.Resource {
 			"catalog_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -40,13 +41,13 @@ func DataSourcePermissions() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 					},
 				},
@@ -62,7 +63,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -88,7 +89,7 @@ func DataSourcePermissions() *schema.Resource {
 			"principal": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validatePrincipal,
+				ValidateFunc: validPrincipal,
 			},
 			"table": {
 				Type:     schema.TypeList,
@@ -101,7 +102,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 						"database_name": {
 							Type:     schema.TypeString,
@@ -131,7 +132,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,

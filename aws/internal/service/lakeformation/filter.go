@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
@@ -180,16 +181,4 @@ func FilterLakeFormationDatabasePermissions(principal *string, allPermissions []
 	return cleanPermissions
 }
 
-func StringSlicesEqualIgnoreOrder(s1, s2 []*string) bool {
-	if len(s1) != len(s2) {
-		return false
-	}
 
-	v1 := aws.StringValueSlice(s1)
-	v2 := aws.StringValueSlice(s2)
-
-	sort.Strings(v1)
-	sort.Strings(v2)
-
-	return reflect.DeepEqual(v1, v2)
-}

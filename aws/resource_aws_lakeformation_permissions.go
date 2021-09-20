@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePermissions() *schema.Resource {
@@ -31,7 +32,7 @@ func ResourcePermissions() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -65,14 +66,14 @@ func ResourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"catalog_id": {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 					},
 				},
@@ -97,7 +98,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -131,7 +132,7 @@ func ResourcePermissions() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validatePrincipal,
+				ValidateFunc: validPrincipal,
 			},
 			"table": {
 				Type:     schema.TypeList,
@@ -153,7 +154,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 						"database_name": {
 							Type:     schema.TypeString,
@@ -203,7 +204,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validateAwsAccountId,
+							ValidateFunc: verify.ValidAccountID,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,

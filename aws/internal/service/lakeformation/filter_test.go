@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestFilterPermissions(t *testing.T) {

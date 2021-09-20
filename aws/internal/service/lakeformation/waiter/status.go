@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func PermissionsStatus(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) resource.StateRefreshFunc {
