@@ -360,7 +360,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(serviceName),
 		SourceConfiguration: expandAppRunnerServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
-		Tags:                tags.IgnoreAws().ApprunnerTags(),
+		Tags:                Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration_arn"); ok {
@@ -481,7 +481,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
 
-	tags, err := tftags.ApprunnerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
@@ -539,7 +539,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ApprunnerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}

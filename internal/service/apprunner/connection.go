@@ -73,7 +73,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ApprunnerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateConnectionWithContext(ctx, input)
@@ -124,7 +124,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("provider_type", c.ProviderType)
 	d.Set("status", c.Status)
 
-	tags, err := tftags.ApprunnerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Connection (%s): %w", arn, err))
@@ -150,7 +150,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ApprunnerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner Connection (%s) tags: %w", d.Get("arn").(string), err))
 		}
 	}
