@@ -19,7 +19,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 
 func testAccCheckAWSInspectorResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

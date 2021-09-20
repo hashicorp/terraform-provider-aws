@@ -22,7 +22,7 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +54,7 @@ func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -77,7 +77,7 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 }
 
 func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+	conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_inspector_assessment_template" {
@@ -153,7 +153,7 @@ func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
 
 func testAccCheckAWSInspectorTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
@@ -177,7 +177,7 @@ func testAccCheckAWSInspectorTemplateExists(name string, v *inspector.Assessment
 			return fmt.Errorf("No Inspector assessment template ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
 
 		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
