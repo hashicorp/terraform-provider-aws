@@ -1,4 +1,4 @@
-package aws
+package appstream
 
 import (
 	"bytes"
@@ -15,8 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -237,7 +236,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var err error
 	var output *appstream.CreateStackOutput
-	err = resource.RetryContext(ctx, waiter.stackOperationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, stackOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateStackWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -390,7 +389,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
 	}
 
-	if _, err = waiter.waitStackStateDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err = waitStackStateDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			return nil
 		}
