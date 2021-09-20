@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ComputeEnvironmentStatus(conn *batch.Batch, name string) resource.StateRefreshFunc {
+func statusComputeEnvironment(conn *batch.Batch, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		computeEnvironmentDetail, err := finder.ComputeEnvironmentDetailByName(conn, name)
+		computeEnvironmentDetail, err := finder.FindComputeEnvironmentDetailByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

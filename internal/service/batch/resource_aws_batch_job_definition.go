@@ -48,7 +48,7 @@ func ResourceJobDefinition() *schema.Resource {
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalency.EquivalentBatchContainerPropertiesJSON(old, new)
+					equal, _ := equivalency.equivalentBatchContainerPropertiesJSON(old, new)
 
 					return equal
 				},
@@ -233,7 +233,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	jobDefinition, err := finder.JobDefinitionByARN(conn, d.Id())
+	jobDefinition, err := finder.FindJobDefinitionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())

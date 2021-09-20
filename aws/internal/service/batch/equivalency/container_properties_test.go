@@ -373,7 +373,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got, err := EquivalentBatchContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
+			got, err := equivalentBatchContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
 
 			if err != nil && !testCase.ExpectError {
 				t.Errorf("got unexpected error: %s", err)

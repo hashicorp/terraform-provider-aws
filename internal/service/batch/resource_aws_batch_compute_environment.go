@@ -251,7 +251,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.ComputeEnvironmentName))
 
-	if _, err := waiter.ComputeEnvironmentCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitComputeEnvironmentCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Batch Compute Environment (%s) create: %w", d.Id(), err)
 	}
 
@@ -263,7 +263,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, d.Id())
+	computeEnvironment, err := finder.FindComputeEnvironmentDetailByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
@@ -359,7 +359,7 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error updating Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.ComputeEnvironmentUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waiter.waitComputeEnvironmentUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -389,7 +389,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error disabling Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.ComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waiter.waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) disable: %w", d.Id(), err)
 		}
 	}
@@ -404,7 +404,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error deleting Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.ComputeEnvironmentDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waiter.waitComputeEnvironmentDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) delete: %w", d.Id(), err)
 		}
 	}

@@ -1480,7 +1480,7 @@ func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
+		_, err := finder.FindComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1508,7 +1508,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
-		computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
+		computeEnvironment, err := finder.FindComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

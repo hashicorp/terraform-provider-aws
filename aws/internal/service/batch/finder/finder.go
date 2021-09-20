@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
+func FindComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
 	input := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: aws.StringSlice([]string{name}),
 	}
 
-	computeEnvironmentDetail, err := ComputeEnvironmentDetail(conn, input)
+	computeEnvironmentDetail, err := FindComputeEnvironmentDetail(conn, input)
 
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func ComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.Comp
 	return computeEnvironmentDetail, nil
 }
 
-func ComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
+func FindComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
 	output, err := conn.DescribeComputeEnvironments(input)
 
 	if err != nil {
@@ -48,18 +48,18 @@ func ComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnv
 	return output.ComputeEnvironments[0], nil
 }
 
-func JobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
+func FindJobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitions: aws.StringSlice([]string{arn}),
 	}
 
-	jobDefinition, err := JobDefinition(conn, input)
+	jobDefinition, err := FindJobDefinition(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if status := aws.StringValue(jobDefinition.Status); status == tfbatch.JobDefinitionStatusInactive {
+	if status := aws.StringValue(jobDefinition.Status); status == tfbatch.jobDefinitionStatusInactive {
 		return nil, &resource.NotFoundError{
 			Message:     status,
 			LastRequest: input,
@@ -69,7 +69,7 @@ func JobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, er
 	return jobDefinition, nil
 }
 
-func JobDefinition(conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
+func FindJobDefinition(conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
 	output, err := conn.DescribeJobDefinitions(input)
 
 	if err != nil {

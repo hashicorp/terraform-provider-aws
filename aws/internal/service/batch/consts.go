@@ -1,5 +1,5 @@
 package batch
 
 const (
-	JobDefinitionStatusInactive = "INACTIVE"
+	jobDefinitionStatusInactive = "INACTIVE"
 )
