@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -70,7 +71,7 @@ func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
 				Config: testAccAWSAppautoscalingTargetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapplicationautoscaling.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -245,7 +246,7 @@ func testAccCheckAWSAppautoscalingTargetExists(n string, target *applicationauto
 		namespace := rs.Primary.Attributes["service_namespace"]
 		dimension := rs.Primary.Attributes["scalable_dimension"]
 
-		tgt, err := getAwsAppautoscalingTarget(rs.Primary.ID, namespace, dimension, conn)
+		tgt, err := tfapplicationautoscaling.GetTarget(rs.Primary.ID, namespace, dimension, conn)
 		if err != nil {
 			return err
 		}

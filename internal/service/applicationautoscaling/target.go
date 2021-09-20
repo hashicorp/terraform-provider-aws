@@ -115,7 +115,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+		t, err = GetTarget(d.Id(), namespace, dimension, conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -125,7 +125,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
+		t, err = GetTarget(d.Id(), namespace, dimension, conn)
 	}
 
 	if err != nil {
@@ -167,7 +167,7 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		t, err := getAwsAppautoscalingTarget(d.Get("resource_id").(string), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string), conn)
+		t, err := GetTarget(d.Get("resource_id").(string), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string), conn)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -181,7 +181,7 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 }
 
-func getAwsAppautoscalingTarget(resourceId, namespace, dimension string,
+func GetTarget(resourceId, namespace, dimension string,
 	conn *applicationautoscaling.ApplicationAutoScaling) (*applicationautoscaling.ScalableTarget, error) {
 
 	describeOpts := applicationautoscaling.DescribeScalableTargetsInput{

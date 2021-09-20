@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
 )
 
 func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
@@ -64,17 +65,17 @@ func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		idParts, err := validateAppautoscalingPolicyImportInput(tc.input)
+		idParts, err := tfapplicationautoscaling.ValidPolicyImportInput(tc.input)
 		if tc.errorExpected == false && err != nil {
-			t.Errorf("validateAppautoscalingPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
+			t.Errorf("tfapplicationautoscaling.ValidPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
 		}
 
 		if tc.errorExpected == true && err == nil {
-			t.Errorf("validateAppautoscalingPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
+			t.Errorf("tfapplicationautoscaling.ValidPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
 		}
 
 		if !reflect.DeepEqual(tc.expected, idParts) {
-			t.Errorf("validateAppautoscalingPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
+			t.Errorf("tfapplicationautoscaling.ValidPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
 		}
 	}
 }
