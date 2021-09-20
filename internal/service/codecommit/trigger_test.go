@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCodeCommitTrigger_basic(t *testing.T) {
+func TestAccCodeCommitTrigger_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codecommit_trigger.test"
 

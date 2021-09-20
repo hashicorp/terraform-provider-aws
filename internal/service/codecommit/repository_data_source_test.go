@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
+func TestAccCodeCommitRepositoryDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acctest-%d", sdkacctest.RandInt())
 	resourceName := "aws_codecommit_repository.default"
 	datasourceName := "data.aws_codecommit_repository.default"
