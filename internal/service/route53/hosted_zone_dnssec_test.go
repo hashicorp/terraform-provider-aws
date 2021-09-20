@@ -15,7 +15,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
+func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -45,7 +45,7 @@ func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
+func TestAccRoute53HostedZoneDNSSEC_disappears(t *testing.T) {
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -69,7 +69,7 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
+func TestAccRoute53HostedZoneDNSSEC_signingStatus(t *testing.T) {
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

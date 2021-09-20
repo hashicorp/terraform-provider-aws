@@ -15,7 +15,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
+func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_route53_vpc_association_authorization.test"
 
@@ -44,7 +44,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
+func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_route53_vpc_association_authorization.test"
 

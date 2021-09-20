@@ -81,7 +81,7 @@ func testSweepRoute53Healthchecks(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
+func TestAccRoute53HealthCheck_basic(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -119,7 +119,7 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_tags(t *testing.T) {
+func TestAccRoute53HealthCheck_tags(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,7 +162,7 @@ func TestAccAWSRoute53HealthCheck_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
+func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,7 +196,7 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
+func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -220,7 +220,7 @@ func TestAccAWSRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
+func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -245,7 +245,7 @@ func TestAccAWSRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
+func TestAccRoute53HealthCheck_ip(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -277,7 +277,7 @@ func TestAccAWSRoute53HealthCheck_IpConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
+func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -306,7 +306,7 @@ func TestAccAWSRoute53HealthCheck_Ipv6Config(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_CloudWatchAlarmCheck(t *testing.T) {
+func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -331,7 +331,7 @@ func TestAccAWSRoute53HealthCheck_CloudWatchAlarmCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_withSNI(t *testing.T) {
+func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -370,7 +370,7 @@ func TestAccAWSRoute53HealthCheck_withSNI(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_Disabled(t *testing.T) {
+func TestAccRoute53HealthCheck_disabled(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 
@@ -410,7 +410,7 @@ func TestAccAWSRoute53HealthCheck_Disabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_withRoutingControlArn(t *testing.T) {
+func TestAccRoute53HealthCheck_withRoutingControlARN(t *testing.T) {
 	var check route53.HealthCheck
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_health_check.test"
@@ -436,7 +436,7 @@ func TestAccAWSRoute53HealthCheck_withRoutingControlArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
+func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{

@@ -15,7 +15,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
+func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 	resourceName := "aws_route53_zone_association.test"
 
 	domainName := acctest.RandomFQDomainName()
@@ -41,7 +41,7 @@ func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
+func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 	resourceName := "aws_route53_zone_association.test"
 
 	domainName := acctest.RandomFQDomainName()
@@ -64,7 +64,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
+func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 	resourceName := "aws_route53_zone_association.test"
 	vpcResourceName := "aws_vpc.bar"
 
@@ -88,7 +88,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
+func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
 	resourceName := "aws_route53_zone_association.test"
 	route53ZoneResourceName := "aws_route53_zone.foo"
 
@@ -112,7 +112,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ZoneAssociation_CrossAccount(t *testing.T) {
+func TestAccRoute53ZoneAssociation_crossAccount(t *testing.T) {
 	resourceName := "aws_route53_zone_association.test"
 
 	// record the initialized providers so that we can use them to
@@ -146,7 +146,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossAccount(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
+func TestAccRoute53ZoneAssociation_crossRegion(t *testing.T) {
 	resourceName := "aws_route53_zone_association.test"
 
 	// record the initialized providers so that we can use them to
