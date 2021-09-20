@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRuleGroup() *schema.Resource {
@@ -89,7 +90,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Required: true,
 																Elem: &schema.Schema{
 																	Type:         schema.TypeString,
-																	ValidateFunc: validateIpv4CIDRNetworkAddress,
+																	ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 																},
 															},
 														},
@@ -189,7 +190,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.Any(
-																	validateIpv4CIDRNetworkAddress,
+																	verify.ValidIPv4CIDRNetworkAddress,
 																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
 																),
 															},
@@ -211,7 +212,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.Any(
-																	validateIpv4CIDRNetworkAddress,
+																	verify.ValidIPv4CIDRNetworkAddress,
 																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
 																),
 															},
@@ -283,7 +284,7 @@ func ResourceRuleGroup() *schema.Resource {
 																								"address_definition": {
 																									Type:         schema.TypeString,
 																									Required:     true,
-																									ValidateFunc: validateIpv4CIDRNetworkAddress,
+																									ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 																								},
 																							},
 																						},
@@ -317,7 +318,7 @@ func ResourceRuleGroup() *schema.Resource {
 																								"address_definition": {
 																									Type:         schema.TypeString,
 																									Required:     true,
-																									ValidateFunc: validateIpv4CIDRNetworkAddress,
+																									ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 																								},
 																							},
 																						},
