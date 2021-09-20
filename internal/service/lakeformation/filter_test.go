@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func TestFilterPermissions(t *testing.T) {
@@ -293,7 +294,7 @@ func TestFilterPermissions(t *testing.T) {
 					},
 				},
 			},
-			TableType:   TableTypeTableWithColumns,
+			TableType:   tflakeformation.TableTypeTableWithColumns,
 			ColumnNames: aws.StringSlice([]string{"value"}),
 			All: []*lakeformation.PrincipalResourcePermissions{
 				{
@@ -375,7 +376,7 @@ func TestFilterPermissions(t *testing.T) {
 					},
 				},
 			},
-			TableType:      TableTypeTableWithColumns,
+			TableType:      tflakeformation.TableTypeTableWithColumns,
 			ColumnWildcard: true,
 			All: []*lakeformation.PrincipalResourcePermissions{
 				{
@@ -457,7 +458,7 @@ func TestFilterPermissions(t *testing.T) {
 					},
 				},
 			},
-			TableType:           TableTypeTableWithColumns,
+			TableType:           tflakeformation.TableTypeTableWithColumns,
 			ColumnWildcard:      true,
 			ExcludedColumnNames: aws.StringSlice([]string{"value"}),
 			All: []*lakeformation.PrincipalResourcePermissions{
@@ -536,7 +537,7 @@ func TestFilterPermissions(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := FilterPermissions(testCase.Input, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
+			got := tflakeformation.FilterPermissions(testCase.Input, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if !reflect.DeepEqual(testCase.ExpectedClean, got) {
 				t.Errorf("got %v, expected %v, input %v", got, testCase.ExpectedClean, testCase.Input)

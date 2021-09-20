@@ -286,19 +286,19 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = expandLakeFormationCatalogResource()
+		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = expandLakeFormationDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = expandLakeFormationDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -363,27 +363,27 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = expandLakeFormationCatalogResource()
+		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = expandLakeFormationDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = expandLakeFormationDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	tableType := ""
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
 		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
-		input.Resource.Table = expandLakeFormationTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
 		tableType = TableTypeTableWithColumns
 	}
 
@@ -550,19 +550,19 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = expandLakeFormationCatalogResource()
+		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = expandLakeFormationDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = expandLakeFormationDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -640,11 +640,11 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandLakeFormationCatalogResource() *lakeformation.CatalogResource {
+func ExpandCatalogResource() *lakeformation.CatalogResource {
 	return &lakeformation.CatalogResource{}
 }
 
-func expandLakeFormationDataLocationResource(tfMap map[string]interface{}) *lakeformation.DataLocationResource {
+func ExpandDataLocationResource(tfMap map[string]interface{}) *lakeformation.DataLocationResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -680,7 +680,7 @@ func flattenLakeFormationDataLocationResource(apiObject *lakeformation.DataLocat
 	return tfMap
 }
 
-func expandLakeFormationDatabaseResource(tfMap map[string]interface{}) *lakeformation.DatabaseResource {
+func ExpandDatabaseResource(tfMap map[string]interface{}) *lakeformation.DatabaseResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -716,7 +716,7 @@ func flattenLakeFormationDatabaseResource(apiObject *lakeformation.DatabaseResou
 	return tfMap
 }
 
-func expandLakeFormationTableResource(tfMap map[string]interface{}) *lakeformation.TableResource {
+func ExpandTableResource(tfMap map[string]interface{}) *lakeformation.TableResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -742,7 +742,7 @@ func expandLakeFormationTableResource(tfMap map[string]interface{}) *lakeformati
 	return apiObject
 }
 
-func expandLakeFormationTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *lakeformation.TableResource {
+func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *lakeformation.TableResource {
 	if tfMap == nil {
 		return nil
 	}

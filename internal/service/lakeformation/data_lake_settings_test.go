@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
@@ -48,7 +49,7 @@ func testAccAWSLakeFormationDataLakeSettings_disappears(t *testing.T) {
 				Config: testAccAWSLakeFormationDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDataLakeSettings(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourceDataLakeSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
