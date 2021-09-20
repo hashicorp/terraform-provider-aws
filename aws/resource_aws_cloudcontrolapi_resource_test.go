@@ -643,8 +643,7 @@ data "aws_cloudformation_type" "test" {
 }
 
 resource "aws_cloudcontrolapi_resource" "test" {
-  # Santitize the schema by rewriting all "pattern" regexes to the empty string.
-  schema    = replace(data.aws_cloudformation_type.test.schema, "/(?m)^(\\s+\"pattern\"\\s*:\\s*)\".*\"/", "$1\"\"")
+  schema    = data.aws_cloudformation_type.test.schema
   type_name = data.aws_cloudformation_type.test.type_name
 
   desired_state = jsonencode({
