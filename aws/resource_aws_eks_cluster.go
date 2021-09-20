@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEksCluster() *schema.Resource {
@@ -232,8 +233,8 @@ func resourceAwsEksCluster() *schema.Resource {
 }
 
 func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -315,9 +316,9 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster, err := finder.ClusterByName(conn, d.Id())
 
@@ -382,7 +383,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	// Do any version update first.
 	if d.HasChange("version") {
@@ -488,7 +489,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEksClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())
 	_, err := conn.DeleteCluster(&eks.DeleteClusterInput{

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEksIdentityProviderConfig() *schema.Resource {
@@ -137,8 +138,8 @@ func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValid
 }
 
 func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -173,9 +174,9 @@ func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.R
 }
 
 func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(d.Id())
 
@@ -219,7 +220,7 @@ func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsEksIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -232,7 +233,7 @@ func resourceAwsEksIdentityProviderConfigUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceAwsEksIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(d.Id())
 

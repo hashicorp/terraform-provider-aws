@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEksAddon() *schema.Resource {
@@ -86,8 +87,8 @@ func resourceAwsEksAddon() *schema.Resource {
 }
 
 func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	addonName := d.Get("addon_name").(string)
@@ -164,9 +165,9 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
 
@@ -209,7 +210,7 @@ func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
 
@@ -272,7 +273,7 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAwsEksAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
 

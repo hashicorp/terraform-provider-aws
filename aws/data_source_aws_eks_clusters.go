@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEksClusters() *schema.Resource {
@@ -23,7 +24,7 @@ func dataSourceAwsEksClusters() *schema.Resource {
 }
 
 func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	var clusters []*string
 
@@ -41,7 +42,7 @@ func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing EKS Clusters: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("names", aws.StringValueSlice(clusters))
 

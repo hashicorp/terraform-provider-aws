@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEksFargateProfile() *schema.Resource {
@@ -99,8 +100,8 @@ func resourceAwsEksFargateProfile() *schema.Resource {
 }
 
 func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -161,9 +162,9 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(d.Id())
 
@@ -213,7 +214,7 @@ func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEksFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -226,7 +227,7 @@ func resourceAwsEksFargateProfileUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(d.Id())
 
