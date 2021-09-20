@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -59,7 +60,7 @@ func resourceAwsSecurityHubMember() *schema.Resource {
 }
 
 func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
 	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
@@ -100,7 +101,7 @@ func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
 	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
@@ -138,7 +139,7 @@ func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSSecurityHubAccount_basic(t *testing.T) {
@@ -39,7 +40,7 @@ func testAccCheckAWSSecurityHubAccountExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
 
@@ -56,7 +57,7 @@ func testAccCheckAWSSecurityHubAccountExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSSecurityHubAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_account" {

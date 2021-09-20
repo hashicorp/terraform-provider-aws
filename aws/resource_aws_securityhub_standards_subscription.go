@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
 }
 
 func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	standardsARN := d.Get("standards_arn").(string)
 	input := &securityhub.BatchEnableStandardsInput{
@@ -64,7 +65,7 @@ func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, m
 }
 
 func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	output, err := finder.StandardsSubscriptionByARN(conn, d.Id())
 
@@ -80,7 +81,7 @@ func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, met
 }
 
 func resourceAwsSecurityHubStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Deleting Security Hub Standards Subscription: %s", d.Id())
 	_, err := conn.BatchDisableStandards(&securityhub.BatchDisableStandardsInput{

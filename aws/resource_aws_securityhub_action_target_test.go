@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
@@ -135,7 +136,7 @@ func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No Security Hub custom action ARN is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		action, err := resourceAwsSecurityHubActionTargetCheckExists(conn, rs.Primary.ID)
 
@@ -152,7 +153,7 @@ func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_action_target" {

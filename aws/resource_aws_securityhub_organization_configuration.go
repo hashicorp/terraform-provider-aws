@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubOrganizationConfiguration() *schema.Resource {
@@ -29,7 +30,7 @@ func resourceAwsSecurityHubOrganizationConfiguration() *schema.Resource {
 }
 
 func resourceAwsSecurityHubOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.UpdateOrganizationConfigurationInput{
 		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
@@ -41,13 +42,13 @@ func resourceAwsSecurityHubOrganizationConfigurationUpdate(d *schema.ResourceDat
 		return fmt.Errorf("error updating Security Hub Organization Configuration (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return resourceAwsSecurityHubOrganizationConfigurationRead(d, meta)
 }
 
 func resourceAwsSecurityHubOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	output, err := conn.DescribeOrganizationConfiguration(&securityhub.DescribeOrganizationConfigurationInput{})
 

@@ -12,6 +12,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
@@ -91,7 +92,7 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 			return fmt.Errorf("No Security Hub Standards Control ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
@@ -49,7 +50,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
@@ -66,7 +67,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 }
 
 func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_invite_accepter" {

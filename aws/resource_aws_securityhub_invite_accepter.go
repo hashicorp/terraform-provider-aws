@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
 }
 
 func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
 	invitationId, err := resourceAwsSecurityHubInviteAccepterGetInvitationId(conn, d.Get("master_id").(string))
@@ -53,7 +54,7 @@ func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error accepting Security Hub invitation: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return resourceAwsSecurityHubInviteAccepterRead(d, meta)
 }
@@ -78,7 +79,7 @@ func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.Secur
 }
 
 func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Reading Security Hub master account")
 
 	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
@@ -106,7 +107,7 @@ func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSecurityHubInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 
 	_, err := conn.DisassociateFromMasterAccount(&securityhub.DisassociateFromMasterAccountInput{})

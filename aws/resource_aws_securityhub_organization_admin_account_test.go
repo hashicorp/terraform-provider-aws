@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
@@ -95,7 +96,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 }
 
 func testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_organization_admin_account" {
@@ -131,7 +132,7 @@ func testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName strin
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		adminAccount, err := finder.AdminAccount(conn, rs.Primary.ID)
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSSecurityHubMember_basic(t *testing.T) {
@@ -72,7 +73,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
@@ -93,7 +94,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 }
 
 func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_member" {
