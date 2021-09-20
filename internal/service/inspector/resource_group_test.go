@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
+func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	var v1, v2 inspector.ResourceGroup
 	resourceName := "aws_inspector_resource_group.test"
 

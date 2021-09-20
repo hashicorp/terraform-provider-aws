@@ -14,7 +14,7 @@ import (
 	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 )
 
-func TestAccAWSInspectorTarget_basic(t *testing.T) {
+func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 	var assessmentTarget1 inspector.AssessmentTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_inspector_assessment_target.test"
@@ -43,7 +43,7 @@ func TestAccAWSInspectorTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInspectorTarget_disappears(t *testing.T) {
+func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 	var assessmentTarget1 inspector.AssessmentTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_inspector_assessment_target.test"
@@ -66,7 +66,7 @@ func TestAccAWSInspectorTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSInspectorTarget_Name(t *testing.T) {
+func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 	var assessmentTarget1, assessmentTarget2 inspector.AssessmentTarget
 	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -101,7 +101,7 @@ func TestAccAWSInspectorTarget_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
+func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 	var assessmentTarget1, assessmentTarget2, assessmentTarget3, assessmentTarget4 inspector.AssessmentTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	inspectorResourceGroupResourceName1 := "aws_inspector_resource_group.test1"

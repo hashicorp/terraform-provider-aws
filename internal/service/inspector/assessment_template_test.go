@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSInspectorTemplate_basic(t *testing.T) {
+func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -47,7 +47,7 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
+func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -70,7 +70,7 @@ func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSInspectorTemplate_tags(t *testing.T) {
+func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
