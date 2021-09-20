@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
+func ResourceMemberAccountAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMacieMemberAccountAssociationCreate,
-		Read:   resourceAwsMacieMemberAccountAssociationRead,
-		Delete: resourceAwsMacieMemberAccountAssociationDelete,
+		Create: resourceMemberAccountAssociationCreate,
+		Read:   resourceMemberAccountAssociationRead,
+		Delete: resourceMemberAccountAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"member_account_id": {
@@ -27,7 +27,7 @@ func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsMacieMemberAccountAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberAccountAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	memberAccountId := d.Get("member_account_id").(string)
@@ -42,10 +42,10 @@ func resourceAwsMacieMemberAccountAssociationCreate(d *schema.ResourceData, meta
 	}
 
 	d.SetId(memberAccountId)
-	return resourceAwsMacieMemberAccountAssociationRead(d, meta)
+	return resourceMemberAccountAssociationRead(d, meta)
 }
 
-func resourceAwsMacieMemberAccountAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberAccountAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	req := &macie.ListMemberAccountsInput{}
@@ -74,7 +74,7 @@ func resourceAwsMacieMemberAccountAssociationRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsMacieMemberAccountAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMemberAccountAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	log.Printf("[DEBUG] Deleting Macie member account association: %s", d.Id())

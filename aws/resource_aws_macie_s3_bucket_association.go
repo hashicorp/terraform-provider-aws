@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMacieS3BucketAssociation() *schema.Resource {
+func ResourceS3BucketAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMacieS3BucketAssociationCreate,
-		Read:   resourceAwsMacieS3BucketAssociationRead,
-		Update: resourceAwsMacieS3BucketAssociationUpdate,
-		Delete: resourceAwsMacieS3BucketAssociationDelete,
+		Create: resourceS3BucketAssociationCreate,
+		Read:   resourceS3BucketAssociationRead,
+		Update: resourceS3BucketAssociationUpdate,
+		Delete: resourceS3BucketAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"bucket_name": {
@@ -62,7 +62,7 @@ func resourceAwsMacieS3BucketAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceS3BucketAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	req := &macie.AssociateS3ResourcesInput{
@@ -90,10 +90,10 @@ func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", d.Get("bucket_name"), d.Get("prefix")))
-	return resourceAwsMacieS3BucketAssociationRead(d, meta)
+	return resourceS3BucketAssociationRead(d, meta)
 }
 
-func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	req := &macie.ListS3ResourcesInput{}
@@ -132,7 +132,7 @@ func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	if d.HasChange("classification_type") {
@@ -161,10 +161,10 @@ func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsMacieS3BucketAssociationRead(d, meta)
+	return resourceS3BucketAssociationRead(d, meta)
 }
 
-func resourceAwsMacieS3BucketAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceS3BucketAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MacieConn
 
 	log.Printf("[DEBUG] Deleting Macie S3 bucket association: %s", d.Id())
