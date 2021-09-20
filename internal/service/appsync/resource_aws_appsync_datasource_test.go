@@ -1,4 +1,4 @@
-package aws
+package appsync_test
 
 import (
 	"fmt"
