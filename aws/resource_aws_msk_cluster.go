@@ -430,7 +430,7 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 		}
 		return resource.RetryableError(fmt.Errorf("%q: cluster still creating", arn))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err := conn.DescribeCluster(input)
 		if err != nil {
 			return fmt.Errorf("Error describing MSK cluster state: %s", err)
@@ -459,7 +459,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		ClusterArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -707,7 +707,7 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 		ClusterArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
@@ -1220,7 +1220,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 		_, err := conn.DescribeCluster(input)
 
 		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1228,9 +1228,9 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 
 		return resource.RetryableError(fmt.Errorf("timeout while waiting for the cluster %q to be deleted", arn))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeCluster(input)
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 			return nil
 		}
 	}

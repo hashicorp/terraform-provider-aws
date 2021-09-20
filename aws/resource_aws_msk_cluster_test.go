@@ -893,7 +893,7 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeCluster(opts)
 		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
