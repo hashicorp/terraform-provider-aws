@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 )
 
 func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
