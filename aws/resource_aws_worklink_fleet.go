@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFleet() *schema.Resource {
@@ -34,7 +35,7 @@ func ResourceFleet() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateWorklinkFleetName,
+				ValidateFunc: validFleetName,
 			},
 			"display_name": {
 				Type:         schema.TypeString,
@@ -44,7 +45,7 @@ func ResourceFleet() *schema.Resource {
 			"audit_stream_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"network": {
 				Type:     schema.TypeList,
