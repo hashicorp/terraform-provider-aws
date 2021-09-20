@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSKmsAlias_basic(t *testing.T) {
@@ -230,7 +231,7 @@ func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
 }
 
 func testAccCheckAWSKmsAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_alias" {
@@ -264,7 +265,7 @@ func testAccCheckAWSKmsAliasExists(name string, v *kms.AliasListEntry) resource.
 			return fmt.Errorf("No KMS Alias ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 		output, err := finder.AliasByName(conn, rs.Primary.ID)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
@@ -40,7 +41,7 @@ func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
 
 func testAccDataSourceAwsKmsSecretsEncrypt(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		kmsconn := acctest.Provider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
@@ -50,7 +51,7 @@ func testAccDataSourceAwsKmsSecretsEncrypt(key *kms.KeyMetadata, plaintext strin
 			},
 		}
 
-		resp, err := kmsconn.Encrypt(input)
+		resp, err := conn.Encrypt(input)
 		if err != nil {
 			return fmt.Errorf("failed encrypting string: %s", err)
 		}
