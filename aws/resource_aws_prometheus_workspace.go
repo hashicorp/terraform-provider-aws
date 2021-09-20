@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/prometheusservice/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPrometheusWorkspace() *schema.Resource {
@@ -42,7 +43,7 @@ func resourceAwsPrometheusWorkspace() *schema.Resource {
 
 func resourceAwsPrometheusWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Reading AMP workspace %s", d.Id())
-	conn := meta.(*AWSClient).prometheusserviceconn
+	conn := meta.(*conns.AWSClient).PrometheusConn
 
 	details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
@@ -79,7 +80,7 @@ func resourceAwsPrometheusWorkspaceUpdate(ctx context.Context, d *schema.Resourc
 	if v, ok := d.GetOk("alias"); ok {
 		req.Alias = aws.String(v.(string))
 	}
-	conn := meta.(*AWSClient).prometheusserviceconn
+	conn := meta.(*conns.AWSClient).PrometheusConn
 	if _, err := conn.UpdateWorkspaceAliasWithContext(ctx, req); err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s): %w", d.Id(), err))
 	}
@@ -89,7 +90,7 @@ func resourceAwsPrometheusWorkspaceUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceAwsPrometheusWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating AMP workspace %s", d.Id())
-	conn := meta.(*AWSClient).prometheusserviceconn
+	conn := meta.(*conns.AWSClient).PrometheusConn
 
 	req := &prometheusservice.CreateWorkspaceInput{}
 	if v, ok := d.GetOk("alias"); ok {
@@ -111,7 +112,7 @@ func resourceAwsPrometheusWorkspaceCreate(ctx context.Context, d *schema.Resourc
 
 func resourceAwsPrometheusWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting AMP workspace %s", d.Id())
-	conn := meta.(*AWSClient).prometheusserviceconn
+	conn := meta.(*conns.AWSClient).PrometheusConn
 
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAMPWorkspace_basic(t *testing.T) {
@@ -82,7 +83,7 @@ func testCheckAWSAMPWorkspaceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No AMP Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).prometheusserviceconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
 
 		req := &prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
@@ -100,7 +101,7 @@ func testCheckAWSAMPWorkspaceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).prometheusserviceconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_prometheus_workspace" {
