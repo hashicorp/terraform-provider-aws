@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSfnActivity_basic(t *testing.T) {
+func TestAccSFNActivity_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_sfn_activity.test"
 
@@ -42,7 +42,7 @@ func TestAccAWSSfnActivity_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSfnActivity_Tags(t *testing.T) {
+func TestAccSFNActivity_tags(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_sfn_activity.test"
 

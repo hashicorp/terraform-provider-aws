@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSStepFunctionsActivityDataSource_basic(t *testing.T) {
+func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sfn_activity.test"
 	dataName := "data.aws_sfn_activity.test"
