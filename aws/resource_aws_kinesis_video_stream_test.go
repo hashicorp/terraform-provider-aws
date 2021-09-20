@@ -24,7 +24,7 @@ func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -66,7 +66,7 @@ func TestAccAWSKinesisVideoStream_options(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAWSKinesisVideoStream_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func TestAccAWSKinesisVideoStream_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAWSKinesisVideoStream_disappears(t *testing.T) {
 
 func testAccCheckKinesisVideoStreamDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kinesisvideoconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisvideoconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -219,7 +219,7 @@ func testAccCheckKinesisVideoStreamExists(n string, stream *kinesisvideo.StreamI
 			return fmt.Errorf("No Kinesis ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kinesisvideoconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisvideoconn
 		describeOpts := &kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(rs.Primary.ID),
 		}
@@ -239,7 +239,7 @@ func testAccCheckKinesisVideoStreamDestroy(s *terraform.State) error {
 		if rs.Type != "aws_kinesis_video_stream" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).kinesisvideoconn
+		conn := acctest.Provider.Meta().(*AWSClient).kinesisvideoconn
 		describeOpts := &kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(rs.Primary.ID),
 		}
