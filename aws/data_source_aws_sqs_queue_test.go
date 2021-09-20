@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsSqsQueue_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf_acc_test_")
+	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, sqs.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -32,13 +33,13 @@ func TestAccDataSourceAwsSqsQueue_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSqsQueue_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf_acc_test_")
+	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, sqs.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, sqs.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
