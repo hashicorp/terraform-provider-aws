@@ -26,7 +26,7 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,14 +172,14 @@ func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationPart(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -198,7 +198,7 @@ func testAccCheckAWSAPIGatewayDocumentationPartExists(n string, res *apigateway.
 			return fmt.Errorf("No API Gateway Documentation Part ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		apiId, id, err := decodeApiGatewayDocumentationPartId(rs.Primary.ID)
 		if err != nil {
@@ -221,7 +221,7 @@ func testAccCheckAWSAPIGatewayDocumentationPartExists(n string, res *apigateway.
 }
 
 func testAccCheckAWSAPIGatewayDocumentationPartDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_documentation_part" {

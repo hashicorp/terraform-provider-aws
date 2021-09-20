@@ -45,7 +45,7 @@ func testAccAWSAPIGatewayV2ApiMapping_createCertificate(t *testing.T, rName stri
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +70,7 @@ func testAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T, rName string, certific
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,7 @@ func testAccAWSAPIGatewayV2ApiMapping_disappears(t *testing.T, rName string, cer
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey(t *testing.T, rName string, 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,10 +154,10 @@ func testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey(t *testing.T, rName string, 
 
 func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certificateArn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		privateKey := tlsRsaPrivateKeyPem(2048)
-		certificate := tlsRsaX509SelfSignedCertificatePem(privateKey, fmt.Sprintf("%s.example.com", rName))
+		privateKey := acctest.TLSRSAPrivateKeyPEM(2048)
+		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey, fmt.Sprintf("%s.example.com", rName))
 
-		conn := testAccProvider.Meta().(*AWSClient).acmconn
+		conn := acctest.Provider.Meta().(*AWSClient).acmconn
 
 		output, err := conn.ImportCertificate(&acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
@@ -177,7 +177,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 }
 
 func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_api_mapping" {
@@ -203,7 +203,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2ApiMappingDisappears(domainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{
 			ApiMappingId: v.ApiMappingId,
@@ -225,7 +225,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingExists(n string, vDomainName *string, 
 			return fmt.Errorf("No API Gateway v2 API mapping ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
 
 		domainName := aws.String(rs.Primary.Attributes["domain_name"])
 		resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{

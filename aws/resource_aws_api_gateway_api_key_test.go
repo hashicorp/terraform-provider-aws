@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSAPIGatewayApiKey_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +100,7 @@ func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +135,7 @@ func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,7 +170,7 @@ func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,14 +197,14 @@ func TestAccAWSAPIGatewayApiKey_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayApiKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayApiKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayApiKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -223,7 +223,7 @@ func testAccCheckAWSAPIGatewayApiKeyExists(n string, res *apigateway.ApiKey) res
 			return fmt.Errorf("No API Gateway ApiKey ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetApiKeyInput{
 			ApiKey: aws.String(rs.Primary.ID),
@@ -244,7 +244,7 @@ func testAccCheckAWSAPIGatewayApiKeyExists(n string, res *apigateway.ApiKey) res
 }
 
 func testAccCheckAWSAPIGatewayApiKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_api_key" {

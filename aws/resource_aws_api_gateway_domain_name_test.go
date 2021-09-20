@@ -26,7 +26,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApigatewayEdgeDomainName(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSAPIGatewayEdgeDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +88,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,13 +118,13 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,15 +162,15 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	rName := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), domain)
 
-	caKey := tlsRsaPrivateKeyPem(2048)
-	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, domainWildcard)
+	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,13 +197,13 @@ func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,13 +227,13 @@ func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,20 +275,20 @@ func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDomainName(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -309,7 +309,7 @@ func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -352,7 +352,7 @@ func testAccCheckAWSAPIGatewayDomainNameExists(n string, res *apigateway.DomainN
 			return fmt.Errorf("No API Gateway DomainName ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetDomainNameInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -373,7 +373,7 @@ func testAccCheckAWSAPIGatewayDomainNameExists(n string, res *apigateway.DomainN
 }
 
 func testAccCheckAWSAPIGatewayDomainNameDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_domain_name" {
@@ -530,7 +530,7 @@ resource "aws_api_gateway_domain_name" "test" {
   certificate_name        = "tf-acc-apigateway-domain-name"
   certificate_private_key = "%[4]s"
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(chainCertificate), tlsPemEscapeNewlines(key))
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(chainCertificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(domainName, key, certificate string) string {
@@ -548,7 +548,7 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["REGIONAL"]
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateName(domainName, key, certificate, chainCertificate string) string {
@@ -564,7 +564,7 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["REGIONAL"]
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(chainCertificate), tlsPemEscapeNewlines(key))
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(chainCertificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSAPIGatewayDomainNameConfig_SecurityPolicy(domainName, key, certificate, securityPolicy string) string {
@@ -583,7 +583,7 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["REGIONAL"]
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), securityPolicy)
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), securityPolicy)
 }
 
 func testAccAWSAPIGatewayDomainNameConfigTags1(domainName, key, certificate, tagKey1, tagValue1 string) string {
@@ -605,7 +605,7 @@ resource "aws_api_gateway_domain_name" "test" {
     %[4]q = %[5]q
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), tagKey1, tagValue1)
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
 }
 
 func testAccAWSAPIGatewayDomainNameConfigTags2(domainName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -628,7 +628,7 @@ resource "aws_api_gateway_domain_name" "test" {
     %[6]q = %[7]q
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthentication(rootDomain, domain, rName string) string {

@@ -23,13 +23,13 @@ func init() {
 }
 
 func testSweepAPIGatewayVpcLinks(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).apigatewayconn
 
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var sweeperErrs *multierror.Error
 
 	err = conn.GetVpcLinksPages(&apigateway.GetVpcLinksInput{}, func(page *apigateway.GetVpcLinksOutput, lastPage bool) bool {
@@ -41,11 +41,11 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway VPC Link sweep for %s: %s", region, err)
 		return nil
 	}
@@ -53,7 +53,7 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 		return fmt.Errorf("error retrieving API Gateway VPC Links: %w", err)
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
 	}
 
@@ -69,7 +69,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +110,7 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,14 +163,14 @@ func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayVpcLink(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayVpcLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -179,7 +179,7 @@ func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsAPIGatewayVpcLinkDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_vpc_link" {
@@ -211,7 +211,7 @@ func testAccCheckAwsAPIGatewayVpcLinkExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		input := &apigateway.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),

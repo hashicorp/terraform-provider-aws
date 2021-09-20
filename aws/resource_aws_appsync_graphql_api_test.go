@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepAppsyncGraphqlApis(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -32,7 +32,7 @@ func testSweepAppsyncGraphqlApis(region string) error {
 
 	for {
 		output, err := conn.ListGraphqlApis(input)
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, err)
 			return nil
 		}
@@ -73,7 +73,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,14 +110,14 @@ func TestAccAWSAppsyncGraphqlApi_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncGraphqlApiConfig_AuthenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppsyncGraphqlApi(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAppsyncGraphqlApi(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,7 +133,7 @@ func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -212,7 +212,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_APIKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,7 +241,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AWSIAM(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,7 +271,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AmazonCognitoUserPools(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -302,7 +302,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_OpenIDConnect(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -332,7 +332,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -363,7 +363,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -414,7 +414,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_ExcludeVerboseContent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -455,7 +455,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_AuthTTL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -495,7 +495,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_ClientID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -535,7 +535,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_IatTTL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -575,7 +575,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_Issuer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -614,7 +614,7 @@ func TestAccAWSAppsyncGraphqlApi_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -644,7 +644,7 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_AwsRegion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -687,7 +687,7 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -729,7 +729,7 @@ func TestAccAWSAppsyncGraphqlApi_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -770,7 +770,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_APIKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -803,7 +803,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_AWSIAM(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -837,7 +837,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_CognitoUserPools(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -871,7 +871,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_OpenIDConnect(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -906,7 +906,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_Multiple(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -947,7 +947,7 @@ func TestAccAWSAppsyncGraphqlApi_XrayEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -969,7 +969,7 @@ func TestAccAWSAppsyncGraphqlApi_XrayEnabled(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+	conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_graphql_api" {
 			continue
@@ -997,7 +997,7 @@ func testAccCheckAwsAppsyncGraphqlApiExists(name string, api *appsync.GraphqlApi
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
 
 		input := &appsync.GetGraphqlApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -1022,7 +1022,7 @@ func testAccCheckAwsAppsyncTypeExists(name, typeName string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+		conn := acctest.Provider.Meta().(*AWSClient).appsyncconn
 
 		input := &appsync.GetTypeInput{
 			ApiId:    aws.String(rs.Primary.ID),

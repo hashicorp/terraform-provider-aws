@@ -23,7 +23,7 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,14 +59,14 @@ func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayModel(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func testAccCheckAWSAPIGatewayModelExists(n, rName string, res *apigateway.Model
 			return fmt.Errorf("No API Gateway Model ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetModelInput{
 			ModelName: aws.String(rName),
@@ -122,7 +122,7 @@ func testAccCheckAWSAPIGatewayModelExists(n, rName string, res *apigateway.Model
 }
 
 func testAccCheckAWSAPIGatewayModelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_model" {

@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -138,7 +138,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,7 +214,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,7 +257,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -302,7 +302,7 @@ func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -339,14 +339,14 @@ func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayIntegration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -365,7 +365,7 @@ func testAccCheckAWSAPIGatewayIntegrationExists(n string, res *apigateway.Integr
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetIntegrationInput{
 			HttpMethod: aws.String("GET"),
@@ -384,7 +384,7 @@ func testAccCheckAWSAPIGatewayIntegrationExists(n string, res *apigateway.Integr
 }
 
 func testAccCheckAWSAPIGatewayIntegrationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_integration" {

@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -61,7 +61,7 @@ func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
 					testAccCheckAWSAPIGatewayRestAPIExists(restApiResourceName, &restApi),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), restApiResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayRestApi(), restApiResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,7 +77,7 @@ func TestAccAWSAPIGatewayDeployment_Triggers(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSAPIGatewayDeployment_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +162,7 @@ func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -185,7 +185,7 @@ func TestAccAWSAPIGatewayDeployment_StageName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -213,7 +213,7 @@ func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -234,7 +234,7 @@ func TestAccAWSAPIGatewayDeployment_Variables(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,7 +260,7 @@ func testAccCheckAWSAPIGatewayDeploymentExists(n string, res *apigateway.Deploym
 			return fmt.Errorf("No API Gateway Deployment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetDeploymentInput{
 			DeploymentId: aws.String(rs.Primary.ID),
@@ -283,7 +283,7 @@ func testAccCheckAWSAPIGatewayDeploymentExists(n string, res *apigateway.Deploym
 
 func testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName string, res *apigateway.Stage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -306,7 +306,7 @@ func testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName string, res *ap
 }
 
 func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_deployment" {

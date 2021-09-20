@@ -68,13 +68,13 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 
 	name := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -98,13 +98,13 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 
 	name := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -127,13 +127,13 @@ func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -178,20 +178,20 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	name := acctest.RandomSubdomain()
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayBasePathMapping(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -210,7 +210,7 @@ func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathM
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		domainName, basePath, err := decodeApiGatewayBasePathMappingId(rs.Primary.ID)
 		if err != nil {
@@ -234,7 +234,7 @@ func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathM
 
 func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_base_path_mapping" {
@@ -356,7 +356,7 @@ resource "aws_api_gateway_deployment" "test" {
   stage_name  = "test"
   depends_on  = [aws_api_gateway_integration.test]
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccAWSAPIGatewayBasePathConfigBasePath(domainName, key, certificate, basePath string) string {

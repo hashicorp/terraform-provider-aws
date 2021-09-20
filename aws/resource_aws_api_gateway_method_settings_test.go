@@ -21,7 +21,7 @@ func TestAccAWSAPIGatewayMethodSettings_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheDataEncrypted(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,7 +87,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,7 +132,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CachingEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +169,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_DataTraceEnabled(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +206,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_LoggingLevel(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +245,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_MetricsEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -284,7 +284,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -327,7 +327,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_RequireAuthorizationForCacheCon
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -364,7 +364,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimit(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -402,7 +402,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingBurstLimitDisabledByD
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -439,7 +439,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimit(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -477,7 +477,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_ThrottlingRateLimitDisabledByDe
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -514,7 +514,7 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_UnauthorizedCacheControlHeaderS
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -584,14 +584,14 @@ func TestAccAWSAPIGatewayMethodSettings_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsLoggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodSettingsExists(resourceName, &stage),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethodSettings(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayMethodSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -610,7 +610,7 @@ func testAccCheckAWSAPIGatewayMethodSettingsExists(n string, res *apigateway.Sta
 			return fmt.Errorf("No API Gateway Stage ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetStageInput{
 			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
@@ -628,7 +628,7 @@ func testAccCheckAWSAPIGatewayMethodSettingsExists(n string, res *apigateway.Sta
 }
 
 func testAccCheckAWSAPIGatewayMethodSettingsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_method_settings" {

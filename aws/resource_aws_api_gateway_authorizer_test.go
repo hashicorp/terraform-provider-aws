@@ -25,7 +25,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito_authorizerCredentials(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +140,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,7 +187,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -234,7 +234,7 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -261,7 +261,7 @@ func TestAccAWSAPIGatewayAuthorizer_zero_ttl(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -289,14 +289,14 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -315,7 +315,7 @@ func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authori
 			return fmt.Errorf("No API Gateway Authorizer ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetAuthorizerInput{
 			AuthorizerId: aws.String(rs.Primary.ID),
@@ -333,7 +333,7 @@ func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authori
 }
 
 func testAccCheckAWSAPIGatewayAuthorizerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_authorizer" {

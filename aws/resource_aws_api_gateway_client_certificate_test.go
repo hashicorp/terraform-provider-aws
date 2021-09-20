@@ -20,7 +20,7 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,14 +99,14 @@ func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayClientCertificate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.
 			return fmt.Errorf("No API Gateway Client Certificate ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetClientCertificateInput{
 			ClientCertificateId: aws.String(rs.Primary.ID),
@@ -142,7 +142,7 @@ func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.
 }
 
 func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_client_certificate" {

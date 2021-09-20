@@ -16,7 +16,7 @@ func TestAccDataSourceAwsApiGatewayRestApi_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -48,7 +48,7 @@ func TestAccDataSourceAwsApiGatewayRestApi_EndpointConfiguration_VpcEndpointIds(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
