@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepDxLags(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -41,7 +41,7 @@ func testSweepDxLags(region string) error {
 	// DescribeLags has no pagination support
 	output, err := conn.DescribeLags(input)
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect LAG sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -91,7 +91,7 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func TestAccAwsDxLag_ProviderName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,14 +183,14 @@ func TestAccAwsDxLag_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxLagExists(resourceName, &lag),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxLag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -206,7 +206,7 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -249,7 +249,7 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_lag" {
@@ -274,7 +274,7 @@ func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
 
 func testAccCheckAwsDxLagExists(name string, v *directconnect.Lag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

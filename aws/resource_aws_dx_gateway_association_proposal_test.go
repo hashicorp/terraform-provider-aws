@@ -27,14 +27,14 @@ func init() {
 }
 
 func testSweepDirectConnectGatewayAssociationProposals(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).dxconn
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = lister.DescribeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
 		if page == nil {
@@ -58,13 +58,13 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 			d := r.Data(nil)
 			d.SetId(proposalID)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway Association Proposal sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
@@ -73,7 +73,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Association Proposals (%s): %w", region, err))
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = acctest.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateway Association Proposals (%s): %w", region, err))
@@ -173,7 +173,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 				Config: testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -199,7 +199,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -294,7 +294,7 @@ func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 }
 
 func testAccCheckAwsDxGatewayAssociationProposalDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway_association_proposal" {
@@ -328,7 +328,7 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
 
@@ -359,7 +359,7 @@ func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) re
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
 
