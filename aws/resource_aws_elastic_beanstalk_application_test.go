@@ -50,7 +50,7 @@ func testSweepElasticBeanstalkApplications(region string) error {
 				ApplicationName: bsa.ApplicationName,
 			})
 		if err != nil {
-			if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
 				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
 				continue
 			}
@@ -225,7 +225,7 @@ func testAccCheckBeanstalkAppDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !isAWSErr(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
 			return err
 		}
 	}

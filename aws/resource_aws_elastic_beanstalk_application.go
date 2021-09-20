@@ -236,7 +236,7 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		app, err = getBeanstalkApplication(d.Id(), conn)
 	}
 	if err != nil {
@@ -300,7 +300,7 @@ func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta i
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		app, err = getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
 	}
 	if err != nil {
@@ -314,7 +314,7 @@ func getBeanstalkApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk)
 		ApplicationNames: []*string{aws.String(id)},
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
 			return nil, nil
 		}
 		return nil, err
