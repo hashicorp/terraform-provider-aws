@@ -1,4 +1,4 @@
-package aws
+package guardduty
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/guardduty/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -73,7 +72,7 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
 
-	_, err = waiter.waitPublishingDestinationCreated(conn, aws.StringValue(output.DestinationId), detectorID)
+	_, err = waitPublishingDestinationCreated(conn, aws.StringValue(output.DestinationId), detectorID)
 
 	if err != nil {
 		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %w",

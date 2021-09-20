@@ -1,4 +1,4 @@
-package aws
+package guardduty
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/guardduty/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,7 +50,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(adminAccountID)
 
-	if _, err := waiter.waitAdminAccountEnabled(conn, d.Id()); err != nil {
+	if _, err := waitAdminAccountEnabled(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
@@ -91,7 +90,7 @@ func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error disabling GuardDuty Organization Admin Account (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.waitAdminAccountNotFound(conn, d.Id()); err != nil {
+	if _, err := waitAdminAccountNotFound(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to disable: %w", d.Id(), err)
 	}
 
