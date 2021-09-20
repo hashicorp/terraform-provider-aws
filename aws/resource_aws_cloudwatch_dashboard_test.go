@@ -9,19 +9,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
@@ -44,11 +45,11 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
@@ -80,11 +81,11 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 func TestAccAWSCloudWatchDashboard_updateName(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
-	rInt := acctest.RandInt()
-	rInt2 := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
+	rInt2 := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
