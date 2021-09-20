@@ -9,7 +9,7 @@ import (
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region
-var elasticBeanstalkHostedZoneIds = map[string]string{
+var HostedZoneIDs = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z1EI3BVKMKK4AM",
 	endpoints.ApSoutheast1RegionID: "Z16FZ9L249IFLT",
 	endpoints.ApSoutheast2RegionID: "Z2PCDNR3VC2G1N",
@@ -54,7 +54,7 @@ func dataSourceHostedZoneRead(d *schema.ResourceData, meta interface{}) error {
 		region = v.(string)
 	}
 
-	zoneID, ok := elasticBeanstalkHostedZoneIds[region]
+	zoneID, ok := HostedZoneIDs[region]
 
 	if !ok {
 		return fmt.Errorf("Unsupported Region: %s", region)
