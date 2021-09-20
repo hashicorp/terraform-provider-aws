@@ -1,4 +1,4 @@
-package aws
+package quicksight_test
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
@@ -84,7 +84,7 @@ func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
 			GroupName:    aws.String(groupName),
 		}
 
-		found, err := finder.FindGroupMembership(conn, listInput, userName)
+		found, err := tfquicksight.FindGroupMembership(conn, listInput, userName)
 
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
@@ -120,7 +120,7 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 			GroupName:    aws.String(groupName),
 		}
 
-		found, err := finder.FindGroupMembership(conn, listInput, userName)
+		found, err := tfquicksight.FindGroupMembership(conn, listInput, userName)
 		if err != nil {
 			return fmt.Errorf("Error listing QuickSight Group Memberships: %s", err)
 		}

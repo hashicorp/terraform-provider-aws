@@ -1,4 +1,4 @@
-package aws
+package quicksight
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -108,7 +107,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		GroupName:    aws.String(groupName),
 	}
 
-	found, err := finder.FindGroupMembership(conn, listInput, userName)
+	found, err := FindGroupMembership(conn, listInput, userName)
 	if err != nil {
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
