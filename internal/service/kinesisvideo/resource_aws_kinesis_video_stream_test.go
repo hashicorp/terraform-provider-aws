@@ -1,4 +1,4 @@
-package aws
+package kinesisvideo_test
 
 import (
 	"fmt"
