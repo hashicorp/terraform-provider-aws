@@ -14,8 +14,8 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (

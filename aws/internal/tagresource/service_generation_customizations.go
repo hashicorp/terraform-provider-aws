@@ -1,7 +1,7 @@
 package tagresource
 
 import (
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // ServiceIdentifierAttributeName determines the schema identifier attribute name.

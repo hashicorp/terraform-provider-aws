@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	testingiface "github.com/mitchellh/go-testing-interface"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 )
 
 func TestTestFailIfAllEmpty(t *testing.T) {

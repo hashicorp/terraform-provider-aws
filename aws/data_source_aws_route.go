@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func dataSourceAwsRoute() *schema.Resource {

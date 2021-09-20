@@ -1,4 +1,4 @@
-module github.com/terraform-providers/terraform-provider-aws/tools
+module github.com/hashicorp/terraform-provider-aws/tools
 
 go 1.15
 

@@ -95,7 +95,7 @@ Implementing name generation support for Terraform AWS Provider resources requir
 
 ### Resource Name Generation Code Implementation
 
-- In the resource Go file (e.g. `aws/resource_aws_service_thing.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"`
+- In the resource Go file (e.g. `aws/resource_aws_service_thing.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"`
 - In the resource schema, add the new `name_prefix` attribute and adjust the `name` attribute to be `Optional`, `Computed`, and `ConflictsWith` the `name_prefix` attribute. Ensure to keep any existing schema fields on `name` such as `ValidateFunc`. e.g.
 
 ```go
@@ -132,7 +132,7 @@ d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
 
 ### Resource Name Generation Testing Implementation
 
-- In the resource testing (e.g. `aws/resource_aws_service_thing_test.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"`
+- In the resource testing (e.g. `aws/resource_aws_service_thing_test.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"`
 - In the resource testing, implement two new tests named `_Name_Generated` and `_NamePrefix` with associated configurations, that verifies creating the resource without `name` and `name_prefix` arguments (for the former) and with only the `name_prefix` argument (for the latter). e.g.
 
 ```go
@@ -288,7 +288,7 @@ More details about this code generation, including fixes for potential error mes
 
 ### Resource Tagging Code Implementation
 
-- In the resource Go file (e.g. `aws/resource_aws_eks_cluster.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"`
+- In the resource Go file (e.g. `aws/resource_aws_eks_cluster.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"`
 - In the resource schema, add `"tags": tagsSchema(),` and `"tags_all": tagsSchemaComputed(),`
 - In the `schema.Resource` struct definition, add the `CustomizeDiff: SetTagsDiff` handling essential to resource support for default tags:
 
@@ -575,7 +575,7 @@ More details about this code generation can be found in the [namevaluesfilters d
 
 ### Resource Filter Code Implementation
 
-- In the resource's equivalent data source Go file (e.g. `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/namevaluesfilters"`
+- In the resource's equivalent data source Go file (e.g. `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/aws/internal/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 

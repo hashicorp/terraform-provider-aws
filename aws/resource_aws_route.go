@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 var routeValidDestinations = []string{
