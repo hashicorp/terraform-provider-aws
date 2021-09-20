@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxBgpPeer() *schema.Resource {
+func ResourceBGPPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxBgpPeerCreate,
-		Read:   resourceAwsDxBgpPeerRead,
-		Delete: resourceAwsDxBgpPeerDelete,
+		Create: resourceBGPPeerCreate,
+		Read:   resourceBGPPeerRead,
+		Delete: resourceBGPPeerDelete,
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
@@ -75,7 +75,7 @@ func resourceAwsDxBgpPeer() *schema.Resource {
 	}
 }
 
-func resourceAwsDxBgpPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBGPPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
@@ -125,10 +125,10 @@ func resourceAwsDxBgpPeerCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error waiting for Direct Connect BGP peer (%s) to be available: %s", d.Id(), err)
 	}
 
-	return resourceAwsDxBgpPeerRead(d, meta)
+	return resourceBGPPeerRead(d, meta)
 }
 
-func resourceAwsDxBgpPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBGPPeerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
@@ -156,7 +156,7 @@ func resourceAwsDxBgpPeerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDxBgpPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)

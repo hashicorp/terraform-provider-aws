@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
+func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate,
-		Read:   resourceAwsDxHostedPublicVirtualInterfaceAccepterRead,
-		Update: resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate,
-		Delete: resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete,
+		Create: resourceHostedPublicVirtualInterfaceAccepterCreate,
+		Read:   resourceHostedPublicVirtualInterfaceAccepterRead,
+		Update: resourceHostedPublicVirtualInterfaceAccepterUpdate,
+		Delete: resourceHostedPublicVirtualInterfaceAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedPublicVirtualInterfaceAccepterImport,
 		},
@@ -46,7 +46,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
@@ -74,10 +74,10 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceD
 		return err
 	}
 
-	return resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate(d, meta)
+	return resourceHostedPublicVirtualInterfaceAccepterUpdate(d, meta)
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -123,15 +123,15 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
-	return resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d, meta)
+	return resourceHostedPublicVirtualInterfaceAccepterRead(d, meta)
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Will not delete Direct Connect virtual interface. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

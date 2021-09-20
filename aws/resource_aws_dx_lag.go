@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxLag() *schema.Resource {
+func ResourceLag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxLagCreate,
-		Read:   resourceAwsDxLagRead,
-		Update: resourceAwsDxLagUpdate,
-		Delete: resourceAwsDxLagDelete,
+		Create: resourceLagCreate,
+		Read:   resourceLagRead,
+		Update: resourceLagUpdate,
+		Delete: resourceLagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsDxLag() *schema.Resource {
 	}
 }
 
-func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -113,10 +113,10 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceAwsDxLagRead(d, meta)
+	return resourceLagRead(d, meta)
 }
 
-func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -169,7 +169,7 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.HasChange("name") {
@@ -195,10 +195,10 @@ func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsDxLagRead(d, meta)
+	return resourceLagRead(d, meta)
 }
 
-func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.Get("force_destroy").(bool) {

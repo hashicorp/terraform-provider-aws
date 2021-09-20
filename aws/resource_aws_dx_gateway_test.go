@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -84,7 +85,7 @@ func testSweepDirectConnectGateways(region string) error {
 				continue
 			}
 
-			r := resourceAwsDxGateway()
+			r := ResourceGateway()
 			d := r.Data(nil)
 			d.SetId(directConnectGatewayID)
 
@@ -156,7 +157,7 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

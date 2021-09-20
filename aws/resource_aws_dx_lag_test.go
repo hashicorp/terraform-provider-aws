@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -66,7 +67,7 @@ func testSweepDxLags(region string) error {
 
 		id := aws.StringValue(lag.LagId)
 
-		r := resourceAwsDxLag()
+		r := ResourceLag()
 		d := r.Data(nil)
 		d.SetId(id)
 
@@ -191,7 +192,7 @@ func TestAccAwsDxLag_disappears(t *testing.T) {
 				Config: testAccDxLagConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxLagExists(resourceName, &lag),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxLag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDxGateway() *schema.Resource {
+func DataSourceGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDxGatewayRead,
+		Read: dataSourceGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
@@ -31,7 +31,7 @@ func dataSourceAwsDxGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	name := d.Get("name").(string)
 

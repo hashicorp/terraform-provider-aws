@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
+func ResourceGatewayAssociationProposal() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxGatewayAssociationProposalCreate,
-		Read:   resourceAwsDxGatewayAssociationProposalRead,
-		Delete: resourceAwsDxGatewayAssociationProposalDelete,
+		Create: resourceGatewayAssociationProposalCreate,
+		Read:   resourceGatewayAssociationProposalRead,
+		Delete: resourceGatewayAssociationProposalDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxGatewayAssociationProposalImport,
@@ -90,7 +90,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 	}
 }
 
-func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
@@ -114,10 +114,10 @@ func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.DirectConnectGatewayAssociationProposal.ProposalId))
 
-	return resourceAwsDxGatewayAssociationProposalRead(d, meta)
+	return resourceGatewayAssociationProposalRead(d, meta)
 }
 
-func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	// First attempt to find by proposal ID.
@@ -171,7 +171,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsDxGatewayAssociationProposalDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationProposalDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())

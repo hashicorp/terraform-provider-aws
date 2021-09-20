@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxTransitVirtualInterface() *schema.Resource {
+func ResourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxTransitVirtualInterfaceCreate,
-		Read:   resourceAwsDxTransitVirtualInterfaceRead,
-		Update: resourceAwsDxTransitVirtualInterfaceUpdate,
-		Delete: resourceAwsDxTransitVirtualInterfaceDelete,
+		Create: resourceTransitVirtualInterfaceCreate,
+		Read:   resourceTransitVirtualInterfaceRead,
+		Update: resourceTransitVirtualInterfaceUpdate,
+		Delete: resourceTransitVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxTransitVirtualInterfaceImport,
 		},
@@ -115,7 +115,7 @@ func resourceAwsDxTransitVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -156,10 +156,10 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	return resourceAwsDxTransitVirtualInterfaceRead(d, meta)
+	return resourceTransitVirtualInterfaceRead(d, meta)
 }
 
-func resourceAwsDxTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -216,7 +216,7 @@ func resourceAwsDxTransitVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDxTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
@@ -225,10 +225,10 @@ func resourceAwsDxTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	return resourceAwsDxTransitVirtualInterfaceRead(d, meta)
+	return resourceTransitVirtualInterfaceRead(d, meta)
 }
 
-func resourceAwsDxTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
 }
 

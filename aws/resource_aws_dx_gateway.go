@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxGateway() *schema.Resource {
+func ResourceGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxGatewayCreate,
-		Read:   resourceAwsDxGatewayRead,
-		Delete: resourceAwsDxGatewayDelete,
+		Create: resourceGatewayCreate,
+		Read:   resourceGatewayRead,
+		Delete: resourceGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -53,7 +53,7 @@ func resourceAwsDxGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	name := d.Get("name").(string)
@@ -80,10 +80,10 @@ func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsDxGatewayRead(d, meta)
+	return resourceGatewayRead(d, meta)
 }
 
-func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	output, err := finder.GatewayByID(conn, d.Id())
@@ -105,7 +105,7 @@ func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())

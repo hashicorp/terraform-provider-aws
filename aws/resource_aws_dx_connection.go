@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxConnection() *schema.Resource {
+func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxConnectionCreate,
-		Read:   resourceAwsDxConnectionRead,
-		Update: resourceAwsDxConnectionUpdate,
-		Delete: resourceAwsDxConnectionDelete,
+		Create: resourceConnectionCreate,
+		Read:   resourceConnectionRead,
+		Update: resourceConnectionUpdate,
+		Delete: resourceConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsDxConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -105,10 +105,10 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(output.ConnectionId))
 
-	return resourceAwsDxConnectionRead(d, meta)
+	return resourceConnectionRead(d, meta)
 }
 
-func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -162,7 +162,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	arn := d.Get("arn").(string)
@@ -174,10 +174,10 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsDxConnectionRead(d, meta)
+	return resourceConnectionRead(d, meta)
 }
 
-func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	return deleteDirectConnectConnection(conn, d.Id())

@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxGatewayAssociation() *schema.Resource {
+func ResourceGatewayAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxGatewayAssociationCreate,
-		Read:   resourceAwsDxGatewayAssociationRead,
-		Update: resourceAwsDxGatewayAssociationUpdate,
-		Delete: resourceAwsDxGatewayAssociationDelete,
+		Create: resourceGatewayAssociationCreate,
+		Read:   resourceGatewayAssociationRead,
+		Update: resourceGatewayAssociationUpdate,
+		Delete: resourceGatewayAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxGatewayAssociationImport,
@@ -110,7 +110,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	var associationID string
@@ -167,10 +167,10 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsDxGatewayAssociationRead(d, meta)
+	return resourceGatewayAssociationRead(d, meta)
 }
 
-func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	associationID := d.Get("dx_gateway_association_id").(string)
@@ -201,7 +201,7 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	associationID := d.Get("dx_gateway_association_id").(string)
@@ -231,10 +231,10 @@ func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to update: %w", d.Id(), err)
 	}
 
-	return resourceAwsDxGatewayAssociationRead(d, meta)
+	return resourceGatewayAssociationRead(d, meta)
 }
 
-func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	associationID := d.Get("dx_gateway_association_id").(string)

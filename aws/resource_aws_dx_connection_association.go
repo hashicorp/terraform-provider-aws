@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxConnectionAssociation() *schema.Resource {
+func ResourceConnectionAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxConnectionAssociationCreate,
-		Read:   resourceAwsDxConnectionAssociationRead,
-		Delete: resourceAwsDxConnectionAssociationDelete,
+		Create: resourceConnectionAssociationCreate,
+		Read:   resourceConnectionAssociationRead,
+		Delete: resourceConnectionAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"connection_id": {
@@ -35,7 +35,7 @@ func resourceAwsDxConnectionAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	connectionID := d.Get("connection_id").(string)
@@ -57,7 +57,7 @@ func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	lagID := d.Get("lag_id").(string)
@@ -76,7 +76,7 @@ func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	lagID := d.Get("lag_id").(string)
