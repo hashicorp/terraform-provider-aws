@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepBackupVaults(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -34,7 +34,7 @@ func testSweepBackupVaults(region string) error {
 	conn := client.(*AWSClient).backupconn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
@@ -92,13 +92,13 @@ func testSweepBackupVaults(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -107,7 +107,7 @@ func testSweepBackupVaults(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
 	}
 
@@ -122,7 +122,7 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -148,7 +148,7 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -175,7 +175,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,14 +224,14 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,7 +240,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*AWSClient).backupconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault" {
 			continue
@@ -269,7 +269,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*AWSClient).backupconn
 		params := &backup.DescribeBackupVaultInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
@@ -285,7 +285,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 }
 
 func testAccPreCheckAWSBackup(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*AWSClient).backupconn
 
 	input := &backup.ListBackupVaultsInput{}
 

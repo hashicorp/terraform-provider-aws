@@ -23,7 +23,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 			testAccPreCheckAWSBackup(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 func testAccCheckAwsBackupRegionSettingsExists(settings *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*AWSClient).backupconn
 		resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
 		if err != nil {
 			return err

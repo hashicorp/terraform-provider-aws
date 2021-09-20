@@ -22,14 +22,14 @@ func init() {
 }
 
 func testSweepBackupVaultNotifications(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).backupconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &backup.ListBackupVaultsInput{}
@@ -48,7 +48,7 @@ func testSweepBackupVaultNotifications(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vault.BackupVaultName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -58,11 +58,11 @@ func testSweepBackupVaultNotifications(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vault Notifications for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Backup Vault Notifications sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -78,7 +78,7 @@ func TestAccAwsBackupVaultNotification_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,14 +105,14 @@ func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultNotificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultNotificationExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupVaultNotifications(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVaultNotifications(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,7 +121,7 @@ func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultNotificationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*AWSClient).backupconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_notifications" {
 			continue
@@ -150,7 +150,7 @@ func testAccCheckAwsBackupVaultNotificationExists(name string, vault *backup.Get
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*AWSClient).backupconn
 		params := &backup.GetBackupVaultNotificationsInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}

@@ -20,7 +20,7 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,14 +47,14 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupSelection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupSelection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,15 +71,15 @@ func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupSelectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupSelection(), resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupPlan(), backupPlanResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupSelection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupPlan(), backupPlanResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +95,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,7 +151,7 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 }
 
 func testAccCheckAwsBackupSelectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*AWSClient).backupconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_selection" {
 			continue
@@ -208,7 +208,7 @@ func testAccCheckAwsBackupSelectionExists(name string, selection *backup.GetBack
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*AWSClient).backupconn
 
 		input := &backup.GetBackupSelectionInput{
 			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),

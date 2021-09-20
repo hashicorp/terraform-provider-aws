@@ -25,14 +25,14 @@ func init() {
 }
 
 func testSweepBackupVaultPolicies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).backupconn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
@@ -44,13 +44,13 @@ func testSweepBackupVaultPolicies(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vault.BackupVaultName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Backup Vault Policies sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -59,7 +59,7 @@ func testSweepBackupVaultPolicies(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vault Policies for %s: %w", region, err))
 	}
 
@@ -74,7 +74,7 @@ func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,14 +108,14 @@ func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupVaultPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVaultPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,14 +132,14 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultPolicyExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), vaultResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBackupVault(), vaultResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,7 +148,7 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*AWSClient).backupconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_policy" {
@@ -182,7 +182,7 @@ func testAccCheckAwsBackupVaultPolicyExists(name string, vault *backup.GetBackup
 			return fmt.Errorf("No Backup Vault Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*AWSClient).backupconn
 
 		output, err := finder.BackupVaultAccessPolicyByName(conn, rs.Primary.ID)
 

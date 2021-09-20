@@ -24,14 +24,14 @@ func init() {
 }
 
 func testSweepFSXBackups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).fsxconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
 
@@ -45,7 +45,7 @@ func testSweepFSXBackups(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.BackupId))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -55,11 +55,11 @@ func testSweepFSXBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Backups for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Backups for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping FSx Backups sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -74,7 +74,7 @@ func TestAccAWSFsxBackup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,14 +102,14 @@ func TestAccAWSFsxBackup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxBackup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxBackup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,14 +124,14 @@ func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsFsxBackupConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,7 +146,7 @@ func TestAccAWSFsxBackup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSFsxBackup_implictTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +217,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).fsxconn
+		conn := acctest.Provider.Meta().(*AWSClient).fsxconn
 
 		output, err := finder.BackupByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -235,7 +235,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 }
 
 func testAccCheckFsxBackupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).fsxconn
+	conn := acctest.Provider.Meta().(*AWSClient).fsxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_backup" {
