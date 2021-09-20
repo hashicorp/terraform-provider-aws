@@ -1,4 +1,4 @@
-package aws
+package s3
 
 import (
 	"bytes"
@@ -25,10 +25,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -82,7 +80,7 @@ func ResourceBucket() *schema.Resource {
 				Default:       "private",
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(tfs3.BucketCannedACL_Values(), false),
+				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
 			},
 
 			"grant": {
@@ -807,7 +805,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.bucketCreatedTimeout, func() *resource.RetryError {
+	err := resource.Retry(bucketCreatedTimeout, func() *resource.RetryError {
 		_, err := conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -1961,12 +1959,12 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.propagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryption(i)
 		},
 		s3.ErrCodeNoSuchBucket,
-		tfs3.ErrCodeOperationAborted,
+		ErrCodeOperationAborted,
 	)
 
 	if err != nil {

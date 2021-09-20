@@ -1,4 +1,4 @@
-package aws
+package s3_test
 
 import (
 	"context"
@@ -25,13 +25,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func init() {
@@ -318,7 +318,7 @@ func TestAccAWSS3Bucket_Tags_withSystemTags(t *testing.T) {
 					return fmt.Errorf("error deleting CloudFormation stack: %w", err)
 				}
 
-				if _, err := waiter.WaitStackDeleted(conn, stackID, requestToken, 10*time.Minute); err != nil {
+				if _, err := tfcloudformation.WaitStackDeleted(conn, stackID, requestToken, 10*time.Minute); err != nil {
 					return fmt.Errorf("Error waiting for CloudFormation stack deletion: %s", err)
 				}
 
@@ -2915,7 +2915,7 @@ func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) r
 			return fmt.Errorf("error creating CloudFormation stack: %w", err)
 		}
 
-		stack, err := waiter.WaitStackCreated(conn, aws.StringValue(resp.StackId), requestToken, 10*time.Minute)
+		stack, err := tfcloudformation.WaitStackCreated(conn, aws.StringValue(resp.StackId), requestToken, 10*time.Minute)
 		if err != nil {
 			return fmt.Errorf("Error waiting for CloudFormation stack creation: %w", err)
 		}

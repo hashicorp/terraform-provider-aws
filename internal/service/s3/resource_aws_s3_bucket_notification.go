@@ -1,4 +1,4 @@
-package aws
+package s3
 
 import (
 	"fmt"
@@ -10,8 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -312,7 +311,7 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
-	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketNotificationConfiguration(i)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {

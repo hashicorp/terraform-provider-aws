@@ -1,4 +1,4 @@
-package aws
+package s3
 
 import (
 	"fmt"
@@ -10,10 +10,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -87,7 +85,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Putting S3 Bucket Metrics Configuration: %s", input)
-	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketMetricsConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -134,7 +132,7 @@ func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
 		return nil
 	}
 
@@ -170,7 +168,7 @@ func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Metrics Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
