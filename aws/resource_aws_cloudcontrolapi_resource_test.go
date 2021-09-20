@@ -268,7 +268,7 @@ func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *test
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsCloudControlApiResourceConfigDesiredStateInvalidPropertyValue(rName),
-				ExpectError: regexp.MustCompile(`LogGroupName: Does not match pattern`),
+				ExpectError: regexp.MustCompile(`Model validation failed`),
 			},
 		},
 	})
