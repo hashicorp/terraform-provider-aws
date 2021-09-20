@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFrontFunction() *schema.Resource {
+func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontFunctionRead,
+		Read: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -66,7 +66,7 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	name := d.Get("name").(string)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func testSweepCloudFrontRealtimeLogConfigs(region string) error {
 			id := aws.StringValue(config.ARN)
 
 			log.Printf("[INFO] Deleting CloudFront Real-time Log Config: %s", id)
-			r := resourceAwsCloudFrontRealtimeLogConfig()
+			r := ResourceRealtimeLogConfig()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -127,7 +128,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontRealtimeLogConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

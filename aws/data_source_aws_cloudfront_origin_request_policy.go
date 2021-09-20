@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
+func DataSourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontOriginRequestPolicyRead,
+		Read: dataSourceOriginRequestPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -109,7 +109,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if d.Get("id").(string) == "" {

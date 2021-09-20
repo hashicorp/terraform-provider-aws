@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontPublicKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePublicKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

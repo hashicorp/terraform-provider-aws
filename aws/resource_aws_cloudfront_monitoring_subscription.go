@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
+func ResourceMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontMonitoringSubscriptionCreate,
-		Read:   resourceAwsCloudFrontMonitoringSubscriptionRead,
-		Update: resourceAwsCloudFrontMonitoringSubscriptionCreate,
-		Delete: resourceAwsCloudFrontMonitoringSubscriptionDelete,
+		Create: resourceMonitoringSubscriptionCreate,
+		Read:   resourceMonitoringSubscriptionRead,
+		Update: resourceMonitoringSubscriptionCreate,
+		Delete: resourceMonitoringSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudFrontMonitoringSubscriptionImport,
 		},
@@ -59,7 +59,7 @@ func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	id := d.Get("distribution_id").(string)
@@ -77,10 +77,10 @@ func resourceAwsCloudFrontMonitoringSubscriptionCreate(d *schema.ResourceData, m
 
 	d.SetId(id)
 
-	return resourceAwsCloudFrontMonitoringSubscriptionRead(d, meta)
+	return resourceMonitoringSubscriptionRead(d, meta)
 }
 
-func resourceAwsCloudFrontMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	subscription, err := finder.MonitoringSubscriptionByDistributionId(conn, d.Id())
@@ -111,7 +111,7 @@ func resourceAwsCloudFrontMonitoringSubscriptionRead(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsCloudFrontMonitoringSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMonitoringSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())

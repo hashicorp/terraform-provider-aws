@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
+func ResourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontOriginRequestPolicyCreate,
-		Read:   resourceAwsCloudFrontOriginRequestPolicyRead,
-		Update: resourceAwsCloudFrontOriginRequestPolicyUpdate,
-		Delete: resourceAwsCloudFrontOriginRequestPolicyDelete,
+		Create: resourceOriginRequestPolicyCreate,
+		Read:   resourceOriginRequestPolicyRead,
+		Update: resourceOriginRequestPolicyUpdate,
+		Delete: resourceOriginRequestPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -124,7 +124,7 @@ func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.CreateOriginRequestPolicyInput{
@@ -139,10 +139,10 @@ func resourceAwsCloudFrontOriginRequestPolicyCreate(d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(resp.OriginRequestPolicy.Id))
 
-	return resourceAwsCloudFrontOriginRequestPolicyRead(d, meta)
+	return resourceOriginRequestPolicyRead(d, meta)
 }
 
-func resourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	request := &cloudfront.GetOriginRequestPolicyInput{
 		Id: aws.String(d.Id()),
@@ -175,7 +175,7 @@ func resourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsCloudFrontOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdateOriginRequestPolicyInput{
@@ -189,10 +189,10 @@ func resourceAwsCloudFrontOriginRequestPolicyUpdate(d *schema.ResourceData, meta
 		return err
 	}
 
-	return resourceAwsCloudFrontOriginRequestPolicyRead(d, meta)
+	return resourceOriginRequestPolicyRead(d, meta)
 }
 
-func resourceAwsCloudFrontOriginRequestPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginRequestPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeleteOriginRequestPolicyInput{

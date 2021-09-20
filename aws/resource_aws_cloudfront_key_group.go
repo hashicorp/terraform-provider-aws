@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontKeyGroup() *schema.Resource {
+func ResourceKeyGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontKeyGroupCreate,
-		Read:   resourceAwsCloudFrontKeyGroupRead,
-		Update: resourceAwsCloudFrontKeyGroupUpdate,
-		Delete: resourceAwsCloudFrontKeyGroupDelete,
+		Create: resourceKeyGroupCreate,
+		Read:   resourceKeyGroupRead,
+		Update: resourceKeyGroupUpdate,
+		Delete: resourceKeyGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -43,7 +43,7 @@ func resourceAwsCloudFrontKeyGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.CreateKeyGroupInput{
@@ -62,10 +62,10 @@ func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId(aws.StringValue(output.KeyGroup.Id))
-	return resourceAwsCloudFrontKeyGroupRead(d, meta)
+	return resourceKeyGroupRead(d, meta)
 }
 
-func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.GetKeyGroupInput{
 		Id: aws.String(d.Id()),
@@ -95,7 +95,7 @@ func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.UpdateKeyGroupInput{
@@ -109,10 +109,10 @@ func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error updating CloudFront Key Group (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudFrontKeyGroupRead(d, meta)
+	return resourceKeyGroupRead(d, meta)
 }
 
-func resourceAwsCloudFrontKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.DeleteKeyGroupInput{
