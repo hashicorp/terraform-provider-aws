@@ -336,7 +336,7 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("auto_branch_creation_patterns"); ok && v.(*schema.Set).Len() > 0 {
-		input.AutoBranchCreationPatterns = expandStringSet(v.(*schema.Set))
+		input.AutoBranchCreationPatterns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("basic_auth_credentials"); ok {
@@ -372,7 +372,7 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EnvironmentVariables = expandStringMap(v.(map[string]interface{}))
+		input.EnvironmentVariables = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("iam_service_role_arn"); ok {
@@ -493,7 +493,7 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.HasChange("auto_branch_creation_patterns") {
-			input.AutoBranchCreationPatterns = expandStringSet(d.Get("auto_branch_creation_patterns").(*schema.Set))
+			input.AutoBranchCreationPatterns = flex.ExpandStringSet(d.Get("auto_branch_creation_patterns").(*schema.Set))
 		}
 
 		if d.HasChange("basic_auth_credentials") {
@@ -534,7 +534,7 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if d.HasChange("environment_variables") {
 			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
-				input.EnvironmentVariables = expandStringMap(v)
+				input.EnvironmentVariables = flex.ExpandStringMap(v)
 			} else {
 				input.EnvironmentVariables = aws.StringMap(map[string]string{"": ""})
 			}
@@ -628,7 +628,7 @@ func expandAmplifyAutoBranchCreationConfig(tfMap map[string]interface{}) *amplif
 	}
 
 	if v, ok := tfMap["environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.EnvironmentVariables = expandStringMap(v)
+		apiObject.EnvironmentVariables = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["framework"].(string); ok && v != "" {
