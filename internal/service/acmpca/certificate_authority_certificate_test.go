@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 
@@ -43,7 +43,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
@@ -78,7 +78,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsAcmpcaCertificate_Basic(t *testing.T) {
+func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 	dataSourceName := "data.aws_acmpca_certificate.test"
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
+func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
@@ -47,7 +47,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
+func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 

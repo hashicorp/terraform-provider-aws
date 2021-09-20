@@ -86,7 +86,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
+func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -133,7 +133,7 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
+func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -157,7 +157,7 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
+func TestAccACMPCACertificateAuthority_enabled(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -208,7 +208,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
+func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -235,7 +235,7 @@ func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_CustomCname(t *testing.T) {
+func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -326,7 +326,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_Enabled(t *testing.T) {
+func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -398,7 +398,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_ExpirationInDays(t *testing.T) {
+func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -460,7 +460,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_S3ObjectAcl(t *testing.T) {
+func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -512,7 +512,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
+func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
