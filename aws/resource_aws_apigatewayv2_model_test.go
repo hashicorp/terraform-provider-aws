@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
@@ -176,7 +177,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2ModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_model" {
@@ -202,7 +203,7 @@ func testAccCheckAWSAPIGatewayV2ModelDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2ModelDisappears(apiId *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		_, err := conn.DeleteModel(&apigatewayv2.DeleteModelInput{
 			ApiId:   apiId,
@@ -224,7 +225,7 @@ func testAccCheckAWSAPIGatewayV2ModelExists(n string, vApiId *string, v *apigate
 			return fmt.Errorf("No API Gateway v2 model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetModel(&apigatewayv2.GetModelInput{

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2IntegrationResponse() *schema.Resource {
@@ -58,7 +59,7 @@ func resourceAwsApiGatewayV2IntegrationResponse() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2IntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateIntegrationResponseInput{
 		ApiId:                  aws.String(d.Get("api_id").(string)),
@@ -87,7 +88,7 @@ func resourceAwsApiGatewayV2IntegrationResponseCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsApiGatewayV2IntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetIntegrationResponse(&apigatewayv2.GetIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -115,7 +116,7 @@ func resourceAwsApiGatewayV2IntegrationResponseRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsApiGatewayV2IntegrationResponseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -145,7 +146,7 @@ func resourceAwsApiGatewayV2IntegrationResponseUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsApiGatewayV2IntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration response (%s)", d.Id())
 	_, err := conn.DeleteIntegrationResponse(&apigatewayv2.DeleteIntegrationResponseInput{

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayV2Route_basic(t *testing.T) {
@@ -476,7 +477,7 @@ func TestAccAWSAPIGatewayV2Route_UpdateRouteKey(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2RouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_route" {
@@ -511,7 +512,7 @@ func testAccCheckAWSAPIGatewayV2RouteExists(n string, vApiId *string, v *apigate
 			return fmt.Errorf("No API Gateway v2 route ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2DomainName() *schema.Resource {
@@ -111,8 +112,8 @@ func resourceAwsApiGatewayV2DomainName() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2DomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	domainName := d.Get("domain_name").(string)
 
@@ -140,9 +141,9 @@ func resourceAwsApiGatewayV2DomainNameCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2DomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.DomainNameByName(conn, d.Id())
 
@@ -158,9 +159,9 @@ func resourceAwsApiGatewayV2DomainNameRead(d *schema.ResourceData, meta interfac
 
 	d.Set("api_mapping_selection_expression", output.ApiMappingSelectionExpression)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("/domainnames/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -189,7 +190,7 @@ func resourceAwsApiGatewayV2DomainNameRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2DomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
 		input := &apigatewayv2.UpdateDomainNameInput{
@@ -235,7 +236,7 @@ func resourceAwsApiGatewayV2DomainNameUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2DomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 domain name (%s)", d.Id())
 	_, err := conn.DeleteDomainName(&apigatewayv2.DeleteDomainNameInput{

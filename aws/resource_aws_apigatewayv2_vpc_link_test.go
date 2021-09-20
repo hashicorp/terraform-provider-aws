@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).apigatewayv2conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn
 	input := &apigatewayv2.GetVpcLinksInput{}
 	var sweeperErrs *multierror.Error
 
@@ -186,7 +187,7 @@ func TestAccAWSAPIGatewayV2VpcLink_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2VpcLinkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_vpc_link" {
@@ -211,7 +212,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		if _, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 			VpcLinkId: v.VpcLinkId,
@@ -242,7 +243,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkExists(n string, v *apigatewayv2.GetVpcLi
 			return fmt.Errorf("No API Gateway v2 VPC Link ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),

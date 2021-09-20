@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepAPIGatewayV2DomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).apigatewayv2conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn
 	input := &apigatewayv2.GetDomainNamesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -363,7 +364,7 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_domain_name" {
@@ -397,7 +398,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 			return fmt.Errorf("No API Gateway v2 domain name ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		output, err := finder.DomainNameByName(conn, rs.Primary.ID)
 

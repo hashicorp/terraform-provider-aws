@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
@@ -119,7 +120,7 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_AllAttributes(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_integration_response" {
@@ -146,7 +147,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy(s *terraform.State) e
 
 func testAccCheckAWSAPIGatewayV2IntegrationResponseDisappears(apiId, integrationId *string, v *apigatewayv2.GetIntegrationResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		_, err := conn.DeleteIntegrationResponse(&apigatewayv2.DeleteIntegrationResponseInput{
 			ApiId:                 apiId,
@@ -169,7 +170,7 @@ func testAccCheckAWSAPIGatewayV2IntegrationResponseExists(n string, vApiId, vInt
 			return fmt.Errorf("No API Gateway v2 integration response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apigatewayv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		integrationId := aws.String(rs.Primary.Attributes["integration_id"])
