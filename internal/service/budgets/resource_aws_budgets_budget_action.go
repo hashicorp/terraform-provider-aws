@@ -1,4 +1,4 @@
-package aws
+package budgets
 
 import (
 	"fmt"
@@ -11,14 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceBudgetAction() *schema.Resource {
@@ -231,7 +228,7 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Creating Budget Action: %s", input)
-	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(tfiam.PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateBudgetAction(input)
 	}, budgets.ErrCodeAccessDeniedException)
 
@@ -243,9 +240,9 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 	actionID := aws.StringValue(output.ActionId)
 	budgetName := aws.StringValue(output.BudgetName)
 
-	d.SetId(tfbudgets.BudgetActionCreateResourceID(accountID, actionID, budgetName))
+	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waiter.waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
 		return fmt.Errorf("error waiting for Budget Action (%s) to create: %w", d.Id(), err)
 	}
 
@@ -255,13 +252,13 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
+	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	output, err := finder.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+	output, err := FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
@@ -310,7 +307,7 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
+	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -353,7 +350,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error updating Budget Action (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
 		return fmt.Errorf("error waiting for Budget Action (%s) to update: %w", d.Id(), err)
 	}
 
@@ -363,7 +360,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceBudgetActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(d.Id())
+	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
 		return err

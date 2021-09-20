@@ -1,4 +1,4 @@
-package aws
+package budgets_test
 
 import (
 	"fmt"
@@ -12,14 +12,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 )
 
 func init() {
@@ -161,7 +161,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 			return err
 		}
 
-		output, err := finder.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		output, err := tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if err != nil {
 			return err
@@ -187,7 +187,7 @@ func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		_, err = tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if tfresource.NotFound(err) {
 			continue
