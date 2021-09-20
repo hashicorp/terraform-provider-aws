@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -76,14 +77,14 @@ func testSweepNetworkFirewallLoggingConfigurations(region string) error {
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logGroup(t *testing.T) {
-	logGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedLogGroupName := fmt.Sprintf("%s-updated", logGroupName)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -121,13 +122,13 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logG
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logType(t *testing.T) {
-	logGroupName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -161,14 +162,14 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logT
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_deliveryStream(t *testing.T) {
-	streamName := acctest.RandomWithPrefix("tf-acc-test")
+	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedStreamName := fmt.Sprintf("%s-updated", streamName)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -206,13 +207,13 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_deliver
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_logType(t *testing.T) {
-	streamName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -246,14 +247,14 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_logType
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	updatedBucketName := fmt.Sprintf("%s-updated", bucketName)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -290,13 +291,13 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName(t
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_logType(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -331,13 +332,13 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_logType(t *t
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -375,14 +376,14 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *te
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_updateFirewallArn(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 	firewallResourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -411,15 +412,15 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateFirewallArn(t *testing.
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	logGroupName := acctest.RandomWithPrefix("tf-acc-test")
-	streamName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -470,14 +471,14 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *t
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinationConfigs(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	streamName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	streamName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -525,14 +526,14 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinatio
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDestinationConfig(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	logGroupName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -580,14 +581,14 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDes
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestinationConfig(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	logGroupName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	logGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -635,13 +636,13 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDest
 }
 
 func TestAccAwsNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-acc-test")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -649,7 +650,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallLoggingConfiguration_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallLoggingConfigurationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallLoggingConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -929,7 +930,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_s3(bucketName, rName, destinationType, logType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
 		testAccNetworkFirewallLoggingConfigurationS3BucketDependencyConfig(bucketName),
 		fmt.Sprintf(`
@@ -950,7 +951,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_s3_updateFirewallArn(bucketName, rName, destinationType, logType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationBaseConfig_updateFirewall(rName),
 		testAccNetworkFirewallLoggingConfigurationS3BucketDependencyConfig(bucketName),
 		fmt.Sprintf(`
@@ -971,7 +972,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_s3_updatePrefix(bucketName, rName, destinationType, logType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
 		testAccNetworkFirewallLoggingConfigurationS3BucketDependencyConfig(bucketName),
 		fmt.Sprintf(`
@@ -993,7 +994,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_kinesis(streamName, rName, destinationType, logType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
 		testAccNetworkFirewallLoggingConfiguration_kinesisDependenciesConfig(rName, streamName),
 		fmt.Sprintf(`
@@ -1014,7 +1015,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_cloudwatch(logGroupName, rName, destinationType, logType string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
 		testAccNetworkFirewallLoggingConfigurationCloudWatchDependencyConfig(logGroupName),
 		fmt.Sprintf(`
@@ -1035,7 +1036,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_s3AndKinesis(bucketName, streamName, rName, logTypeS3, logTypeKinesis string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationS3BucketDependencyConfig(bucketName),
 		testAccNetworkFirewallLoggingConfiguration_kinesisDependenciesConfig(rName, streamName),
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
@@ -1065,7 +1066,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 }
 
 func testAccNetworkFirewallLoggingConfiguration_s3AndCloudWatch(bucketName, logGroupName, rName, logTypeS3, logTypeCloudWatch string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
 		testAccNetworkFirewallLoggingConfigurationS3BucketDependencyConfig(bucketName),
 		testAccNetworkFirewallLoggingConfigurationCloudWatchDependencyConfig(logGroupName),
