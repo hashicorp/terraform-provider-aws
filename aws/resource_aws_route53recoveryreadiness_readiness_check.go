@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceReadinessCheck() *schema.Resource {
@@ -42,18 +43,18 @@ func ResourceReadinessCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceReadinessCheckCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Get("readiness_check_name").(string)),
@@ -69,7 +70,7 @@ func resourceReadinessCheckCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if len(tags) > 0 {
 		arn := aws.StringValue(resp.ReadinessCheckArn)
-		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error adding Route53 Recovery Readiness ReadinessCheck (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -102,7 +103,7 @@ func resourceReadinessCheckRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("readiness_check_name", resp.ReadinessCheckName)
 	d.Set("resource_set_name", resp.ResourceSet)
 
-	tags, err := keyvaluetags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.Route53recoveryreadinessListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Recovery Readiness ReadinessCheck (%s): %w", d.Id(), err)
@@ -138,7 +139,7 @@ func resourceReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
-		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Recovery Readiness ReadinessCheck (%s) tags: %w", d.Id(), err)
 		}
 	}
