@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepCloudFrontRealtimeLogConfigs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -35,7 +35,7 @@ func testSweepCloudFrontRealtimeLogConfigs(region string) error {
 	for {
 		output, err := conn.ListRealtimeLogConfigs(input)
 
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudFront Real-time Log Configs sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -81,7 +81,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,14 +119,14 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontRealtimeLogConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,7 +148,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,7 +196,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 }
 
 func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_realtime_log_config" {
@@ -229,7 +229,7 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 			return fmt.Errorf("No CloudFront Real-time Log Config ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 		out, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepCloudFrontKeyGroup(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
@@ -34,7 +34,7 @@ func testSweepCloudFrontKeyGroup(region string) error {
 	for {
 		output, err := conn.ListKeyGroups(input)
 		if err != nil {
-			if testSweepSkipSweepError(err) {
+			if acctest.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping CloudFront key group sweep for %s: %s", region, err)
 				return nil
 			}
@@ -77,7 +77,7 @@ func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,14 +107,14 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontKeyGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +132,7 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,7 +165,7 @@ func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -201,7 +201,7 @@ func testAccCheckCloudFrontKeyGroupExistence(r string) resource.TestCheckFunc {
 			return fmt.Errorf("no Id is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 		input := &cloudfront.GetKeyGroupInput{
 			Id: aws.String(rs.Primary.ID),
@@ -216,7 +216,7 @@ func testAccCheckCloudFrontKeyGroupExistence(r string) resource.TestCheckFunc {
 }
 
 func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_key_group" {

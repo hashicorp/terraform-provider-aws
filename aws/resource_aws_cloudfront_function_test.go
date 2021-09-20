@@ -33,7 +33,7 @@ func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func testSweepCloudfrontFunctions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -79,7 +79,7 @@ func testSweepCloudfrontFunctions(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -99,7 +99,7 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,14 +135,14 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,7 +158,7 @@ func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,7 +197,7 @@ func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,7 +240,7 @@ func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,7 +275,7 @@ func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,7 +303,7 @@ func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
 }
 
 func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_function" {
@@ -338,7 +338,7 @@ func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFun
 			return fmt.Errorf("Cloudfront Function ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 		output, err := finder.FunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 

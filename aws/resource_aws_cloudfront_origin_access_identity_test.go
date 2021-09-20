@@ -19,7 +19,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,14 +80,14 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudFrontOriginAccessIdentity(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontOriginAccessIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 }
 
 func testAccCheckCloudFrontOriginAccessIdentityDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_origin_access_identity" {
@@ -126,7 +126,7 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloud
 			return fmt.Errorf("No Id is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudfrontconn
 
 		params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 			Id: aws.String(rs.Primary.ID),
