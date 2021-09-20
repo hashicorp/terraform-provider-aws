@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepSagemakerEndpointConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -54,7 +54,7 @@ func testSweepSagemakerEndpointConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Endpoint Config sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -73,7 +73,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAWSSagemakerEndpointConfiguration_productionVariants_InitialVariantW
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +135,7 @@ func TestAccAWSSagemakerEndpointConfiguration_productionVariants_AcceleratorType
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,7 +187,7 @@ func TestAccAWSSagemakerEndpointConfiguration_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +231,7 @@ func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -264,15 +264,15 @@ func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSagemakerEndpointConfigurationConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -287,7 +287,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -319,7 +319,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async_notifConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -352,7 +352,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async_client(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -377,7 +377,7 @@ func TestAccAWSSagemakerEndpointConfiguration_async_client(t *testing.T) {
 }
 
 func testAccCheckSagemakerEndpointConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_endpoint_configuration" {
@@ -411,7 +411,7 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 			return fmt.Errorf("no SageMaker endpoint config ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		_, err := finder.EndpointConfigByName(conn, rs.Primary.ID)
 
 		if err != nil {

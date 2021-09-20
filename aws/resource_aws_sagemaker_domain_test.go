@@ -31,7 +31,7 @@ func init() {
 }
 
 func testSweepSagemakerDomains(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -56,7 +56,7 @@ func testSweepSagemakerDomains(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -76,7 +76,7 @@ func testAccAWSSagemakerDomain_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +114,7 @@ func testAccAWSSagemakerDomain_kms(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +142,7 @@ func testAccAWSSagemakerDomain_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,7 +188,7 @@ func testAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func testAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,7 +257,7 @@ func testAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +288,7 @@ func testAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -357,7 +357,7 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -390,7 +390,7 @@ func testAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -421,14 +421,14 @@ func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -437,7 +437,7 @@ func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerDomainDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_domain" {
@@ -479,7 +479,7 @@ func testAccCheckAWSSagemakerDomainExists(n string, codeRepo *sagemaker.Describe
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.DomainByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

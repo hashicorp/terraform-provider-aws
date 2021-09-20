@@ -25,7 +25,7 @@ func init() {
 }
 
 func testSweepSagemakerWorkteams(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -49,7 +49,7 @@ func testSweepSagemakerWorkteams(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker workteam sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -69,7 +69,7 @@ func testAccAWSSagemakerWorkteam_cognitoConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +140,7 @@ func testAccAWSSagemakerWorkteam_oidcConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,7 +197,7 @@ func testAccAWSSagemakerWorkteam_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -243,7 +243,7 @@ func testAccAWSSagemakerWorkteam_notificationConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -296,14 +296,14 @@ func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerWorkteamOidcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkteamExists(resourceName, &workteam),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerWorkteam(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerWorkteam(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -312,7 +312,7 @@ func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerWorkteamDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_workteam" {
@@ -346,7 +346,7 @@ func testAccCheckAWSSagemakerWorkteamExists(n string, workteam *sagemaker.Workte
 			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 		output, err := finder.WorkteamByName(conn, rs.Primary.ID)
 

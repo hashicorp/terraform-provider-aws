@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepSagemakerModelPackageGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -48,7 +48,7 @@ func testSweepSagemakerModelPackageGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Model Package Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -68,7 +68,7 @@ func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +124,7 @@ func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,14 +169,14 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerModelPackageGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,7 +185,7 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerModelPackageGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_model_package_group" {
@@ -221,7 +221,7 @@ func testAccCheckAWSSagemakerModelPackageGroupExists(n string, mpg *sagemaker.De
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.ModelPackageGroupByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

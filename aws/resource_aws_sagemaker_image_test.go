@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepSagemakerImages(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -47,7 +47,7 @@ func testSweepSagemakerImages(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Image sweep for %s: %s", region, err)
 		return nil
 	}
@@ -67,7 +67,7 @@ func TestAccAWSSagemakerImage_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSSagemakerImage_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -138,7 +138,7 @@ func TestAccAWSSagemakerImage_displayName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,7 +179,7 @@ func TestAccAWSSagemakerImage_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,14 +224,14 @@ func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerImageBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageExists(resourceName, &image),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerImage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,7 +240,7 @@ func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerImageDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_image" {
@@ -276,7 +276,7 @@ func testAccCheckAWSSagemakerImageExists(n string, image *sagemaker.DescribeImag
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.ImageByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

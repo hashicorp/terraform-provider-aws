@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepSagemakerCodeRepositories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -48,7 +48,7 @@ func testSweepSagemakerCodeRepositories(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Code Repository sweep for %s: %s", region, err)
 		return nil
 	}
@@ -68,7 +68,7 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +129,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,14 +171,14 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerCodeRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,7 +187,7 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_code_repository" {
@@ -223,7 +223,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 			return fmt.Errorf("No sagmaker Code Repository ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

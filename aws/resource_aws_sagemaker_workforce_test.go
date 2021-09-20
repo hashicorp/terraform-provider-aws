@@ -28,7 +28,7 @@ func init() {
 }
 
 func testSweepSagemakerWorkforces(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -52,7 +52,7 @@ func testSweepSagemakerWorkforces(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker workforce sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -72,7 +72,7 @@ func testAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func testAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func testAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -218,14 +218,14 @@ func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerWorkforce(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerWorkforce(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -234,7 +234,7 @@ func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerWorkforceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_workforce" {
@@ -268,7 +268,7 @@ func testAccCheckAWSSagemakerWorkforceExists(n string, workforce *sagemaker.Work
 			return fmt.Errorf("No SageMaker Workforce ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 		output, err := finder.WorkforceByName(conn, rs.Primary.ID)
 

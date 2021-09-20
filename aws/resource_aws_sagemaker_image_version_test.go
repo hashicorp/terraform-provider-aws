@@ -29,7 +29,7 @@ func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,14 +67,14 @@ func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerImageVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,14 +96,14 @@ func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerImage(), "aws_sagemaker_image.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImage(), "aws_sagemaker_image.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,7 +112,7 @@ func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerImageVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_image_version" {
@@ -148,7 +148,7 @@ func testAccCheckAWSSagemakerImageVersionExists(n string, image *sagemaker.Descr
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		resp, err := finder.ImageVersionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
