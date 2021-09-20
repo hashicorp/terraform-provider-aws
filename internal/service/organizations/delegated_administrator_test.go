@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
 func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
@@ -67,7 +68,7 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDelegatedAdministrator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +84,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorDestroy(s *terraform.Stat
 			continue
 		}
 
-		accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
+		accountID, servicePrincipal, err := tforganizations.DecodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -125,7 +126,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 			return fmt.Errorf("Organization ID not set")
 		}
 
-		accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
+		accountID, servicePrincipal, err := tforganizations.DecodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

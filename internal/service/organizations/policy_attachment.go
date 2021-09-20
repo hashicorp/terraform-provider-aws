@@ -82,7 +82,7 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(d.Id())
+	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(d.Id())
+	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func decodeAwsOrganizationsPolicyAttachmentID(id string) (string, string, error) {
+func DecodePolicyAttachmentID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format of TARGETID:POLICYID, received: %s", id)

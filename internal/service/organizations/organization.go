@@ -285,7 +285,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting non_master_accounts: %s", err)
 	}
 
-	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
+	if err := d.Set("roots", FlattenRoots(roots)); err != nil {
 		return fmt.Errorf("error setting roots: %s", err)
 	}
 
@@ -441,7 +441,7 @@ func flattenOrganizationsAccounts(accounts []*organizations.Account) []map[strin
 	return result
 }
 
-func flattenOrganizationsRoots(roots []*organizations.Root) []map[string]interface{} {
+func FlattenRoots(roots []*organizations.Root) []map[string]interface{} {
 	if len(roots) == 0 {
 		return nil
 	}

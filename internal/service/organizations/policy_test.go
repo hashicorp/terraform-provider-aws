@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
 func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
@@ -187,7 +188,7 @@ func testAccAwsOrganizationsPolicy_disappears(t *testing.T) {
 				Config: testAccAwsOrganizationsPolicyConfig_Description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -66,14 +66,14 @@ func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{})
 
 	d.SetId(parent_id)
 
-	if err := d.Set("children", flattenOrganizationsOrganizationalUnits(children)); err != nil {
+	if err := d.Set("children", FlattenOrganizationalUnits(children)); err != nil {
 		return fmt.Errorf("error setting children: %w", err)
 	}
 
 	return nil
 }
 
-func flattenOrganizationsOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
+func FlattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
 	if len(ous) == 0 {
 		return nil
 	}

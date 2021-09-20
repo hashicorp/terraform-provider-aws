@@ -25,7 +25,7 @@ func TestFlattenOrganizationalUnits(t *testing.T) {
 		},
 	}
 
-	output := flattenOrganizationsOrganizationalUnits(input)
+	output := FlattenOrganizationalUnits(input)
 	if !reflect.DeepEqual(expected_output, output) {
 		t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, expected_output)
 	}
