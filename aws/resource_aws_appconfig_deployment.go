@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppconfigDeployment() *schema.Resource {
@@ -83,8 +84,8 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 }
 
 func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &appconfig.StartDeploymentInput{
@@ -117,9 +118,9 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	appID, envID, deploymentNum, err := resourceAwsAppconfigDeploymentParseID(d.Id())
 
@@ -150,9 +151,9 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.EnvironmentId), aws.Int64Value(output.DeploymentNumber)),
 		Service:   "appconfig",
 	}.String()
@@ -188,7 +189,7 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppconfigDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")

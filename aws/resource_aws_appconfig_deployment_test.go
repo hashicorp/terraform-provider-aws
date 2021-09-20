@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
@@ -145,7 +146,7 @@ func testAccCheckAWSAppConfigDeploymentExists(resourceName string) resource.Test
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),

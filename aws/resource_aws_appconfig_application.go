@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppconfigApplication() *schema.Resource {
@@ -46,8 +47,8 @@ func resourceAwsAppconfigApplication() *schema.Resource {
 }
 
 func resourceAwsAppconfigApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	applicationName := d.Get("name").(string)
@@ -77,9 +78,9 @@ func resourceAwsAppconfigApplicationCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &appconfig.GetApplicationInput{
 		ApplicationId: aws.String(d.Id()),
@@ -102,9 +103,9 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("application/%s", aws.StringValue(output.Id)),
 		Service:   "appconfig",
 	}.String()
@@ -134,7 +135,7 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppconfigApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 
@@ -168,7 +169,7 @@ func resourceAwsAppconfigApplicationUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppconfigApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	input := &appconfig.DeleteApplicationInput{
 		ApplicationId: aws.String(d.Id()),
