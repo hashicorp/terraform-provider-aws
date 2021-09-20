@@ -17,7 +17,7 @@ func testAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckCloudHsmV2ClusterDataSourceConfig,

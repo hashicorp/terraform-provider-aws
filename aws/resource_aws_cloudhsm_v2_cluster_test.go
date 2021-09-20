@@ -23,13 +23,13 @@ func init() {
 }
 
 func testSweepCloudhsmv2Clusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).cloudhsmv2conn
 	input := &cloudhsmv2.DescribeClustersInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -44,13 +44,13 @@ func testSweepCloudhsmv2Clusters(region string) error {
 			r := resourceAwsCloudHsmV2Cluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster.ClusterId))
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudHSMv2 Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -59,7 +59,7 @@ func testSweepCloudhsmv2Clusters(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 Clusters (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = acctest.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 Clusters (%s): %w", region, err)
@@ -74,7 +74,7 @@ func testAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,16 +109,16 @@ func testAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +132,7 @@ func testAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 }
 
 func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudhsm_v2_cluster" {
@@ -255,7 +255,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsmV2ClusterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
 		it, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)

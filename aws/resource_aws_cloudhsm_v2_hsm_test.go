@@ -22,13 +22,13 @@ func init() {
 }
 
 func testSweepCloudhsmv2Hsms(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).cloudhsmv2conn
 	input := &cloudhsmv2.DescribeClustersInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 
 	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -45,14 +45,14 @@ func testSweepCloudhsmv2Hsms(region string) error {
 				d := r.Data(nil)
 				d.SetId(aws.StringValue(hsm.HsmId))
 				d.Set("cluster_id", cluster.ClusterId)
-				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 			}
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudHSMv2 HSM sweep for %s: %s", region, err)
 		return nil
 	}
@@ -61,7 +61,7 @@ func testSweepCloudhsmv2Hsms(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 HSMs (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = acctest.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 HSMs (%s): %w", region, err)
@@ -76,7 +76,7 @@ func testAccAWSCloudHsmV2Hsm_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2HsmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,16 +107,16 @@ func testAccAWSCloudHsmV2Hsm_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudHsmV2HsmConfigSubnetId(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Hsm(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Hsm(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Hsm(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Hsm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,15 +131,15 @@ func testAccAWSCloudHsmV2Hsm_disappears_Cluster(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudHsmV2HsmConfigSubnetId(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Hsm(), resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Hsm(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,7 +153,7 @@ func testAccAWSCloudHsmV2Hsm_AvailabilityZone(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2HsmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func testAccAWSCloudHsmV2Hsm_IpAddress(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2HsmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 }
 
 func testAccCheckAWSCloudHsmV2HsmDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudhsm_v2_hsm" {
@@ -285,7 +285,7 @@ func testAccCheckAWSCloudHsmV2HsmDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsmV2HsmExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
 
 		it, ok := s.RootModule().Resources[name]
 		if !ok {
