@@ -88,7 +88,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = acmconn.DescribeCertificate(params)
 		if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
 			return fmt.Errorf("Expected certificate to be issued but was in state %s", aws.StringValue(resp.Certificate.Status))
@@ -121,7 +121,7 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 			cert = output.Certificate
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			output, err = conn.DescribeCertificate(input)
 			if err != nil {
 				return fmt.Errorf("Error describing ACM certificate: %w", err)
