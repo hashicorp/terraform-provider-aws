@@ -387,7 +387,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("processing", ds.Processing)
 
-	tags, err := tftags.ElasticsearchserviceListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)

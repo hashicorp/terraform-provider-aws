@@ -626,7 +626,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
 	if len(tags) > 0 {
-		if err := tftags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, tags.IgnoreAws().ElasticsearchserviceTags()); err != nil {
+		if err := UpdateTags(conn, d.Id(), nil, Tags(tags.IgnoreAws())); err != nil {
 			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -798,7 +798,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", ds.ARN)
 
-	tags, err := tftags.ElasticsearchserviceListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
@@ -824,7 +824,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElasticsearchserviceUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
