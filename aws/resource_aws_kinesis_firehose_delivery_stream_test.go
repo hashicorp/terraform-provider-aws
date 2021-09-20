@@ -57,7 +57,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 			log.Printf("[INFO] Deleting Kinesis Firehose Delivery Stream: %s", name)
 			_, err := conn.DeleteDeliveryStream(input)
 
-			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 

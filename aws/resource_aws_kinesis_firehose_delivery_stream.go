@@ -2553,7 +2553,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateDeliveryStream(createInput)
 	}
 	if err != nil {
@@ -2700,7 +2700,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.UpdateDestination(updateInput)
 	}
 
@@ -2765,7 +2765,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", sn)
 			d.SetId("")
 			return nil
@@ -2823,7 +2823,7 @@ func firehoseDeliveryStreamStateRefreshFunc(conn *firehose.Firehose, sn string) 
 			DeliveryStreamName: aws.String(sn),
 		})
 		if err != nil {
-			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeResourceNotFoundException, "") {
 				return &firehose.DeliveryStreamDescription{}, firehoseDeliveryStreamStatusDeleted, nil
 			}
 			return nil, "", err
