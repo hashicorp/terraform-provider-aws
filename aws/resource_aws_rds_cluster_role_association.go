@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
+func ResourceClusterRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterRoleAssociationCreate,
-		Read:   resourceAwsRDSClusterRoleAssociationRead,
-		Delete: resourceAwsRDSClusterRoleAssociationDelete,
+		Create: resourceClusterRoleAssociationCreate,
+		Read:   resourceClusterRoleAssociationRead,
+		Delete: resourceClusterRoleAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +46,7 @@ func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
@@ -72,10 +72,10 @@ func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to create: %w", dbClusterID, roleARN, err)
 	}
 
-	return resourceAwsRDSClusterRoleAssociationRead(d, meta)
+	return resourceClusterRoleAssociationRead(d, meta)
 }
 
-func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
@@ -103,7 +103,7 @@ func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsRDSClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())

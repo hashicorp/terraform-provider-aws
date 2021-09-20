@@ -25,12 +25,12 @@ const (
 	rdsClusterTimeoutDelete                           = 2 * time.Minute
 )
 
-func resourceAwsRDSCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterCreate,
-		Read:   resourceAwsRDSClusterRead,
-		Update: resourceAwsRDSClusterUpdate,
-		Delete: resourceAwsRDSClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRdsClusterImport,
 		},
@@ -479,7 +479,7 @@ func resourceAwsRdsClusterImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -978,10 +978,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsRDSClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1131,7 +1131,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	requestUpdate := false
 
@@ -1329,10 +1329,10 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsRDSClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	log.Printf("[DEBUG] Destroying RDS Cluster (%s)", d.Id())
 

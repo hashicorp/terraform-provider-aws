@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbParameterGroup() *schema.Resource {
+func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbParameterGroupCreate,
-		Read:   resourceAwsDbParameterGroupRead,
-		Update: resourceAwsDbParameterGroupUpdate,
-		Delete: resourceAwsDbParameterGroupDelete,
+		Create: resourceParameterGroupCreate,
+		Read:   resourceParameterGroupRead,
+		Update: resourceParameterGroupUpdate,
+		Delete: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -89,7 +89,7 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDbParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -121,10 +121,10 @@ func resourceAwsDbParameterGroupCreate(d *schema.ResourceData, meta interface{})
 	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
 	log.Printf("[INFO] DB Parameter Group ID: %s", d.Id())
 
-	return resourceAwsDbParameterGroupUpdate(d, meta)
+	return resourceParameterGroupUpdate(d, meta)
 }
 
-func resourceAwsDbParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -249,7 +249,7 @@ func resourceAwsDbParameterGroupRead(d *schema.ResourceData, meta interface{}) e
 
 const maxParamModifyChunk = 20
 
-func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("parameter") {
@@ -340,10 +340,10 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsDbParameterGroupRead(d, meta)
+	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	deleteOpts := rds.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),

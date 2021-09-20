@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDbEventCategories() *schema.Resource {
+func DataSourceEventCategories() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbEventCategoriesRead,
+		Read: dataSourceEventCategoriesRead,
 
 		Schema: map[string]*schema.Schema{
 			"source_type": {
@@ -29,7 +29,7 @@ func dataSourceAwsDbEventCategories() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDbEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	req := &rds.DescribeEventCategoriesInput{}

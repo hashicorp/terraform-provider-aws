@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRDSClusterRoleAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,7 +86,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRDSCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,7 +110,7 @@ func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
 				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamRole(), roleResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, iam.ResourceRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

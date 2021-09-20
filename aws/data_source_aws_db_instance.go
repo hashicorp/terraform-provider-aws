@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDbInstance() *schema.Resource {
+func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbInstanceRead,
+		Read: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
 			"db_instance_identifier": {
@@ -216,7 +216,7 @@ func dataSourceAwsDbInstance() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -17,11 +17,11 @@ import (
 
 const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
 
-func resourceAwsDbClusterSnapshot() *schema.Resource {
+func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbClusterSnapshotCreate,
-		Read:   resourceAwsDbClusterSnapshotRead,
-		Delete: resourceAwsDbClusterSnapshotDelete,
+		Create: resourceClusterSnapshotCreate,
+		Read:   resourceClusterSnapshotRead,
+		Delete: resourceClusterSnapshotDelete,
 		Update: resourceAwsdbClusterSnapshotUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -111,7 +111,7 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -156,10 +156,10 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for RDS DB Cluster Snapshot %q to create: %s", d.Id(), err)
 	}
 
-	return resourceAwsDbClusterSnapshotRead(d, meta)
+	return resourceClusterSnapshotRead(d, meta)
 }
 
-func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -237,7 +237,7 @@ func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsDbClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := &rds.DeleteDBClusterSnapshotInput{

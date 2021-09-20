@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDbSnapshot() *schema.Resource {
+func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbSnapshotRead,
+		Read: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			//selection criteria
@@ -123,7 +123,7 @@ func dataSourceAwsDbSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	instanceIdentifier, instanceIdentifierOk := d.GetOk("db_instance_identifier")

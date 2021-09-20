@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbEventSubscription() *schema.Resource {
+func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbEventSubscriptionCreate,
-		Read:   resourceAwsDbEventSubscriptionRead,
-		Update: resourceAwsDbEventSubscriptionUpdate,
-		Delete: resourceAwsDbEventSubscriptionDelete,
+		Create: resourceEventSubscriptionCreate,
+		Read:   resourceEventSubscriptionRead,
+		Update: resourceEventSubscriptionUpdate,
+		Delete: resourceEventSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("name", d.Id())
@@ -89,7 +89,7 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -151,10 +151,10 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Creating RDS Event Subscription %s failed: %s", d.Id(), err)
 	}
 
-	return resourceAwsDbEventSubscriptionRead(d, meta)
+	return resourceEventSubscriptionRead(d, meta)
 }
 
-func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -249,7 +249,7 @@ func resourceAwsDbEventSubscriptionRetrieve(name string, conn *rds.RDS) (*rds.Ev
 	return eventSubscription, err
 }
 
-func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	requestUpdate := false
@@ -362,7 +362,7 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	deleteOpts := rds.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
