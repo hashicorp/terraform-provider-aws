@@ -154,8 +154,8 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 	name := d.Get("name").(string)
 	ruleInput := configservice.ConfigRule{
 		ConfigRuleName: aws.String(name),
-		Scope:          expandConfigRuleScope(d.Get("scope").([]interface{})),
-		Source:         expandConfigRuleSource(d.Get("source").([]interface{})),
+		Scope:          expandRuleScope(d.Get("scope").([]interface{})),
+		Source:         expandRuleSource(d.Get("source").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -250,10 +250,10 @@ func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
 
 	if rule.Scope != nil {
-		d.Set("scope", flattenConfigRuleScope(rule.Scope))
+		d.Set("scope", flattenRuleScope(rule.Scope))
 	}
 
-	d.Set("source", flattenConfigRuleSource(rule.Source))
+	d.Set("source", flattenRuleSource(rule.Source))
 
 	tags, err := keyvaluetags.ConfigserviceListTags(conn, d.Get("arn").(string))
 
