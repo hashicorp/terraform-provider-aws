@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
+func ResourceApplicationVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkApplicationVersionCreate,
-		Read:   resourceAwsElasticBeanstalkApplicationVersionRead,
-		Update: resourceAwsElasticBeanstalkApplicationVersionUpdate,
-		Delete: resourceAwsElasticBeanstalkApplicationVersionDelete,
+		Create: resourceApplicationVersionCreate,
+		Read:   resourceApplicationVersionRead,
+		Update: resourceApplicationVersionUpdate,
+		Delete: resourceApplicationVersionDelete,
 
 		CustomizeDiff: SetTagsDiff,
 
@@ -62,7 +62,7 @@ func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -95,10 +95,10 @@ func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData,
 	d.SetId(name)
 	log.Printf("[INFO] Elastic Beanstalk Application Version Label: %s", name)
 
-	return resourceAwsElasticBeanstalkApplicationVersionRead(d, meta)
+	return resourceApplicationVersionRead(d, meta)
 }
 
-func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -146,7 +146,7 @@ func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsElasticBeanstalkApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	if d.HasChange("description") {
@@ -164,11 +164,11 @@ func resourceAwsElasticBeanstalkApplicationVersionUpdate(d *schema.ResourceData,
 		}
 	}
 
-	return resourceAwsElasticBeanstalkApplicationVersionRead(d, meta)
+	return resourceApplicationVersionRead(d, meta)
 
 }
 
-func resourceAwsElasticBeanstalkApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	application := d.Get("application").(string)

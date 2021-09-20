@@ -35,9 +35,9 @@ var elasticBeanstalkHostedZoneIds = map[string]string{
 	endpoints.UsGovWest1RegionID:   "Z4KAURWC4UUUG",
 }
 
-func dataSourceAwsElasticBeanstalkHostedZone() *schema.Resource {
+func DataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticBeanstalkHostedZoneRead,
+		Read: dataSourceHostedZoneRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -48,7 +48,7 @@ func dataSourceAwsElasticBeanstalkHostedZone() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElasticBeanstalkHostedZoneRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostedZoneRead(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)

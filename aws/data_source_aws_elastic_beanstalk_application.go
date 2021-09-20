@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
+func DataSourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticBeanstalkApplicationRead,
+		Read: dataSourceApplicationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,7 +54,7 @@ func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 
 	// Get the name and description
