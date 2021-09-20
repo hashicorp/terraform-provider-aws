@@ -1,4 +1,4 @@
-package waiter
+package macie2
 
 import (
 	"context"

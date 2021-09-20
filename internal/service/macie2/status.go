@@ -1,4 +1,4 @@
-package waiter
+package macie2
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
