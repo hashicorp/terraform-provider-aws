@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppautoscalingTarget() *schema.Resource {
+func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppautoscalingTargetPut,
-		Read:   resourceAwsAppautoscalingTargetRead,
+		Read:   resourceTargetRead,
 		Update: resourceAwsAppautoscalingTargetPut,
-		Delete: resourceAwsAppautoscalingTargetDelete,
+		Delete: resourceTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppautoscalingTargetImport,
 		},
@@ -100,10 +100,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 	d.SetId(d.Get("resource_id").(string))
 	log.Printf("[INFO] Application AutoScaling Target ID: %s", d.Id())
 
-	return resourceAwsAppautoscalingTargetRead(d, meta)
+	return resourceTargetRead(d, meta)
 }
 
-func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	var t *applicationautoscaling.ScalableTarget
 
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
@@ -145,7 +145,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{

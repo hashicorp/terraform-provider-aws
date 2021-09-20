@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAppautoscalingPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingPolicyCreate,
-		Read:   resourceAwsAppautoscalingPolicyRead,
-		Update: resourceAwsAppautoscalingPolicyUpdate,
-		Delete: resourceAwsAppautoscalingPolicyDelete,
+		Create: resourcePolicyCreate,
+		Read:   resourcePolicyRead,
+		Update: resourcePolicyUpdate,
+		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppautoscalingPolicyImport,
 		},
@@ -201,7 +201,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	params, err := getAwsAppautoscalingPutScalingPolicyInput(d)
@@ -242,10 +242,10 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 	d.SetId(d.Get("name").(string))
 	log.Printf("[INFO] ApplicationAutoScaling scaling PolicyARN: %s", d.Get("arn").(string))
 
-	return resourceAwsAppautoscalingPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	var p *applicationautoscaling.ScalingPolicy
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -294,7 +294,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 
 	params, inputErr := getAwsAppautoscalingPutScalingPolicyInput(d)
@@ -323,10 +323,10 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}
 
-	return resourceAwsAppautoscalingPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
 	p, err := getAwsAppautoscalingPolicy(d, meta)
 	if err != nil {
