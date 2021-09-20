@@ -1,4 +1,4 @@
-package waiter
+package glue
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
