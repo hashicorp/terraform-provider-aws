@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceWebACL() *schema.Resource {
@@ -140,18 +141,18 @@ func ResourceWebACL() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -254,7 +255,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
 
-	tags, err := keyvaluetags.WafListTags(conn, arn)
+	tags, err := tftags.WafListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for WAF Web ACL (%s): %w", arn, err)
 	}
@@ -344,7 +345,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating WAF Web ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
