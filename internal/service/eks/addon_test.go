@@ -806,7 +806,7 @@ func testAccCheckEksAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[strin
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		return tftags.EksUpdateTags(conn, aws.StringValue(addon.AddonArn), oldTags, newTags)
+		return tfeks.UpdateTags(conn, aws.StringValue(addon.AddonArn), oldTags, newTags)
 	}
 }
 

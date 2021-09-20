@@ -117,7 +117,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().EksTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	// mutex lock for creation/deletion serialization
@@ -198,7 +198,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	tags := tftags.EksKeyValueTags(fargateProfile.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fargateProfile.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -217,7 +217,7 @@ func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
