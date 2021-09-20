@@ -131,7 +131,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, met
 		req.NewPublicVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set))
+		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Allocating Direct Connect hosted public virtual interface: %s", req)
@@ -180,7 +180,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta 
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("name", vif.VirtualInterfaceName)
 	d.Set("owner_account_id", vif.OwnerAccount)
-	if err := d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
+	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return fmt.Errorf("error setting route_filter_prefixes: %s", err)
 	}
 	d.Set("vlan", vif.Vlan)
