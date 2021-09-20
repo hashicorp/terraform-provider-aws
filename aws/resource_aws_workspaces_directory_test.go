@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepWorkspacesDirectories(region string) error {
 		}
 
 		for _, directory := range page.Directories {
-			r := resourceAwsWorkspacesDirectory()
+			r := ResourceDirectory()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(directory.DirectoryId))
 
@@ -160,7 +161,7 @@ func testAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 				Config: testAccWorkspacesDirectoryConfig(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWorkspacesDirectory(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDirectoryServiceDirectory() *schema.Resource {
+func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDirectoryServiceDirectoryCreate,
-		Read:   resourceAwsDirectoryServiceDirectoryRead,
-		Update: resourceAwsDirectoryServiceDirectoryUpdate,
-		Delete: resourceAwsDirectoryServiceDirectoryDelete,
+		Create: resourceDirectoryCreate,
+		Read:   resourceDirectoryRead,
+		Update: resourceDirectoryUpdate,
+		Delete: resourceDirectoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -368,7 +368,7 @@ func enableDirectoryServiceSso(conn *directoryservice.DirectoryService, d *schem
 	return nil
 }
 
-func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	var directoryId string
@@ -417,10 +417,10 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsDirectoryServiceDirectoryRead(d, meta)
+	return resourceDirectoryRead(d, meta)
 }
 
-func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	if d.HasChange("enable_sso") {
@@ -437,10 +437,10 @@ func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsDirectoryServiceDirectoryRead(d, meta)
+	return resourceDirectoryRead(d, meta)
 }
 
-func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -510,7 +510,7 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
 	input := &directoryservice.DeleteDirectoryInput{

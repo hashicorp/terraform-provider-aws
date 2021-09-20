@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -53,7 +54,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 		for _, directory := range page.DirectoryDescriptions {
 			id := aws.StringValue(directory.DirectoryId)
 
-			r := resourceAwsDirectoryServiceDirectory()
+			r := ResourceDirectory()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -360,7 +361,7 @@ func TestAccAWSDirectoryServiceDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDirectoryServiceDirectory(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
