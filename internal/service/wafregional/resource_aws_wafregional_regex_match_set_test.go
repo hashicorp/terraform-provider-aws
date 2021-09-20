@@ -45,7 +45,7 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 		for _, r := range page.RegexMatchSets {
 			id := aws.StringValue(r.RegexMatchSetId)
 
-			set, err := finder.RegexMatchSetByID(conn, id)
+			set, err := finder.FindRegexMatchSetByID(conn, id)
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving WAF Regional Regex Match Set (%s): %w", id, err))
 				continue
