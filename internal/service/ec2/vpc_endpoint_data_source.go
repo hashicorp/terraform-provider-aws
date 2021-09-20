@@ -136,7 +136,7 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -225,7 +225,7 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
-	err = d.Set("tags", tftags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}

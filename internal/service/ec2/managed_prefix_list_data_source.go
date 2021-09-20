@@ -112,7 +112,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	d.Set("max_entries", pl.MaxEntries)
 	d.Set("version", pl.Version)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags attribute: %s", err)
 	}
 

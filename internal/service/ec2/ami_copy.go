@@ -272,7 +272,7 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("manage_ebs_snapshots", true)
 
 	if len(tags) > 0 {
-		if err := tftags.Ec2CreateTags(client, d.Id(), tags); err != nil {
+		if err := CreateTags(client, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}

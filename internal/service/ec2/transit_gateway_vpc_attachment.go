@@ -213,7 +213,7 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	tags := tftags.Ec2KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -295,7 +295,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}

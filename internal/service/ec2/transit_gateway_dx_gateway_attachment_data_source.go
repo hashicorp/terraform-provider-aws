@@ -86,7 +86,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(d *schema.ResourceData, met
 
 	transitGatewayAttachment := output.TransitGatewayAttachments[0]
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -280,7 +280,7 @@ func resourceDefaultNetworkACLUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Default Network ACL (%s) tags: %s", d.Id(), err)
 		}
 	}

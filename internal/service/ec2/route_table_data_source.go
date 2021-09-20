@@ -189,7 +189,7 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
@@ -225,7 +225,7 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set("vpc_id", rt.VpcId)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

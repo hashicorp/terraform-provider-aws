@@ -741,7 +741,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	tags := tftags.Ec2KeyValueTags(lt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(lt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -915,7 +915,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -1295,7 +1295,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	for _, v := range t {
 		s = append(s, map[string]interface{}{
 			"resource_type": aws.StringValue(v.ResourceType),
-			"tags":          tftags.Ec2KeyValueTags(v.Tags).IgnoreAws().Map(),
+			"tags":          KeyValueTags(v.Tags).IgnoreAws().Map(),
 		})
 	}
 	return s
@@ -1506,7 +1506,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 			tsData := ts.(map[string]interface{})
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{
 				ResourceType: aws.String(tsData["resource_type"].(string)),
-				Tags:         tftags.New(tsData["tags"].(map[string]interface{})).IgnoreAws().Ec2Tags(),
+				Tags:         Tags(tftags.New(tsData["tags"].(map[string]interface{})).IgnoreAws()),
 			}
 			tagSpecifications = append(tagSpecifications, tagSpecification)
 		}

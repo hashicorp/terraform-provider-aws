@@ -634,7 +634,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
 
-		tags := tftags.New(m).IgnoreAws().Ec2Tags()
+		tags := Tags(tftags.New(m).IgnoreAws())
 
 		spec := &ec2.SpotFleetTagSpecification{
 			ResourceType: aws.String(ec2.ResourceTypeInstance),
@@ -1306,7 +1306,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
-	tags := tftags.Ec2KeyValueTags(sfr.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(sfr.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1470,7 +1470,7 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if aws.StringValue(tagSpecs.ResourceType) == ec2.ResourceTypeInstance {
-				m["tags"] = tftags.Ec2KeyValueTags(tagSpecs.Tags).IgnoreAws().Map()
+				m["tags"] = KeyValueTags(tagSpecs.Tags).IgnoreAws().Map()
 			}
 		}
 	}
@@ -1645,7 +1645,7 @@ func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

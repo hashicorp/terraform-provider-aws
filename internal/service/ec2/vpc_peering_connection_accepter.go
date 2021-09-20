@@ -93,7 +93,7 @@ func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{
 	d.SetId(id)
 
 	if len(tags) > 0 {
-		if err := tftags.Ec2CreateTags(conn, d.Id(), tags.Map()); err != nil {
+		if err := CreateTags(conn, d.Id(), tags.Map()); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}

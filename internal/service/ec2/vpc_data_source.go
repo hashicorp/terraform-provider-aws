@@ -151,7 +151,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(
-			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -184,7 +184,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default", vpc.IsDefault)
 	d.Set("state", vpc.State)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

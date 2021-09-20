@@ -240,7 +240,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		if err := tftags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+		if err := CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding tags: %w", err)
 		}
 	}

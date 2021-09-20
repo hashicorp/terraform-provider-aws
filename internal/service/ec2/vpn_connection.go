@@ -684,7 +684,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("transit_gateway_id", vpnConnection.TransitGatewayId)
 	d.Set("type", vpnConnection.Type)
 
-	tags := tftags.Ec2KeyValueTags(vpnConnection.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(vpnConnection.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1003,7 +1003,7 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 		vpnConnectionID := d.Id()
 
-		if err := tftags.Ec2UpdateTags(conn, vpnConnectionID, o, n); err != nil {
+		if err := UpdateTags(conn, vpnConnectionID, o, n); err != nil {
 			return fmt.Errorf("error updating EC2 VPN Connection (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -223,7 +223,7 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -298,7 +298,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("throughput", volume.Throughput)
 
-	tags := tftags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

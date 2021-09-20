@@ -68,7 +68,7 @@ func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) err
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
@@ -90,7 +90,7 @@ func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) err
 	igw := resp.InternetGateways[0]
 	d.SetId(aws.StringValue(igw.InternetGatewayId))
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(igw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(igw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

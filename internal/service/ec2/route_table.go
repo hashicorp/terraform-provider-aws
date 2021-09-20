@@ -237,7 +237,7 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	tags := tftags.Ec2KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -352,7 +352,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Route Table (%s) tags: %w", d.Id(), err)
 		}
 	}

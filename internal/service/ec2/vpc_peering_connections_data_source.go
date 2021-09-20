@@ -33,7 +33,7 @@ func dataSourceVPCPeeringConnectionsRead(d *schema.ResourceData, meta interface{
 	req := &ec2.DescribeVpcPeeringConnectionsInput{}
 
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),

@@ -104,7 +104,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -34,7 +34,7 @@ func dataSourceLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interfac
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	req.Filters = append(req.Filters, BuildCustomFilterList(

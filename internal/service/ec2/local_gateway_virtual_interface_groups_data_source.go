@@ -36,7 +36,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(d *schema.ResourceData, me
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildCustomFilterList(

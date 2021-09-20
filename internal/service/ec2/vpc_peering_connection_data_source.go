@@ -132,7 +132,7 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(
-			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -188,7 +188,7 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting peer_cidr_block_set: %w", err)
 	}
 	d.Set("peer_region", pcx.AccepterVpcInfo.Region)
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(pcx.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(pcx.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

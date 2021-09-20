@@ -83,7 +83,7 @@ func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interfa
 	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

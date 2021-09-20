@@ -66,7 +66,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta int
 	}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildCustomFilterList(
@@ -101,7 +101,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta int
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
 
-	if err := d.Set("tags", tftags.Ec2KeyValueTags(localGatewayVirtualInterface.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(localGatewayVirtualInterface.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

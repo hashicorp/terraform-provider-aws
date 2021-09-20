@@ -119,7 +119,7 @@ func resourceTrafficMirrorFilterUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Traffic Mirror Filter (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -157,7 +157,7 @@ func resourceTrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) e
 	trafficMirrorFilter := out.TrafficMirrorFilters[0]
 	d.Set("description", trafficMirrorFilter.Description)
 
-	tags := tftags.Ec2KeyValueTags(trafficMirrorFilter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(trafficMirrorFilter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

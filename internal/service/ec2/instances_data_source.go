@@ -84,7 +84,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if tagsOk {
 		params.Filters = append(params.Filters, BuildTagFilterList(
-			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
+			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 

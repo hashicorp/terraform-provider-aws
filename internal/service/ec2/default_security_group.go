@@ -251,7 +251,7 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Default Security Group ID: %s", d.Id())
 
 	if len(tags) > 0 {
-		if err := tftags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+		if err := CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding EC2 Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -311,7 +311,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting Egress rule set for (%s): %w", d.Id(), err)
 	}
 
-	tags := tftags.Ec2KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -348,7 +348,7 @@ func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}

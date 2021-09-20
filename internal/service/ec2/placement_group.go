@@ -141,7 +141,7 @@ func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", pg.GroupName)
 	d.Set("strategy", pg.Strategy)
 	d.Set("placement_group_id", pg.GroupId)
-	tags := tftags.Ec2KeyValueTags(pg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(pg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -172,7 +172,7 @@ func resourcePlacementGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		pgId := d.Get("placement_group_id").(string)
-		if err := tftags.Ec2UpdateTags(conn, pgId, o, n); err != nil {
+		if err := UpdateTags(conn, pgId, o, n); err != nil {
 			return fmt.Errorf("error updating Placement Group (%s) tags: %s", pgId, err)
 		}
 	}

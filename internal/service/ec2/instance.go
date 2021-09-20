@@ -872,7 +872,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := tftags.Ec2CreateTags(conn, vol, blockDeviceTags); err != nil {
+		if err := CreateTags(conn, vol, blockDeviceTags); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -1071,7 +1071,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	tags := tftags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1088,7 +1088,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		if err := d.Set("volume_tags", tftags.Ec2KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
+		if err := d.Set("volume_tags", KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
 			return fmt.Errorf("error setting volume_tags: %s", err)
 		}
 	}
@@ -1193,7 +1193,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -1207,7 +1207,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("volume_tags")
 
 		for _, volumeId := range volumeIds {
-			if err := tftags.Ec2UpdateTags(conn, volumeId, o, n); err != nil {
+			if err := UpdateTags(conn, volumeId, o, n); err != nil {
 				return fmt.Errorf("error updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
@@ -1683,7 +1683,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := tftags.Ec2UpdateTags(conn, volumeID, o, n); err != nil {
+			if err := UpdateTags(conn, volumeID, o, n); err != nil {
 				return fmt.Errorf("error updating tags for volume (%s): %s", volumeID, err)
 			}
 		}
@@ -2018,7 +2018,7 @@ func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
-			bd["tags"] = tftags.Ec2KeyValueTags(vol.Tags).IgnoreAws().Map()
+			bd["tags"] = KeyValueTags(vol.Tags).IgnoreAws().Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {

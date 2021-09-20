@@ -145,7 +145,7 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_name", kp.KeyName)
 	d.Set("fingerprint", kp.KeyFingerprint)
 	d.Set("key_pair_id", kp.KeyPairId)
-	tags := tftags.Ec2KeyValueTags(kp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(kp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -174,7 +174,7 @@ func resourceKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Ec2UpdateTags(conn, d.Get("key_pair_id").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("key_pair_id").(string), o, n); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
