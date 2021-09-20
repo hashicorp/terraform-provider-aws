@@ -111,7 +111,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        tags.IgnoreAws().NeptuneTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	_, err := conn.CreateDBClusterParameterGroup(&createOpts)
@@ -182,7 +182,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting neptune parameter: %w", err)
 	}
 
-	tags, err := tftags.NeptuneListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
@@ -230,7 +230,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) tags: %w", d.Id(), err)
 		}
 	}

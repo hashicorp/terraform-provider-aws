@@ -206,7 +206,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags.IgnoreAws().NeptuneTags(),
+		Tags:                    Tags(tags.IgnoreAws()),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -360,7 +360,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	tags, err := tftags.NeptuneListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Neptune Cluster Instance (%s): %s", d.Get("arn").(string), err)
@@ -459,7 +459,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

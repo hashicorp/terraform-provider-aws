@@ -107,7 +107,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             tags.IgnoreAws().NeptuneTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok {
@@ -199,7 +199,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	tags, err := tftags.NeptuneListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Neptune Event Subscription (%s): %s", d.Get("arn").(string), err)
@@ -282,7 +282,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

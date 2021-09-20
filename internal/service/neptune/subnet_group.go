@@ -93,7 +93,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		DBSubnetGroupName:        aws.String(groupName),
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		SubnetIds:                subnetIds,
-		Tags:                     tags.IgnoreAws().NeptuneTags(),
+		Tags:                     Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create Neptune Subnet Group: %#v", createOpts)
@@ -156,7 +156,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	//https://docs.aws.amazon.com/neptune/latest/userguide/tagging.ARN.html
 	d.Set("arn", subnetGroup.DBSubnetGroupArn)
 
-	tags, err := tftags.NeptuneListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Neptune Subnet Group (%s): %s", d.Get("arn").(string), err)
@@ -204,7 +204,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
