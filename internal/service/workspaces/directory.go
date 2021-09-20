@@ -247,7 +247,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", directoryID)
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(directoryID),
-			SelfservicePermissions: expandSelfServicePermissions(v.([]interface{})),
+			SelfservicePermissions: ExpandSelfServicePermissions(v.([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("error setting WorkSpaces Directory (%s) self-service permissions: %w", directoryID, err)
@@ -259,7 +259,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) access properties", directoryID)
 		_, err := conn.ModifyWorkspaceAccessProperties(&workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(directoryID),
-			WorkspaceAccessProperties: expandWorkspaceAccessProperties(v.([]interface{})),
+			WorkspaceAccessProperties: ExpandWorkspaceAccessProperties(v.([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("error setting WorkSpaces Directory (%s) access properties: %w", directoryID, err)
@@ -271,7 +271,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", directoryID)
 		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(directoryID),
-			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]interface{})),
+			WorkspaceCreationProperties: ExpandWorkspaceCreationProperties(v.([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("error setting WorkSpaces Directory (%s) creation properties: %w", directoryID, err)
@@ -323,15 +323,15 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("directory_type", directory.DirectoryType)
 	d.Set("alias", directory.Alias)
 
-	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
+	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
 		return fmt.Errorf("error setting self_service_permissions: %w", err)
 	}
 
-	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
+	if err := d.Set("workspace_access_properties", FlattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return fmt.Errorf("error setting workspace_access_properties: %w", err)
 	}
 
-	if err := d.Set("workspace_creation_properties", flattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+	if err := d.Set("workspace_creation_properties", FlattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
 		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
 	}
 
@@ -371,7 +371,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
-			SelfservicePermissions: expandSelfServicePermissions(permissions),
+			SelfservicePermissions: ExpandSelfServicePermissions(permissions),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating WorkSpaces Directory (%s) self service permissions: %w", d.Id(), err)
@@ -385,7 +385,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.ModifyWorkspaceAccessProperties(&workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
-			WorkspaceAccessProperties: expandWorkspaceAccessProperties(properties),
+			WorkspaceAccessProperties: ExpandWorkspaceAccessProperties(properties),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating WorkSpaces Directory (%s) access properties: %w", d.Id(), err)
@@ -399,7 +399,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
-			WorkspaceCreationProperties: expandWorkspaceCreationProperties(properties),
+			WorkspaceCreationProperties: ExpandWorkspaceCreationProperties(properties),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating WorkSpaces Directory (%s) creation properties: %w", d.Id(), err)
@@ -477,7 +477,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandWorkspaceAccessProperties(properties []interface{}) *workspaces.WorkspaceAccessProperties {
+func ExpandWorkspaceAccessProperties(properties []interface{}) *workspaces.WorkspaceAccessProperties {
 	if len(properties) == 0 || properties[0] == nil {
 		return nil
 	}
@@ -521,7 +521,7 @@ func expandWorkspaceAccessProperties(properties []interface{}) *workspaces.Works
 	return result
 }
 
-func expandSelfServicePermissions(permissions []interface{}) *workspaces.SelfservicePermissions {
+func ExpandSelfServicePermissions(permissions []interface{}) *workspaces.SelfservicePermissions {
 	if len(permissions) == 0 || permissions[0] == nil {
 		return nil
 	}
@@ -563,7 +563,7 @@ func expandSelfServicePermissions(permissions []interface{}) *workspaces.Selfser
 	return result
 }
 
-func expandWorkspaceCreationProperties(properties []interface{}) *workspaces.WorkspaceCreationProperties {
+func ExpandWorkspaceCreationProperties(properties []interface{}) *workspaces.WorkspaceCreationProperties {
 	if len(properties) == 0 || properties[0] == nil {
 		return nil
 	}
@@ -587,7 +587,7 @@ func expandWorkspaceCreationProperties(properties []interface{}) *workspaces.Wor
 	return result
 }
 
-func flattenWorkspaceAccessProperties(properties *workspaces.WorkspaceAccessProperties) []interface{} {
+func FlattenWorkspaceAccessProperties(properties *workspaces.WorkspaceAccessProperties) []interface{} {
 	if properties == nil {
 		return []interface{}{}
 	}
@@ -606,7 +606,7 @@ func flattenWorkspaceAccessProperties(properties *workspaces.WorkspaceAccessProp
 	}
 }
 
-func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermissions) []interface{} {
+func FlattenSelfServicePermissions(permissions *workspaces.SelfservicePermissions) []interface{} {
 	if permissions == nil {
 		return []interface{}{}
 	}
@@ -661,7 +661,7 @@ func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermission
 	return []interface{}{result}
 }
 
-func flattenWorkspaceCreationProperties(properties *workspaces.DefaultWorkspaceCreationProperties) []interface{} {
+func FlattenWorkspaceCreationProperties(properties *workspaces.DefaultWorkspaceCreationProperties) []interface{} {
 	if properties == nil {
 		return []interface{}{}
 	}

@@ -38,7 +38,7 @@ func testSweepWorkspacesIpGroups(region string) error {
 		}
 
 		for _, ipGroup := range page.Result {
-			r := ResourceIPGroup()
+			r := tfworkspaces.ResourceIPGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(ipGroup.GroupId))
 
@@ -173,7 +173,7 @@ func testAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIPGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfworkspaces.ResourceIPGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -163,7 +163,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VolumeEncryptionKey = aws.String(v.(string))
 	}
 
-	input.WorkspaceProperties = expandWorkspaceProperties(d.Get("workspace_properties").([]interface{}))
+	input.WorkspaceProperties = ExpandWorkspaceProperties(d.Get("workspace_properties").([]interface{}))
 
 	log.Printf("[DEBUG] Creating workspace...\n%#v\n", *input)
 	resp, err := conn.CreateWorkspaces(&workspaces.CreateWorkspacesInput{
@@ -217,7 +217,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_name", workspace.UserName)
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
-	if err := d.Set("workspace_properties", flattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
+	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
 		return fmt.Errorf("error setting workspace properties: %s", err)
 	}
 
@@ -290,7 +290,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
-	err := workspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err := WorkspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
+func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating workspace %q", id)
 	resp, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
@@ -379,7 +379,7 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 	return nil
 }
 
-func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspaceProperties {
+func ExpandWorkspaceProperties(properties []interface{}) *workspaces.WorkspaceProperties {
 	log.Printf("[DEBUG] Expand Workspace properties: %+v ", properties)
 
 	if len(properties) == 0 || properties[0] == nil {
@@ -402,7 +402,7 @@ func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspacePr
 	return workspaceProperties
 }
 
-func flattenWorkspaceProperties(properties *workspaces.WorkspaceProperties) []map[string]interface{} {
+func FlattenWorkspaceProperties(properties *workspaces.WorkspaceProperties) []map[string]interface{} {
 	log.Printf("[DEBUG] Flatten workspace properties: %+v ", properties)
 
 	if properties == nil {

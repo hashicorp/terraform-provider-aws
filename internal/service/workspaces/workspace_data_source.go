@@ -152,7 +152,7 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_name", workspace.UserName)
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
-	if err := d.Set("workspace_properties", flattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
+	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
 		return fmt.Errorf("error setting workspace properties: %w", err)
 	}
 
