@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -232,7 +233,7 @@ func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerImageBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageExists(resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

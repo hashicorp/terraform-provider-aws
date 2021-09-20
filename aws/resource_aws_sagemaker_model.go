@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerModel() *schema.Resource {
+func ResourceModel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerModelCreate,
-		Read:   resourceAwsSagemakerModelRead,
-		Update: resourceAwsSagemakerModelUpdate,
-		Delete: resourceAwsSagemakerModelDelete,
+		Create: resourceModelCreate,
+		Read:   resourceModelRead,
+		Update: resourceModelUpdate,
+		Delete: resourceModelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -204,7 +204,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -258,7 +258,7 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 	}
 	d.SetId(name)
 
-	return resourceAwsSagemakerModelRead(d, meta)
+	return resourceModelRead(d, meta)
 }
 
 func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
@@ -274,7 +274,7 @@ func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	}
 }
 
-func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -347,7 +347,7 @@ func flattenSageMakerVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[str
 	return []map[string]interface{}{m}
 }
 
-func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -358,10 +358,10 @@ func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsSagemakerModelRead(d, meta)
+	return resourceModelRead(d, meta)
 }
 
-func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	deleteOpts := &sagemaker.DeleteModelInput{

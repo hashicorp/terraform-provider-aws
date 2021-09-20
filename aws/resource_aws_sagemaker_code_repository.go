@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerCodeRepository() *schema.Resource {
+func ResourceCodeRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerCodeRepositoryCreate,
-		Read:   resourceAwsSagemakerCodeRepositoryRead,
-		Update: resourceAwsSagemakerCodeRepositoryUpdate,
-		Delete: resourceAwsSagemakerCodeRepositoryDelete,
+		Create: resourceCodeRepositoryCreate,
+		Read:   resourceCodeRepositoryRead,
+		Update: resourceCodeRepositoryUpdate,
+		Delete: resourceCodeRepositoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsSagemakerCodeRepository() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("code_repository_name").(string)
@@ -85,10 +85,10 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerCodeRepositoryRead(d, meta)
+	return resourceCodeRepositoryRead(d, meta)
 }
 
-func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	codeRepository, err := finder.CodeRepositoryByName(conn, d.Id())
@@ -112,7 +112,7 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.UpdateCodeRepositoryInput{
@@ -126,10 +126,10 @@ func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error updating SageMaker code repository: %w", err)
 	}
 
-	return resourceAwsSagemakerCodeRepositoryRead(d, meta)
+	return resourceCodeRepositoryRead(d, meta)
 }
 
-func resourceAwsSagemakerCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteCodeRepositoryInput{

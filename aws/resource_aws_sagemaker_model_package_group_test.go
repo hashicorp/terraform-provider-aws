@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -177,7 +178,7 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerModelPackageGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

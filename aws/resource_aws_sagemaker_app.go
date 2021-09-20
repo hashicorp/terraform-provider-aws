@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerApp() *schema.Resource {
+func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerAppCreate,
-		Read:   resourceAwsSagemakerAppRead,
-		Update: resourceAwsSagemakerAppUpdate,
-		Delete: resourceAwsSagemakerAppDelete,
+		Create: resourceAppCreate,
+		Read:   resourceAppRead,
+		Update: resourceAppUpdate,
+		Delete: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -87,7 +87,7 @@ func resourceAwsSagemakerApp() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -125,10 +125,10 @@ func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error waiting for SageMaker App (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -185,7 +185,7 @@ func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsSagemakerAppUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -196,10 +196,10 @@ func resourceAwsSagemakerAppUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsSagemakerAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsSagemakerAppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	appName := d.Get("app_name").(string)

@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerNotebookInstance() *schema.Resource {
+func ResourceNotebookInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerNotebookInstanceCreate,
-		Read:   resourceAwsSagemakerNotebookInstanceRead,
-		Update: resourceAwsSagemakerNotebookInstanceUpdate,
-		Delete: resourceAwsSagemakerNotebookInstanceDelete,
+		Create: resourceNotebookInstanceCreate,
+		Read:   resourceNotebookInstanceRead,
+		Update: resourceNotebookInstanceUpdate,
+		Delete: resourceNotebookInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -140,7 +140,7 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -207,10 +207,10 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerNotebookInstanceRead(d, meta)
+	return resourceNotebookInstanceRead(d, meta)
 }
 
-func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -310,7 +310,7 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -438,10 +438,10 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsSagemakerNotebookInstanceRead(d, meta)
+	return resourceNotebookInstanceRead(d, meta)
 }
 
-func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
