@@ -1,4 +1,4 @@
-package securityhub_test
+package securityhub
 
 import (
 	"regexp"

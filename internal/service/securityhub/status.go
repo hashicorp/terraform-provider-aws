@@ -1,4 +1,4 @@
-package waiter
+package securityhub
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
