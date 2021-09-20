@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
+func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_basic(t *testing.T) {
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,7 +34,7 @@ func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
+func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_duplicateLabels(t *testing.T) {
 	var firstAppVersion elasticbeanstalk.ApplicationVersionDescription
 	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
 
@@ -55,7 +55,7 @@ func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
+func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 	resourceName := "aws_elastic_beanstalk_application_version.default"
 

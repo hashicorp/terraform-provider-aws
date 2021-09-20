@@ -12,7 +12,7 @@ import (
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
 )
 
-func TestAccAWSDataSourceElasticBeanstalkHostedZone_basic(t *testing.T) {
+func TestAccElasticBeanstalkHostedZoneDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccAWSDataSourceElasticBeanstalkHostedZone_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceElasticBeanstalkHostedZone_Region(t *testing.T) {
+func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{

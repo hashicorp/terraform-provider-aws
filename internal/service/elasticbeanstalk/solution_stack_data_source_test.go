@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
+func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
