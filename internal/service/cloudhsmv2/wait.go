@@ -1,4 +1,4 @@
-package waiter
+package cloudhsmv2
 
 import (
 	"time"
