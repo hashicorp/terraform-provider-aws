@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceConfigurationAggregator() *schema.Resource {
@@ -34,7 +35,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -108,8 +109,8 @@ func ResourceConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -117,7 +118,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
@@ -144,7 +145,7 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 		o, n := d.GetChange("tags_all")
 
 		arn := aws.StringValue(configAgg.ConfigurationAggregatorArn)
-		if err := keyvaluetags.ConfigserviceUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.ConfigserviceUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Config Configuration Aggregator (%s) tags: %w", arn, err)
 		}
 	}
@@ -190,7 +191,7 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
 	}
 
-	tags, err := keyvaluetags.ConfigserviceListTags(conn, arn)
+	tags, err := tftags.ConfigserviceListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Config Configuration Aggregator (%s): %w", arn, err)
