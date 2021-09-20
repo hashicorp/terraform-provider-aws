@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -87,12 +88,12 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 }
 
 func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
-	thingName := acctest.RandomWithPrefix("tf-acc")
-	thingName2 := acctest.RandomWithPrefix("tf-acc2")
+	thingName := sdkacctest.RandomWithPrefix("tf-acc")
+	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{

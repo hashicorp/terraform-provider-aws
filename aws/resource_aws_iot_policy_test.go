@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iot"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -72,12 +73,12 @@ func testSweepIotPolicies(region string) error {
 
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
 	var v iot.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
@@ -86,7 +87,7 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("policy/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "default_version_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -102,12 +103,12 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 
 func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 	var v iot.GetPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
@@ -115,7 +116,7 @@ func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 				Config: testAccAWSIoTPolicyConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTPolicyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIotPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIotPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

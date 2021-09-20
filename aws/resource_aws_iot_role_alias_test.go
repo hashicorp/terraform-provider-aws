@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,15 +69,15 @@ func testSweepIotRoleAliases(region string) error {
 }
 
 func TestAccAWSIotRoleAlias_basic(t *testing.T) {
-	alias := acctest.RandomWithPrefix("RoleAlias-")
-	alias2 := acctest.RandomWithPrefix("RoleAlias2-")
+	alias := sdkacctest.RandomWithPrefix("RoleAlias-")
+	alias2 := sdkacctest.RandomWithPrefix("RoleAlias2-")
 
 	resourceName := "aws_iot_role_alias.ra"
 	resourceName2 := "aws_iot_role_alias.ra2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotRoleAliasDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Config: testAccAWSIotRoleAliasConfig(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(resourceName, "credential_duration", "3600"),
 				),
 			},
@@ -93,7 +94,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists(resourceName),
 					testAccCheckAWSIotRoleAliasExists(resourceName2),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(resourceName, "credential_duration", "1800"),
 				),
 			},
@@ -118,7 +119,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Config: testAccAWSIotRoleAliasConfigUpdate5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists(resourceName2),
-					testAccMatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
+					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
 				),
 			},
 			{
