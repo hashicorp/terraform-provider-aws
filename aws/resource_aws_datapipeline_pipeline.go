@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataPipelinePipeline() *schema.Resource {
+func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataPipelinePipelineCreate,
-		Read:   resourceAwsDataPipelinePipelineRead,
-		Update: resourceAwsDataPipelinePipelineUpdate,
-		Delete: resourceAwsDataPipelinePipelineDelete,
+		Create: resourcePipelineCreate,
+		Read:   resourcePipelineRead,
+		Update: resourcePipelineUpdate,
+		Delete: resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,7 +44,7 @@ func resourceAwsDataPipelinePipeline() *schema.Resource {
 	}
 }
 
-func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -69,10 +69,10 @@ func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.PipelineId))
 
-	return resourceAwsDataPipelinePipelineRead(d, meta)
+	return resourcePipelineRead(d, meta)
 }
 
-func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -103,7 +103,7 @@ func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 
 	if d.HasChange("tags_all") {
@@ -114,10 +114,10 @@ func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsDataPipelinePipelineRead(d, meta)
+	return resourcePipelineRead(d, meta)
 }
 
-func resourceAwsDataPipelinePipelineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 
 	opts := datapipeline.DeletePipelineInput{
