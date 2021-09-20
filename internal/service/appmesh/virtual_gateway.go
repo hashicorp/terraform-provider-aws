@@ -694,7 +694,7 @@ func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandAppmeshVirtualGatewaySpec(d.Get("spec").([]interface{})),
-		Tags:               tags.IgnoreAws().AppmeshTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -783,7 +783,7 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %w", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh virtual gateway (%s): %s", arn, err)
@@ -828,7 +828,7 @@ func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating App Mesh virtual gateway (%s) tags: %w", arn, err)
 		}
 	}

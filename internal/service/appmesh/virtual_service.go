@@ -143,7 +143,7 @@ func resourceVirtualServiceCreate(d *schema.ResourceData, meta interface{}) erro
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
 		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
-		Tags:               tags.IgnoreAws().AppmeshTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		req.MeshOwner = aws.String(v.(string))
@@ -232,7 +232,7 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := tftags.AppmeshListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh virtual service (%s): %s", arn, err)
@@ -277,7 +277,7 @@ func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating App Mesh virtual service (%s) tags: %s", arn, err)
 		}
 	}
