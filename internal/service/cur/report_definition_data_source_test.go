@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
+func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
+func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
