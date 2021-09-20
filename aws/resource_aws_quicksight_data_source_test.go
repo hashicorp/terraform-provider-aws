@@ -22,6 +22,7 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy: testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,6 +51,7 @@ func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy: testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
