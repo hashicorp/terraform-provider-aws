@@ -773,7 +773,7 @@ func testAccCheckAWSDataSyncTaskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.TaskByARN(conn, rs.Primary.ID)
+		_, err := finder.FindTaskByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -798,7 +798,7 @@ func testAccCheckAWSDataSyncTaskExists(resourceName string, task *datasync.Descr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
-		output, err := finder.TaskByARN(conn, rs.Primary.ID)
+		output, err := finder.FindTaskByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

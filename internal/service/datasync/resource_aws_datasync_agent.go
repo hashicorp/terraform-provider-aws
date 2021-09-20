@@ -200,7 +200,7 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.AgentArn))
 
 	// Agent activations can take a few minutes
-	if _, err := waiter.AgentReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.waitAgentReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
 	}
 
@@ -212,7 +212,7 @@ func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.AgentByARN(conn, d.Id())
+	output, err := finder.FindAgentByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Agent (%s)not found, removing from state", d.Id())

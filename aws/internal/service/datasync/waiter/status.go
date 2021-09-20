@@ -13,9 +13,9 @@ const (
 	agentStatusReady = "ready"
 )
 
-func AgentStatus(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+func statusAgent(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.AgentByARN(conn, arn)
+		output, err := finder.FindAgentByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -29,9 +29,9 @@ func AgentStatus(conn *datasync.DataSync, arn string) resource.StateRefreshFunc 
 	}
 }
 
-func TaskStatus(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+func statusTask(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.TaskByARN(conn, arn)
+		output, err := finder.FindTaskByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
