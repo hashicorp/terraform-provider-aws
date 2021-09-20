@@ -22,7 +22,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,14 +50,14 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +95,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 }
 
 func testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_organization_admin_account" {
@@ -131,7 +131,7 @@ func testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName strin
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		adminAccount, err := finder.AdminAccount(conn, rs.Primary.ID)
 

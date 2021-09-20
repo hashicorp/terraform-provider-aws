@@ -16,7 +16,7 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -31,7 +31,7 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 				// AWS product subscriptions happen automatically when enabling Security Hub.
 				// Here we attempt to remove one so we can attempt to (re-)enable it.
 				PreConfig: func() {
-					conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+					conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 					productSubscriptionARN := arn.ARN{
 						AccountID: acctest.AccountID(),
 						Partition: acctest.Partition(),
@@ -76,7 +76,7 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(rs.Primary.ID)
 
@@ -99,7 +99,7 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 }
 
 func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_product_subscription" {

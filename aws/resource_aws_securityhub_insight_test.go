@@ -23,7 +23,7 @@ func testAccAwsSecurityHubInsight_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,14 +57,14 @@ func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecurityHubInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSecurityHubInsight(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func testAccAwsSecurityHubInsight_DateFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func testAccAwsSecurityHubInsight_IpFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func testAccAwsSecurityHubInsight_KeywordFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,7 +191,7 @@ func testAccAwsSecurityHubInsight_MapFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,7 +223,7 @@ func testAccAwsSecurityHubInsight_MultipleFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +283,7 @@ func testAccAwsSecurityHubInsight_Name(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -318,7 +318,7 @@ func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -375,7 +375,7 @@ func testAccAwsSecurityHubInsight_GroupByAttribute(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -410,7 +410,7 @@ func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -436,7 +436,7 @@ func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
 }
 
 func testAccCheckAwsSecurityHubInsightDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_insight" {
@@ -470,7 +470,7 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		insight, err := finder.Insight(context.Background(), conn, rs.Primary.ID)
 

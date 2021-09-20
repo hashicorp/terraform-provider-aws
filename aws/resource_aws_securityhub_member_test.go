@@ -20,11 +20,11 @@ func testAccAWSSecurityHubMember_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig_basic("111111111111", testAccDefaultEmailAddress),
+				Config: testAccAWSSecurityHubMemberConfig_basic("111111111111", acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
 				),
@@ -45,11 +45,11 @@ func testAccAWSSecurityHubMember_invite(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig_invite("111111111111", testAccDefaultEmailAddress, true),
+				Config: testAccAWSSecurityHubMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
@@ -72,7 +72,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
@@ -93,7 +93,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 }
 
 func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_member" {
