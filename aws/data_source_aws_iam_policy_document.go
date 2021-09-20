@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -276,7 +276,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	jsonString := string(jsonDoc)
 
 	d.Set("json", jsonString)
-	d.SetId(strconv.Itoa(hashcode.String(jsonString)))
+	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return nil
 }
