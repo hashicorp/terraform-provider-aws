@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ConnectionState(conn *events.CloudWatchEvents, name string) resource.StateRefreshFunc {
+func statusConnectionState(conn *events.CloudWatchEvents, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ConnectionByName(conn, name)
+		output, err := finder.FindConnectionByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

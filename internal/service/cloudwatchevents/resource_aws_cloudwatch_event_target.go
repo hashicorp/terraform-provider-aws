@@ -429,7 +429,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	busName := d.Get("event_bus_name").(string)
 
-	t, err := finder.Target(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
+	t, err := finder.FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
 			tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) ||

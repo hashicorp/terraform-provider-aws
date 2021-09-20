@@ -263,7 +263,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	_, err = waiter.ConnectionCreated(conn, d.Id())
+	_, err = waiter.waitConnectionCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to create: %w", d.Id(), err)
@@ -275,7 +275,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	output, err := finder.ConnectionByName(conn, d.Id())
+	output, err := finder.FindConnectionByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Events connection (%s) not found, removing from state", d.Id())
@@ -329,7 +329,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ConnectionUpdated(conn, d.Id())
+	_, err = waiter.waitConnectionUpdated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to update: %w", d.Id(), err)
@@ -354,7 +354,7 @@ func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ConnectionDeleted(conn, d.Id())
+	_, err = waiter.waitConnectionDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to delete: %w", d.Id(), err)

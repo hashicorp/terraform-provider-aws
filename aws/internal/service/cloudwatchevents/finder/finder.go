@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ConnectionByName(conn *events.CloudWatchEvents, name string) (*events.DescribeConnectionOutput, error) {
+func FindConnectionByName(conn *events.CloudWatchEvents, name string) (*events.DescribeConnectionOutput, error) {
 	input := &events.DescribeConnectionInput{
 		Name: aws.String(name),
 	}
@@ -40,7 +40,7 @@ func ConnectionByName(conn *events.CloudWatchEvents, name string) (*events.Descr
 	return output, nil
 }
 
-func RuleByEventBusAndRuleNames(conn *events.CloudWatchEvents, eventBusName, ruleName string) (*events.DescribeRuleOutput, error) {
+func FindRuleByEventBusAndRuleNames(conn *events.CloudWatchEvents, eventBusName, ruleName string) (*events.DescribeRuleOutput, error) {
 	input := events.DescribeRuleInput{
 		Name: aws.String(ruleName),
 	}
@@ -72,17 +72,17 @@ func RuleByEventBusAndRuleNames(conn *events.CloudWatchEvents, eventBusName, rul
 	return output, nil
 }
 
-func RuleByResourceID(conn *events.CloudWatchEvents, id string) (*events.DescribeRuleOutput, error) {
+func FindRuleByResourceID(conn *events.CloudWatchEvents, id string) (*events.DescribeRuleOutput, error) {
 	eventBusName, ruleName, err := tfevents.RuleParseResourceID(id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return RuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
+	return FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
 }
 
-func Target(conn *events.CloudWatchEvents, busName, ruleName, targetId string) (*events.Target, error) {
+func FindTarget(conn *events.CloudWatchEvents, busName, ruleName, targetId string) (*events.Target, error) {
 	var result *events.Target
 	err := lister.ListAllTargetsForRulePages(conn, busName, ruleName, func(page *events.ListTargetsByRuleOutput, lastPage bool) bool {
 		if page == nil {
@@ -103,7 +103,7 @@ func Target(conn *events.CloudWatchEvents, busName, ruleName, targetId string) (
 	}
 
 	if result == nil {
-		return nil, fmt.Errorf("CloudWatch Event Target %q (\"%s/%s\") not found", targetId, busName, ruleName)
+		return nil, fmt.Errorf("CloudWatch Event FindTarget %q (\"%s/%s\") not found", targetId, busName, ruleName)
 	}
 	return result, nil
 }

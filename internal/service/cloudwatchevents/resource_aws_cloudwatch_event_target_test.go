@@ -869,7 +869,7 @@ func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) reso
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
-		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+		t, err := finder.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err != nil {
 			return fmt.Errorf("Event Target not found: %w", err)
 		}
@@ -888,7 +888,7 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+		t, err := finder.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err == nil {
 			return fmt.Errorf("CloudWatch Events Target %q still exists: %s",
 				rs.Primary.ID, t)

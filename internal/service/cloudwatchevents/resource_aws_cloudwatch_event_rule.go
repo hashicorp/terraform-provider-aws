@@ -162,7 +162,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	output, err := finder.RuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
+	output, err := finder.FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Events Rule (%s) not found, removing from state", d.Id())
