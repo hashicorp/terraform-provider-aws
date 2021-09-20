@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
+func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_rotation.test"

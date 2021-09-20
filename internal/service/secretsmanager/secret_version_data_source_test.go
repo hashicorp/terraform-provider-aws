@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
+func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionID(t *testing.T) {
+func TestAccSecretsManagerSecretVersionDataSource_versionID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionID(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionStage(t *testing.T) {
+func TestAccSecretsManagerSecretVersionDataSource_versionStage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"

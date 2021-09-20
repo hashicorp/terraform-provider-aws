@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
+func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 	var version secretsmanager.GetSecretValueOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
@@ -48,7 +48,7 @@ func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
+func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 	var version secretsmanager.GetSecretValueOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
@@ -80,7 +80,7 @@ func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
+func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 	var version secretsmanager.GetSecretValueOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
