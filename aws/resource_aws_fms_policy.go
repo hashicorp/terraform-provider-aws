@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFmsPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFmsPolicyCreate,
-		Read:   resourceAwsFmsPolicyRead,
-		Update: resourceAwsFmsPolicyUpdate,
-		Delete: resourceAwsFmsPolicyDelete,
+		Create: resourcePolicyCreate,
+		Read:   resourcePolicyRead,
+		Update: resourcePolicyUpdate,
+		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -147,7 +147,7 @@ func resourceAwsFmsPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
@@ -167,10 +167,10 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(resp.Policy.PolicyId))
 
-	return resourceAwsFmsPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
 	var resp *fms.GetPolicyOutput
@@ -259,7 +259,7 @@ func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	return fmsPolicy
 }
 
-func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
@@ -271,10 +271,10 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error modifying FMS Policy Rule: %s", err)
 	}
 
-	return resourceAwsFmsPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 	log.Printf("[DEBUG] Delete FMS Policy: %s", d.Id())
 
