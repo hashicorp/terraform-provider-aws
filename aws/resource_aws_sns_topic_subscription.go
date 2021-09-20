@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSnsTopicSubscription() *schema.Resource {
+func ResourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsTopicSubscriptionCreate,
-		Read:   resourceAwsSnsTopicSubscriptionRead,
-		Update: resourceAwsSnsTopicSubscriptionUpdate,
-		Delete: resourceAwsSnsTopicSubscriptionDelete,
+		Create: resourceTopicSubscriptionCreate,
+		Read:   resourceTopicSubscriptionRead,
+		Update: resourceTopicSubscriptionUpdate,
+		Delete: resourceTopicSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -122,7 +122,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsSnsTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	input := &sns.SubscribeInput{
@@ -166,10 +166,10 @@ func resourceAwsSnsTopicSubscriptionCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSnsTopicSubscriptionRead(d, meta)
+	return resourceTopicSubscriptionRead(d, meta)
 }
 
-func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	var output *sns.GetSubscriptionAttributesOutput
@@ -240,7 +240,7 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	if d.HasChange("raw_message_delivery") {
@@ -289,10 +289,10 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSnsTopicSubscriptionRead(d, meta)
+	return resourceTopicSubscriptionRead(d, meta)
 }
 
-func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS delete topic subscription: %s", d.Id())

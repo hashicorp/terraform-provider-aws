@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSnsPlatformApplication() *schema.Resource {
+func ResourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsPlatformApplicationCreate,
-		Read:   resourceAwsSnsPlatformApplicationRead,
-		Update: resourceAwsSnsPlatformApplicationUpdate,
-		Delete: resourceAwsSnsPlatformApplicationDelete,
+		Create: resourcePlatformApplicationCreate,
+		Read:   resourcePlatformApplicationRead,
+		Update: resourcePlatformApplicationUpdate,
+		Delete: resourcePlatformApplicationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsSnsPlatformApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributes := make(map[string]*string)
@@ -108,10 +108,10 @@ func resourceAwsSnsPlatformApplicationCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.PlatformApplicationArn))
 
-	return resourceAwsSnsPlatformApplicationUpdate(d, meta)
+	return resourcePlatformApplicationUpdate(d, meta)
 }
 
-func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributes := make(map[string]*string)
@@ -188,10 +188,10 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error updating SNS platform application: %s", err)
 	}
 
-	return resourceAwsSnsPlatformApplicationRead(d, meta)
+	return resourcePlatformApplicationRead(d, meta)
 }
 
-func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
@@ -262,7 +262,7 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsSnsPlatformApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS Delete Application: %s", d.Id())

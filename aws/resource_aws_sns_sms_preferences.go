@@ -28,12 +28,12 @@ func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors 
 	return
 }
 
-func resourceAwsSnsSmsPreferences() *schema.Resource {
+func ResourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSnsSmsPreferencesSet,
 		Read:   resourceAwsSnsSmsPreferencesGet,
 		Update: resourceAwsSnsSmsPreferencesSet,
-		Delete: resourceAwsSnsSmsPreferencesDelete,
+		Delete: resourceSMSPreferencesDelete,
 
 		Schema: map[string]*schema.Schema{
 			"monthly_spend_limit": {
@@ -149,7 +149,7 @@ func resourceAwsSnsSmsPreferencesGet(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSnsSmsPreferencesDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSMSPreferencesDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	// Reset the attributes to their default value

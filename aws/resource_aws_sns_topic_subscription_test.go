@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
@@ -453,7 +454,7 @@ func TestAccAWSSNSTopicSubscription_disappears(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopicSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopicSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -476,7 +477,7 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopic(), "aws_sns_topic.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopic(), "aws_sns_topic.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
