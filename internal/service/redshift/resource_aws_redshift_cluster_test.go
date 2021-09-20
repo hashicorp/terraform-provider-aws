@@ -618,7 +618,7 @@ func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ClusterByID(conn, rs.Primary.ID)
+		_, err := finder.FindClusterByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -655,7 +655,7 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 				return fmt.Errorf("error deleting Redshift Cluster Snapshot (%s): %w", snapshot_identifier, err)
 			}
 
-			_, err = finder.ClusterByID(conn, rs.Primary.ID)
+			_, err = finder.FindClusterByID(conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				return nil
@@ -685,7 +685,7 @@ func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
-		output, err := finder.ClusterByID(conn, rs.Primary.ID)
+		output, err := finder.FindClusterByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ClusterStatus(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ClusterByID(conn, id)
+		output, err := finder.FindClusterByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

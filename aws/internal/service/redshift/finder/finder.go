@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
+func FindClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
 	input := &redshift.DescribeClustersInput{
 		ClusterIdentifier: aws.String(id),
 	}

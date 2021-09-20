@@ -522,7 +522,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rsc, err := finder.ClusterByID(conn, d.Id())
+	rsc, err := finder.FindClusterByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster (%s) not found, removing from state", d.Id())
@@ -562,9 +562,9 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 	if len(rsc.ClusterNodes) > 1 {
-		d.Set("cluster_type", tfredshift.ClusterTypeMultiNode)
+		d.Set("cluster_type", tfredshift.clusterTypeMultiNode)
 	} else {
-		d.Set("cluster_type", tfredshift.ClusterTypeSingleNode)
+		d.Set("cluster_type", tfredshift.clusterTypeSingleNode)
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set("database_name", rsc.DBName)
@@ -879,7 +879,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.ClusterInvalidClusterStateFaultTimeout,
+		waiter.clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCluster(input)
 		},
@@ -894,7 +894,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Redshift Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Redshift Cluster (%s) delete: %w", d.Id(), err)
