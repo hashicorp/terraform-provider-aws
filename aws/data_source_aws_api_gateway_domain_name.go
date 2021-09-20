@@ -12,6 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
+// is used to set the zone_id attribute.
+const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
+
 func dataSourceAwsApiGatewayDomainName() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsApiGatewayDomainNameRead,

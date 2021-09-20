@@ -125,7 +125,7 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 
 	stageName := d.Get("stage_name").(string)
 
-	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*conns.AWSClient), restApiId, stageName))
+	d.Set("invoke_url", buildInvokeURL(meta.(*conns.AWSClient), restApiId, stageName))
 
 	executionArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

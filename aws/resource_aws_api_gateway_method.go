@@ -139,7 +139,7 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("authorization_scopes"); ok {
-		input.AuthorizationScopes = expandStringSet(v.(*schema.Set))
+		input.AuthorizationScopes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("operation_name"); ok {
@@ -182,7 +182,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("api_key_required", out.ApiKeyRequired)
 
-	if err := d.Set("authorization_scopes", flattenStringList(out.AuthorizationScopes)); err != nil {
+	if err := d.Set("authorization_scopes", flex.FlattenStringList(out.AuthorizationScopes)); err != nil {
 		return fmt.Errorf("error setting authorization_scopes: %s", err)
 	}
 
@@ -217,7 +217,7 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("request_models") {
-		operations = append(operations, expandApiGatewayRequestResponseModelOperations(d, "request_models", "requestModels")...)
+		operations = append(operations, expandRequestResponseModelOperations(d, "request_models", "requestModels")...)
 	}
 
 	if d.HasChange("request_parameters") {
@@ -230,7 +230,7 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 				parameters[k] = value
 			}
 		}
-		ops := expandApiGatewayMethodParametersOperations(d, "request_parameters", "requestParameters")
+		ops := expandMethodParametersOperations(d, "request_parameters", "requestParameters")
 		operations = append(operations, ops...)
 	}
 

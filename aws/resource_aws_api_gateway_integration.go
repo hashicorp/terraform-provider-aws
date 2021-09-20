@@ -183,7 +183,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("cache_key_parameters"); ok && v.(*schema.Set).Len() > 0 {
-		input.CacheKeyParameters = expandStringSet(v.(*schema.Set))
+		input.CacheKeyParameters = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("cache_namespace"); ok {
@@ -217,11 +217,11 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestParameters = expandStringMap(v.(map[string]interface{}))
+		input.RequestParameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("request_templates"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestTemplates = expandStringMap(v.(map[string]interface{}))
+		input.RequestTemplates = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
@@ -266,7 +266,7 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[DEBUG] Received API Gateway Integration: %s", integration)
 
-	if err := d.Set("cache_key_parameters", flattenStringList(integration.CacheKeyParameters)); err != nil {
+	if err := d.Set("cache_key_parameters", flex.FlattenStringList(integration.CacheKeyParameters)); err != nil {
 		return fmt.Errorf("error setting cache_key_parameters: %s", err)
 	}
 	d.Set("cache_namespace", integration.CacheNamespace)

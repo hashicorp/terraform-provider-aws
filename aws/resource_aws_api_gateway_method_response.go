@@ -162,11 +162,11 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if d.HasChange("response_models") {
-		operations = append(operations, expandApiGatewayRequestResponseModelOperations(d, "response_models", "responseModels")...)
+		operations = append(operations, expandRequestResponseModelOperations(d, "response_models", "responseModels")...)
 	}
 
 	if d.HasChange("response_parameters") {
-		ops := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
+		ops := expandMethodParametersOperations(d, "response_parameters", "responseParameters")
 		operations = append(operations, ops...)
 	}
 

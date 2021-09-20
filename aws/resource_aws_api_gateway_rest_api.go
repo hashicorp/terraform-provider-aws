@@ -182,7 +182,7 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 
 	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
 	if binaryMediaTypesOk {
-		params.BinaryMediaTypes = expandStringList(binaryMediaTypes.([]interface{}))
+		params.BinaryMediaTypes = flex.ExpandStringList(binaryMediaTypes.([]interface{}))
 	}
 
 	minimumCompressionSize := d.Get("minimum_compression_size").(int)
@@ -207,7 +207,7 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		}
 
 		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-			input.Parameters = expandStringMap(v.(map[string]interface{}))
+			input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 
 		output, err := conn.PutRestApi(input)
@@ -237,14 +237,14 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 			for _, elem := range aws.StringValueSlice(output.BinaryMediaTypes) {
 				updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
 					Op:   aws.String(apigateway.OpRemove),
-					Path: aws.String("/binaryMediaTypes/" + escapeJsonPointer(elem)),
+					Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem)),
 				})
 			}
 
 			for _, elem := range v.([]interface{}) {
 				updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
 					Op:   aws.String(apigateway.OpAdd),
-					Path: aws.String("/binaryMediaTypes/" + escapeJsonPointer(elem.(string))),
+					Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem.(string))),
 				})
 			}
 		}
@@ -496,7 +496,7 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		for _, v := range old {
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:   aws.String(apigateway.OpRemove),
-				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
+				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
 			})
 		}
 
@@ -505,7 +505,7 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			for _, v := range new {
 				operations = append(operations, &apigateway.PatchOperation{
 					Op:   aws.String(apigateway.OpAdd),
-					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJsonPointer(v.(string)))),
+					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
 				})
 			}
 		}
@@ -574,7 +574,7 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 			}
 
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-				input.Parameters = expandStringMap(v.(map[string]interface{}))
+				input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 			}
 
 			output, err := conn.PutRestApi(input)
@@ -604,14 +604,14 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 				for _, elem := range aws.StringValueSlice(output.BinaryMediaTypes) {
 					updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
 						Op:   aws.String(apigateway.OpRemove),
-						Path: aws.String("/binaryMediaTypes/" + escapeJsonPointer(elem)),
+						Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem)),
 					})
 				}
 
 				for _, elem := range v.([]interface{}) {
 					updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
 						Op:   aws.String(apigateway.OpAdd),
-						Path: aws.String("/binaryMediaTypes/" + escapeJsonPointer(elem.(string))),
+						Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem.(string))),
 					})
 				}
 			}
@@ -733,11 +733,11 @@ func expandApiGatewayEndpointConfiguration(l []interface{}) *apigateway.Endpoint
 	m := l[0].(map[string]interface{})
 
 	endpointConfiguration := &apigateway.EndpointConfiguration{
-		Types: expandStringList(m["types"].([]interface{})),
+		Types: flex.ExpandStringList(m["types"].([]interface{})),
 	}
 
 	if endpointIds, ok := m["vpc_endpoint_ids"]; ok {
-		endpointConfiguration.VpcEndpointIds = expandStringSet(endpointIds.(*schema.Set))
+		endpointConfiguration.VpcEndpointIds = flex.ExpandStringSet(endpointIds.(*schema.Set))
 	}
 
 	return endpointConfiguration
@@ -749,7 +749,7 @@ func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.En
 	}
 
 	m := map[string]interface{}{
-		"types": flattenStringList(endpointConfiguration.Types),
+		"types": flex.FlattenStringList(endpointConfiguration.Types),
 	}
 
 	if len(endpointConfiguration.VpcEndpointIds) > 0 {

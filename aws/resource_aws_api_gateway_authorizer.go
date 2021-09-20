@@ -130,7 +130,7 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 		input.IdentityValidationExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("provider_arns"); ok {
-		input.ProviderARNs = expandStringSet(v.(*schema.Set))
+		input.ProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[INFO] Creating API Gateway Authorizer: %s", input)
@@ -191,7 +191,7 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
 	d.Set("name", authorizer.Name)
 	d.Set("type", authorizer.Type)
-	d.Set("provider_arns", flattenStringSet(authorizer.ProviderARNs))
+	d.Set("provider_arns", flex.FlattenStringSet(authorizer.ProviderARNs))
 
 	return nil
 }
