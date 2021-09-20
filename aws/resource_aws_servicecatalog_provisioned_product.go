@@ -248,7 +248,7 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]interface{})) > 0 {
-		input.NotificationArns = expandStringList(v.([]interface{}))
+		input.NotificationArns = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("path_id"); ok {
@@ -588,7 +588,7 @@ func expandServiceCatalogProvisioningPreferences(tfMap map[string]interface{}) *
 	apiObject := &servicecatalog.ProvisioningPreferences{}
 
 	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = expandStringList(v)
+		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
@@ -608,7 +608,7 @@ func expandServiceCatalogProvisioningPreferences(tfMap map[string]interface{}) *
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = expandStringList(v)
+		apiObject.StackSetRegions = flex.ExpandStringList(v)
 	}
 
 	return apiObject
@@ -670,7 +670,7 @@ func expandServiceCatalogUpdateProvisioningPreferences(tfMap map[string]interfac
 	apiObject := &servicecatalog.UpdateProvisioningPreferences{}
 
 	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = expandStringList(v)
+		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
@@ -690,7 +690,7 @@ func expandServiceCatalogUpdateProvisioningPreferences(tfMap map[string]interfac
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = expandStringList(v)
+		apiObject.StackSetRegions = flex.ExpandStringList(v)
 	}
 
 	return apiObject
