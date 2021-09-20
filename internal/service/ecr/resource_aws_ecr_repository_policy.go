@@ -1,4 +1,4 @@
-package aws
+package ecr
 
 import (
 	"fmt"
@@ -10,12 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecr/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceRepositoryPolicy() *schema.Resource {
@@ -61,7 +60,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 	// Retry due to IAM eventual consistency
 	var err error
 	var out *ecr.SetRepositoryPolicyOutput
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
 		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
@@ -95,7 +94,7 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 
 	var out *ecr.GetRepositoryPolicyOutput
 
-	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.GetRepositoryPolicy(input)

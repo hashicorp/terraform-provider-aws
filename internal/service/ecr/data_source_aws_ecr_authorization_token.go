@@ -1,4 +1,4 @@
-package aws
+package ecr
 
 import (
 	"encoding/base64"
