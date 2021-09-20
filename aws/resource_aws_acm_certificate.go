@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -229,8 +230,8 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ACMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &acm.ImportCertificateInput{
@@ -258,8 +259,8 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ACMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &acm.RequestCertificateInput{
@@ -289,7 +290,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
-	resp, err := acmconn.RequestCertificate(params)
+	resp, err := conn.RequestCertificate(params)
 
 	if err != nil {
 		return fmt.Errorf("Error requesting certificate: %s", err)
@@ -301,16 +302,16 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ACMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
 
 	return resource.Retry(AcmCertificateDnsValidationAssignmentTimeout, func() *resource.RetryError {
-		resp, err := acmconn.DescribeCertificate(params)
+		resp, err := conn.DescribeCertificate(params)
 
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] ACM Certificate (%s) not found, removing from state", d.Id())
@@ -361,7 +362,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("status", resp.Certificate.Status)
 
-		tags, err := keyvaluetags.AcmListTags(acmconn, d.Id())
+		tags, err := keyvaluetags.AcmListTags(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err))
@@ -395,7 +396,7 @@ func resourceAwsAcmCertificateValidationMethod(certificate *acm.CertificateDetai
 }
 
 func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmconn
+	conn := meta.(*conns.AWSClient).ACMConn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
 		// Prior to version 3.0.0 of the Terraform AWS Provider, these attributes were stored in state as hashes.
@@ -484,7 +485,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 }
 
 func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
+	conn := meta.(*conns.AWSClient).ACMConn
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
 
@@ -493,7 +494,7 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	err := resource.Retry(AcmCertificateCrossServicePropagationTimeout, func() *resource.RetryError {
-		_, err := acmconn.DeleteCertificate(params)
+		_, err := conn.DeleteCertificate(params)
 
 		if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceInUseException) {
 			return resource.RetryableError(err)
@@ -507,7 +508,7 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = acmconn.DeleteCertificate(params)
+		_, err = conn.DeleteCertificate(params)
 	}
 
 	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
