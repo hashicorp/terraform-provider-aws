@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
+func ResourceManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminManagedPolicyAttachmentCreate,
-		Read:   resourceAwsSsoAdminManagedPolicyAttachmentRead,
-		Delete: resourceAwsSsoAdminManagedPolicyAttachmentDelete,
+		Create: resourceManagedPolicyAttachmentCreate,
+		Read:   resourceManagedPolicyAttachmentRead,
+		Delete: resourceManagedPolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
@@ -77,10 +77,10 @@ func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, me
 		return err
 	}
 
-	return resourceAwsSsoAdminManagedPolicyAttachmentRead(d, meta)
+	return resourceManagedPolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsSsoAdminManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
@@ -114,7 +114,7 @@ func resourceAwsSsoAdminManagedPolicyAttachmentRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsSsoAdminManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())

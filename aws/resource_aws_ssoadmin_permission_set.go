@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsoAdminPermissionSet() *schema.Resource {
+func ResourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminPermissionSetCreate,
-		Read:   resourceAwsSsoAdminPermissionSetRead,
-		Update: resourceAwsSsoAdminPermissionSetUpdate,
-		Delete: resourceAwsSsoAdminPermissionSetDelete,
+		Create: resourcePermissionSetCreate,
+		Read:   resourcePermissionSetRead,
+		Update: resourcePermissionSetUpdate,
+		Delete: resourcePermissionSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -89,7 +89,7 @@ func resourceAwsSsoAdminPermissionSet() *schema.Resource {
 	}
 }
 
-func resourceAwsSsoAdminPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -129,10 +129,10 @@ func resourceAwsSsoAdminPermissionSetCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.PermissionSet.PermissionSetArn), instanceArn))
 
-	return resourceAwsSsoAdminPermissionSetRead(d, meta)
+	return resourcePermissionSetRead(d, meta)
 }
 
-func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -190,7 +190,7 @@ func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
@@ -239,10 +239,10 @@ func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	return resourceAwsSsoAdminPermissionSetRead(d, meta)
+	return resourcePermissionSetRead(d, meta)
 }
 
-func resourceAwsSsoAdminPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())

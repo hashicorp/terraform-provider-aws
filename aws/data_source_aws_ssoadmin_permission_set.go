@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
+func DataSourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSsoAdminPermissionSetRead,
+		Read: dataSourcePermissionSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -69,7 +69,7 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
