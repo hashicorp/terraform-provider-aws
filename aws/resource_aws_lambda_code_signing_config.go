@@ -225,7 +225,7 @@ func expandLambdaCodeSigningConfigAllowedPublishers(allowedPublishers []interfac
 	mAllowedPublishers := allowedPublishers[0].(map[string]interface{})
 
 	return &lambda.AllowedPublishers{
-		SigningProfileVersionArns: expandStringSet(mAllowedPublishers["signing_profile_version_arns"].(*schema.Set)),
+		SigningProfileVersionArns: flex.ExpandStringSet(mAllowedPublishers["signing_profile_version_arns"].(*schema.Set)),
 	}
 }
 
@@ -235,7 +235,7 @@ func flattenLambdaCodeSigningConfigAllowedPublishers(allowedPublishers *lambda.A
 	}
 
 	return []interface{}{map[string]interface{}{
-		"signing_profile_version_arns": flattenStringSet(allowedPublishers.SigningProfileVersionArns),
+		"signing_profile_version_arns": flex.FlattenStringSet(allowedPublishers.SigningProfileVersionArns),
 	}}
 }
 

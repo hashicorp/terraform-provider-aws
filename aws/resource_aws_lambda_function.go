@@ -449,7 +449,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
-		params.Layers = expandStringList(v.([]interface{}))
+		params.Layers = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("dead_letter_config"); ok {
@@ -478,8 +478,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		config := v.([]interface{})[0].(map[string]interface{})
 
 		params.VpcConfig = &lambda.VpcConfig{
-			SecurityGroupIds: expandStringSet(config["security_group_ids"].(*schema.Set)),
-			SubnetIds:        expandStringSet(config["subnet_ids"].(*schema.Set)),
+			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
+			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
 		}
 	}
 
@@ -753,13 +753,13 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting image uri for Lambda Function: %w", err)
 	}
 
-	layers := flattenLambdaLayers(function.Layers)
+	layers := flattenLayers(function.Layers)
 	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
 	if err := d.Set("layers", layers); err != nil {
 		return fmt.Errorf("error setting layers for Lambda Function (%s): %w", d.Id(), err)
 	}
 
-	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
+	config := flattenVPCConfigResponse(function.VpcConfig)
 	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
 	if err := d.Set("vpc_config", config); err != nil {
 		return fmt.Errorf("error setting vpc_config for Lambda Function (%s): %w", d.Id(), err)
@@ -992,7 +992,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("layers") {
 		layers := d.Get("layers").([]interface{})
-		configReq.Layers = expandStringList(layers)
+		configReq.Layers = flex.ExpandStringList(layers)
 	}
 	if d.HasChange("dead_letter_config") {
 		dlcMaps := d.Get("dead_letter_config").([]interface{})
@@ -1020,8 +1020,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 		if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
 			vpcConfig := v.([]interface{})[0].(map[string]interface{})
-			configReq.VpcConfig.SecurityGroupIds = expandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
-			configReq.VpcConfig.SubnetIds = expandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
+			configReq.VpcConfig.SecurityGroupIds = flex.ExpandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
+			configReq.VpcConfig.SubnetIds = flex.ExpandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
 		}
 	}
 
@@ -1407,10 +1407,10 @@ func expandLambdaImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig
 	if len(imageConfigMaps) == 1 && imageConfigMaps[0] != nil {
 		config := imageConfigMaps[0].(map[string]interface{})
 		if len(config["entry_point"].([]interface{})) > 0 {
-			imageConfig.EntryPoint = expandStringList(config["entry_point"].([]interface{}))
+			imageConfig.EntryPoint = flex.ExpandStringList(config["entry_point"].([]interface{}))
 		}
 		if len(config["command"].([]interface{})) > 0 {
-			imageConfig.Command = expandStringList(config["command"].([]interface{}))
+			imageConfig.Command = flex.ExpandStringList(config["command"].([]interface{}))
 		}
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}

@@ -134,7 +134,7 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 	invokeArn := lambdaFunctionInvokeArn(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
-	if err := d.Set("routing_config", flattenLambdaAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
+	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
 		return fmt.Errorf("error setting routing_config: %s", err)
 	}
 

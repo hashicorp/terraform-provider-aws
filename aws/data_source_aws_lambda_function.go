@@ -250,7 +250,7 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 
-	if err := d.Set("layers", flattenLambdaLayers(function.Layers)); err != nil {
+	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return fmt.Errorf("Error setting layers for Lambda Function (%s): %w", d.Id(), err)
 	}
 
@@ -297,7 +297,7 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("timeout", function.Timeout)
 	d.Set("version", function.Version)
 
-	if err := d.Set("vpc_config", flattenLambdaVpcConfigResponse(function.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
