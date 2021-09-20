@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -53,7 +54,7 @@ func testSweepEksFargateProfiles(region string) error {
 				}
 
 				for _, profile := range page.FargateProfileNames {
-					r := resourceAwsEksFargateProfile()
+					r := ResourceFargateProfile()
 					d := r.Data(nil)
 					d.SetId(tfeks.FargateProfileCreateResourceID(aws.StringValue(cluster), aws.StringValue(profile)))
 
@@ -144,7 +145,7 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 				Config: testAccAWSEksFargateProfileConfigFargateProfileName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksFargateProfileExists(resourceName, &fargateProfile),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksFargateProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFargateProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

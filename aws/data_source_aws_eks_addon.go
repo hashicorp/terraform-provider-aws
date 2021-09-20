@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEksAddon() *schema.Resource {
+func DataSourceAddon() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceAwsEksAddonRead,
+		ReadWithoutTimeout: dataSourceAddonRead,
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
 				Type:         schema.TypeString,
@@ -54,7 +54,7 @@ func dataSourceAwsEksAddon() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

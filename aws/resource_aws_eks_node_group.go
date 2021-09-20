@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEksNodeGroup() *schema.Resource {
+func ResourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsEksNodeGroupCreate,
-		ReadContext:   resourceAwsEksNodeGroupRead,
-		UpdateContext: resourceAwsEksNodeGroupUpdate,
-		DeleteContext: resourceAwsEksNodeGroupDelete,
+		CreateContext: resourceNodeGroupCreate,
+		ReadContext:   resourceNodeGroupRead,
+		UpdateContext: resourceNodeGroupUpdate,
+		DeleteContext: resourceNodeGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -285,7 +285,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -368,10 +368,10 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error waiting for EKS Node Group (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceAwsEksNodeGroupRead(ctx, d, meta)
+	return resourceNodeGroupRead(ctx, d, meta)
 }
 
-func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -467,7 +467,7 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
@@ -574,10 +574,10 @@ func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return resourceAwsEksNodeGroupRead(ctx, d, meta)
+	return resourceNodeGroupRead(ctx, d, meta)
 }
 
-func resourceAwsEksNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())

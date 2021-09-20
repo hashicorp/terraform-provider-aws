@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEksFargateProfile() *schema.Resource {
+func ResourceFargateProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEksFargateProfileCreate,
-		Read:   resourceAwsEksFargateProfileRead,
-		Update: resourceAwsEksFargateProfileUpdate,
-		Delete: resourceAwsEksFargateProfileDelete,
+		Create: resourceFargateProfileCreate,
+		Read:   resourceFargateProfileRead,
+		Update: resourceFargateProfileUpdate,
+		Delete: resourceFargateProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -99,7 +99,7 @@ func resourceAwsEksFargateProfile() *schema.Resource {
 	}
 }
 
-func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -123,8 +123,8 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 
 	// mutex lock for creation/deletion serialization
 	mutexKey := fmt.Sprintf("%s-fargate-profiles", clusterName)
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
@@ -158,10 +158,10 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for EKS Fargate Profile (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsEksFargateProfileRead(d, meta)
+	return resourceFargateProfileRead(d, meta)
 }
 
-func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -213,7 +213,7 @@ func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsEksFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	if d.HasChange("tags_all") {
@@ -223,10 +223,10 @@ func resourceAwsEksFargateProfileUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsEksFargateProfileRead(d, meta)
+	return resourceFargateProfileRead(d, meta)
 }
 
-func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(d.Id())
@@ -237,8 +237,8 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 
 	// mutex lock for creation/deletion serialization
 	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	log.Printf("[DEBUG] Deleting EKS Fargate Profile: %s", d.Id())
 	_, err = conn.DeleteFargateProfile(&eks.DeleteFargateProfileInput{

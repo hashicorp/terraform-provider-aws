@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEksAddon() *schema.Resource {
+func ResourceAddon() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsEksAddonCreate,
-		ReadWithoutTimeout:   resourceAwsEksAddonRead,
-		UpdateWithoutTimeout: resourceAwsEksAddonUpdate,
-		DeleteWithoutTimeout: resourceAwsEksAddonDelete,
+		CreateWithoutTimeout: resourceAddonCreate,
+		ReadWithoutTimeout:   resourceAddonRead,
+		UpdateWithoutTimeout: resourceAddonUpdate,
+		DeleteWithoutTimeout: resourceAddonDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -86,7 +86,7 @@ func resourceAwsEksAddon() *schema.Resource {
 	}
 }
 
-func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -161,10 +161,10 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 			d.Id(), err))
 	}
 
-	return resourceAwsEksAddonRead(ctx, d, meta)
+	return resourceAddonRead(ctx, d, meta)
 }
 
-func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -209,7 +209,7 @@ func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())
@@ -269,10 +269,10 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsEksAddonRead(ctx, d, meta)
+	return resourceAddonRead(ctx, d, meta)
 }
 
-func resourceAwsEksAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, addonName, err := tfeks.AddonParseResourceID(d.Id())

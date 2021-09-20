@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEksCluster() *schema.Resource {
+func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEksClusterRead,
+		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -142,7 +142,7 @@ func dataSourceAwsEksCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

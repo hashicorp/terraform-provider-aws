@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEksNodeGroups() *schema.Resource {
+func DataSourceNodeGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEksNodeGroupsRead,
+		Read: dataSourceNodeGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
@@ -29,7 +29,7 @@ func dataSourceAwsEksNodeGroups() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEksNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName := d.Get("cluster_name").(string)

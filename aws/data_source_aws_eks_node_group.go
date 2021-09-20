@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEksNodeGroup() *schema.Resource {
+func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsEksNodeGroupRead,
+		ReadContext: dataSourceNodeGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {
@@ -137,7 +137,7 @@ func dataSourceAwsEksNodeGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

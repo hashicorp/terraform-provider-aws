@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func testSweepEksClusters(region string) error {
 		}
 
 		for _, cluster := range page.Clusters {
-			r := resourceAwsEksCluster()
+			r := ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster))
 
@@ -136,7 +137,7 @@ func TestAccAWSEksCluster_disappears(t *testing.T) {
 				Config: testAccAWSEksClusterConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
