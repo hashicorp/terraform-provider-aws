@@ -44,7 +44,7 @@ func testAccCheckAWSSecurityHubAccountExists(n string) resource.TestCheckFunc {
 
 		if err != nil {
 			// Can only read enabled standards if Security Hub is enabled
-			if isAWSErr(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+			if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 				return fmt.Errorf("Security Hub account not found")
 			}
 			return err
@@ -66,7 +66,7 @@ func testAccCheckAWSSecurityHubAccountDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Can only read enabled standards if Security Hub is enabled
-			if isAWSErr(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+			if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 				return nil
 			}
 			return err
