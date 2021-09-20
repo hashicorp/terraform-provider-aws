@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -60,7 +61,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -217,7 +218,7 @@ func ResourceCluster() *schema.Resource {
 						"autoscaling_policy": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressEquivalentJsonDiffs,
+							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 							ValidateFunc:     validation.StringIsJSON,
 						},
 						"bid_price": {
@@ -246,7 +247,7 @@ func ResourceCluster() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEmrEbsVolumeType(),
+										ValidateFunc: validateAwsEMREBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -315,7 +316,7 @@ func ResourceCluster() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEmrEbsVolumeType(),
+										ValidateFunc: validateAwsEMREBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
@@ -467,7 +468,7 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:         true,
 				ConflictsWith:    []string{"configurations"},
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -512,7 +513,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validateAwsEmrCustomAmiId,
+				ValidateFunc: validateAwsEMRCustomAMIID,
 			},
 			"step_concurrency_level": {
 				Type:         schema.TypeInt,
@@ -589,7 +590,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateAwsEmrEbsVolumeType(),
+										ValidateFunc: validateAwsEMREBSVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
