@@ -1,4 +1,4 @@
-package aws
+package opsworks
 
 import (
 	"github.com/aws/aws-sdk-go/service/opsworks"

@@ -1,4 +1,4 @@
-package aws
+package opsworks_test
 
 import (
 	"fmt"
