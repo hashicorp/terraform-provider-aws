@@ -6,15 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	hashKey := "hashKey"
 	itemContent := `{
 	"hashKey": {"S": "something"},
@@ -25,8 +26,8 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +48,7 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
 	itemContent := `{
@@ -60,8 +61,8 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
 	firstItem := `{
@@ -104,8 +105,8 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	hashKey := "hashKey"
 
 	itemBefore := `{
@@ -152,8 +153,8 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -184,7 +185,7 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
 
@@ -200,8 +201,8 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
