@@ -161,7 +161,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsElbListenerHash,
+				Set: ListenerHash,
 			},
 
 			"security_groups": {
@@ -317,7 +317,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.StringValue(lb.HealthCheck.Target) != "" {
-		d.Set("health_check", flattenHealthCheck(lb.HealthCheck))
+		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
 	return nil

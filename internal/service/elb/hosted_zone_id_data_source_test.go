@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSElbHostedZoneId_basic(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccAWSElbHostedZoneId_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsElbHostedZoneIdConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", "id", elbHostedZoneIdPerRegionMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", "id", tfelb.HostedZoneIdPerRegionMap[acctest.Region()]),
 				),
 			},
 			{

@@ -10,7 +10,7 @@ import (
 )
 
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
-var elbAccountIdPerRegionMap = map[string]string{
+var AccountIdPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "098369216593",
 	endpoints.ApEast1RegionID:      "754344448648",
 	endpoints.ApNortheast1RegionID: "582318560864",
@@ -61,7 +61,7 @@ func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) erro
 		region = v.(string)
 	}
 
-	if accid, ok := elbAccountIdPerRegionMap[region]; ok {
+	if accid, ok := AccountIdPerRegionMap[region]; ok {
 		d.SetId(accid)
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,

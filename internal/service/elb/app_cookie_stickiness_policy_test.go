@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSAppCookieStickinessPolicy_basic(t *testing.T) {
@@ -65,7 +66,7 @@ func TestAccAWSAppCookieStickinessPolicy_disappears_ELB(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(elbResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceLoadBalancer(), elbResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +82,7 @@ func testAccCheckAppCookieStickinessPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		lbName, _, policyName := resourceAwsAppCookieStickinessPolicyParseId(
+		lbName, _, policyName := tfelb.AppCookieStickinessPolicyParseID(
 			rs.Primary.ID)
 		out, err := conn.DescribeLoadBalancerPolicies(
 			&elb.DescribeLoadBalancerPoliciesInput{
@@ -119,7 +120,7 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-		elbName, _, policyName := resourceAwsAppCookieStickinessPolicyParseId(policy.Primary.ID)
+		elbName, _, policyName := tfelb.AppCookieStickinessPolicyParseID(policy.Primary.ID)
 		_, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},
@@ -144,7 +145,7 @@ func TestAccAWSAppCookieStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(elbResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAppCookieStickinessPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

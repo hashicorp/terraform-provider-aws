@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 		_, err := conn.DescribeLoadBalancers(req)
 		if err != nil {
 			// Verify the error is what we want
-			if isLoadBalancerNotFound(err) {
+			if tfelb.IsNotFound(err) {
 				continue
 			}
 			return err

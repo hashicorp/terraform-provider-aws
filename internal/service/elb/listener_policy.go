@@ -68,7 +68,7 @@ func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	loadBalancerName, loadBalancerPort := resourceAwsLoadBalancerListenerPoliciesParseId(d.Id())
+	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
@@ -115,7 +115,7 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	loadBalancerName, loadBalancerPort := resourceAwsLoadBalancerListenerPoliciesParseId(d.Id())
+	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 
 	loadBalancerPortInt, err := strconv.ParseInt(loadBalancerPort, 10, 64)
 	if err != nil {
@@ -135,7 +135,7 @@ func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsLoadBalancerListenerPoliciesParseId(id string) (string, string) {
+func ListenerPoliciesParseID(id string) (string, string) {
 	parts := strings.SplitN(id, ":", 2)
 	return parts[0], parts[1]
 }

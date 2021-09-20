@@ -76,7 +76,7 @@ func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) e
 	}
 	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
+		if IsNotFound(err) {
 			// The ELB is gone now, so just remove it from the state
 			d.SetId("")
 			return nil
@@ -106,7 +106,7 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 	}
 	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
+		if IsNotFound(err) {
 			// The ELB is gone now, so just remove it from the state
 			d.SetId("")
 			return nil
@@ -160,7 +160,7 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 	var err error
 	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
+		if IsNotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("Error retrieving ELB attributes: %s", err)

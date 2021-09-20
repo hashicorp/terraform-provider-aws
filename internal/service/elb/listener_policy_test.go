@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error 
 	for _, rs := range s.RootModule().Resources {
 		switch {
 		case rs.Type == "aws_load_balancer_policy":
-			loadBalancerName, policyName := resourceAwsLoadBalancerListenerPoliciesParseId(rs.Primary.ID)
+			loadBalancerName, policyName := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
 			out, err := conn.DescribeLoadBalancerPolicies(
 				&elb.DescribeLoadBalancerPoliciesInput{
 					LoadBalancerName: aws.String(loadBalancerName),
@@ -80,7 +81,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error 
 				return fmt.Errorf("Policy still exists")
 			}
 		case rs.Type == "aws_load_listener_policy":
-			loadBalancerName, _ := resourceAwsLoadBalancerListenerPoliciesParseId(rs.Primary.ID)
+			loadBalancerName, _ := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
 			out, err := conn.DescribeLoadBalancers(
 				&elb.DescribeLoadBalancersInput{
 					LoadBalancerNames: []*string{aws.String(loadBalancerName)},

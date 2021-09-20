@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func init() {
@@ -49,7 +50,7 @@ func testSweepELBs(region string) error {
 				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
 				continue
 			}
-			err = cleanupELBNetworkInterfaces(client.(*conns.AWSClient).EC2Conn, *lb.LoadBalancerName)
+			err = tfelb.CleanupNetworkInterfaces(client.(*conns.AWSClient).EC2Conn, *lb.LoadBalancerName)
 			if err != nil {
 				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
 			}
@@ -739,8 +740,8 @@ func TestResourceAwsElbListenerHash(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
-		leftHash := resourceAwsElbListenerHash(tc.Left)
-		rightHash := resourceAwsElbListenerHash(tc.Right)
+		leftHash := tfelb.ListenerHash(tc.Left)
+		rightHash := tfelb.ListenerHash(tc.Right)
 		if leftHash == rightHash != tc.Match {
 			t.Fatalf("%s: expected match: %t, but did not get it", tn, tc.Match)
 		}
@@ -749,7 +750,7 @@ func TestResourceAwsElbListenerHash(t *testing.T) {
 
 func TestResourceAWSELB_validateElbNameCannotBeginWithHyphen(t *testing.T) {
 	var elbName = "-Testing123"
-	_, errors := validName(elbName, "SampleKey")
+	_, errors := tfelb.ValidName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -758,7 +759,7 @@ func TestResourceAWSELB_validateElbNameCannotBeginWithHyphen(t *testing.T) {
 
 func TestResourceAWSELB_validateElbNameCanBeAnEmptyString(t *testing.T) {
 	var elbName = ""
-	_, errors := validName(elbName, "SampleKey")
+	_, errors := tfelb.ValidName(elbName, "SampleKey")
 
 	if len(errors) != 0 {
 		t.Fatalf("Expected the ELB Name to pass validation")
@@ -767,7 +768,7 @@ func TestResourceAWSELB_validateElbNameCanBeAnEmptyString(t *testing.T) {
 
 func TestResourceAWSELB_validateElbNameCannotBeLongerThan32Characters(t *testing.T) {
 	var elbName = "Testing123dddddddddddddddddddvvvv"
-	_, errors := validName(elbName, "SampleKey")
+	_, errors := tfelb.ValidName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -776,7 +777,7 @@ func TestResourceAWSELB_validateElbNameCannotBeLongerThan32Characters(t *testing
 
 func TestResourceAWSELB_validateElbNameCannotHaveSpecialCharacters(t *testing.T) {
 	var elbName = "Testing123%%"
-	_, errors := validName(elbName, "SampleKey")
+	_, errors := tfelb.ValidName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -785,7 +786,7 @@ func TestResourceAWSELB_validateElbNameCannotHaveSpecialCharacters(t *testing.T)
 
 func TestResourceAWSELB_validateElbNameCannotEndWithHyphen(t *testing.T) {
 	var elbName = "Testing123-"
-	_, errors := validName(elbName, "SampleKey")
+	_, errors := tfelb.ValidName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -814,7 +815,7 @@ func TestResourceAWSELB_validateAccessLogsInterval(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validateAccessLogsInterval(tc.Value, "interval")
+		_, errors := tfelb.ValidAccessLogsInterval(tc.Value, "interval")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -865,7 +866,7 @@ func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := validateHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
@@ -912,7 +913,7 @@ func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validateHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -1242,7 +1243,7 @@ resource "aws_s3_bucket" "accesslogs_bucket" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*",
+      "tfelb.Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*",
       "Sid": "Stmt1446575236270"
     }
   ],

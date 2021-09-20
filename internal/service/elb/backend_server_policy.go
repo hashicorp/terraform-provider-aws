@@ -68,7 +68,7 @@ func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{})
 func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	loadBalancerName, instancePort := resourceAwsLoadBalancerBackendServerPoliciesParseId(d.Id())
+	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
 
 	describeElbOpts := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
@@ -115,7 +115,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 func resourceBackendServerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	loadBalancerName, instancePort := resourceAwsLoadBalancerBackendServerPoliciesParseId(d.Id())
+	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
 
 	instancePortInt, err := strconv.ParseInt(instancePort, 10, 64)
 	if err != nil {
@@ -135,7 +135,7 @@ func resourceBackendServerPolicyDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsLoadBalancerBackendServerPoliciesParseId(id string) (string, string) {
+func BackendServerPoliciesParseID(id string) (string, string) {
 	parts := strings.SplitN(id, ":", 2)
 	return parts[0], parts[1]
 }
