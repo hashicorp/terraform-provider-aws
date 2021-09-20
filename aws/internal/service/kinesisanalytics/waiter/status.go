@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ApplicationStatus fetches the ApplicationDetail and its Status
-func ApplicationStatus(conn *kinesisanalytics.KinesisAnalytics, name string) resource.StateRefreshFunc {
+// statusApplication fetches the ApplicationDetail and its Status
+func statusApplication(conn *kinesisanalytics.KinesisAnalytics, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		applicationDetail, err := finder.ApplicationDetailByName(conn, name)
+		applicationDetail, err := finder.FindApplicationDetailByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

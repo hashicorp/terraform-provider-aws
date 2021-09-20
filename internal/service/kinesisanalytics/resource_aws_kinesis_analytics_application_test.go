@@ -49,7 +49,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := finder.ApplicationDetailByName(conn, name)
+			application, err := finder.FindApplicationDetailByName(conn, name)
 
 			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
@@ -1960,7 +1960,7 @@ func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		_, err := finder.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1988,7 +1988,7 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, v *kinesisanalytics
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
 
-		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		application, err := finder.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err

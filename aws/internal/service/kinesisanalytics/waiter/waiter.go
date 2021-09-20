@@ -12,19 +12,19 @@ import (
 )
 
 const (
-	ApplicationDeletedTimeout = 5 * time.Minute
-	ApplicationStartedTimeout = 5 * time.Minute
-	ApplicationStoppedTimeout = 5 * time.Minute
-	ApplicationUpdatedTimeout = 5 * time.Minute
+	applicationDeletedTimeout = 5 * time.Minute
+	applicationStartedTimeout = 5 * time.Minute
+	applicationStoppedTimeout = 5 * time.Minute
+	applicationUpdatedTimeout = 5 * time.Minute
 )
 
-// ApplicationDeleted waits for an Application to return Deleted
-func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+// waitApplicationDeleted waits for an Application to return Deleted
+func waitApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusDeleting},
 		Target:  []string{},
-		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationDeletedTimeout,
+		Refresh: statusApplication(conn, name),
+		Timeout: applicationDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -36,13 +36,13 @@ func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string) (*
 	return nil, err
 }
 
-// ApplicationStarted waits for an Application to start
-func ApplicationStarted(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+// waitApplicationStarted waits for an Application to start
+func waitApplicationStarted(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusStarting},
 		Target:  []string{kinesisanalytics.ApplicationStatusRunning},
-		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationStartedTimeout,
+		Refresh: statusApplication(conn, name),
+		Timeout: applicationStartedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -54,13 +54,13 @@ func ApplicationStarted(conn *kinesisanalytics.KinesisAnalytics, name string) (*
 	return nil, err
 }
 
-// ApplicationStopped waits for an Application to stop
-func ApplicationStopped(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+// waitApplicationStopped waits for an Application to stop
+func waitApplicationStopped(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusStopping},
 		Target:  []string{kinesisanalytics.ApplicationStatusReady},
-		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationStoppedTimeout,
+		Refresh: statusApplication(conn, name),
+		Timeout: applicationStoppedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -72,13 +72,13 @@ func ApplicationStopped(conn *kinesisanalytics.KinesisAnalytics, name string) (*
 	return nil, err
 }
 
-// ApplicationUpdated waits for an Application to update
-func ApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+// waitApplicationUpdated waits for an Application to update
+func waitApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusUpdating},
 		Target:  []string{kinesisanalytics.ApplicationStatusReady, kinesisanalytics.ApplicationStatusRunning},
-		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationUpdatedTimeout,
+		Refresh: statusApplication(conn, name),
+		Timeout: applicationUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -90,9 +90,9 @@ func ApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*
 	return nil, err
 }
 
-// IAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
+// waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
-func IAMPropagation(f func() (interface{}, error)) (interface{}, error) {
+func waitIAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
