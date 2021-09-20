@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSServiceCatalogPortfolioDataSource_basic(t *testing.T) {
+func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_servicecatalog_portfolio.test"
 	resourceName := "aws_servicecatalog_portfolio.test"

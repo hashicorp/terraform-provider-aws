@@ -77,7 +77,7 @@ func testSweepServiceCatalogServiceActions(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogServiceAction_basic(t *testing.T) {
+func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -110,7 +110,7 @@ func TestAccAWSServiceCatalogServiceAction_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogServiceAction_disappears(t *testing.T) {
+func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -132,7 +132,7 @@ func TestAccAWSServiceCatalogServiceAction_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogServiceAction_update(t *testing.T) {
+func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")

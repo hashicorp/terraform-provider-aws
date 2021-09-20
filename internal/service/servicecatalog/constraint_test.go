@@ -95,7 +95,7 @@ func testSweepServiceCatalogConstraints(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
+func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -128,7 +128,7 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
+func TestAccServiceCatalogConstraint_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -150,7 +150,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
+func TestAccServiceCatalogConstraint_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")

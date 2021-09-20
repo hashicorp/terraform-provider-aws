@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
@@ -46,7 +46,7 @@ func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
 

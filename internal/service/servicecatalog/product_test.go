@@ -80,7 +80,7 @@ func testSweepServiceCatalogProducts(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
+func TestAccServiceCatalogProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -132,7 +132,7 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
+func TestAccServiceCatalogProduct_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -156,7 +156,7 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
+func TestAccServiceCatalogProduct_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -192,7 +192,7 @@ func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
+func TestAccServiceCatalogProduct_updateTags(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -225,7 +225,7 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_physicalID(t *testing.T) {
+func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

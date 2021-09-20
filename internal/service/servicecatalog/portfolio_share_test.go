@@ -15,7 +15,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
+func TestAccServiceCatalogPortfolioShare_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
@@ -56,7 +56,7 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
+func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

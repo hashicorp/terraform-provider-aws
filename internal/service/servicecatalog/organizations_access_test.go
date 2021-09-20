@@ -12,7 +12,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
+func TestAccServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_organizations_access.test"
 
 	resource.ParallelTest(t, resource.TestCase{

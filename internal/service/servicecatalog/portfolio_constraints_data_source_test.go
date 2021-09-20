@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSServiceCatalogPortfolioConstraintDataSource_basic(t *testing.T) {
+func TestAccServiceCatalogPortfolioConstraintsDataSource_Constraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	dataSourceName := "data.aws_servicecatalog_portfolio_constraints.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

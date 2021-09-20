@@ -120,7 +120,7 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
+func TestAccServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -149,7 +149,7 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
+func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

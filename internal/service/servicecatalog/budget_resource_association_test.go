@@ -137,7 +137,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
+func TestAccServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -164,7 +164,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
+func TestAccServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
