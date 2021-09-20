@@ -12,7 +12,7 @@ on:
       - .golangci.yml
       - .semgrep.yml
       - aws/**
-      - awsproviderlint/**
+      - providerlint/**
       - docs/index.md
       - docs/data-sources/**
       - docs/guides/**
@@ -123,7 +123,7 @@ jobs:
         mkdir terraform-providers-schema
         terraform providers schema -json > terraform-providers-schema/schema.json
 
-  awsproviderlint:
+  providerlint:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
@@ -149,9 +149,9 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd awsproviderlint && go install .
-    - name: awsproviderlint
-      run: make awsproviderlint
+    - run: cd providerlint && go install .
+    - name: providerlint
+      run: make providerlint
 
   go_generate:
     name: go generate
@@ -243,7 +243,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
     - run: golangci-lint run ./aws/...
-    - run: cd awsproviderlint && golangci-lint run ./...
+    - run: cd providerlint && golangci-lint run ./...
 
   importlint:
     needs: [go_build]

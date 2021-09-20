@@ -1,14 +1,14 @@
-# awsproviderlint
+# providerlint
 
-The `awsproviderlint` tool is a Terraform Provider code linting tool, specifically tailored for the Terraform AWS Provider.
+The `providerlint` tool is a Terraform Provider code linting tool, specifically tailored for the Terraform AWS Provider.
 
 ## Lint Checks
 
-For additional information about each check, you can run `awsproviderlint help NAME`.
+For additional information about each check, you can run `providerlint help NAME`.
 
 ### tfproviderlint Checks
 
-The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See the [`tfproviderlint` documentation](https://github.com/bflad/tfproviderlint) for additional information about the checks it provides.
+The `providerlint` tool extends the `tfproviderlint` tool and its checks. See the [`tfproviderlint` documentation](https://github.com/bflad/tfproviderlint) for additional information about the checks it provides.
 
 ### AWS Acceptance Test Checks
 
