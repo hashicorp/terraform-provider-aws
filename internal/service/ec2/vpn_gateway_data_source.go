@@ -47,7 +47,7 @@ func DataSourceVPNGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 		},
 	}
@@ -84,10 +84,10 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 			},
 		)...)
 	}
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
+	req.Filters = append(req.Filters, BuildTagFilterList(
 		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

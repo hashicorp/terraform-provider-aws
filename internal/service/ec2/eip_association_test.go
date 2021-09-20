@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSEIPAssociation_instance(t *testing.T) {
@@ -175,7 +176,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEIPAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEIPAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -197,7 +198,7 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		platforms := acctest.Provider.Meta().(*conns.AWSClient).SupportedPlatforms
 
-		request, err := describeAddressesById(rs.Primary.ID, platforms)
+		request, err := tfec2.DescribeAddressesByID(rs.Primary.ID, platforms)
 		if err != nil {
 			return err
 		}
@@ -230,7 +231,7 @@ func testAccCheckAWSEIPAssociationEc2ClassicExists(name string, res *ec2.Address
 		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 		platforms := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).SupportedPlatforms
 
-		request, err := describeAddressesById(rs.Primary.ID, platforms)
+		request, err := tfec2.DescribeAddressesByID(rs.Primary.ID, platforms)
 
 		if err != nil {
 			return err

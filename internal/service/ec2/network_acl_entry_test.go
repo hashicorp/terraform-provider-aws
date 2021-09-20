@@ -35,7 +35,7 @@ func Test_expandNetworkACLEntry(t *testing.T) {
 			"rule_no":    2,
 		},
 	}
-	expanded, _ := expandNetworkAclEntries(input, "egress")
+	expanded, _ := ExpandNetworkACLEntries(input, "egress")
 
 	expected := []*ec2.NetworkAclEntry{
 		{
@@ -86,13 +86,13 @@ func Test_validatePorts(t *testing.T) {
 	for _, ts := range []struct {
 		to       int64
 		from     int64
-		expected *expectedPortPair
+		expected *ExpectedPortPair
 		wanted   bool
 	}{
-		{0, 0, &expectedPortPair{0, 0}, true},
-		{0, 1, &expectedPortPair{0, 0}, false},
+		{0, 0, &ExpectedPortPair{0, 0}, true},
+		{0, 1, &ExpectedPortPair{0, 0}, false},
 	} {
-		got := validatePorts(ts.to, ts.from, *ts.expected)
+		got := ValidPorts(ts.to, ts.from, *ts.expected)
 		if got != ts.wanted {
 			t.Fatalf("Got: %t; Expected: %t\n", got, ts.wanted)
 		}

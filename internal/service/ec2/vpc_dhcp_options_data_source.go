@@ -33,7 +33,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -71,7 +71,7 @@ func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) erro
 		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = append(input.Filters, buildEC2CustomFilterList(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

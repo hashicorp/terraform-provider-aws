@@ -97,7 +97,7 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnRouteConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

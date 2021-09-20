@@ -297,7 +297,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := deleteClientVpnEndpoint(conn, d.Id())
+	err := DeleteClientVPNEndpoint(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting Client VPN endpoint: %w", err)
 	}
@@ -445,7 +445,7 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 	return req
 }
 
-func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
+func DeleteClientVPNEndpoint(conn *ec2.EC2, endpointID string) error {
 	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 	})

@@ -179,19 +179,19 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("association", flattenNetworkInterfaceAssociation(eni.Association))
 	}
 	if eni.Attachment != nil {
-		attachment := []interface{}{flattenAttachment(eni.Attachment)}
+		attachment := []interface{}{FlattenAttachment(eni.Attachment)}
 		d.Set("attachment", attachment)
 	}
 	d.Set("availability_zone", eni.AvailabilityZone)
 	d.Set("description", eni.Description)
-	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
+	d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("owner_id", eni.OwnerId)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
-	d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
+	d.Set("private_ips", FlattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("outpost_arn", eni.OutpostArn)

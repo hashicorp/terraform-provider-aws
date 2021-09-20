@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-func resourceAwsInstanceMigrateState(
+func InstanceMigrateState(
 	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
@@ -32,7 +32,7 @@ func migrateAwsInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 	// Delete old count
 	delete(is.Attributes, "block_device.#")
 
-	oldBds, err := readV0BlockDevices(is)
+	oldBds, err := ReadV0BlockDevices(is)
 	if err != nil {
 		return is, err
 	}
@@ -45,13 +45,13 @@ func migrateAwsInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 		is.Attributes["root_block_device.#"] = "0"
 	}
 	for _, oldBd := range oldBds {
-		writeV1BlockDevice(is, oldBd)
+		WriteV1BlockDevice(is, oldBd)
 	}
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil
 }
 
-func readV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]string, error) {
+func ReadV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]string, error) {
 	oldBds := make(map[string]map[string]string)
 	for k, v := range is.Attributes {
 		if !strings.HasPrefix(k, "block_device.") {
@@ -73,7 +73,7 @@ func readV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]stri
 	return oldBds, nil
 }
 
-func writeV1BlockDevice(
+func WriteV1BlockDevice(
 	is *terraform.InstanceState, oldBd map[string]string) {
 	code := create.StringHashcode(oldBd["device_name"])
 	bdType := "ebs_block_device"

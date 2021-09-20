@@ -21,7 +21,7 @@ func DataSourceInternetGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 			"attachments": {
 				Type:     schema.TypeList,
@@ -67,10 +67,10 @@ func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) err
 	req.Filters = BuildAttributeFilterList(map[string]string{
 		"internet-gateway-id": internetGatewayId.(string),
 	})
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
+	req.Filters = append(req.Filters, BuildTagFilterList(
 		tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 	)...)
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 

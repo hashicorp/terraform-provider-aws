@@ -333,7 +333,7 @@ func TestAWSDefaultSecurityGroupMigrateState(t *testing.T) {
 			ID:         "i-abc123",
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsDefaultSecurityGroupMigrateState(
+		is, err := tfec2.DefaultSecurityGroupMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
@@ -355,7 +355,7 @@ func TestAWSDefaultSecurityGroupMigrateState_empty(t *testing.T) {
 	var meta interface{}
 
 	// should handle nil
-	is, err := resourceAwsDefaultSecurityGroupMigrateState(0, is, meta)
+	is, err := tfec2.DefaultSecurityGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)
@@ -366,7 +366,7 @@ func TestAWSDefaultSecurityGroupMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	_, err = resourceAwsDefaultSecurityGroupMigrateState(0, is, meta)
+	_, err = tfec2.DefaultSecurityGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceLocalGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,7 +79,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 			return fmt.Errorf("No EC2 Local Gateway Route ID is set")
 		}
 
-		localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(rs.Primary.ID)
+		localGatewayRouteTableID, destination, err := tfec2.DecodeLocalGatewayRouteID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -86,7 +87,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		route, err := getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
+		route, err := tfec2.GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
 		if err != nil {
 			return err
@@ -108,13 +109,13 @@ func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(rs.Primary.ID)
+		localGatewayRouteTableID, destination, err := tfec2.DecodeLocalGatewayRouteID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		route, err := getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
+		route, err := tfec2.GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue

@@ -162,7 +162,7 @@ func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interf
 func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := deleteClientVpnNetworkAssociation(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
+	err := DeleteClientVPNNetworkAssociation(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
 	if err != nil {
 		return fmt.Errorf("error deleting Client VPN network association: %w", err)
 	}
@@ -170,7 +170,7 @@ func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func deleteClientVpnNetworkAssociation(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) error {
+func DeleteClientVPNNetworkAssociation(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) error {
 	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
 		ClientVpnEndpointId: aws.String(clientVpnEndpointID),
 		AssociationId:       aws.String(networkAssociationID),

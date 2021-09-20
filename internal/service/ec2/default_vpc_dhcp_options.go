@@ -52,7 +52,7 @@ func resourceDefaultVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{
 		},
 		{
 			Name:   aws.String("value"),
-			Values: aws.StringSlice([]string{regionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
+			Values: aws.StringSlice([]string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
 		},
 		{
 			Name:   aws.String("key"),
@@ -108,7 +108,7 @@ func resourceDefaultVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func regionalPrivateDNSSuffix(region string) string {
+func RegionalPrivateDNSSuffix(region string) string {
 	if region == endpoints.UsEast1RegionID {
 		return "ec2.internal"
 	}
@@ -116,7 +116,7 @@ func regionalPrivateDNSSuffix(region string) string {
 	return fmt.Sprintf("%s.compute.internal", region)
 }
 
-func resourceAwsEc2RegionalPublicDnsSuffix(region string) string {
+func RegionalPublicDNSSuffix(region string) string {
 	if region == endpoints.UsEast1RegionID {
 		return "compute-1"
 	}

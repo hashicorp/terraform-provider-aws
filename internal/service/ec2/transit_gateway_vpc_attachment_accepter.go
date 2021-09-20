@@ -104,7 +104,7 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(d *schema.ResourceData, m
 		}
 	}
 
-	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
+	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 	if err != nil {
 		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
@@ -129,7 +129,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVPCAttachment(conn, d.Id())
+	transitGatewayVpcAttachment, err := DescribeTransitGatewayVPCAttachment(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway VPC Attachment (%s) not found, removing from state", d.Id())
@@ -154,7 +154,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(d *schema.ResourceData, met
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayId)
-	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
+	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 	if err != nil {
 		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
@@ -164,7 +164,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(d *schema.ResourceData, met
 	}
 
 	transitGatewayAssociationDefaultRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-	transitGatewayDefaultRouteTableAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayAssociationDefaultRouteTableID, d.Id())
+	transitGatewayDefaultRouteTableAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayAssociationDefaultRouteTableID, d.Id())
 	if err != nil {
 		return fmt.Errorf("error determining EC2 Transit Gateway Attachment (%s) association to Route Table (%s): %s", d.Id(), transitGatewayAssociationDefaultRouteTableID, err)
 	}
@@ -214,7 +214,7 @@ func resourceTransitGatewayVPCAttachmentAccepterUpdate(d *schema.ResourceData, m
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
 
-		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
+		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 		if err != nil {
 			return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}
@@ -265,7 +265,7 @@ func resourceTransitGatewayVPCAttachmentAccepterDelete(d *schema.ResourceData, m
 		return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment: %s", err)
 	}
 
-	if err := waitForTransitGatewayVPCAttachmentDeletion(conn, d.Id()); err != nil {
+	if err := WaitForTransitGatewayVPCAttachmentDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", d.Id(), err)
 	}
 

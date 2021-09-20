@@ -417,7 +417,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(remove) > 0 {
 			// A Network ACL is required for each subnet. In order to disassociate a
 			// subnet from this ACL, we must associate it with the default ACL.
-			defaultAcl, err := getDefaultNetworkAcl(d.Get("vpc_id").(string), conn)
+			defaultAcl, err := GetDefaultNetworkACL(d.Get("vpc_id").(string), conn)
 			if err != nil {
 				return fmt.Errorf("Failed to find Default ACL for VPC %s", d.Get("vpc_id").(string))
 			}
@@ -487,7 +487,7 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		toBeDeleted, err := expandNetworkAclEntries(os.Difference(ns).List(), entryType)
+		toBeDeleted, err := ExpandNetworkACLEntries(os.Difference(ns).List(), entryType)
 		if err != nil {
 			return err
 		}
@@ -513,7 +513,7 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 			}
 		}
 
-		toBeCreated, err := expandNetworkAclEntries(ns.Difference(os).List(), entryType)
+		toBeCreated, err := ExpandNetworkACLEntries(ns.Difference(os).List(), entryType)
 		if err != nil {
 			return err
 		}
@@ -525,11 +525,11 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 			if aws.StringValue(add.Protocol) == "-1" {
 				to := aws.Int64Value(add.PortRange.To)
 				from := aws.Int64Value(add.PortRange.From)
-				expected := &expectedPortPair{
+				expected := &ExpectedPortPair{
 					to_port:   0,
 					from_port: 0,
 				}
-				if ok := validatePorts(to, from, *expected); !ok {
+				if ok := ValidPorts(to, from, *expected); !ok {
 					return fmt.Errorf(
 						"to_port (%d) and from_port (%d) must both be 0 to use the the 'all' \"-1\" protocol!",
 						to, from)
@@ -645,7 +645,7 @@ func cleanUpDependencyViolations(d *schema.ResourceData, conn *ec2.EC2) error {
 	}
 
 	log.Printf("[DEBUG] Replacing network associations for Network ACL (%s): %s", d.Id(), associations)
-	defaultAcl, err := getDefaultNetworkAcl(d.Get("vpc_id").(string), conn)
+	defaultAcl, err := GetDefaultNetworkACL(d.Get("vpc_id").(string), conn)
 	if err != nil {
 		return fmt.Errorf("Error getting default network ACL: %s", err)
 	}
@@ -721,7 +721,7 @@ func resourceAwsNetworkAclEntryHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func getDefaultNetworkAcl(vpcId string, conn *ec2.EC2) (defaultAcl *ec2.NetworkAcl, err error) {
+func GetDefaultNetworkACL(vpcId string, conn *ec2.EC2) (defaultAcl *ec2.NetworkAcl, err error) {
 	resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
 		Filters: []*ec2.Filter{
 			{

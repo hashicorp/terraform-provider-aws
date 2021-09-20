@@ -31,7 +31,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"group_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -82,7 +82,7 @@ func dataSourceAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		request.Filters = append(request.Filters, buildEC2CustomFilterList(
+		request.Filters = append(request.Filters, BuildCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}

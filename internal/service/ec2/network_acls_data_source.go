@@ -16,7 +16,7 @@ func DataSourceNetworkACLs() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNetworkACLsRead,
 		Schema: map[string]*schema.Schema{
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 
 			"tags": tftags.TagsSchemaComputed(),
 
@@ -52,13 +52,13 @@ func dataSourceNetworkACLsRead(d *schema.ResourceData, meta interface{}) error {
 	tags, tagsOk := d.GetOk("tags")
 
 	if tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
+		req.Filters = append(req.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
 	if filtersOk {
-		req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		req.Filters = append(req.Filters, BuildCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}

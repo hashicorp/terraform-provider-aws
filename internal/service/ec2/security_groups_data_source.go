@@ -55,7 +55,7 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 			buildAwsDataSourceFilters(filters.(*schema.Set))...)
 	}
 	if tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
+		req.Filters = append(req.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}

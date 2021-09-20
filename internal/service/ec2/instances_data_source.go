@@ -83,7 +83,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 			buildAwsDataSourceFilters(filters.(*schema.Set))...)
 	}
 	if tagsOk {
-		params.Filters = append(params.Filters, buildEC2TagFilterList(
+		params.Filters = append(params.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}

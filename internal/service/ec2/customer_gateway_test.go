@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
@@ -168,7 +169,7 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 				Config: testAccCustomerGatewayConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCustomerGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCustomerGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

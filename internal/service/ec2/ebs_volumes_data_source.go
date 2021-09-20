@@ -15,7 +15,7 @@ func DataSourceEBSVolumes() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceEBSVolumesRead,
 		Schema: map[string]*schema.Schema{
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 
 			"tags": tftags.TagsSchema(),
 
@@ -35,13 +35,13 @@ func dataSourceEBSVolumesRead(d *schema.ResourceData, meta interface{}) error {
 	req := &ec2.DescribeVolumesInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
+		req.Filters = append(req.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		req.Filters = append(req.Filters, BuildCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}

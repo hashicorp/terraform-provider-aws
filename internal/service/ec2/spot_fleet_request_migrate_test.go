@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAWSSpotFleetRequestMigrateState(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAWSSpotFleetRequestMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsSpotFleetRequestMigrateState(
+		is, err := tfec2.SpotFleetRequestMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

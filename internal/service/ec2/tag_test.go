@@ -8,6 +8,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSEc2Tag_basic(t *testing.T) {
@@ -51,7 +52,7 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2TagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

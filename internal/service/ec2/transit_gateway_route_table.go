@@ -82,7 +82,7 @@ func resourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayRouteTable, err := ec2DescribeTransitGatewayRouteTable(conn, d.Id())
+	transitGatewayRouteTable, err := DescribeTransitGatewayRouteTable(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", d.Id())

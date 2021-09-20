@@ -16,7 +16,7 @@ func TestFlattenAttachment(t *testing.T) {
 		AttachmentId: aws.String("at-002"),
 	}
 
-	result := flattenAttachment(expanded)
+	result := FlattenAttachment(expanded)
 
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")
@@ -41,7 +41,7 @@ func TestFlattenAttachmentWhenNoInstanceId(t *testing.T) {
 		AttachmentId: aws.String("at-002"),
 	}
 
-	result := flattenAttachment(expanded)
+	result := FlattenAttachment(expanded)
 
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")
@@ -58,7 +58,7 @@ func TestFlattenGroupIdentifiers(t *testing.T) {
 		{GroupId: aws.String("sg-002")},
 	}
 
-	result := flattenGroupIdentifiers(expanded)
+	result := FlattenGroupIdentifiers(expanded)
 
 	if len(result) != 2 {
 		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
@@ -99,7 +99,7 @@ func TestExpandIPPerms(t *testing.T) {
 		GroupId: aws.String("foo"),
 		VpcId:   aws.String("bar"),
 	}
-	perms, err := expandIPPerms(group, expanded)
+	perms, err := ExpandIPPerms(group, expanded)
 	if err != nil {
 		t.Fatalf("error expanding perms: %v", err)
 	}
@@ -208,7 +208,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 		VpcId:   aws.String("bar"),
 	}
 
-	perms, err := expandIPPerms(group, expanded)
+	perms, err := ExpandIPPerms(group, expanded)
 	if err != nil {
 		t.Fatalf("error expanding perms: %v", err)
 	}
@@ -274,9 +274,9 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 		VpcId:   aws.String("bar"),
 	}
 
-	_, expandErr := expandIPPerms(securityGroups, errorCase)
+	_, expandErr := ExpandIPPerms(securityGroups, errorCase)
 	if expandErr == nil {
-		t.Fatal("expandIPPerms should have errored!")
+		t.Fatal("ExpandIPPerms should have errored!")
 	}
 }
 
@@ -304,7 +304,7 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 	group := &ec2.SecurityGroup{
 		GroupName: aws.String("foo"),
 	}
-	perms, err := expandIPPerms(group, expanded)
+	perms, err := ExpandIPPerms(group, expanded)
 	if err != nil {
 		t.Fatalf("error expanding perms: %v", err)
 	}
@@ -384,7 +384,7 @@ func TestFlattenNetworkInterfacesPrivateIPAddresses(t *testing.T) {
 		{PrivateIpAddress: aws.String("192.168.0.2")},
 	}
 
-	result := flattenNetworkInterfacesPrivateIPAddresses(expanded)
+	result := FlattenNetworkInterfacesPrivateIPAddresses(expanded)
 
 	if result == nil {
 		t.Fatal("result was nil")
@@ -412,7 +412,7 @@ func TestExpandPrivateIPAddresses(t *testing.T) {
 		ip2,
 	}
 
-	result := expandPrivateIPAddresses(flattened)
+	result := ExpandPrivateIPAddresses(flattened)
 
 	if len(result) != 2 {
 		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
@@ -519,7 +519,7 @@ func TestFlattenSecurityGroups(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenSecurityGroups(c.pairs, c.ownerId)
+		out := FlattenSecurityGroups(c.pairs, c.ownerId)
 		if !reflect.DeepEqual(out, c.expected) {
 			t.Fatalf("Error matching output and expected: %#v vs %#v", out, c.expected)
 		}

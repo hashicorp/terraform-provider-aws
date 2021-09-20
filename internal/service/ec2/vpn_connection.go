@@ -743,7 +743,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 
 	if vpnConnection.CustomerGatewayConfiguration != nil {
-		tunnelInfo, err := xmlConfigToTunnelInfo(
+		tunnelInfo, err := XmlConfigToTunnelInfo(
 			aws.StringValue(vpnConnection.CustomerGatewayConfiguration),
 			d.Get("tunnel1_preshared_key").(string),    // Not currently available during import
 			d.Get("tunnel1_inside_cidr").(string),      // Not currently available during import
@@ -1026,7 +1026,7 @@ func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting VPN Connection (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForEc2VpnConnectionDeletion(conn, d.Id()); err != nil {
+	if err := WaitForVPNConnectionDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", d.Id(), err)
 	}
 
@@ -1651,7 +1651,7 @@ func waitForEc2VpnConnectionAvailableWhenModifying(conn *ec2.EC2, id string) err
 	return err
 }
 
-func waitForEc2VpnConnectionDeletion(conn *ec2.EC2, id string) error {
+func WaitForVPNConnectionDeletion(conn *ec2.EC2, id string) error {
 	// These things can take quite a while to tear themselves down and any
 	// attempt to modify resources they reference (e.g. CustomerGateways or
 	// VPN Gateways) before deletion will result in an error. Furthermore,
@@ -1673,7 +1673,7 @@ func waitForEc2VpnConnectionDeletion(conn *ec2.EC2, id string) error {
 }
 
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
-func xmlConfigToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
+func XmlConfigToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
 	var vpnConfig XmlVpnConnectionConfig
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
 		return nil, fmt.Errorf("Error Unmarshalling XML: %s", err)

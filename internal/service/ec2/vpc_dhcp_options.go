@@ -260,7 +260,7 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 		case "DependencyViolation":
 			// If it is a dependency violation, we want to disassociate
 			// all VPCs using the given DHCP Options ID, and retry deleting.
-			vpcs, err2 := findVPCsByDHCPOptionsID(conn, d.Id())
+			vpcs, err2 := FindVPCsByDHCPOptionsID(conn, d.Id())
 			if err2 != nil {
 				log.Printf("[ERROR] %s", err2)
 				return resource.RetryableError(err2)
@@ -289,7 +289,7 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 	return err
 }
 
-func findVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
+func FindVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
 	req := &ec2.DescribeVpcsInput{
 		Filters: []*ec2.Filter{
 			{

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
@@ -148,7 +149,7 @@ func TestAccAWSEc2TrafficMirrorSession_disappears(t *testing.T) {
 				Config: testAccTrafficMirrorSessionConfig(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTrafficMirrorSession(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorSession(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

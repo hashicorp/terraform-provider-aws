@@ -17,7 +17,7 @@ func DataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 		Read: dataSourceTransitGatewayPeeringAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -54,7 +54,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta 
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = buildEC2CustomFilterList(d.Get("filter").(*schema.Set))
+	input.Filters = BuildCustomFilterList(d.Get("filter").(*schema.Set))
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		input.Filters = append(input.Filters, ec2TagFiltersFromMap(v)...)
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -74,7 +75,7 @@ func testSweepEC2Eips(region string) error {
 			continue
 		}
 
-		r := ResourceEIP()
+		r := tfec2.ResourceEIP()
 		d := r.Data(nil)
 		if address.AllocationId != nil {
 			d.SetId(aws.StringValue(address.AllocationId))
@@ -139,7 +140,7 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 				Config: testAccEIPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceEIP(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEIP(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -894,8 +895,8 @@ func testAccCheckAWSEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
 		privateDNS := rs.Primary.Attributes["private_dns"]
 		expectedPrivateDNS := fmt.Sprintf(
 			"ip-%s.%s",
-			convertIPToDashIP(rs.Primary.Attributes["private_ip"]),
-			regionalPrivateDNSSuffix(acctest.Region()),
+			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["private_ip"]),
+			tfec2.RegionalPrivateDNSSuffix(acctest.Region()),
 		)
 
 		if privateDNS != expectedPrivateDNS {
@@ -916,8 +917,8 @@ func testAccCheckAWSEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 		publicDNS := rs.Primary.Attributes["public_dns"]
 		expectedPublicDNS := fmt.Sprintf(
 			"ec2-%s.%s.%s",
-			convertIPToDashIP(rs.Primary.Attributes["public_ip"]),
-			resourceAwsEc2RegionalPublicDnsSuffix(acctest.Region()),
+			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["public_ip"]),
+			tfec2.RegionalPublicDNSSuffix(acctest.Region()),
 			acctest.PartitionDNSSuffix(),
 		)
 
@@ -939,8 +940,8 @@ func testAccCheckAWSEIPPublicDNSEC2Classic(resourceName string) resource.TestChe
 		publicDNS := rs.Primary.Attributes["public_dns"]
 		expectedPublicDNS := fmt.Sprintf(
 			"ec2-%s.%s.%s",
-			convertIPToDashIP(rs.Primary.Attributes["public_ip"]),
-			resourceAwsEc2RegionalPublicDnsSuffix(acctest.EC2ClassicRegion()),
+			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["public_ip"]),
+			tfec2.RegionalPublicDNSSuffix(acctest.EC2ClassicRegion()),
 			acctest.PartitionDNSSuffix(),
 		)
 

@@ -42,7 +42,7 @@ func DataSourceCoIPPool() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 		},
 	}
 }
@@ -66,12 +66,12 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 	req.Filters = BuildAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
+		req.Filters = append(req.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

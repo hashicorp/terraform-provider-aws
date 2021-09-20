@@ -293,7 +293,7 @@ func resourceAwsInternetGatewayDetach(d *schema.ResourceData, meta interface{}) 
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{ec2.AttachmentStatusDetaching},
 		Target:         []string{ec2.AttachmentStatusDetached},
-		Refresh:        detachIGStateRefreshFunc(conn, d.Id(), vpcID.(string)),
+		Refresh:        DetachIGStateRefreshFunc(conn, d.Id(), vpcID.(string)),
 		Timeout:        15 * time.Minute,
 		Delay:          10 * time.Second,
 		NotFoundChecks: 30,
@@ -309,7 +309,7 @@ func resourceAwsInternetGatewayDetach(d *schema.ResourceData, meta interface{}) 
 
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an EC2 instance.
-func detachIGStateRefreshFunc(conn *ec2.EC2, gatewayID, vpcID string) resource.StateRefreshFunc {
+func DetachIGStateRefreshFunc(conn *ec2.EC2, gatewayID, vpcID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		_, err := conn.DetachInternetGateway(&ec2.DetachInternetGatewayInput{
 			InternetGatewayId: aws.String(gatewayID),

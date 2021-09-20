@@ -164,7 +164,7 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGateway, err := ec2DescribeTransitGateway(conn, d.Id())
+	transitGateway, err := DescribeTransitGateway(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", d.Id())
@@ -321,13 +321,13 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting EC2 Transit Gateway: %s", err)
 	}
 
-	if err := waitForTransitGatewayDeletion(conn, d.Id()); err != nil {
+	if err := WaitForTransitGatewayDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
 }
-func decodeTransitGatewayRouteID(id string) (string, string, error) {
+func DecodeTransitGatewayRouteID(id string) (string, string, error) {
 	parts := strings.Split(id, "_")
 
 	if len(parts) != 2 {
@@ -337,7 +337,7 @@ func decodeTransitGatewayRouteID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func decodeTransitGatewayRouteTableAssociationID(id string) (string, string, error) {
+func DecodeTransitGatewayRouteTableAssociationID(id string) (string, string, error) {
 	parts := strings.Split(id, "_")
 
 	if len(parts) != 2 {
@@ -347,7 +347,7 @@ func decodeTransitGatewayRouteTableAssociationID(id string) (string, string, err
 	return parts[0], parts[1], nil
 }
 
-func decodeTransitGatewayRouteTablePropagationID(id string) (string, string, error) {
+func DecodeTransitGatewayRouteTablePropagationID(id string) (string, string, error) {
 	parts := strings.Split(id, "_")
 
 	if len(parts) != 2 {
@@ -357,7 +357,7 @@ func decodeTransitGatewayRouteTablePropagationID(id string) (string, string, err
 	return parts[0], parts[1], nil
 }
 
-func ec2DescribeTransitGateway(conn *ec2.EC2, transitGatewayID string) (*ec2.TransitGateway, error) {
+func DescribeTransitGateway(conn *ec2.EC2, transitGatewayID string) (*ec2.TransitGateway, error) {
 	input := &ec2.DescribeTransitGatewaysInput{
 		TransitGatewayIds: []*string{aws.String(transitGatewayID)},
 	}
@@ -394,7 +394,7 @@ func ec2DescribeTransitGateway(conn *ec2.EC2, transitGatewayID string) (*ec2.Tra
 	return nil, nil
 }
 
-func ec2DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
+func DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
 		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
 	}
@@ -431,7 +431,7 @@ func ec2DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAtt
 	return nil, nil
 }
 
-func ec2DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
+func DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		// As of the time of writing, the EC2 API reference documentation (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html)
 		// incorrectly states which filter Names are allowed. The below are example errors:
@@ -472,7 +472,7 @@ func ec2DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, d
 	return nil, nil
 }
 
-func ec2DescribeTransitGatewayRouteTable(conn *ec2.EC2, transitGatewayRouteTableID string) (*ec2.TransitGatewayRouteTable, error) {
+func DescribeTransitGatewayRouteTable(conn *ec2.EC2, transitGatewayRouteTableID string) (*ec2.TransitGatewayRouteTable, error) {
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{
 		TransitGatewayRouteTableIds: []*string{aws.String(transitGatewayRouteTableID)},
 	}
@@ -509,7 +509,7 @@ func ec2DescribeTransitGatewayRouteTable(conn *ec2.EC2, transitGatewayRouteTable
 	return nil, nil
 }
 
-func ec2DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+func DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	if transitGatewayRouteTableID == "" {
 		return nil, nil
 	}
@@ -537,7 +537,7 @@ func ec2DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewa
 	return output.Associations[0], nil
 }
 
-func ec2DescribeTransitGatewayVPCAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayVpcAttachment, error) {
+func DescribeTransitGatewayVPCAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayVpcAttachment, error) {
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
 		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
 	}
@@ -576,7 +576,7 @@ func ec2DescribeTransitGatewayVPCAttachment(conn *ec2.EC2, transitGatewayAttachm
 
 func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayPeeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
+		transitGatewayPeeringAttachment, err := DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
@@ -600,7 +600,7 @@ func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtt
 
 func transitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
+		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 			return nil, ec2.TransitGatewayStateDeleted, nil
@@ -620,7 +620,7 @@ func transitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resource.
 
 func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
@@ -639,7 +639,7 @@ func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewa
 }
 
 func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
-	transitGatewayAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 	if err != nil {
 		return fmt.Errorf("error determining EC2 Transit Gateway Attachment Route Table (%s) association (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
@@ -706,7 +706,7 @@ func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRout
 
 func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTableID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayRouteTable, err := ec2DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
+		transitGatewayRouteTable, err := DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
@@ -726,7 +726,7 @@ func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTable
 
 func transitGatewayVPCAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVPCAttachment(conn, transitGatewayAttachmentID)
+		transitGatewayVpcAttachment, err := DescribeTransitGatewayVPCAttachment(conn, transitGatewayAttachmentID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
@@ -758,7 +758,7 @@ func waitForTransitGatewayCreation(conn *ec2.EC2, transitGatewayID string) error
 	return err
 }
 
-func waitForTransitGatewayDeletion(conn *ec2.EC2, transitGatewayID string) error {
+func WaitForTransitGatewayDeletion(conn *ec2.EC2, transitGatewayID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayStateAvailable,
@@ -818,7 +818,7 @@ func waitForTransitGatewayPeeringAttachmentCreation(conn *ec2.EC2, transitGatewa
 	return err
 }
 
-func waitForTransitGatewayPeeringAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func WaitForTransitGatewayPeeringAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayAttachmentStateAvailable,
@@ -947,7 +947,7 @@ func waitForTransitGatewayVPCAttachmentCreation(conn *ec2.EC2, transitGatewayAtt
 	return err
 }
 
-func waitForTransitGatewayVPCAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func WaitForTransitGatewayVPCAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayAttachmentStateAvailable,

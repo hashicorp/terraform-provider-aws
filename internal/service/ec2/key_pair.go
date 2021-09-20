@@ -31,7 +31,7 @@ func ResourceKeyPair() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsKeyPairMigrateState,
+		MigrateState:  KeyPairMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"key_name": {

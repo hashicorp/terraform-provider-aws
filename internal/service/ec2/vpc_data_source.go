@@ -71,7 +71,7 @@ func DataSourceVPC() *schema.Resource {
 				Computed: true,
 			},
 
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 
 			"id": {
 				Type:     schema.TypeString,
@@ -150,12 +150,12 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
+		req.Filters = append(req.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

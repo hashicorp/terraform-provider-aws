@@ -42,7 +42,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsInstanceMigrateState,
+		MigrateState:  InstanceMigrateState,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -886,7 +886,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instance, err := resourceAwsInstanceFindByID(conn, d.Id())
+	instance, err := InstanceFindByID(conn, d.Id())
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
@@ -1327,7 +1327,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("secondary_private_ips", "vpc_security_group_ids") && !d.IsNewResource() {
-		instance, err := resourceAwsInstanceFindByID(conn, d.Id())
+		instance, err := InstanceFindByID(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error retrieving instance %q: %w", d.Id(), err)
 		}
@@ -1422,7 +1422,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForInstanceStopping(conn, d.Id(), 10*time.Minute); err != nil {
+		if err := WaitForInstanceStopping(conn, d.Id(), 10*time.Minute); err != nil {
 			return err
 		}
 
@@ -1759,7 +1759,7 @@ func resourceAwsInstanceDisableAPITermination(conn *ec2.EC2, id string, disableA
 // an EC2 instance.
 func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
 			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
@@ -1790,7 +1790,7 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 // changes in an EC2 instance's metadata options.
 func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
 			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
@@ -1814,7 +1814,7 @@ func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.State
 // that is used to watch changes in an EC2 instance's root block device's delete on termination attribute.
 func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
 			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
@@ -2104,7 +2104,7 @@ func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) 
 	return "", nil
 }
 
-func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
+func FetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	if ami == "" {
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
 	}
@@ -2375,7 +2375,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 				return nil, errors.New("`ami` must be set or provided via launch template")
 			}
 
-			if dn, err := fetchRootDeviceName(ami, conn); err == nil {
+			if dn, err := FetchRootDeviceName(ami, conn); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -2760,7 +2760,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 	return waitForInstanceDeletion(conn, id, timeout)
 }
 
-func waitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) error {
+func WaitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Waiting for instance (%s) to become stopped", id)
 
 	stateConf := &resource.StateChangeConf{
@@ -3046,11 +3046,11 @@ func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse
 	return []interface{}{m}
 }
 
-// resourceAwsInstanceFindByID returns the EC2 instance by ID
+// InstanceFindByID returns the EC2 instance by ID
 // * If the instance is found, returns the instance and nil
 // * If no instance is found, returns nil and nil
 // * If an error occurs, returns nil and the error
-func resourceAwsInstanceFindByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
+func InstanceFindByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	instances, err := resourceAwsInstanceFind(conn, &ec2.DescribeInstancesInput{
 		InstanceIds: aws.StringSlice([]string{id}),
 	})

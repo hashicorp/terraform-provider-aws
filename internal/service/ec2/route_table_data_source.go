@@ -38,7 +38,7 @@ func DataSourceRouteTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 			"routes": {
 				Type:     schema.TypeList,
@@ -188,10 +188,10 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 			"association.gateway-id": gatewayId.(string),
 		},
 	)
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
+	req.Filters = append(req.Filters, BuildTagFilterList(
 		tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 	)...)
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 

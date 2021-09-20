@@ -15,7 +15,7 @@ func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
 		Read: dataSourceLocalGatewayVirtualInterfaceRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -65,11 +65,11 @@ func dataSourceLocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta int
 		input.LocalGatewayVirtualInterfaceIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = append(input.Filters, buildEC2TagFilterList(
+	input.Filters = append(input.Filters, BuildTagFilterList(
 		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
-	input.Filters = append(input.Filters, buildEC2CustomFilterList(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

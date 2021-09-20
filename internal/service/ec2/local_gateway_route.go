@@ -76,7 +76,7 @@ func resourceLocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) e
 func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
+	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 	var localGatewayRoute *ec2.LocalGatewayRoute
 	err = resource.Retry(ec2LocalGatewayRouteEventualConsistencyTimeout, func() *resource.RetryError {
 		var err error
-		localGatewayRoute, err = getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
+		localGatewayRoute, err = GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -98,7 +98,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		localGatewayRoute, err = getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
+		localGatewayRoute, err = GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 	}
 
 	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
@@ -140,7 +140,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
+	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func decodeEc2LocalGatewayRouteID(id string) (string, string, error) {
+func DecodeLocalGatewayRouteID(id string) (string, string, error) {
 	parts := strings.Split(id, "_")
 
 	if len(parts) != 2 {
@@ -174,7 +174,7 @@ func decodeEc2LocalGatewayRouteID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func getEc2LocalGatewayRoute(conn *ec2.EC2, localGatewayRouteTableID, destination string) (*ec2.LocalGatewayRoute, error) {
+func GetLocalGatewayRoute(conn *ec2.EC2, localGatewayRouteTableID, destination string) (*ec2.LocalGatewayRoute, error) {
 	input := &ec2.SearchLocalGatewayRoutesInput{
 		Filters: []*ec2.Filter{
 			{

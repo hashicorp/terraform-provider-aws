@@ -71,7 +71,7 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 				Config: testAccAwsEc2ManagedPrefixListConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedPrefixList(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceManagedPrefixList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

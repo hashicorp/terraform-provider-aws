@@ -61,7 +61,7 @@ func testSweepEc2VpcEndpoints(region string) error {
 
 			log.Printf("[INFO] Deleting EC2 VPC Endpoint: %s", id)
 
-			r := ResourceVPCEndpoint()
+			r := tfec2.ResourceVPCEndpoint()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -468,7 +468,7 @@ func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

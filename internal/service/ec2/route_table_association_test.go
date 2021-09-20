@@ -159,7 +159,7 @@ func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
 				Config: testAccRouteTableAssociationConfigSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

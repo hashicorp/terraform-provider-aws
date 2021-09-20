@@ -81,7 +81,7 @@ func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) 
 func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(d.Id())
+	cidrBlock, vpnConnectionId := VPNConnectionRouteParseID(d.Id())
 
 	route, err := findConnectionRoute(conn, cidrBlock, vpnConnectionId)
 	if err != nil {
@@ -163,7 +163,7 @@ func findConnectionRoute(conn *ec2.EC2, cidrBlock, vpnConnectionId string) (*ec2
 	return nil, nil
 }
 
-func resourceAwsVpnConnectionRouteParseId(id string) (string, string) {
+func VPNConnectionRouteParseID(id string) (string, string) {
 	parts := strings.SplitN(id, ":", 2)
 	return parts[0], parts[1]
 }

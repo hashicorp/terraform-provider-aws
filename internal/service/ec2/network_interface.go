@@ -163,7 +163,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
-		request.PrivateIpAddresses = expandPrivateIPAddresses(v.(*schema.Set).List())
+		request.PrivateIpAddresses = ExpandPrivateIPAddresses(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -257,7 +257,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	attachment := []map[string]interface{}{}
 
 	if eni.Attachment != nil {
-		attachment = []map[string]interface{}{flattenAttachment(eni.Attachment)}
+		attachment = []map[string]interface{}{FlattenAttachment(eni.Attachment)}
 	}
 
 	if err := d.Set("attachment", attachment); err != nil {
@@ -271,13 +271,13 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("private_ip", eni.PrivateIpAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
 
-	if err := d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ips", FlattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %s", err)
 	}
 
 	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
 
-	if err := d.Set("security_groups", flattenGroupIdentifiers(eni.Groups)); err != nil {
+	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
 		return fmt.Errorf("error setting security_groups: %s", err)
 	}
 

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-func expandNetworkAclEntries(configured []interface{}, entryType string) ([]*ec2.NetworkAclEntry, error) {
+func ExpandNetworkACLEntries(configured []interface{}, entryType string) ([]*ec2.NetworkAclEntry, error) {
 	entries := make([]*ec2.NetworkAclEntry, 0, len(configured))
 	for _, eRaw := range configured {
 		data := eRaw.(map[string]interface{})
@@ -217,15 +217,15 @@ func protocolIntegers() map[string]int {
 	}
 }
 
-// expectedPortPair stores a pair of ports we expect to see together.
-type expectedPortPair struct {
+// ExpectedPortPair stores a pair of ports we expect to see together.
+type ExpectedPortPair struct {
 	to_port   int64
 	from_port int64
 }
 
-// validatePorts ensures the ports and protocol match expected
+// ValidPorts ensures the ports and protocol match expected
 // values.
-func validatePorts(to int64, from int64, expected expectedPortPair) bool {
+func ValidPorts(to int64, from int64, expected ExpectedPortPair) bool {
 	if to != expected.to_port || from != expected.from_port {
 		return false
 	}
