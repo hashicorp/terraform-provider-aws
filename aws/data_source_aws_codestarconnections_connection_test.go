@@ -18,7 +18,7 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigBasic(rName),
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigTags(rName),

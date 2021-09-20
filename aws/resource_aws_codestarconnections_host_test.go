@@ -22,7 +22,7 @@ func TestAccAWSCodeStarConnectionsHost_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,14 +53,14 @@ func TestAccAWSCodeStarConnectionsHost_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeStarConnectionsHostConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsHostExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeStarConnectionsHost(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeStarConnectionsHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,7 +76,7 @@ func TestAccAWSCodeStarConnectionsHost_vpcConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func testAccCheckAWSCodeStarConnectionsHostExists(n string, v *codestarconnectio
 			return errors.New("No CodeStar host ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+		conn := acctest.Provider.Meta().(*AWSClient).codestarconnectionsconn
 
 		resp, err := conn.GetHost(&codestarconnections.GetHostInput{
 			HostArn: aws.String(rs.Primary.ID),
@@ -131,7 +131,7 @@ func testAccCheckAWSCodeStarConnectionsHostExists(n string, v *codestarconnectio
 }
 
 func testAccCheckAWSCodeStarConnectionsHostDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+	conn := acctest.Provider.Meta().(*AWSClient).codestarconnectionsconn
 
 	for _, rs := range s.RootModule().Resources {
 		switch rs.Type {

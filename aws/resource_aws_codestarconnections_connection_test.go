@@ -22,7 +22,7 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,14 +85,14 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeStarConnectionsConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeStarConnectionsConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +108,7 @@ func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 			return errors.New("No CodeStar connection ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+		conn := acctest.Provider.Meta().(*AWSClient).codestarconnectionsconn
 
 		resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 			ConnectionArn: aws.String(rs.Primary.ID),
@@ -172,7 +172,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 }
 
 func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+	conn := acctest.Provider.Meta().(*AWSClient).codestarconnectionsconn
 
 	for _, rs := range s.RootModule().Resources {
 		switch rs.Type {
