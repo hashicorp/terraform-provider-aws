@@ -220,7 +220,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"elb_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      loadBalancerInfoHash,
+							Set:      LoadBalancerInfoHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -234,7 +234,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"target_group_info": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      loadBalancerInfoHash,
+							Set:      LoadBalancerInfoHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -501,7 +501,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
-		input.DeploymentStyle = expandDeploymentStyle(attr.([]interface{}))
+		input.DeploymentStyle = ExpandDeploymentStyle(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("deployment_config_name"); ok {
@@ -530,24 +530,24 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("trigger_configuration"); ok {
-		triggerConfigs := buildTriggerConfigs(attr.(*schema.Set).List())
+		triggerConfigs := BuildTriggerConfigs(attr.(*schema.Set).List())
 		input.TriggerConfigurations = triggerConfigs
 	}
 
 	if attr, ok := d.GetOk("auto_rollback_configuration"); ok {
-		input.AutoRollbackConfiguration = buildAutoRollbackConfig(attr.([]interface{}))
+		input.AutoRollbackConfiguration = BuildAutoRollbackConfig(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("alarm_configuration"); ok {
-		input.AlarmConfiguration = buildAlarmConfig(attr.([]interface{}))
+		input.AlarmConfiguration = BuildAlarmConfig(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("load_balancer_info"); ok {
-		input.LoadBalancerInfo = expandLoadBalancerInfo(attr.([]interface{}))
+		input.LoadBalancerInfo = ExpandLoadBalancerInfo(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("blue_green_deployment_config"); ok {
-		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfig(attr.([]interface{}))
+		input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(attr.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating CodeDeploy DeploymentGroup %s", applicationName)
@@ -635,7 +635,7 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting autoscaling_groups: %w", err)
 	}
 
-	if err := d.Set("deployment_style", flattenDeploymentStyle(group.DeploymentStyle)); err != nil {
+	if err := d.Set("deployment_style", FlattenDeploymentStyle(group.DeploymentStyle)); err != nil {
 		return fmt.Errorf("error setting deployment_style: %w", err)
 	}
 
@@ -655,23 +655,23 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
 	}
 
-	if err := d.Set("trigger_configuration", triggerConfigsToMap(group.TriggerConfigurations)); err != nil {
+	if err := d.Set("trigger_configuration", TriggerConfigsToMap(group.TriggerConfigurations)); err != nil {
 		return fmt.Errorf("error setting trigger_configuration: %w", err)
 	}
 
-	if err := d.Set("auto_rollback_configuration", autoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
+	if err := d.Set("auto_rollback_configuration", AutoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
 		return fmt.Errorf("error setting auto_rollback_configuration: %w", err)
 	}
 
-	if err := d.Set("alarm_configuration", alarmConfigToMap(group.AlarmConfiguration)); err != nil {
+	if err := d.Set("alarm_configuration", AlarmConfigToMap(group.AlarmConfiguration)); err != nil {
 		return fmt.Errorf("error setting alarm_configuration: %w", err)
 	}
 
-	if err := d.Set("load_balancer_info", flattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
+	if err := d.Set("load_balancer_info", FlattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
 		return fmt.Errorf("error setting load_balancer_info: %w", err)
 	}
 
-	if err := d.Set("blue_green_deployment_config", flattenBlueGreenDeploymentConfig(group.BlueGreenDeploymentConfiguration)); err != nil {
+	if err := d.Set("blue_green_deployment_config", FlattenBlueGreenDeploymentConfig(group.BlueGreenDeploymentConfiguration)); err != nil {
 		return fmt.Errorf("error setting blue_green_deployment_config: %w", err)
 	}
 
@@ -717,7 +717,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 
 		if d.HasChange("deployment_style") {
 			_, n := d.GetChange("deployment_style")
-			input.DeploymentStyle = expandDeploymentStyle(n.([]interface{}))
+			input.DeploymentStyle = ExpandDeploymentStyle(n.([]interface{}))
 		}
 
 		if d.HasChange("deployment_config_name") {
@@ -756,28 +756,28 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 
 		if d.HasChange("trigger_configuration") {
 			_, n := d.GetChange("trigger_configuration")
-			triggerConfigs := buildTriggerConfigs(n.(*schema.Set).List())
+			triggerConfigs := BuildTriggerConfigs(n.(*schema.Set).List())
 			input.TriggerConfigurations = triggerConfigs
 		}
 
 		if d.HasChange("auto_rollback_configuration") {
 			_, n := d.GetChange("auto_rollback_configuration")
-			input.AutoRollbackConfiguration = buildAutoRollbackConfig(n.([]interface{}))
+			input.AutoRollbackConfiguration = BuildAutoRollbackConfig(n.([]interface{}))
 		}
 
 		if d.HasChange("alarm_configuration") {
 			_, n := d.GetChange("alarm_configuration")
-			input.AlarmConfiguration = buildAlarmConfig(n.([]interface{}))
+			input.AlarmConfiguration = BuildAlarmConfig(n.([]interface{}))
 		}
 
 		if d.HasChange("load_balancer_info") {
 			_, n := d.GetChange("load_balancer_info")
-			input.LoadBalancerInfo = expandLoadBalancerInfo(n.([]interface{}))
+			input.LoadBalancerInfo = ExpandLoadBalancerInfo(n.([]interface{}))
 		}
 
 		if d.HasChange("blue_green_deployment_config") {
 			_, n := d.GetChange("blue_green_deployment_config")
-			input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfig(n.([]interface{}))
+			input.BlueGreenDeploymentConfiguration = ExpandBlueGreenDeploymentConfig(n.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
@@ -893,9 +893,9 @@ func buildEC2TagSet(configured []interface{}) *codedeploy.EC2TagSet {
 	return &codedeploy.EC2TagSet{Ec2TagSetList: filterSets}
 }
 
-// buildTriggerConfigs converts a raw schema list into a list of
+// BuildTriggerConfigs converts a raw schema list into a list of
 // codedeploy.TriggerConfig.
-func buildTriggerConfigs(configured []interface{}) []*codedeploy.TriggerConfig {
+func BuildTriggerConfigs(configured []interface{}) []*codedeploy.TriggerConfig {
 	configs := make([]*codedeploy.TriggerConfig, 0, len(configured))
 	for _, raw := range configured {
 		var config codedeploy.TriggerConfig
@@ -910,9 +910,9 @@ func buildTriggerConfigs(configured []interface{}) []*codedeploy.TriggerConfig {
 	return configs
 }
 
-// buildAutoRollbackConfig converts a raw schema list containing a map[string]interface{}
+// BuildAutoRollbackConfig converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.AutoRollbackConfiguration
-func buildAutoRollbackConfig(configured []interface{}) *codedeploy.AutoRollbackConfiguration {
+func BuildAutoRollbackConfig(configured []interface{}) *codedeploy.AutoRollbackConfiguration {
 	result := &codedeploy.AutoRollbackConfiguration{}
 
 	if len(configured) == 1 {
@@ -927,9 +927,9 @@ func buildAutoRollbackConfig(configured []interface{}) *codedeploy.AutoRollbackC
 	return result
 }
 
-// buildAlarmConfig converts a raw schema list containing a map[string]interface{}
+// BuildAlarmConfig converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.AlarmConfiguration
-func buildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
+func BuildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 	result := &codedeploy.AlarmConfiguration{}
 
 	if len(configured) == 1 {
@@ -1053,9 +1053,9 @@ func expandCodeDeployTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
 	return trafficRoute
 }
 
-// expandDeploymentStyle converts a raw schema list containing a map[string]interface{}
+// ExpandDeploymentStyle converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.DeploymentStyle object
-func expandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
+func ExpandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
@@ -1073,9 +1073,9 @@ func expandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 	return result
 }
 
-// expandLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
+// ExpandLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.LoadBalancerInfo object. Returns an empty object if list is nil.
-func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
+func ExpandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 	if len(list) == 0 || list[0] == nil {
 		return loadBalancerInfo
@@ -1098,9 +1098,9 @@ func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	return loadBalancerInfo
 }
 
-// expandBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
+// ExpandBlueGreenDeploymentConfig converts a raw schema list containing a map[string]interface{}
 // into a single codedeploy.BlueGreenDeploymentConfiguration object
-func expandBlueGreenDeploymentConfig(list []interface{}) *codedeploy.BlueGreenDeploymentConfiguration {
+func ExpandBlueGreenDeploymentConfig(list []interface{}) *codedeploy.BlueGreenDeploymentConfiguration {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
@@ -1219,8 +1219,8 @@ func ec2TagSetToMap(tagSet *codedeploy.EC2TagSet) []map[string]interface{} {
 	return result
 }
 
-// triggerConfigsToMap converts a list of []*codedeploy.TriggerConfig into a []map[string]interface{}
-func triggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interface{} {
+// TriggerConfigsToMap converts a list of []*codedeploy.TriggerConfig into a []map[string]interface{}
+func TriggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tc := range list {
 		item := make(map[string]interface{})
@@ -1232,9 +1232,9 @@ func triggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interfac
 	return result
 }
 
-// autoRollbackConfigToMap converts a codedeploy.AutoRollbackConfiguration
+// AutoRollbackConfigToMap converts a codedeploy.AutoRollbackConfiguration
 // into a []map[string]interface{} list containing a single item
-func autoRollbackConfigToMap(config *codedeploy.AutoRollbackConfiguration) []map[string]interface{} {
+func AutoRollbackConfigToMap(config *codedeploy.AutoRollbackConfiguration) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	// only create configurations that are enabled or temporarily disabled (retaining events)
@@ -1249,9 +1249,9 @@ func autoRollbackConfigToMap(config *codedeploy.AutoRollbackConfiguration) []map
 	return result
 }
 
-// alarmConfigToMap converts a codedeploy.AlarmConfiguration
+// AlarmConfigToMap converts a codedeploy.AlarmConfiguration
 // into a []map[string]interface{} list containing a single item
-func alarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interface{} {
+func AlarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	// only create configurations that are enabled or temporarily disabled (retaining alarms)
@@ -1360,9 +1360,9 @@ func flattenCodeDeployTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []inte
 	return []interface{}{m}
 }
 
-// flattenDeploymentStyle converts a codedeploy.DeploymentStyle object
+// FlattenDeploymentStyle converts a codedeploy.DeploymentStyle object
 // into a []map[string]interface{} list containing a single item
-func flattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]interface{} {
+func FlattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]interface{} {
 	if style == nil {
 		return nil
 	}
@@ -1380,23 +1380,23 @@ func flattenDeploymentStyle(style *codedeploy.DeploymentStyle) []map[string]inte
 	return result
 }
 
-func flattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []interface{} {
+func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []interface{} {
 	if loadBalancerInfo == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"elb_info":               schema.NewSet(loadBalancerInfoHash, flattenCodeDeployElbInfo(loadBalancerInfo.ElbInfoList)),
-		"target_group_info":      schema.NewSet(loadBalancerInfoHash, flattenCodeDeployTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
+		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployElbInfo(loadBalancerInfo.ElbInfoList)),
+		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
 		"target_group_pair_info": flattenCodeDeployTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
 	return []interface{}{m}
 }
 
-// flattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
+// FlattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
-func flattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
+func FlattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
 
 	if config == nil {
 		return nil
@@ -1500,7 +1500,7 @@ func resourceAwsCodeDeployTriggerConfigHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func loadBalancerInfoHash(v interface{}) int {
+func LoadBalancerInfoHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	if v == nil {

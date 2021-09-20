@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 )
 
 func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
@@ -219,7 +220,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeploymentGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodedeploy.ResourceDeploymentGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -242,7 +243,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), "aws_codedeploy_app.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodedeploy.ResourceApp(), "aws_codedeploy_app.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1775,10 +1776,10 @@ func TestAWSCodeDeployDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 		},
 	}
 
-	actual := buildTriggerConfigs(input)
+	actual := tfcodedeploy.BuildTriggerConfigs(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("buildTriggerConfigs output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.BuildTriggerConfigs output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -1804,7 +1805,7 @@ func TestAWSCodeDeployDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 		"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic-2", // lintignore:AWSAT003,AWSAT005 // unit test
 	}
 
-	actual := triggerConfigsToMap(input)[0]
+	actual := tfcodedeploy.TriggerConfigsToMap(input)[0]
 
 	fatal := false
 
@@ -1823,7 +1824,7 @@ func TestAWSCodeDeployDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("triggerConfigsToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.TriggerConfigsToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -1845,10 +1846,10 @@ func TestAWSCodeDeployDeploymentGroup_buildAutoRollbackConfig(t *testing.T) {
 		Enabled: aws.Bool(true),
 	}
 
-	actual := buildAutoRollbackConfig(input)
+	actual := tfcodedeploy.BuildAutoRollbackConfig(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("buildAutoRollbackConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.BuildAutoRollbackConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -1870,7 +1871,7 @@ func TestAWSCodeDeployDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
 		"enabled": false,
 	}
 
-	actual := autoRollbackConfigToMap(input)[0]
+	actual := tfcodedeploy.AutoRollbackConfigToMap(input)[0]
 
 	fatal := false
 
@@ -1885,7 +1886,7 @@ func TestAWSCodeDeployDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("autoRollbackConfigToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.AutoRollbackConfigToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -1903,10 +1904,10 @@ func TestAWSCodeDeployDeploymentGroup_expandDeploymentStyle(t *testing.T) {
 		DeploymentType:   aws.String("BLUE_GREEN"),
 	}
 
-	actual := expandDeploymentStyle(input)
+	actual := tfcodedeploy.ExpandDeploymentStyle(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("expandDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.ExpandDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -1922,7 +1923,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenDeploymentStyle(t *testing.T) {
 		DeploymentType:   aws.String("IN_PLACE"),
 	}
 
-	actual := flattenDeploymentStyle(input)[0]
+	actual := tfcodedeploy.FlattenDeploymentStyle(input)[0]
 
 	fatal := false
 
@@ -1935,7 +1936,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenDeploymentStyle(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("flattenDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.FlattenDeploymentStyle output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -1952,7 +1953,7 @@ func TestAWSCodeDeployDeploymentGroup_expandLoadBalancerInfo(t *testing.T) {
 		{
 			Input: []interface{}{
 				map[string]interface{}{
-					"elb_info": schema.NewSet(loadBalancerInfoHash, []interface{}{
+					"elb_info": schema.NewSet(tfcodedeploy.LoadBalancerInfoHash, []interface{}{
 						map[string]interface{}{
 							"name": "acc-test-codedeploy-dep-group",
 						},
@@ -1976,9 +1977,9 @@ func TestAWSCodeDeployDeploymentGroup_expandLoadBalancerInfo(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actual := expandLoadBalancerInfo(tc.Input)
+		actual := tfcodedeploy.ExpandLoadBalancerInfo(tc.Input)
 		if !reflect.DeepEqual(actual, tc.Expected) {
-			t.Fatalf("expandLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+			t.Fatalf("tfcodedeploy.ExpandLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 				actual, tc.Expected)
 		}
 	}
@@ -1997,7 +1998,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
 	}
 
 	expected := map[string]interface{}{
-		"target_group_info": schema.NewSet(loadBalancerInfoHash, []interface{}{
+		"target_group_info": schema.NewSet(tfcodedeploy.LoadBalancerInfoHash, []interface{}{
 			map[string]interface{}{
 				"name": "abc-tg",
 			},
@@ -2007,7 +2008,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
 		}),
 	}
 
-	actual := flattenLoadBalancerInfo(input)[0].(map[string]interface{})
+	actual := tfcodedeploy.FlattenLoadBalancerInfo(input)[0].(map[string]interface{})
 
 	fatal := false
 
@@ -2018,7 +2019,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("flattenLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.FlattenLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -2064,10 +2065,10 @@ func TestAWSCodeDeployDeploymentGroup_expandBlueGreenDeploymentConfig(t *testing
 		},
 	}
 
-	actual := expandBlueGreenDeploymentConfig(input)
+	actual := tfcodedeploy.ExpandBlueGreenDeploymentConfig(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("expandBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.ExpandBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -2111,7 +2112,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testin
 		},
 	}
 
-	actual := flattenBlueGreenDeploymentConfig(input)[0]
+	actual := tfcodedeploy.FlattenBlueGreenDeploymentConfig(input)[0]
 
 	fatal := false
 
@@ -2139,7 +2140,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testin
 	}
 
 	if fatal {
-		t.Fatalf("flattenBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.FlattenBlueGreenDeploymentConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -2165,10 +2166,10 @@ func TestAWSCodeDeployDeploymentGroup_buildAlarmConfig(t *testing.T) {
 		IgnorePollAlarmFailure: aws.Bool(false),
 	}
 
-	actual := buildAlarmConfig(input)
+	actual := tfcodedeploy.BuildAlarmConfig(input)
 
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("buildAlarmConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.BuildAlarmConfig output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
@@ -2196,7 +2197,7 @@ func TestAWSCodeDeployDeploymentGroup_alarmConfigToMap(t *testing.T) {
 		"ignore_poll_alarm_failure": true,
 	}
 
-	actual := alarmConfigToMap(input)[0]
+	actual := tfcodedeploy.AlarmConfigToMap(input)[0]
 
 	fatal := false
 
@@ -2215,7 +2216,7 @@ func TestAWSCodeDeployDeploymentGroup_alarmConfigToMap(t *testing.T) {
 	}
 
 	if fatal {
-		t.Fatalf("alarmConfigToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+		t.Fatalf("tfcodedeploy.AlarmConfigToMap output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
 			actual, expected)
 	}
 }
