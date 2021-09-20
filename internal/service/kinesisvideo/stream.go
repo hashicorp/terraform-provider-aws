@@ -115,7 +115,7 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = tags.IgnoreAws().KinesisvideoTags()
+		createOpts.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateStream(createOpts)
@@ -172,7 +172,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("version", resp.StreamInfo.Version)
 
-	tags, err := tftags.KinesisvideoListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Video Stream (%s): %s", d.Id(), err)
@@ -220,7 +220,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.KinesisvideoUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Video Stream (%s) tags: %s", d.Id(), err)
 		}
 	}
