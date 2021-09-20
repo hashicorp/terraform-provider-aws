@@ -7,21 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicequotas.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsServiceQuotasServiceQuotaDataSourceConfigQuotaCode("vpc", "L-F678F1CE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					testAccCheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
 					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", "L-F678F1CE"),
@@ -37,8 +38,8 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
 
 func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaCode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t); testAccAssumeRoleARNPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -54,15 +55,15 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicequotas.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsServiceQuotasServiceQuotaDataSourceConfigQuotaName("vpc", "VPCs per Region"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					testAccCheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
 					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", "L-F678F1CE"),
@@ -78,8 +79,8 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
 
 func TestAccAwsServiceQuotasServiceQuotaDataSource_PermissionError_QuotaName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t); testAccAssumeRoleARNPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -121,8 +122,8 @@ func testAccAwsServiceQuotasServiceQuotaDataSourceConfig_PermissionError_QuotaCo
   ]
 }`
 
-	return composeConfig(
-		testAccProviderConfigAssumeRolePolicy(policy),
+	return acctest.ConfigCompose(
+		acctest.ConfigAssumeRolePolicy(policy),
 		fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   service_code = %[1]q
@@ -161,8 +162,8 @@ func testAccAwsServiceQuotasServiceQuotaDataSourceConfig_PermissionError_QuotaNa
   ]
 }`
 
-	return composeConfig(
-		testAccProviderConfigAssumeRolePolicy(policy),
+	return acctest.ConfigCompose(
+		acctest.ConfigAssumeRolePolicy(policy),
 		fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   service_code = %[1]q

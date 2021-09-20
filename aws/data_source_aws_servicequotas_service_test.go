@@ -6,14 +6,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsServiceQuotasServiceDataSource_ServiceName(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicequotas.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, servicequotas.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

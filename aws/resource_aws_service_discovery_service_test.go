@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,15 +69,15 @@ func testSweepServiceDiscoveryServices(region string) error {
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_private(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
@@ -105,7 +106,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_private_update(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
@@ -121,16 +122,16 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -138,7 +139,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_public(rName, 5, "/path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "WEIGHTED"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
@@ -157,7 +158,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_public(rName, 3, "/updated-path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "3"),
@@ -170,7 +171,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -180,12 +181,12 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -193,7 +194,7 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -209,12 +210,12 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -222,7 +223,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryService(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -231,12 +232,12 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{

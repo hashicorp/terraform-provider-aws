@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -95,15 +96,15 @@ func testSweepServiceDiscoveryPrivateDnsNamespaces(region string) error {
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -129,15 +130,15 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -145,7 +146,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryPrivateDnsNamespace(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryPrivateDnsNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -155,15 +156,15 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Description(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -182,15 +183,15 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Description(t *testing.T) {
 //  * https://github.com/hashicorp/terraform-provider-aws/issues/2830
 //  * https://github.com/hashicorp/terraform-provider-aws/issues/5532
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -204,15 +205,15 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Tags(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -292,7 +293,7 @@ func testAccPreCheckAWSServiceDiscovery(t *testing.T) {
 
 	_, err := conn.ListNamespaces(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
