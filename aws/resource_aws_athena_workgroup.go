@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAthenaWorkgroup() *schema.Resource {
+func ResourceWorkGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAthenaWorkgroupCreate,
-		Read:   resourceAwsAthenaWorkgroupRead,
-		Update: resourceAwsAthenaWorkgroupUpdate,
-		Delete: resourceAwsAthenaWorkgroupDelete,
+		Create: resourceWorkGroupCreate,
+		Read:   resourceWorkGroupRead,
+		Update: resourceWorkGroupUpdate,
+		Delete: resourceWorkGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -127,7 +127,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 	}
 }
 
-func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -168,10 +168,10 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsAthenaWorkgroupRead(d, meta)
+	return resourceWorkGroupRead(d, meta)
 }
 
-func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -236,7 +236,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.DeleteWorkGroupInput{
@@ -255,7 +255,7 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	workGroupUpdate := false
@@ -294,7 +294,7 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsAthenaWorkgroupRead(d, meta)
+	return resourceWorkGroupRead(d, meta)
 }
 
 func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguration {

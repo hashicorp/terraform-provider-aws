@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAthenaDatabase() *schema.Resource {
+func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAthenaDatabaseCreate,
-		Read:   resourceAwsAthenaDatabaseRead,
-		Update: resourceAwsAthenaDatabaseUpdate,
-		Delete: resourceAwsAthenaDatabaseDelete,
+		Create: resourceDatabaseCreate,
+		Read:   resourceDatabaseRead,
+		Update: resourceDatabaseUpdate,
+		Delete: resourceDatabaseDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -90,7 +90,7 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 	return &resultConfig
 }
 
-func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.StartQueryExecutionInput{
@@ -107,10 +107,10 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	d.SetId(d.Get("name").(string))
-	return resourceAwsAthenaDatabaseRead(d, meta)
+	return resourceDatabaseRead(d, meta)
 }
 
-func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.GetDatabaseInput{
@@ -124,11 +124,11 @@ func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsAthenaDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsAthenaDatabaseRead(d, meta)
+func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceDatabaseRead(d, meta)
 }
 
-func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	name := d.Get("name").(string)
