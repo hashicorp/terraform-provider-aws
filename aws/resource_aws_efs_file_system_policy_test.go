@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -50,11 +51,11 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystemPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,11 +74,11 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{

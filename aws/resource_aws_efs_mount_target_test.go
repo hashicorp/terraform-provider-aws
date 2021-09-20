@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -88,13 +89,13 @@ func testSweepEfsMountTargets(region string) error {
 
 func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 	var mount efs.MountTargetDescription
-	ct := fmt.Sprintf("createtoken-%d", acctest.RandInt())
+	ct := fmt.Sprintf("createtoken-%d", sdkacctest.RandInt())
 	resourceName := "aws_efs_mount_target.test"
 	resourceName2 := "aws_efs_mount_target.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
@@ -104,12 +105,12 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
-					testAccMatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "file_system_arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "file_system_arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_target_dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -122,8 +123,8 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					testAccCheckEfsMountTarget(resourceName2, &mount),
-					testAccMatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
-					testAccMatchResourceAttrRegionalHostname(resourceName2, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName2, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 				),
 			},
 		},
@@ -133,11 +134,11 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
-	ct := fmt.Sprintf("createtoken-%d", acctest.RandInt())
+	ct := fmt.Sprintf("createtoken-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -145,7 +146,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 				Config: testAccAWSEFSMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsMountTarget(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEfsMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,8 +159,8 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
@@ -185,8 +186,8 @@ func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
 	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
@@ -431,3 +432,47 @@ resource "aws_efs_mount_target" "test" {
 }
 `, ipAddress)
 }
+func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
+	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_vpn_gateway" {
+			continue
+		}
+
+		// Try to find the resource
+		resp, err := ec2conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
+			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
+		})
+		if err == nil {
+			var v *ec2.VpnGateway
+			for _, g := range resp.VpnGateways {
+				if *g.VpnGatewayId == rs.Primary.ID {
+					v = g
+				}
+			}
+
+			if v == nil {
+				// wasn't found
+				return nil
+			}
+
+			if *v.State != "deleted" {
+				return fmt.Errorf("Expected VPN Gateway to be in deleted state, but was not: %s", v)
+			}
+			return nil
+		}
+
+		// Verify the error is what we want
+		ec2err, ok := err.(awserr.Error)
+		if !ok {
+			return err
+		}
+		if ec2err.Code() != "InvalidVpnGatewayID.NotFound" {
+			return err
+		}
+	}
+
+	return nil
+}
+
