@@ -190,10 +190,10 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	if err := d.Set("enabled", sub.Enabled); err != nil {
 		return err
 	}
-	if err := d.Set("source_ids", flattenStringList(sub.SourceIdsList)); err != nil {
+	if err := d.Set("source_ids", flex.FlattenStringList(sub.SourceIdsList)); err != nil {
 		return err
 	}
-	if err := d.Set("event_categories", flattenStringList(sub.EventCategoriesList)); err != nil {
+	if err := d.Set("event_categories", flex.FlattenStringList(sub.EventCategoriesList)); err != nil {
 		return err
 	}
 	if err := d.Set("customer_aws_id", sub.CustomerAwsId); err != nil {
@@ -329,8 +329,8 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringSet(os.Difference(ns))
-		add := expandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringSet(os.Difference(ns))
+		add := flex.ExpandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			for _, removing := range remove {

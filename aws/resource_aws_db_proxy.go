@@ -128,7 +128,7 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Tags:         tags.IgnoreAws().RdsTags(),
-		VpcSubnetIds: expandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
+		VpcSubnetIds: flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("debug_logging"); ok {
@@ -144,7 +144,7 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.VpcSecurityGroupIds = expandStringSet(v)
+		params.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
 	log.Printf("[DEBUG] Create DB Proxy: %#v", params)
@@ -290,8 +290,8 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set("role_arn", dbProxy.RoleArn)
-	d.Set("vpc_subnet_ids", flattenStringSet(dbProxy.VpcSubnetIds))
-	d.Set("vpc_security_group_ids", flattenStringSet(dbProxy.VpcSecurityGroupIds))
+	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxy.VpcSubnetIds))
+	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxy.VpcSecurityGroupIds))
 	d.Set("endpoint", dbProxy.Endpoint)
 
 	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
@@ -342,7 +342,7 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-			params.SecurityGroups = expandStringSet(v)
+			params.SecurityGroups = flex.ExpandStringSet(v)
 		}
 
 		log.Printf("[DEBUG] Update DB Proxy: %#v", params)
