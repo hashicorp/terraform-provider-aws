@@ -1,4 +1,4 @@
-package aws
+package identitystore_test
 
 import (
 	"fmt"
