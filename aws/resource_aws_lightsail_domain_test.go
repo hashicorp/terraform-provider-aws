@@ -22,7 +22,7 @@ func TestAccAWSLightsailDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckLightsailDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccAWSLightsailDomain_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckLightsailDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
 			{
