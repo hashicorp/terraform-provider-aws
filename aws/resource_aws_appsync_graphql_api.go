@@ -267,7 +267,7 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetGraphqlApi(input)
 
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
 		d.SetId("")
 		return nil
@@ -378,7 +378,7 @@ func resourceAwsAppsyncGraphqlApiDelete(d *schema.ResourceData, meta interface{}
 	}
 	_, err := conn.DeleteGraphqlApi(input)
 
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

@@ -121,7 +121,7 @@ func resourceAwsAppsyncFunctionRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.GetFunction(input)
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
 		d.SetId("")
 		return nil
@@ -169,7 +169,7 @@ func resourceAwsAppsyncFunctionUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err = conn.UpdateFunction(input)
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
 		d.SetId("")
 		return nil
@@ -195,7 +195,7 @@ func resourceAwsAppsyncFunctionDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err = conn.DeleteFunction(input)
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

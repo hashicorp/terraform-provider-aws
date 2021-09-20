@@ -303,7 +303,7 @@ func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
 
 		_, err = conn.GetResolver(input)
 
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			continue
 		}
 
