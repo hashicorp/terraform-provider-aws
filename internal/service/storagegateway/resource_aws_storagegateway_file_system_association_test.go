@@ -273,7 +273,7 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationDestroy(s *terraform.Stat
 			continue
 		}
 
-		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
+		output, err := finder.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -301,7 +301,7 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
-		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
+		output, err := finder.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -351,7 +351,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Waiting for Storage Gateway Gateway (%s) to be connected", d.Id())
 
-	if _, err = waiter.StorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waiter.waitStorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to be Connected: %w", d.Id(), err)
 	}
 
@@ -376,7 +376,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
 		}
 		log.Printf("[DEBUG] Waiting for Storage Gateway Gateway (%s) to be connected", d.Id())
-		if _, err = waiter.StorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
+		if _, err = waiter.waitStorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
 		}
 	}
@@ -623,7 +623,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
 		}
 
-		if _, err = waiter.StorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
+		if _, err = waiter.waitStorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
 		}
 	}

@@ -152,7 +152,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 			return err
 		}
 
-		foundDiskID, err := finder.UploadBufferDisk(conn, gatewayARN, diskID)
+		foundDiskID, err := finder.FindUploadBufferDisk(conn, gatewayARN, diskID)
 
 		if err != nil {
 			return fmt.Errorf("error reading Storage Gateway Upload Buffer (%s): %w", rs.Primary.ID, err)

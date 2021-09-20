@@ -62,8 +62,8 @@ func ResourceSMBFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfstoragegateway.AuthenticationActiveDirectory,
-				ValidateFunc: validation.StringInSlice(tfstoragegateway.Authentication_Values(), false),
+				Default:      tfstoragegateway.authenticationActiveDirectory,
+				ValidateFunc: validation.StringInSlice(tfstoragegateway.authentication_Values(), false),
 			},
 			"bucket_region": {
 				Type:         schema.TypeString,
@@ -94,8 +94,8 @@ func ResourceSMBFileShare() *schema.Resource {
 			"default_storage_class": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      tfstoragegateway.DefaultStorageClassS3Standard,
-				ValidateFunc: validation.StringInSlice(tfstoragegateway.DefaultStorageClass_Values(), false),
+				Default:      tfstoragegateway.defaultStorageClassS3Standard,
+				ValidateFunc: validation.StringInSlice(tfstoragegateway.defaultStorageClass_Values(), false),
 			},
 			"fileshare_id": {
 				Type:     schema.TypeString,
@@ -294,7 +294,7 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	if _, err = waiter.SMBFileShareCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waiter.waitSMBFileShareCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to create: %w", d.Id(), err)
 	}
 
@@ -306,7 +306,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	fileshare, err := finder.SMBFileShareByARN(conn, d.Id())
+	fileshare, err := finder.FindSMBFileShareByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway SMB File Share (%s) not found, removing from state", d.Id())
@@ -438,7 +438,7 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("error updating Storage Gateway SMB File Share (%s): %w", d.Id(), err)
 		}
 
-		if _, err = waiter.SMBFileShareUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waiter.waitSMBFileShareUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to update: %w", d.Id(), err)
 		}
 	}
@@ -461,7 +461,7 @@ func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 		FileShareARN: aws.String(d.Id()),
 	})
 
-	if tfstoragegateway.OperationErrorCode(err) == tfstoragegateway.OperationErrCodeFileShareNotFound {
+	if tfstoragegateway.operationErrorCode(err) == tfstoragegateway.operationErrCodeFileShareNotFound {
 		return nil
 	}
 
@@ -469,7 +469,7 @@ func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting Storage Gateway SMB File Share (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waiter.SMBFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waiter.waitSMBFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to delete: %w", d.Id(), err)
 	}
 

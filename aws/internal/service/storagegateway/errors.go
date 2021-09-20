@@ -9,15 +9,15 @@ import (
 )
 
 const (
-	OperationErrCodeFileShareNotFound = "FileShareNotFound"
-	FileSystemAssociationNotFound     = "FileSystemAssociationNotFound"
+	operationErrCodeFileShareNotFound = "FileShareNotFound"
+	fileSystemAssociationNotFound     = "fileSystemAssociationNotFound"
 )
 
-// OperationErrorCode returns the operation error code from the specified error:
+// operationErrorCode returns the operation error code from the specified error:
 //  * err is of type awserr.Error and represents a storagegateway.InternalServerError or storagegateway.InvalidGatewayRequestException
 //  * Error_ is not nil
 // See https://docs.aws.amazon.com/storagegateway/latest/userguide/AWSStorageGatewayAPI.html#APIErrorResponses for details.
-func OperationErrorCode(err error) string {
+func operationErrorCode(err error) string {
 	if inner := (*storagegateway.InternalServerError)(nil); errors.As(err, &inner) && inner.Error_ != nil {
 		return aws.StringValue(inner.Error_.ErrorCode)
 	}
@@ -32,7 +32,7 @@ func OperationErrorCode(err error) string {
 // Error code constants missing from AWS Go SDK:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/storagegateway/#pkg-constants
 
-func InvalidGatewayRequestErrCodeEquals(err error, errCode string) bool {
+func invalidGatewayRequestErrCodeEquals(err error, errCode string) bool {
 	var igrex *storagegateway.InvalidGatewayRequestException
 	if errors.As(err, &igrex) {
 		if err := igrex.Error_; err != nil {

@@ -898,7 +898,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error 
 			continue
 		}
 
-		_, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
+		_, err := finder.FindSMBFileShareByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -924,7 +924,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
-		output, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
+		output, err := finder.FindSMBFileShareByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

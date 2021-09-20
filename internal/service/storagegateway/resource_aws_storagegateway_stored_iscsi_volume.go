@@ -153,7 +153,7 @@ func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(output.VolumeARN))
 
-	_, err = waiter.StoredIscsiVolumeAvailable(conn, d.Id())
+	_, err = waiter.waitStorediSCSIVolumeAvailable(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Stored Iscsi Volume %q to be Available: %s", d.Id(), err)

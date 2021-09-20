@@ -14,18 +14,18 @@ import (
 )
 
 const (
-	StorageGatewayGatewayStatusConnected = "GatewayConnected"
-	StoredIscsiVolumeStatusNotFound      = "NotFound"
-	StoredIscsiVolumeStatusUnknown       = "Unknown"
-	NfsFileShareStatusNotFound           = "NotFound"
-	NfsFileShareStatusUnknown            = "Unknown"
-	SmbFileShareStatusNotFound           = "NotFound"
-	SmbFileShareStatusUnknown            = "Unknown"
-	FileSystemAssociationStatusNotFound  = "NotFound"
-	FileSystemAssociationStatusUnknown   = "Unknown"
+	storageGatewayGatewayStatusConnected = "GatewayConnected"
+	storediSCSIVolumeStatusNotFound      = "NotFound"
+	storediSCSIVolumeStatusUnknown       = "Unknown"
+	nfsFileShareStatusNotFound           = "NotFound"
+	nfsFileShareStatusUnknown            = "Unknown"
+	smbFileShareStatusNotFound           = "NotFound"
+	smbFileShareStatusUnknown            = "Unknown"
+	fileSystemAssociationStatusNotFound  = "NotFound"
+	fileSystemAssociationStatusUnknown   = "Unknown"
 )
 
-func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -41,11 +41,11 @@ func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN
 			return output, "", err
 		}
 
-		return output, StorageGatewayGatewayStatusConnected, nil
+		return output, storageGatewayGatewayStatusConnected, nil
 	}
 }
 
-func StorageGatewayGatewayJoinDomainStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusStorageGatewayGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeSMBSettingsInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -65,8 +65,8 @@ func StorageGatewayGatewayJoinDomainStatus(conn *storagegateway.StorageGateway, 
 	}
 }
 
-// StoredIscsiVolumeStatus fetches the Volume and its Status
-func StoredIscsiVolumeStatus(conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
+// statusStorediSCSIVolume fetches the Volume and its Status
+func statusStorediSCSIVolume(conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(volumeARN)},
@@ -76,22 +76,22 @@ func StoredIscsiVolumeStatus(conn *storagegateway.StorageGateway, volumeARN stri
 
 		if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) ||
 			tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
-			return nil, StoredIscsiVolumeStatusNotFound, nil
+			return nil, storediSCSIVolumeStatusNotFound, nil
 		}
 
 		if err != nil {
-			return nil, StoredIscsiVolumeStatusUnknown, err
+			return nil, storediSCSIVolumeStatusUnknown, err
 		}
 
 		if output == nil || len(output.StorediSCSIVolumes) == 0 {
-			return nil, StoredIscsiVolumeStatusNotFound, nil
+			return nil, storediSCSIVolumeStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.StorediSCSIVolumes[0].VolumeStatus), nil
 	}
 }
 
-func NfsFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string) resource.StateRefreshFunc {
+func statusNFSFileShare(conn *storagegateway.StorageGateway, fileShareArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeNFSFileSharesInput{
 			FileShareARNList: []*string{aws.String(fileShareArn)},
@@ -101,13 +101,13 @@ func NfsFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string
 		output, err := conn.DescribeNFSFileShares(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				return nil, NfsFileShareStatusNotFound, nil
+				return nil, nfsFileShareStatusNotFound, nil
 			}
-			return nil, NfsFileShareStatusUnknown, fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
+			return nil, nfsFileShareStatusUnknown, fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
 		}
 
 		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
-			return nil, NfsFileShareStatusNotFound, nil
+			return nil, nfsFileShareStatusNotFound, nil
 		}
 
 		fileshare := output.NFSFileShareInfoList[0]
@@ -116,9 +116,9 @@ func NfsFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string
 	}
 }
 
-func SMBFileShareStatus(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.SMBFileShareByARN(conn, arn)
+		output, err := finder.FindSMBFileShareByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -132,10 +132,10 @@ func SMBFileShareStatus(conn *storagegateway.StorageGateway, arn string) resourc
 	}
 }
 
-func FileSystemAssociationStatus(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
+func statusFileSystemAssociation(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		output, err := finder.FileSystemAssociationByARN(conn, fileSystemArn)
+		output, err := finder.FindFileSystemAssociationByARN(conn, fileSystemArn)
 
 		// there was an unhandled error in the Finder
 		if err != nil {
@@ -144,7 +144,7 @@ func FileSystemAssociationStatus(conn *storagegateway.StorageGateway, fileSystem
 
 		// no error, and no File System Association found
 		if output == nil {
-			return nil, FileSystemAssociationStatusNotFound, nil
+			return nil, fileSystemAssociationStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.FileSystemAssociationStatus), nil

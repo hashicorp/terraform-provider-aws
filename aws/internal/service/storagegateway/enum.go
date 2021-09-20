@@ -3,68 +3,68 @@ package storagegateway
 import "time"
 
 const (
-	AuthenticationActiveDirectory = "ActiveDirectory"
-	AuthenticationGuestAccess     = "GuestAccess"
+	authenticationActiveDirectory = "ActiveDirectory"
+	authenticationGuestAccess     = "GuestAccess"
 )
 
-func Authentication_Values() []string {
+func authentication_Values() []string {
 	return []string{
-		AuthenticationActiveDirectory,
-		AuthenticationGuestAccess,
+		authenticationActiveDirectory,
+		authenticationGuestAccess,
 	}
 }
 
 const (
-	DefaultStorageClassS3IntelligentTiering = "S3_INTELLIGENT_TIERING"
-	DefaultStorageClassS3OneZoneIA          = "S3_ONEZONE_IA"
-	DefaultStorageClassS3Standard           = "S3_STANDARD"
-	DefaultStorageClassS3StandardIA         = "S3_STANDARD_IA"
+	defaultStorageClassS3IntelligentTiering = "S3_INTELLIGENT_TIERING"
+	defaultStorageClassS3OneZoneIA          = "S3_ONEZONE_IA"
+	defaultStorageClassS3Standard           = "S3_STANDARD"
+	defaultStorageClassS3StandardIA         = "S3_STANDARD_IA"
 )
 
-func DefaultStorageClass_Values() []string {
+func defaultStorageClass_Values() []string {
 	return []string{
-		DefaultStorageClassS3IntelligentTiering,
-		DefaultStorageClassS3OneZoneIA,
-		DefaultStorageClassS3Standard,
-		DefaultStorageClassS3StandardIA,
+		defaultStorageClassS3IntelligentTiering,
+		defaultStorageClassS3OneZoneIA,
+		defaultStorageClassS3Standard,
+		defaultStorageClassS3StandardIA,
 	}
 }
 
 const (
-	FileShareStatusAvailable     = "AVAILABLE"
-	FileShareStatusCreating      = "CREATING"
-	FileShareStatusDeleting      = "DELETING"
-	FileShareStatusForceDeleting = "FORCE_DELETING"
-	FileShareStatusUpdating      = "UPDATING"
+	fileShareStatusAvailable     = "AVAILABLE"
+	fileShareStatusCreating      = "CREATING"
+	fileShareStatusDeleting      = "DELETING"
+	fileShareStatusForceDeleting = "FORCE_DELETING"
+	fileShareStatusUpdating      = "UPDATING"
 )
 
 const (
-	FileSystemAssociationCreateTimeout = 3 * time.Minute
-	FileSystemAssociationUpdateTimeout = 3 * time.Minute
-	FileSystemAssociationDeleteTimeout = 3 * time.Minute
+	fileSystemAssociationCreateTimeout = 3 * time.Minute
+	fileSystemAssociationUpdateTimeout = 3 * time.Minute
+	fileSystemAssociationDeleteTimeout = 3 * time.Minute
 )
 
 const (
-	FileSystemAssociationStatusAvailable     = "AVAILABLE"
-	FileSystemAssociationStatusCreating      = "CREATING"
-	FileSystemAssociationStatusDeleting      = "DELETING"
-	FileSystemAssociationStatusForceDeleting = "FORCE_DELETING"
-	FileSystemAssociationStatusUpdating      = "UPDATING"
-	FileSystemAssociationStatusError         = "ERROR"
+	fileSystemAssociationStatusAvailable     = "AVAILABLE"
+	fileSystemAssociationStatusCreating      = "CREATING"
+	fileSystemAssociationStatusDeleting      = "DELETING"
+	fileSystemAssociationStatusForceDeleting = "FORCE_DELETING"
+	fileSystemAssociationStatusUpdating      = "UPDATING"
+	fileSystemAssociationStatusError         = "ERROR"
 )
 
-func FileSystemAssociationStatusAvailableStatusPending() []string {
-	return []string{FileSystemAssociationStatusCreating, FileSystemAssociationStatusUpdating}
+func fileSystemAssociationStatusAvailableStatusPending() []string {
+	return []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating}
 }
 
-func FileSystemAssociationStatusAvailableStatusTarget() []string {
-	return []string{FileSystemAssociationStatusAvailable}
+func fileSystemAssociationStatusAvailableStatusTarget() []string {
+	return []string{fileSystemAssociationStatusAvailable}
 }
 
-func FileSystemAssociationStatusDeletedStatusPending() []string {
-	return []string{FileSystemAssociationStatusAvailable, FileSystemAssociationStatusDeleting, FileSystemAssociationStatusForceDeleting}
+func fileSystemAssociationStatusDeletedStatusPending() []string {
+	return []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting}
 }
 
-func FileSystemAssociationStatusDeletedStatusTarget() []string {
+func fileSystemAssociationStatusDeletedStatusTarget() []string {
 	return []string{}
 }
