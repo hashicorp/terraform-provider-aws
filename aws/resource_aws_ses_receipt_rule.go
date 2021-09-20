@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReceiptRule() *schema.Resource {
@@ -146,7 +147,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"position": {
@@ -184,7 +185,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"function_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"invocation_type": {
@@ -197,7 +198,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"position": {
@@ -238,7 +239,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"object_key_prefix": {
@@ -249,7 +250,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"position": {
@@ -296,7 +297,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"position": {
@@ -330,7 +331,7 @@ func ResourceReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"position": {
@@ -362,13 +363,13 @@ func ResourceReceiptRule() *schema.Resource {
 						"organization_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"position": {
