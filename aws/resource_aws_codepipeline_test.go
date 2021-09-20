@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepCodepipelinePipelines(region string) error {
 		}
 
 		for _, pipeline := range page.Pipelines {
-			r := resourceAwsCodePipeline()
+			r := Resource()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(pipeline.Name))
@@ -197,7 +198,7 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodePipeline(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, Resource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
