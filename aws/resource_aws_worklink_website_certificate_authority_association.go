@@ -84,7 +84,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.Res
 
 	resp, err := conn.DescribeWebsiteCertificateAuthority(input)
 	if err != nil {
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] WorkLink Website Certificate Authority Association (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -114,7 +114,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete(d *schema.R
 	}
 
 	if _, err := conn.DisassociateWebsiteCertificateAuthority(input); err != nil {
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
@@ -147,7 +147,7 @@ func worklinkWebsiteCertificateAuthorityAssociationStateRefresh(conn *worklink.W
 			FleetArn:    aws.String(arn),
 			WebsiteCaId: aws.String(websiteCaID),
 		})
-		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 			return emptyResp, "DELETED", nil
 		}
 		if err != nil {

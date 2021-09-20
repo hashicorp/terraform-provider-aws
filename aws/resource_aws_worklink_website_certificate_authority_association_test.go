@@ -112,7 +112,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy(s *ter
 		})
 
 		if err != nil {
-			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 
