@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayGateway() *schema.Resource {
@@ -240,10 +241,10 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*conns.AWSClient).Region
 
 	activationKey := d.Get("activation_key").(string)
 	gatewayIpAddress := d.Get("gateway_ip_address").(string)
@@ -441,9 +442,9 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeGatewayInformationInput{
 		GatewayARN: aws.String(d.Id()),
@@ -588,7 +589,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
@@ -718,7 +719,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsStorageGatewayGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteGatewayInput{
 		GatewayARN: aws.String(d.Id()),

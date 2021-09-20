@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
@@ -141,7 +142,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 		gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(rs.Primary.ID)
 		if err != nil {

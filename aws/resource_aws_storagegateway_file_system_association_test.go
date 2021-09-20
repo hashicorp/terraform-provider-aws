@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSStorageGatewayFileSystemAssociation_basic(t *testing.T) {
@@ -262,7 +263,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_fsxFileSystem(t *t
 }
 
 func testAccCheckAwsStorageGatewayFileSystemAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_file_system_association" {
@@ -295,7 +296,7 @@ func testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName strin
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
 

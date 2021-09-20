@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
@@ -107,8 +108,8 @@ func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayCachedIscsiVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
@@ -148,7 +149,7 @@ func resourceAwsStorageGatewayCachedIscsiVolumeCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsStorageGatewayCachedIscsiVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -161,9 +162,9 @@ func resourceAwsStorageGatewayCachedIscsiVolumeUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsStorageGatewayCachedIscsiVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeCachediSCSIVolumesInput{
 		VolumeARNs: []*string{aws.String(d.Id())},
@@ -238,7 +239,7 @@ func resourceAwsStorageGatewayCachedIscsiVolumeRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsStorageGatewayCachedIscsiVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),

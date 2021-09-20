@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayWorkingStorageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -59,7 +60,7 @@ func resourceAwsStorageGatewayWorkingStorageCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsStorageGatewayWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayWorkingStorageID(d.Id())
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
@@ -47,7 +48,7 @@ func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.AddUploadBufferInput{}
 
@@ -96,7 +97,7 @@ func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsStorageGatewayUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(d.Id())
 	if err != nil {

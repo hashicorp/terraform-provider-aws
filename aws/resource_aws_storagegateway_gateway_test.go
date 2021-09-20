@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepStorageGatewayGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).storagegatewayconn
+	conn := client.(*conns.AWSClient).StorageGatewayConn
 
 	err = conn.ListGatewaysPages(&storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
 		if len(page.Gateways) == 0 {
@@ -836,7 +837,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthAll(t *testing.T) {
 }
 
 func testAccCheckAWSStorageGatewayGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_gateway" {
@@ -868,7 +869,7 @@ func testAccCheckAWSStorageGatewayGatewayExists(resourceName string, gateway *st
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(rs.Primary.ID),
 		}

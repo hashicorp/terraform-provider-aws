@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
@@ -621,7 +622,7 @@ func TestAccAWSStorageGatewayNfsFileShare_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSStorageGatewayNfsFileShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_nfs_file_share" {
@@ -657,7 +658,7 @@ func testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName string, nfsFil
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
 		input := &storagegateway.DescribeNFSFileSharesInput{
 			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
 		}
