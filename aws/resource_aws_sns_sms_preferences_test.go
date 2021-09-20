@@ -9,6 +9,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // The preferences are account-wide, so the tests must be serialized
@@ -32,8 +33,8 @@ func testAccAWSSNSSMSPreferences_empty(t *testing.T) {
 	resourceName := "aws_sns_sms_preferences.test_pref"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
@@ -56,8 +57,8 @@ func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
 	resourceName := "aws_sns_sms_preferences.test_pref"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
@@ -80,8 +81,8 @@ func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
 	resourceName := "aws_sns_sms_preferences.test_pref"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
@@ -102,8 +103,8 @@ func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
 	iamRoleName := "aws_iam_role.test_smsdelivery_role"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{

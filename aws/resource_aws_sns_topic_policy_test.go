@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
-					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
 			{
@@ -45,11 +46,11 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -83,11 +84,11 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 	attributes := make(map[string]string)
 	topicResourceName := "aws_sns_topic.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -95,7 +96,7 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(topicResourceName, attributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnsTopic(), topicResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSnsTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,11 +107,11 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_policy.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -118,7 +119,7 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnsTopicPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSnsTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
