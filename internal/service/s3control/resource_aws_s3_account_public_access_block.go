@@ -96,7 +96,7 @@ func resourceAccountPublicAccessBlockRead(d *schema.ResourceData, meta interface
 
 	// Retry for eventual consistency on creation
 	var output *s3control.GetPublicAccessBlockOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetPublicAccessBlock(input)
 
@@ -158,25 +158,25 @@ func resourceAccountPublicAccessBlockUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("block_public_acls") {
-		if _, err := waiter.PublicAccessBlockConfigurationBlockPublicAclsUpdated(conn, d.Id(), d.Get("block_public_acls").(bool)); err != nil {
+		if _, err := waiter.waitPublicAccessBlockConfigurationBlockPublicACLsUpdated(conn, d.Id(), d.Get("block_public_acls").(bool)); err != nil {
 			return fmt.Errorf("error waiting for S3 Account Public Access Block (%s) block_public_acls update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("block_public_policy") {
-		if _, err := waiter.PublicAccessBlockConfigurationBlockPublicPolicyUpdated(conn, d.Id(), d.Get("block_public_policy").(bool)); err != nil {
+		if _, err := waiter.waitPublicAccessBlockConfigurationBlockPublicPolicyUpdated(conn, d.Id(), d.Get("block_public_policy").(bool)); err != nil {
 			return fmt.Errorf("error waiting for S3 Account Public Access Block (%s) block_public_policy update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("ignore_public_acls") {
-		if _, err := waiter.PublicAccessBlockConfigurationIgnorePublicAclsUpdated(conn, d.Id(), d.Get("ignore_public_acls").(bool)); err != nil {
+		if _, err := waiter.waitPublicAccessBlockConfigurationIgnorePublicACLsUpdated(conn, d.Id(), d.Get("ignore_public_acls").(bool)); err != nil {
 			return fmt.Errorf("error waiting for S3 Account Public Access Block (%s) ignore_public_acls update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("restrict_public_buckets") {
-		if _, err := waiter.PublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn, d.Id(), d.Get("restrict_public_buckets").(bool)); err != nil {
+		if _, err := waiter.waitPublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn, d.Id(), d.Get("restrict_public_buckets").(bool)); err != nil {
 			return fmt.Errorf("error waiting for S3 Account Public Access Block (%s) restrict_public_buckets update: %w", d.Id(), err)
 		}
 	}

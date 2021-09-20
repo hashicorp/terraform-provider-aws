@@ -190,7 +190,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		Name:      aws.String(name),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3control.ErrCodeNoSuchAccessPoint) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3control.errCodeNoSuchAccessPoint) {
 		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
