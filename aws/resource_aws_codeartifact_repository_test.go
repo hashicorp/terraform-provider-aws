@@ -375,7 +375,7 @@ func testAccCheckAWSCodeArtifactRepositoryDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
