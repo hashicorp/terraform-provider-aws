@@ -1,4 +1,4 @@
-package aws
+package amplify_test
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package aws
+package amplify
 
 import (
 	"fmt"
@@ -10,10 +10,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -157,7 +155,7 @@ func ResourceBranch() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(amplify.Stage_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "NONE" by default.
-					if old == tfamplify.StageNone && new == "" {
+					if old == StageNone && new == "" {
 						return true
 					}
 
@@ -191,7 +189,7 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
-	id := tfamplify.BranchCreateResourceID(appID, branchName)
+	id := BranchCreateResourceID(appID, branchName)
 
 	input := &amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
@@ -272,13 +270,13 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())
+	appID, branchName, err := BranchParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
 	}
 
-	branch, err := finder.FindBranchByAppIDAndBranchName(conn, appID, branchName)
+	branch, err := FindBranchByAppIDAndBranchName(conn, appID, branchName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Branch (%s) not found, removing from state", d.Id())
@@ -329,7 +327,7 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())
+		appID, branchName, err := BranchParseResourceID(d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
@@ -420,7 +418,7 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceBranchDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
-	appID, branchName, err := tfamplify.BranchParseResourceID(d.Id())
+	appID, branchName, err := BranchParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)

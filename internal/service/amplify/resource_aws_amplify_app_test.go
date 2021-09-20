@@ -1,4 +1,4 @@
-package aws
+package amplify_test
 
 import (
 	"encoding/base64"
@@ -14,14 +14,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/lister"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
+	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
 func init() {
@@ -40,7 +40,7 @@ func testSweepAmplifyApps(region string) error {
 	input := &amplify.ListAppsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = lister.ListAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
+	err = tfamplify.ListAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -645,7 +645,7 @@ func testAccCheckAWSAmplifyAppExists(n string, v *amplify.App) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
-		output, err := finder.FindAppByID(conn, rs.Primary.ID)
+		output, err := tfamplify.FindAppByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -665,7 +665,7 @@ func testAccCheckAWSAmplifyAppDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FindAppByID(conn, rs.Primary.ID)
+		_, err := tfamplify.FindAppByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
