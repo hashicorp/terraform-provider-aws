@@ -67,7 +67,7 @@ func resourceDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SchemasTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Discoverer: %s", input)
@@ -103,7 +103,7 @@ func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("source_arn", output.SourceArn)
 
-	tags, err := tftags.SchemasListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for EventBridge Schemas Discoverer (%s): %w", d.Id(), err)
@@ -141,7 +141,7 @@ func resourceDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.SchemasUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
