@@ -236,7 +236,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 	switch healthCheckType {
 	case route53.HealthCheckTypeCalculated:
 		if v, ok := d.GetOk("child_healthchecks"); ok {
-			healthConfig.ChildHealthChecks = expandStringSet(v.(*schema.Set))
+			healthConfig.ChildHealthChecks = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("child_health_threshold"); ok {
@@ -270,7 +270,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("regions"); ok {
-		healthConfig.Regions = expandStringSet(v.(*schema.Set))
+		healthConfig.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	callerRef := resource.UniqueId()
@@ -333,7 +333,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("disabled", healthCheckConfig.Disabled)
 	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
 
-	if err := d.Set("child_healthchecks", flattenStringList(healthCheckConfig.ChildHealthChecks)); err != nil {
+	if err := d.Set("child_healthchecks", flex.FlattenStringList(healthCheckConfig.ChildHealthChecks)); err != nil {
 		return fmt.Errorf("error setting child_healthchecks: %w", err)
 	}
 
@@ -341,7 +341,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("insufficient_data_health_status", healthCheckConfig.InsufficientDataHealthStatus)
 	d.Set("enable_sni", healthCheckConfig.EnableSNI)
 
-	d.Set("regions", flattenStringList(healthCheckConfig.Regions))
+	d.Set("regions", flex.FlattenStringList(healthCheckConfig.Regions))
 
 	if healthCheckConfig.AlarmIdentifier != nil {
 		d.Set("cloudwatch_alarm_name", healthCheckConfig.AlarmIdentifier.Name)
@@ -404,7 +404,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		if d.HasChange("child_healthchecks") {
-			updateHealthCheck.ChildHealthChecks = expandStringSet(d.Get("child_healthchecks").(*schema.Set))
+			updateHealthCheck.ChildHealthChecks = flex.ExpandStringSet(d.Get("child_healthchecks").(*schema.Set))
 		}
 
 		if d.HasChange("child_health_threshold") {
@@ -433,7 +433,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		if d.HasChange("regions") {
-			updateHealthCheck.Regions = expandStringSet(d.Get("regions").(*schema.Set))
+			updateHealthCheck.Regions = flex.ExpandStringSet(d.Get("regions").(*schema.Set))
 		}
 
 		if d.HasChange("disabled") {
