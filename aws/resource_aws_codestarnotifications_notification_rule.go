@@ -161,7 +161,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData
 	})
 
 	if err != nil {
-		if isAWSErr(err, codestarnotifications.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] codestar notification rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -233,7 +233,7 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 		err := resource.Retry(codestarNotificationsTargetSubscriptionTimeout, func() *resource.RetryError {
 			_, err := conn.DeleteTarget(input)
 
-			if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
+			if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
 				return resource.RetryableError(err)
 			}
 
@@ -249,7 +249,7 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 		}
 
 		// Treat target deletion as best effort
-		if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
+		if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
 			continue
 		}
 
