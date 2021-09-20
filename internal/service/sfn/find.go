@@ -1,4 +1,4 @@
-package finder
+package sfn
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
