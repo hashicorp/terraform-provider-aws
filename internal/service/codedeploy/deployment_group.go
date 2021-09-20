@@ -497,7 +497,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 		ServiceRoleArn:      aws.String(serviceRoleArn),
-		Tags:                tags.IgnoreAws().CodedeployTags(),
+		Tags:                Tags(tags.IgnoreAws()),
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
@@ -675,7 +675,7 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting blue_green_deployment_config: %w", err)
 	}
 
-	tags, err := tftags.CodedeployListTags(conn, groupArn)
+	tags, err := ListTags(conn, groupArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeDeploy Deployment Group (%s): %w", d.Id(), err)
@@ -812,7 +812,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.CodedeployUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeDeploy Deployment Group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
