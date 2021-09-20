@@ -123,7 +123,7 @@ var sageMakerPrebuiltECRImageIDByRegion_DeepAR = map[string]string{
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
-var sageMakerPrebuiltECRImageIDByRegion_FactorMachines = map[string]string{
+var PrebuiltECRImageIDByRegion_FactorMachines = map[string]string{
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "351501993468",
 	endpoints.ApNortheast2RegionID: "835164637446",
@@ -191,7 +191,7 @@ var sageMakerPrebuiltECRImageIDByRegion_XGBoost = map[string]string{
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/pre-built-docker-containers-scikit-learn-spark.html
-var sageMakerPrebuiltECRImageIDByRegion_SparkML = map[string]string{
+var PrebuiltECRImageIDByRegion_SparkML = map[string]string{
 	endpoints.ApNortheast1RegionID: "354813040037",
 	endpoints.ApNortheast2RegionID: "366743142698",
 	endpoints.ApSouth1RegionID:     "720646828776",
@@ -356,7 +356,7 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 	case sageMakerRepositoryXGBoost:
 		id = sageMakerPrebuiltECRImageIDByRegion_XGBoost[region]
 	case sageMakerRepositoryScikitLearn, sageMakerRepositorySparkML:
-		id = sageMakerPrebuiltECRImageIDByRegion_SparkML[region]
+		id = PrebuiltECRImageIDByRegion_SparkML[region]
 	case sageMakerRepositoryTensorFlowServing, sageMakerRepositoryTensorFlowServingEIA:
 		id = sageMakerPrebuiltECRImageIDByRegion_TensorFlowServing[region]
 	case sageMakerRepositoryMXNetInference,
@@ -370,7 +370,7 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 		sageMakerRepositoryTensorFlowTraining:
 		id = sageMakerPrebuiltECRImageIDByRegion_DeepLearning[region]
 	default:
-		id = sageMakerPrebuiltECRImageIDByRegion_FactorMachines[region]
+		id = PrebuiltECRImageIDByRegion_FactorMachines[region]
 	}
 
 	if id == "" {
@@ -379,10 +379,10 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(id)
 	d.Set("registry_id", id)
-	d.Set("registry_path", dataSourceAwsSageMakerPrebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
+	d.Set("registry_path", PrebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
 	return nil
 }
 
-func dataSourceAwsSageMakerPrebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {
+func PrebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {
 	return fmt.Sprintf("%s.dkr.ecr.%s.%s/%s:%s", id, region, suffix, repo, imageTag)
 }

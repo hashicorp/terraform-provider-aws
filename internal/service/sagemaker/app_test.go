@@ -40,7 +40,7 @@ func testSweepSagemakerApps(region string) error {
 				continue
 			}
 
-			r := ResourceApp()
+			r := tfsagemaker.ResourceApp()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(app.AppName))
 			d.Set("app_name", app.AppName)
@@ -195,7 +195,7 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerAppBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppExists(resourceName, &app),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

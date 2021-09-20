@@ -232,7 +232,7 @@ func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerImageBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageExists(resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceImage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

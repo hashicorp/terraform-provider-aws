@@ -36,7 +36,7 @@ func testSweepSagemakerDeviceFleets(region string) error {
 		for _, deviceFleet := range page.DeviceFleetSummaries {
 			name := aws.StringValue(deviceFleet.DeviceFleetName)
 
-			r := ResourceDeviceFleet()
+			r := tfsagemaker.ResourceDeviceFleet()
 			d := r.Data(nil)
 			d.SetId(name)
 			err := r.Delete(d, client)
@@ -190,7 +190,7 @@ func TestAccAWSSagemakerDeviceFleet_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerDeviceFleetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeviceFleet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -6,10 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
-	expectedID := sageMakerPrebuiltECRImageIDByRegion_FactorMachines[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_FactorMachines[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
@@ -23,7 +24,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", dataSourceAwsSageMakerPrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", "1")),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", "1")),
 				),
 			},
 		},
@@ -31,7 +32,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
 }
 
 func TestAccAWSSageMakerPrebuiltECRImage_region(t *testing.T) {
-	expectedID := sageMakerPrebuiltECRImageIDByRegion_SparkML[acctest.Region()]
+	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_SparkML[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
@@ -45,7 +46,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", dataSourceAwsSageMakerPrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-scikit-learn", "2.2-1.0.11.0")),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-scikit-learn", "2.2-1.0.11.0")),
 				),
 			},
 		},
