@@ -17,7 +17,7 @@ func testAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspaceBundleConfig("wsb-b0s22j3d7"),
@@ -44,7 +44,7 @@ func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspaceBundleConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
@@ -69,7 +69,7 @@ func testAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWorkspaceBundleConfig_bundleIDAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
@@ -89,7 +89,7 @@ func testAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
 			testAccWorkspacesBundlePreCheck(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(bundleName),

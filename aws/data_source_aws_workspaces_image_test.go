@@ -23,7 +23,7 @@ func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 			testAccWorkspacesImagePreCheck(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspacesImageConfig(imageID),
@@ -59,7 +59,7 @@ func testAccCheckWorkspacesImageExists(n string, image *workspaces.WorkspaceImag
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
 		resp, err := conn.DescribeWorkspaceImages(&workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
 		})
