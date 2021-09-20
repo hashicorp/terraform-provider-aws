@@ -319,7 +319,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
-		output, err := finder.StateMachineByARN(conn, rs.Primary.ID)
+		output, err := finder.FindStateMachineByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -339,7 +339,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.StateMachineByARN(conn, rs.Primary.ID)
+		_, err := finder.FindStateMachineByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

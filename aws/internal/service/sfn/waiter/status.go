@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func StateMachineStatus(conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
+func statusStateMachine(conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.StateMachineByARN(conn, stateMachineArn)
+		output, err := finder.FindStateMachineByARN(conn, stateMachineArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
