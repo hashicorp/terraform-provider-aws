@@ -197,7 +197,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
 		Options:                expandDataSyncOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
-		Tags:                   tags.IgnoreAws().DatasyncTags(),
+		Tags:                   Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
@@ -264,7 +264,7 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("source_location_arn", output.SourceLocationArn)
 
-	tags, err := tftags.DatasyncListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Task (%s): %w", d.Id(), err)
@@ -321,7 +321,7 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Task (%s) tags: %w", d.Id(), err)
 		}
 	}

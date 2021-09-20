@@ -169,7 +169,7 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
-		Tags:          tags.IgnoreAws().DatasyncTags(),
+		Tags:          Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -236,7 +236,7 @@ func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("vpc_endpoint_id", "")
 	}
 
-	tags, err := tftags.DatasyncListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Agent (%s): %w", d.Id(), err)
@@ -276,7 +276,7 @@ func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Agent (%s) tags: %w", d.Id(), err)
 		}
 	}

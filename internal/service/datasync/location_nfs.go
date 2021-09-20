@@ -107,7 +107,7 @@ func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 		OnPremConfig:   expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           tags.IgnoreAws().DatasyncTags(),
+		Tags:           Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
@@ -166,7 +166,7 @@ func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
 
-	tags, err := tftags.DatasyncListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Location NFS (%s): %w", d.Id(), err)
@@ -209,7 +209,7 @@ func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Location NFS (%s) tags: %w", d.Id(), err)
 		}
 	}
