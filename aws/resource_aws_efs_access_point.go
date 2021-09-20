@@ -276,7 +276,7 @@ func expandEfsAccessPointPosixUser(pUser []interface{}) *efs.PosixUser {
 	}
 
 	if v, ok := m["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
-		posixUser.SecondaryGids = expandInt64Set(v)
+		posixUser.SecondaryGids = flex.ExpandInt64Set(v)
 	}
 
 	return posixUser
