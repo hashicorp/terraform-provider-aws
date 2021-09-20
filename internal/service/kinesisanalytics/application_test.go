@@ -58,7 +58,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 				continue
 			}
 
-			r := ResourceApplication()
+			r := tfkinesisanalytics.ResourceApplication()
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
@@ -142,7 +142,7 @@ func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceApplication(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalytics.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
