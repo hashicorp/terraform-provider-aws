@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSXrayGroup_basic(t *testing.T) {
@@ -128,7 +129,7 @@ func testAccCheckXrayGroupExists(n string, Group *xray.Group) resource.TestCheck
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Group ID is set")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),
@@ -152,7 +153,7 @@ func testAccCheckAWSXrayGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsXrayGroup() *schema.Resource {
@@ -44,8 +45,8 @@ func resourceAwsXrayGroup() *schema.Resource {
 }
 
 func resourceAwsXrayGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).xrayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).XRayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	input := &xray.CreateGroupInput{
 		GroupName:        aws.String(d.Get("group_name").(string)),
@@ -64,9 +65,9 @@ func resourceAwsXrayGroupCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsXrayGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).xrayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).XRayConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &xray.GetGroupInput{
 		GroupARN: aws.String(d.Id()),
@@ -108,7 +109,7 @@ func resourceAwsXrayGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsXrayGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).xrayconn
+	conn := meta.(*conns.AWSClient).XRayConn
 
 	if d.HasChange("filter_expression") {
 		input := &xray.UpdateGroupInput{
@@ -133,7 +134,7 @@ func resourceAwsXrayGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsXrayGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).xrayconn
+	conn := meta.(*conns.AWSClient).XRayConn
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
 

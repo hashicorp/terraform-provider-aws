@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSXraySamplingRule_basic(t *testing.T) {
@@ -186,7 +187,7 @@ func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRul
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
@@ -206,7 +207,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).xrayconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
@@ -223,7 +224,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSXray(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).xrayconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
 
 	input := &xray.GetSamplingRulesInput{}
 
