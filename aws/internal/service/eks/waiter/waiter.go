@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
