@@ -1,4 +1,4 @@
-package aws
+package servicediscovery
 
 import (
 	"context"
@@ -14,9 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,7 +83,7 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waiter.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("error waiting for Service Discovery Instance (%s) register: %w", d.Id(), err)
 		}
 	}
@@ -96,7 +94,7 @@ func resourceAwsServiceDiscoveryInstancePut(d *schema.ResourceData, meta interfa
 func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
-	instance, err := finder.FindInstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	instance, err := FindInstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
