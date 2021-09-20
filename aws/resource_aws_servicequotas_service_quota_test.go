@@ -22,7 +22,7 @@ func TestAccAwsServiceQuotasServiceQuota_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +74,7 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAwsServiceQuotasServiceQuota_PermissionError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccAwsServiceQuotasServiceQuota_PermissionError(t *testing.T) {
 }
 
 func testAccPreCheckAWSServiceQuotas(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).servicequotasconn
+	conn := acctest.Provider.Meta().(*AWSClient).servicequotasconn
 
 	input := &servicequotas.ListServicesInput{}
 

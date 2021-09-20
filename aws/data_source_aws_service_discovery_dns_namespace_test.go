@@ -22,7 +22,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceConfig(rName),
@@ -49,7 +49,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceConfig(rName),
