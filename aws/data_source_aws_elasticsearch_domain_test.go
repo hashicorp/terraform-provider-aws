@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticsearchservice.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -43,13 +44,13 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 }
 
 func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticsearchservice.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +145,7 @@ data "aws_elasticsearch_domain" "test" {
 }
 
 func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}

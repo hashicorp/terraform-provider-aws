@@ -7,22 +7,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	rName := acctest.RandomWithPrefix("acc-test")
-	rUserName := acctest.RandomWithPrefix("es-master-user")
+	rName := sdkacctest.RandomWithPrefix("acc-test")
+	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
@@ -47,14 +48,14 @@ func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
 }
 
 func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("acc-test")
-	rUserName := acctest.RandomWithPrefix("es-master-user")
+	rName := sdkacctest.RandomWithPrefix("acc-test")
+	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
 				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticSearchDomainSAMLOptions(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticSearchDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -70,14 +71,14 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
 }
 
 func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
-	rName := acctest.RandomWithPrefix("acc-test")
-	rUserName := acctest.RandomWithPrefix("es-master-user")
+	rName := sdkacctest.RandomWithPrefix("acc-test")
+	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticSearchDomain(), esDomainResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticSearchDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,14 +95,14 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 }
 
 func TestAccAWSElasticSearchDomainSAMLOptions_Update(t *testing.T) {
-	rName := acctest.RandomWithPrefix("acc-test")
-	rUserName := acctest.RandomWithPrefix("es-master-user")
+	rName := sdkacctest.RandomWithPrefix("acc-test")
+	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
@@ -126,14 +127,14 @@ func TestAccAWSElasticSearchDomainSAMLOptions_Update(t *testing.T) {
 }
 
 func TestAccAWSElasticSearchDomainSAMLOptions_Disabled(t *testing.T) {
-	rName := acctest.RandomWithPrefix("acc-test")
-	rUserName := acctest.RandomWithPrefix("es-master-user")
+	rName := sdkacctest.RandomWithPrefix("acc-test")
+	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
