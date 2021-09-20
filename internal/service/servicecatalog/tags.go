@@ -26,7 +26,7 @@ func portfolioUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string,
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input.AddTags = updatedTags.IgnoreAws().ServicecatalogTags()
+		input.AddTags = Tags(updatedTags.IgnoreAws())
 	}
 
 	_, err := conn.UpdatePortfolio(input)
@@ -51,7 +51,7 @@ func productUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, o
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input.AddTags = updatedTags.IgnoreAws().ServicecatalogTags()
+		input.AddTags = Tags(updatedTags.IgnoreAws())
 	}
 
 	_, err := conn.UpdateProduct(input)

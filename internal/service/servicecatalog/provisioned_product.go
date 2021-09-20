@@ -284,7 +284,7 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ServicecatalogTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	var output *servicecatalog.ProvisionProductOutput
@@ -462,7 +462,7 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 		if len(tags) > 0 {
-			input.Tags = tags.IgnoreAws().ServicecatalogTags()
+			input.Tags = Tags(tags.IgnoreAws())
 		} else {
 			input.Tags = nil
 		}

@@ -73,7 +73,7 @@ func resourcePortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(d.Get("name").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
-		Tags:             tags.IgnoreAws().ServicecatalogTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -123,7 +123,7 @@ func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
-	tags := tftags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -167,7 +167,7 @@ func resourcePortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		input.AddTags = tftags.New(n).IgnoreAws().ServicecatalogTags()
+		input.AddTags = Tags(tftags.New(n).IgnoreAws())
 		input.RemoveTags = aws.StringSlice(tftags.New(o).IgnoreAws().Keys())
 	}
 
