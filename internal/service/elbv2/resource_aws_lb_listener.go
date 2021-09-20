@@ -1,4 +1,4 @@
-package aws
+package elbv2
 
 import (
 	"errors"
@@ -17,10 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -436,7 +434,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var output *elbv2.CreateListenerOutput
 
-	err := resource.Retry(waiter.loadBalancerListenerCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(loadBalancerListenerCreateTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateListener(params)
@@ -476,9 +474,9 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	var listener *elbv2.Listener
 
-	err := resource.Retry(waiter.loadBalancerListenerReadTimeout, func() *resource.RetryError {
+	err := resource.Retry(loadBalancerListenerReadTimeout, func() *resource.RetryError {
 		var err error
-		listener, err = finder.FindListenerByARN(conn, d.Id())
+		listener, err = FindListenerByARN(conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return resource.RetryableError(err)
@@ -492,7 +490,7 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		listener, err = finder.FindListenerByARN(conn, d.Id())
+		listener, err = FindListenerByARN(conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
@@ -595,7 +593,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		err := resource.Retry(waiter.loadBalancerListenerUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(loadBalancerListenerUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyListener(params)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
@@ -621,7 +619,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||

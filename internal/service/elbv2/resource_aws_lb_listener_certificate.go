@@ -1,4 +1,4 @@
-package aws
+package elbv2
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfelbv2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,7 +80,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error adding LB Listener Certificate: %w", err)
 	}
 
-	d.SetId(tfelbv2.listenerCertificateCreateID(listenerArn, certificateArn))
+	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
 
 	return resourceListenerCertificateRead(d, meta)
 }
@@ -89,7 +88,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
-	listenerArn, certificateArn, err := tfelbv2.listenerCertificateParseID(d.Id())
+	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
 	}

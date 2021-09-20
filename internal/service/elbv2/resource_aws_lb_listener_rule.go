@@ -1,4 +1,4 @@
-package aws
+package elbv2
 
 import (
 	"errors"
@@ -17,9 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -847,7 +846,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := tftags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {

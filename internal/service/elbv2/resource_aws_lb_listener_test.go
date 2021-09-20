@@ -1,4 +1,4 @@
-package aws
+package elbv2_test
 
 import (
 	"errors"
@@ -12,12 +12,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func TestAccAWSLBListener_basic(t *testing.T) {
@@ -632,7 +632,7 @@ func testAccCheckAWSLBListenerExists(n string, res *elbv2.Listener) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
-		listener, err := finder.FindListenerByARN(conn, rs.Primary.ID)
+		listener, err := tfelbv2.FindListenerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
@@ -655,7 +655,7 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		listener, err := finder.FindListenerByARN(conn, rs.Primary.ID)
+		listener, err := tfelbv2.FindListenerByARN(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			continue
