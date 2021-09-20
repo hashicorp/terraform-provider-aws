@@ -1,4 +1,4 @@
-package waiter
+package kinesis
 
 import (
 	"time"
