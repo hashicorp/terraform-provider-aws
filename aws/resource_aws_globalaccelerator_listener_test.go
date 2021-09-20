@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorListener_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorListenerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlobalAcceleratorListener(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

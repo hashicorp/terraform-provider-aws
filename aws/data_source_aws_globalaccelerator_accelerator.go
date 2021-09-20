@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
+func DataSourceAccelerator() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsGlobalAcceleratorAcceleratorRead,
+		Read: dataSourceAcceleratorRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -85,7 +85,7 @@ func dataSourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 	}
 }
 
-func dataSourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

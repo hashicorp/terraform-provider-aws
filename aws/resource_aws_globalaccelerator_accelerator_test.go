@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepGlobalAcceleratorAccelerators(region string) error {
 				sweeperErrs = multierror.Append(sweeperErrs, errs)
 			}
 
-			r := resourceAwsGlobalAcceleratorAccelerator()
+			r := ResourceAccelerator()
 			d := r.Data(nil)
 			d.SetId(arn)
 			err = r.Delete(d, client)
@@ -101,7 +102,7 @@ func sweepGlobalAcceleratorListeners(client interface{}, acceleratorArn *string)
 
 		arn := aws.StringValue(listener.ListenerArn)
 
-		r := resourceAwsGlobalAcceleratorListener()
+		r := ResourceListener()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err = r.Delete(d, client)
@@ -135,7 +136,7 @@ func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *strin
 	for _, endpoint := range output.EndpointGroups {
 		arn := aws.StringValue(endpoint.EndpointGroupArn)
 
-		r := resourceAwsGlobalAcceleratorEndpointGroup()
+		r := ResourceEndpointGroup()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err = r.Delete(d, client)
@@ -206,7 +207,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorAcceleratorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlobalAcceleratorAccelerator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
