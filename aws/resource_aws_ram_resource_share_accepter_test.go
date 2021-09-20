@@ -71,7 +71,7 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 				Config: testAccAwsRamResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRamResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +119,7 @@ func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 }
 
 func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share_accepter" {
@@ -155,7 +155,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 			return fmt.Errorf("RAM resource share invitation not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 		input := &ram.GetResourceSharesInput{
 			ResourceShareArns: []*string{aws.String(rs.Primary.Attributes["share_arn"])},

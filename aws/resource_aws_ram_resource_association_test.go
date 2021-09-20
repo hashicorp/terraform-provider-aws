@@ -20,7 +20,7 @@ func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
 
 func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 		input := &ram.DisassociateResourceShareInput{
 			ResourceArns:     []*string{resourceShareAssociation.AssociatedEntity},
@@ -81,7 +81,7 @@ func testAccCheckAwsRamResourceAssociationDisappears(resourceShareAssociation *r
 
 func testAccCheckAwsRamResourceAssociationExists(resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -116,7 +116,7 @@ func testAccCheckAwsRamResourceAssociationExists(resourceName string, associatio
 }
 
 func testAccCheckAwsRamResourceAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_association" {

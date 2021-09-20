@@ -23,7 +23,7 @@ func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,14 +49,14 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRamPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRamPrincipalAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRamPrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,7 +66,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 
 func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -111,7 +111,7 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 }
 
 func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_principal_association" {

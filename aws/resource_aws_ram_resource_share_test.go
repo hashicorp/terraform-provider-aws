@@ -21,7 +21,7 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,7 @@ func TestAccAwsRamResourceShare_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 
 func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -195,7 +195,7 @@ func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *r
 }
 
 func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := acctest.Provider.Meta().(*AWSClient).ramconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share" {
