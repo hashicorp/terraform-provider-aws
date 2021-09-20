@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
+func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 	var dbClusterSnapshot neptune.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_cluster_snapshot.test"

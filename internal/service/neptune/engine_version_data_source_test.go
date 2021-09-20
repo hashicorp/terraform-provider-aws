@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSNeptuneEngineVersionDataSource_basic(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	version := "1.0.2.1"
 
@@ -41,7 +41,7 @@ func TestAccAWSNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneEngineVersionDataSource_preferred(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,7 +61,7 @@ func TestAccAWSNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{

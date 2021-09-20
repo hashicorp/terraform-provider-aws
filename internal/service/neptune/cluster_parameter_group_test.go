@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	parameterGroupName := sdkacctest.RandomWithPrefix("cluster-parameter-group-test-terraform")
@@ -51,7 +51,7 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	resourceName := "aws_neptune_cluster_parameter_group.test"
@@ -79,7 +79,7 @@ func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterParameterGroup_generatedName(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	resourceName := "aws_neptune_cluster_parameter_group.test"
@@ -105,7 +105,7 @@ func TestAccAWSNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_description(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	resourceName := "aws_neptune_cluster_parameter_group.test"
@@ -136,7 +136,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17870
-func TestAccAWSNeptuneClusterParameterGroup_NamePrefix_Parameter(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	resourceName := "aws_neptune_cluster_parameter_group.test"
@@ -182,7 +182,7 @@ func TestAccAWSNeptuneClusterParameterGroup_NamePrefix_Parameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	resourceName := "aws_neptune_cluster_parameter_group.test"
@@ -230,7 +230,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
+func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
 	resourceName := "aws_neptune_cluster_parameter_group.test"

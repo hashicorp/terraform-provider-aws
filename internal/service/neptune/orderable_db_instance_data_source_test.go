@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
+func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
 	engineVersion := "1.0.2.2"
@@ -37,7 +37,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
+func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
 	engineVersion := "1.0.3.0"

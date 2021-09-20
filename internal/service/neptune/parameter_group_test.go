@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
+func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 	var v neptune.DBParameterGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
@@ -48,7 +48,7 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneParameterGroup_Description(t *testing.T) {
+func TestAccNeptuneParameterGroup_description(t *testing.T) {
 	var v neptune.DBParameterGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
@@ -76,7 +76,7 @@ func TestAccAWSNeptuneParameterGroup_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
+func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 	var v neptune.DBParameterGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
@@ -123,7 +123,7 @@ func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneParameterGroup_Tags(t *testing.T) {
+func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 	var v neptune.DBParameterGroup
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

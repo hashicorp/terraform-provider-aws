@@ -17,7 +17,7 @@ import (
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
-func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
+func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 	var dbCluster neptune.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
@@ -50,7 +50,7 @@ func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterEndpoint_tags(t *testing.T) {
+func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Neptune Cluster Endpoint tags are not supported in GovCloud partition")
 	}
@@ -99,7 +99,7 @@ func TestAccAWSNeptuneClusterEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterEndpoint_disappears(t *testing.T) {
+func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 	var dbCluster neptune.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
@@ -122,7 +122,7 @@ func TestAccAWSNeptuneClusterEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSNeptuneClusterEndpoint_disappears_cluster(t *testing.T) {
+func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 	var dbCluster neptune.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
