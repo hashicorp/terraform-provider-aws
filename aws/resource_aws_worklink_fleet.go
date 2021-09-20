@@ -196,7 +196,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error describe worklink company network configuration: %s", err)
 	}
-	if err := d.Set("network", flattenWorkLinkNetworkConfigResponse(companyNetworkConfigurationResp)); err != nil {
+	if err := d.Set("network", flattenNetworkConfigResponse(companyNetworkConfigurationResp)); err != nil {
 		return fmt.Errorf("Error setting network: %s", err)
 	}
 
@@ -207,7 +207,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error describe worklink company network configuration: %s", err)
 	}
 
-	if err := d.Set("identity_provider", flattenWorkLinkIdentityProviderConfigResponse(identityProviderConfigurationResp)); err != nil {
+	if err := d.Set("identity_provider", flattenIdentityProviderConfigResponse(identityProviderConfigurationResp)); err != nil {
 		return fmt.Errorf("Error setting identity_provider: %s", err)
 	}
 
@@ -357,8 +357,8 @@ func updateCompanyNetworkConfiguration(conn *worklink.WorkLink, d *schema.Resour
 		config := v.([]interface{})[0].(map[string]interface{})
 		input := &worklink.UpdateCompanyNetworkConfigurationInput{
 			FleetArn:         aws.String(d.Id()),
-			SecurityGroupIds: expandStringSet(config["security_group_ids"].(*schema.Set)),
-			SubnetIds:        expandStringSet(config["subnet_ids"].(*schema.Set)),
+			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
+			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
 			VpcId:            aws.String(config["vpc_id"].(string)),
 		}
 		log.Printf("[DEBUG] Update company network configuration option: %#v", input)
