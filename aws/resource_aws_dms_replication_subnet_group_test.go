@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
@@ -66,7 +67,7 @@ func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*s
 				continue
 			}
 
-			conn := provider.Meta().(*AWSClient).dmsconn
+			conn := provider.Meta().(*conns.AWSClient).DMSConn
 			_, err := conn.DescribeReplicationSubnetGroups(&dms.DescribeReplicationSubnetGroupsInput{
 				Filters: []*dms.Filter{
 					{

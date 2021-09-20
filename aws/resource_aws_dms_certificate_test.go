@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDmsCertificate_basic(t *testing.T) {
@@ -137,7 +138,7 @@ func testAccCheckAWSDmsCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
@@ -175,7 +176,7 @@ func testAccAWSDmsCertificateExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).dmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
