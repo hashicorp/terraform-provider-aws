@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryReadinessCell() *schema.Resource {
+func ResourceCell() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryReadinessCellCreate,
-		Read:   resourceAwsRoute53RecoveryReadinessCellRead,
-		Update: resourceAwsRoute53RecoveryReadinessCellUpdate,
-		Delete: resourceAwsRoute53RecoveryReadinessCellDelete,
+		Create: resourceCellCreate,
+		Read:   resourceCellRead,
+		Update: resourceCellUpdate,
+		Delete: resourceCellDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsRoute53RecoveryReadinessCell() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryReadinessCellCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -84,10 +84,10 @@ func resourceAwsRoute53RecoveryReadinessCellCreate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsRoute53RecoveryReadinessCellRead(d, meta)
+	return resourceCellRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryReadinessCellRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -133,7 +133,7 @@ func resourceAwsRoute53RecoveryReadinessCellRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsRoute53RecoveryReadinessCellUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.UpdateCellInput{
@@ -154,10 +154,10 @@ func resourceAwsRoute53RecoveryReadinessCellUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsRoute53RecoveryReadinessCellRead(d, meta)
+	return resourceCellRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryReadinessCellDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCellDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.DeleteCellInput{

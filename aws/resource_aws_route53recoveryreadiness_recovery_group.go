@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryReadinessRecoveryGroup() *schema.Resource {
+func ResourceRecoveryGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryReadinessRecoveryGroupCreate,
-		Read:   resourceAwsRoute53RecoveryReadinessRecoveryGroupRead,
-		Update: resourceAwsRoute53RecoveryReadinessRecoveryGroupUpdate,
-		Delete: resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete,
+		Create: resourceRecoveryGroupCreate,
+		Read:   resourceRecoveryGroupRead,
+		Update: resourceRecoveryGroupUpdate,
+		Delete: resourceRecoveryGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -53,7 +53,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryReadinessRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -77,10 +77,10 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupCreate(d *schema.ResourceDa
 		}
 	}
 
-	return resourceAwsRoute53RecoveryReadinessRecoveryGroupRead(d, meta)
+	return resourceRecoveryGroupRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryReadinessRecoveryGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRecoveryGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -124,7 +124,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsRoute53RecoveryReadinessRecoveryGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRecoveryGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.UpdateRecoveryGroupInput{
@@ -146,10 +146,10 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupUpdate(d *schema.ResourceDa
 		}
 	}
 
-	return resourceAwsRoute53RecoveryReadinessRecoveryGroupRead(d, meta)
+	return resourceRecoveryGroupRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRecoveryGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
 
 	input := &route53recoveryreadiness.DeleteRecoveryGroupInput{
