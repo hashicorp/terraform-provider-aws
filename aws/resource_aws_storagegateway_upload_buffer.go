@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
+func ResourceUploadBuffer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayUploadBufferCreate,
-		Read:   resourceAwsStorageGatewayUploadBufferRead,
+		Create: resourceUploadBufferCreate,
+		Read:   resourceUploadBufferRead,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -47,7 +47,7 @@ func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.AddUploadBufferInput{}
@@ -78,7 +78,7 @@ func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("disk_id"); ok {
 		d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.GatewayARN), v.(string)))
 
-		return resourceAwsStorageGatewayUploadBufferRead(d, meta)
+		return resourceUploadBufferRead(d, meta)
 	}
 
 	disk, err := finder.LocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
@@ -93,10 +93,10 @@ func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta in
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.GatewayARN), aws.StringValue(disk.DiskId)))
 
-	return resourceAwsStorageGatewayUploadBufferRead(d, meta)
+	return resourceUploadBufferRead(d, meta)
 }
 
-func resourceAwsStorageGatewayUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(d.Id())

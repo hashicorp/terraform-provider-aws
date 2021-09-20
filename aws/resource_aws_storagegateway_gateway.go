@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayGateway() *schema.Resource {
+func ResourceGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayGatewayCreate,
-		Read:   resourceAwsStorageGatewayGatewayRead,
-		Update: resourceAwsStorageGatewayGatewayUpdate,
-		Delete: resourceAwsStorageGatewayGatewayDelete,
+		Create: resourceGatewayCreate,
+		Read:   resourceGatewayRead,
+		Update: resourceGatewayUpdate,
+		Delete: resourceGatewayDelete,
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
@@ -240,7 +240,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -438,10 +438,10 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsStorageGatewayGatewayRead(d, meta)
+	return resourceGatewayRead(d, meta)
 }
 
-func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -588,7 +588,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
@@ -715,10 +715,10 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 
 	}
 
-	return resourceAwsStorageGatewayGatewayRead(d, meta)
+	return resourceGatewayRead(d, meta)
 }
 
-func resourceAwsStorageGatewayGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteGatewayInput{

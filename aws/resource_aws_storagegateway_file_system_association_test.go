@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSStorageGatewayFileSystemAssociation_basic(t *testing.T) {
@@ -201,7 +202,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayFileSystemAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystemAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,7 +227,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_storageGateway(t *
 				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayGateway(), "aws_storagegateway_gateway.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGateway(), "aws_storagegateway_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,7 +255,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_fsxFileSystem(t *t
 				Config: testAccAwsStorageGatewayFileSystemAssociationConfig_Required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsStorageGatewayFileSystemAssociationExists(resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

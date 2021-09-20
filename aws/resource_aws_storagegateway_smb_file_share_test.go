@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *testing.T) {
@@ -837,7 +838,7 @@ func TestAccAWSStorageGatewaySmbFileShare_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewaySmbFileShareConfig_Authentication_GuestAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewaySmbFileShare(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSMBFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

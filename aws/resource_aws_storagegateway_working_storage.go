@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
+func ResourceWorkingStorage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayWorkingStorageCreate,
-		Read:   resourceAwsStorageGatewayWorkingStorageRead,
+		Create: resourceWorkingStorageCreate,
+		Read:   resourceWorkingStorageRead,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -37,7 +37,7 @@ func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayWorkingStorageCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkingStorageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	diskID := d.Get("disk_id").(string)
@@ -56,10 +56,10 @@ func resourceAwsStorageGatewayWorkingStorageCreate(d *schema.ResourceData, meta 
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
 
-	return resourceAwsStorageGatewayWorkingStorageRead(d, meta)
+	return resourceWorkingStorageRead(d, meta)
 }
 
-func resourceAwsStorageGatewayWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayWorkingStorageID(d.Id())
