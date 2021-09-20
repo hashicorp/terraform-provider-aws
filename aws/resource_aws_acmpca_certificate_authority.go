@@ -17,13 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
+func ResourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaCertificateAuthorityCreate,
-		Read:   resourceAwsAcmpcaCertificateAuthorityRead,
-		Update: resourceAwsAcmpcaCertificateAuthorityUpdate,
-		Delete: resourceAwsAcmpcaCertificateAuthorityDelete,
+		Create: resourceCertificateAuthorityCreate,
+		Read:   resourceCertificateAuthorityRead,
+		Update: resourceCertificateAuthorityUpdate,
+		Delete: resourceCertificateAuthorityDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("permanent_deletion_time_in_days", 30)
@@ -281,7 +281,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 	}
 }
 
-func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -326,10 +326,10 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("error waiting for ACM PCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
 	}
 
-	return resourceAwsAcmpcaCertificateAuthorityRead(d, meta)
+	return resourceCertificateAuthorityRead(d, meta)
 }
 
-func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -446,7 +446,7 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 	updateCertificateAuthority := false
 
@@ -483,10 +483,10 @@ func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsAcmpcaCertificateAuthorityRead(d, meta)
+	return resourceCertificateAuthorityRead(d, meta)
 }
 
-func resourceAwsAcmpcaCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.

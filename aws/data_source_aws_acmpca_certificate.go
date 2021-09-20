@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAcmpcaCertificate() *schema.Resource {
+func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAcmpcaCertificateRead,
+		Read: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,7 +37,7 @@ func dataSourceAwsAcmpcaCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 	certificateArn := d.Get("arn").(string)
 
