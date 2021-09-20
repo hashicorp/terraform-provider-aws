@@ -155,9 +155,9 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 			// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 			// Under some circumstances a newly created IAM Role doesn't show up and causes
 			// an InvalidArnException to be thrown.
-			if isAWSErr(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				isAWSErr(err, kms.ErrCodeInternalException, "") ||
-				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
 				return resource.RetryableError(
 					fmt.Errorf("error creating KMS Grant for Key (%s), retrying: %w", keyId, err))
 			}
@@ -166,7 +166,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.CreateGrant(&input)
 	}
 
@@ -192,7 +192,7 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
 
 	if err != nil {
-		if isResourceNotFoundError(err) {
+		if tfresource.NotFound(err) {
 			log.Printf("[WARN] KMS Grant (%s) not found for Key (%s), removing from state file", grantId, keyId)
 			d.SetId("")
 			return nil
@@ -270,7 +270,7 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return err
@@ -306,7 +306,7 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
-		if isResourceNotFoundError(err) {
+		if tfresource.NotFound(err) {
 			return resource.RetryableError(err)
 		}
 
@@ -316,7 +316,7 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 	}
 
@@ -330,7 +330,7 @@ func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) err
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
-		if isResourceNotFoundError(err) {
+		if tfresource.NotFound(err) {
 			return nil
 		}
 
@@ -345,7 +345,7 @@ func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) err
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 	}
 
@@ -371,9 +371,9 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {
-			if isAWSErr(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				isAWSErr(err, kms.ErrCodeInternalException, "") ||
-				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -381,7 +381,7 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.ListGrants(&input)
 	}
 
