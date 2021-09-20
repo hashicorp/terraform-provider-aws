@@ -1,4 +1,4 @@
-package waiter
+package globalaccelerator
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

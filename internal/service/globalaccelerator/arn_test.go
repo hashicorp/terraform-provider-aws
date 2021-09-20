@@ -1,4 +1,4 @@
-package globalaccelerator_test
+package globalaccelerator
 
 import (
 	"regexp"
