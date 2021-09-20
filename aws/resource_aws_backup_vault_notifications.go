@@ -77,7 +77,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	}
 
 	resp, err := conn.GetBackupVaultNotifications(input)
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -105,7 +105,7 @@ func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta inte
 
 	_, err := conn.DeleteBackupVaultNotifications(input)
 	if err != nil {
-		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Backup Vault Notifications (%s): %w", d.Id(), err)

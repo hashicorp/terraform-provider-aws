@@ -193,7 +193,7 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetBackupPlan(&backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -275,11 +275,11 @@ func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteBackupPlan(input)
 
-		if isAWSErr(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
@@ -289,7 +289,7 @@ func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteBackupPlan(input)
 	}
 
