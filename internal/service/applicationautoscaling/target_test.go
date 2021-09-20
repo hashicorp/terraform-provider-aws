@@ -16,7 +16,7 @@ import (
 	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
 )
 
-func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
+func TestAccApplicationAutoScalingTarget_basic(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 
 	randClusterName := fmt.Sprintf("cluster-%s", sdkacctest.RandString(10))
@@ -56,7 +56,7 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
+func TestAccApplicationAutoScalingTarget_disappears(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appautoscaling_target.bar"
@@ -79,7 +79,7 @@ func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
+func TestAccApplicationAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
@@ -107,7 +107,7 @@ func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
+func TestAccApplicationAutoScalingTarget_emrCluster(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	rInt := sdkacctest.RandInt()
 
@@ -135,7 +135,7 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
+func TestAccApplicationAutoScalingTarget_multipleTargets(t *testing.T) {
 	var writeTarget applicationautoscaling.ScalableTarget
 	var readTarget applicationautoscaling.ScalableTarget
 
@@ -170,7 +170,7 @@ func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
+func TestAccApplicationAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	var readTarget applicationautoscaling.ScalableTarget
 
 	rInt := sdkacctest.RandInt()
