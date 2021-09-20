@@ -88,7 +88,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().GuarddutyTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateIPSet(input)
@@ -152,7 +152,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Name)
 	d.Set("activate", *resp.Status == guardduty.IpSetStatusActive)
 
-	tags := tftags.GuarddutyKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -199,7 +199,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GuarddutyUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating GuardDuty IP Set (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
