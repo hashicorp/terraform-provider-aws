@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidSecurityGroupRuleDescription(t *testing.T) {

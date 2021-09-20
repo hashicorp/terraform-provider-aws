@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
