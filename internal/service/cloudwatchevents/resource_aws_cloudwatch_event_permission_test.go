@@ -1,4 +1,4 @@
-package aws
+package cloudwatchevents_test
 
 import (
 	"encoding/json"
@@ -13,12 +13,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
 func init() {
@@ -120,7 +120,7 @@ func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfevents.DefaultEventBusName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfcloudwatchevents.DefaultEventBusName),
 				),
 			},
 			{
@@ -330,7 +330,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 			return fmt.Errorf("No ID is set")
 		}
 
-		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
+		eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", pr, err)
 		}
@@ -365,7 +365,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
+		eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", rs.Primary.ID, err)
 		}

@@ -7,8 +7,6 @@ import (
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -73,7 +71,7 @@ func FindRuleByEventBusAndRuleNames(conn *events.CloudWatchEvents, eventBusName,
 }
 
 func FindRuleByResourceID(conn *events.CloudWatchEvents, id string) (*events.DescribeRuleOutput, error) {
-	eventBusName, ruleName, err := tfevents.RuleParseResourceID(id)
+	eventBusName, ruleName, err := RuleParseResourceID(id)
 
 	if err != nil {
 		return nil, err
@@ -84,7 +82,7 @@ func FindRuleByResourceID(conn *events.CloudWatchEvents, id string) (*events.Des
 
 func FindTarget(conn *events.CloudWatchEvents, busName, ruleName, targetId string) (*events.Target, error) {
 	var result *events.Target
-	err := lister.ListAllTargetsForRulePages(conn, busName, ruleName, func(page *events.ListTargetsByRuleOutput, lastPage bool) bool {
+	err := ListAllTargetsForRulePages(conn, busName, ruleName, func(page *events.ListTargetsByRuleOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

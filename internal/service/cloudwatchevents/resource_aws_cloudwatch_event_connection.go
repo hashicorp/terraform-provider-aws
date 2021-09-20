@@ -1,4 +1,4 @@
-package aws
+package cloudwatchevents
 
 import (
 	"fmt"
@@ -10,9 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -263,7 +261,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	_, err = waiter.waitConnectionCreated(conn, d.Id())
+	_, err = waitConnectionCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to create: %w", d.Id(), err)
@@ -275,7 +273,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	output, err := finder.FindConnectionByName(conn, d.Id())
+	output, err := FindConnectionByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Events connection (%s) not found, removing from state", d.Id())
@@ -329,7 +327,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitConnectionUpdated(conn, d.Id())
+	_, err = waitConnectionUpdated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to update: %w", d.Id(), err)
@@ -354,7 +352,7 @@ func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitConnectionDeleted(conn, d.Id())
+	_, err = waitConnectionDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to delete: %w", d.Id(), err)
