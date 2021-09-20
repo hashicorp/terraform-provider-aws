@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAwsRamResourceShare_basic(t *testing.T) {
+func TestAccRAMResourceShare_basic(t *testing.T) {
 	var resourceShare ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -44,7 +44,7 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
+func TestAccRAMResourceShare_allowExternalPrincipals(t *testing.T) {
 	var resourceShare1, resourceShare2 ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -78,7 +78,7 @@ func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceShare_Name(t *testing.T) {
+func TestAccRAMResourceShare_name(t *testing.T) {
 	var resourceShare1, resourceShare2 ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -113,7 +113,7 @@ func TestAccAwsRamResourceShare_Name(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceShare_Tags(t *testing.T) {
+func TestAccRAMResourceShare_tags(t *testing.T) {
 	var resourceShare1, resourceShare2, resourceShare3 ram.ResourceShare
 	resourceName := "aws_ram_resource_share.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

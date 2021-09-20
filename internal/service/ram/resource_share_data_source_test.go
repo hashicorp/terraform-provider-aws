@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsRamResourceShare_basic(t *testing.T) {
+func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ram_resource_share.test"
 	datasourceName := "data.aws_ram_resource_share.test"
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsRamResourceShare_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRamResourceShare_Tags(t *testing.T) {
+func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ram_resource_share.test"
 	datasourceName := "data.aws_ram_resource_share.test"

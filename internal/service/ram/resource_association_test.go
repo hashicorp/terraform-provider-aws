@@ -14,7 +14,7 @@ import (
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 )
 
-func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
+func TestAccRAMResourceAssociation_basic(t *testing.T) {
 	var resourceShareAssociation1 ram.ResourceShareAssociation
 	resourceName := "aws_ram_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -40,7 +40,7 @@ func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
+func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 	var resourceShareAssociation1 ram.ResourceShareAssociation
 	resourceName := "aws_ram_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

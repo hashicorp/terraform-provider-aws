@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
+func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
@@ -57,7 +57,7 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
+func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -83,7 +83,7 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
+func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
