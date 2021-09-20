@@ -213,7 +213,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.CreateCluster(input)
 	}
 
@@ -255,11 +255,11 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = finder.ClusterByARN(conn, d.Id())
 	}
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -368,20 +368,20 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
 			_, err := conn.PutClusterCapacityProviders(&input)
 			if err != nil {
-				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, ecs.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.PutClusterCapacityProviders(&input)
 		}
 		if err != nil {
@@ -411,21 +411,21 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		if isAWSErr(err, "ClusterContainsContainerInstancesException", "") {
+		if tfawserr.ErrMessageContains(err, "ClusterContainsContainerInstancesException", "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "ClusterContainsServicesException", "") {
+		if tfawserr.ErrMessageContains(err, "ClusterContainsServicesException", "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+		if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCluster(input)
 	}
 	if err != nil {

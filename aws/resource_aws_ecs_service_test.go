@@ -55,7 +55,7 @@ func testSweepEcsServices(region string) error {
 					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
 					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
 
-					if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+					if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
 						continue
 					}
 
@@ -1295,10 +1295,10 @@ func testAccCheckAWSEcsServiceExists(name string, service *ecs.Service) resource
 			output, err = conn.DescribeServices(input)
 
 			if err != nil {
-				if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClusterNotFoundException, "") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
