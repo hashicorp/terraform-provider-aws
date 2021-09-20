@@ -96,7 +96,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   tags.IgnoreAws().AppconfigTags(),
+		Tags:                   Tags(tags.IgnoreAws()),
 	}
 
 	output, err := conn.StartDeployment(input)
@@ -169,7 +169,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("environment_id", output.EnvironmentId)
 	d.Set("state", output.State)
 
-	tags, err := tftags.AppconfigListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for AppConfig Deployment (%s): %w", d.Id(), err)
@@ -195,7 +195,7 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppConfig Deployment (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

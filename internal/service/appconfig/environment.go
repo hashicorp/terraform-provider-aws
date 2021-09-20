@@ -95,7 +95,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(d.Get("name").(string)),
 		ApplicationId: aws.String(appId),
-		Tags:          tags.IgnoreAws().AppconfigTags(),
+		Tags:          Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -174,7 +174,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", arn)
 
-	tags, err := tftags.AppconfigListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for AppConfig Environment (%s): %s", d.Id(), err)
@@ -230,7 +230,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppConfig Environment (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

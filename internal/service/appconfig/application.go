@@ -56,7 +56,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &appconfig.CreateApplicationInput{
 		Name: aws.String(applicationName),
-		Tags: tags.IgnoreAws().AppconfigTags(),
+		Tags: Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -115,7 +115,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", output.Name)
 	d.Set("description", output.Description)
 
-	tags, err := tftags.AppconfigListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for AppConfig Application (%s): %w", d.Id(), err)
@@ -161,7 +161,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppConfig Application (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
