@@ -764,13 +764,13 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(t *testing.T) {
-	organization, err := organizationsfinder.Organization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+	organization, err := organizationsfinder.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
 
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := stsfinder.CallerIdentity(Provider.Meta().(*conns.AWSClient).STSConn)
+	callerIdentity, err := stsfinder.FindCallerIdentity(Provider.Meta().(*conns.AWSClient).STSConn)
 
 	if err != nil {
 		t.Fatalf("error getting current identity: %s", err)
