@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
+func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -61,7 +61,7 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
+func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -109,7 +109,7 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloud9EnvironmentEc2_tags(t *testing.T) {
+func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -156,7 +156,7 @@ func TestAccAWSCloud9EnvironmentEc2_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloud9EnvironmentEc2_disappears(t *testing.T) {
+func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
