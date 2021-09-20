@@ -408,7 +408,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	if _, err := waiter.BrokerCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitBrokerCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
@@ -555,7 +555,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.BrokerRebooted(conn, d.Id()); err != nil {
+		if _, err := waiter.WaitBrokerRebooted(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
 		}
 	}
@@ -582,7 +582,7 @@ func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if _, err := waiter.BrokerDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.WaitBrokerDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
 	}
 

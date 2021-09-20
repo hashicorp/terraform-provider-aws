@@ -115,7 +115,7 @@ func testSweepMqBrokers(region string) error {
 		})
 		if tfawserr.ErrMessageContains(err, mq.ErrCodeBadRequestException, "while in state [CREATION_IN_PROGRESS") {
 			log.Printf("[WARN] Broker in state CREATION_IN_PROGRESS and must complete creation before deletion")
-			if _, err = waiter.BrokerCreated(conn, aws.StringValue(bs.BrokerId)); err != nil {
+			if _, err = waiter.WaitBrokerCreated(conn, aws.StringValue(bs.BrokerId)); err != nil {
 				return err
 			}
 
@@ -127,7 +127,7 @@ func testSweepMqBrokers(region string) error {
 		if err != nil {
 			return err
 		}
-		if _, err = waiter.BrokerDeleted(conn, aws.StringValue(bs.BrokerId)); err != nil {
+		if _, err = waiter.WaitBrokerDeleted(conn, aws.StringValue(bs.BrokerId)); err != nil {
 			return err
 		}
 	}

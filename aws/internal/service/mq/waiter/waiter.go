@@ -14,7 +14,7 @@ const (
 	BrokerRebootTimeout = 30 * time.Minute
 )
 
-func BrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+func WaitBrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationInProgress,
@@ -22,7 +22,7 @@ func BrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 		},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: BrokerCreateTimeout,
-		Refresh: BrokerStatus(conn, id),
+		Refresh: StatusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
 
@@ -33,7 +33,7 @@ func BrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 	return nil, err
 }
 
-func BrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+func WaitBrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationFailed,
@@ -43,7 +43,7 @@ func BrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 		},
 		Target:  []string{},
 		Timeout: BrokerDeleteTimeout,
-		Refresh: BrokerStatus(conn, id),
+		Refresh: StatusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
 
@@ -54,14 +54,14 @@ func BrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 	return nil, err
 }
 
-func BrokerRebooted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+func WaitBrokerRebooted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateRebootInProgress,
 		},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: BrokerRebootTimeout,
-		Refresh: BrokerStatus(conn, id),
+		Refresh: StatusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
 
