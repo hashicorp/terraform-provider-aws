@@ -18,7 +18,7 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,14 +113,14 @@ func TestAccAWSPinpointSMSChannel_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPinpointSMSChannel(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsPinpointSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,7 +139,7 @@ func testAccCheckAWSPinpointSMSChannelExists(n string, channel *pinpoint.SMSChan
 			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 		// Check if the app exists
 		params := &pinpoint.GetSmsChannelInput{
@@ -179,7 +179,7 @@ resource "aws_pinpoint_sms_channel" "test" {
 }
 
 func testAccCheckAWSPinpointSMSChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_sms_channel" {

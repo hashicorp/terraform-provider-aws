@@ -21,7 +21,7 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,14 +59,14 @@ func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPinpointEventStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsPinpointEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,7 +85,7 @@ func testAccCheckAWSPinpointEventStreamExists(n string, stream *pinpoint.EventSt
 			return fmt.Errorf("No Pinpoint event stream with that ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 		// Check if the app exists
 		params := &pinpoint.GetEventStreamInput{
@@ -162,7 +162,7 @@ EOF
 }
 
 func testAccCheckAWSPinpointEventStreamDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_event_stream" {

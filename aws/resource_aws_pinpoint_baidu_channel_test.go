@@ -22,7 +22,7 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointBaiduChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +64,7 @@ func testAccCheckAWSPinpointBaiduChannelExists(n string, channel *pinpoint.Baidu
 			return fmt.Errorf("No Pinpoint Baidu channel with that Application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 		// Check if the Baidu Channel exists
 		params := &pinpoint.GetBaiduChannelInput{
@@ -97,7 +97,7 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 }
 
 func testAccCheckAWSPinpointBaiduChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_baidu_channel" {

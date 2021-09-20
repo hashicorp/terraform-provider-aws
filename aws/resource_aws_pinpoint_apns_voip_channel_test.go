@@ -97,7 +97,7 @@ func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAPNSVoipChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func TestAccAWSPinpointAPNSVoipChannel_basicToken(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAPNSVoipChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +167,7 @@ func testAccCheckAWSPinpointAPNSVoipChannelExists(n string, channel *pinpoint.AP
 			return fmt.Errorf("No Pinpoint APNs Voip Channel with that Application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 		// Check if the app exists
 		params := &pinpoint.GetApnsVoipChannelInput{
@@ -218,7 +218,7 @@ resource "aws_pinpoint_apns_voip_channel" "test_channel" {
 }
 
 func testAccCheckAWSPinpointAPNSVoipChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_apns_voip_channel" {

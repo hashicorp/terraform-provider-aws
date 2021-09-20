@@ -31,7 +31,7 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointGCMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +69,7 @@ func testAccCheckAWSPinpointGCMChannelExists(n string, channel *pinpoint.GCMChan
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 		// Check if the app exists
 		params := &pinpoint.GetGcmChannelInput{
@@ -100,7 +100,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 }
 
 func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_gcm_channel" {
