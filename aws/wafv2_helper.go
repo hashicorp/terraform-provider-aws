@@ -963,7 +963,7 @@ func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
 	m := l[0].(map[string]interface{})
 
 	statement := &wafv2.GeoMatchStatement{
-		CountryCodes: expandStringList(m["country_codes"].([]interface{})),
+		CountryCodes: flex.ExpandStringList(m["country_codes"].([]interface{})),
 	}
 
 	if v, ok := m["forwarded_ip_config"]; ok {
@@ -1396,7 +1396,7 @@ func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"country_codes":       flattenStringList(g.CountryCodes),
+		"country_codes":       flex.FlattenStringList(g.CountryCodes),
 		"forwarded_ip_config": flattenWafv2ForwardedIPConfig(g.ForwardedIPConfig),
 	}
 

@@ -914,12 +914,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		corsRules = make([]map[string]interface{}, 0, len(cors.CORSRules))
 		for _, ruleObject := range cors.CORSRules {
 			rule := make(map[string]interface{})
-			rule["allowed_headers"] = flattenStringList(ruleObject.AllowedHeaders)
-			rule["allowed_methods"] = flattenStringList(ruleObject.AllowedMethods)
-			rule["allowed_origins"] = flattenStringList(ruleObject.AllowedOrigins)
+			rule["allowed_headers"] = flex.FlattenStringList(ruleObject.AllowedHeaders)
+			rule["allowed_methods"] = flex.FlattenStringList(ruleObject.AllowedMethods)
+			rule["allowed_origins"] = flex.FlattenStringList(ruleObject.AllowedOrigins)
 			// Both the "ExposeHeaders" and "MaxAgeSeconds" might not be set.
 			if ruleObject.AllowedOrigins != nil {
-				rule["expose_headers"] = flattenStringList(ruleObject.ExposeHeaders)
+				rule["expose_headers"] = flex.FlattenStringList(ruleObject.ExposeHeaders)
 			}
 			if ruleObject.MaxAgeSeconds != nil {
 				rule["max_age_seconds"] = int(aws.Int64Value(ruleObject.MaxAgeSeconds))

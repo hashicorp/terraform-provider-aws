@@ -413,7 +413,7 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 	if disableMetrics.Len() != 0 {
 		props := &kinesis.DisableEnhancedMonitoringInput{
 			StreamName:        aws.String(sn),
-			ShardLevelMetrics: expandStringSet(disableMetrics),
+			ShardLevelMetrics: flex.ExpandStringSet(disableMetrics),
 		}
 
 		_, err := conn.DisableEnhancedMonitoring(props)
@@ -429,7 +429,7 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 	if enabledMetrics.Len() != 0 {
 		props := &kinesis.EnableEnhancedMonitoringInput{
 			StreamName:        aws.String(sn),
-			ShardLevelMetrics: expandStringSet(enabledMetrics),
+			ShardLevelMetrics: flex.ExpandStringSet(enabledMetrics),
 		}
 
 		_, err := conn.EnableEnhancedMonitoring(props)
@@ -469,7 +469,7 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 		state.retentionPeriod = aws.Int64Value(page.StreamDescription.RetentionPeriodHours)
 		state.openShards = append(state.openShards, flattenShards(filterShards(page.StreamDescription.Shards, true))...)
 		state.closedShards = append(state.closedShards, flattenShards(filterShards(page.StreamDescription.Shards, false))...)
-		state.shardLevelMetrics = flattenKinesisShardLevelMetrics(page.StreamDescription.EnhancedMonitoring)
+		state.shardLevelMetrics = flattenShardLevelMetrics(page.StreamDescription.EnhancedMonitoring)
 		// EncryptionType can be nil in certain APIs, e.g. AWS China
 		if page.StreamDescription.EncryptionType != nil {
 			state.encryptionType = aws.StringValue(page.StreamDescription.EncryptionType)

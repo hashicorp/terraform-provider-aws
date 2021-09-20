@@ -1361,7 +1361,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if unassignIps.Len() != 0 {
 				input := &ec2.UnassignPrivateIpAddressesInput{
 					NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-					PrivateIpAddresses: expandStringSet(unassignIps),
+					PrivateIpAddresses: flex.ExpandStringSet(unassignIps),
 				}
 				log.Printf("[INFO] Unassigning secondary_private_ips on Instance %q", d.Id())
 				_, err := conn.UnassignPrivateIpAddresses(input)
@@ -1375,7 +1375,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if assignIps.Len() != 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-					PrivateIpAddresses: expandStringSet(assignIps),
+					PrivateIpAddresses: flex.ExpandStringSet(assignIps),
 				}
 				log.Printf("[INFO] Assigning secondary_private_ips on Instance %q", d.Id())
 				_, err := conn.AssignPrivateIpAddresses(input)

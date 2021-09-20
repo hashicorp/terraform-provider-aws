@@ -7,8 +7,10 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -17,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func resourceAwsLb() *schema.Resource {
@@ -290,11 +293,11 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
+		elbOpts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = expandStringSet(v.(*schema.Set))
+		elbOpts.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnet_mapping"); ok {
@@ -496,7 +499,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("security_groups") {
-		sgs := expandStringSet(d.Get("security_groups").(*schema.Set))
+		sgs := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -514,7 +517,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	// resource is just created, so we don't attempt if it is a newly created
 	// resource.
 	if d.HasChange("subnets") && !d.IsNewResource() {
-		subnets := expandStringSet(d.Get("subnets").(*schema.Set))
+		subnets := flex.ExpandStringSet(d.Get("subnets").(*schema.Set))
 
 		params := &elbv2.SetSubnetsInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -745,7 +748,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
-	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
+	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 	d.Set("dns_name", lb.DNSName)
@@ -875,4 +878,82 @@ func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v int
 		}
 	}
 	return nil
+}
+
+func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
+	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
+	for _, ni := range nis {
+		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
+			NetworkInterfaceId: ni.NetworkInterfaceId,
+		})
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
+				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
+	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
+	for _, ni := range nis {
+		if ni.Attachment == nil {
+			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+			continue
+		}
+		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
+			AttachmentId: ni.Attachment.AttachmentId,
+			Force:        aws.Bool(true),
+		})
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
+				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+				continue
+			}
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"true"},
+			Target:  []string{"false"},
+			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
+			Timeout: 10 * time.Minute,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
+				continue
+			}
+			return fmt.Errorf(
+				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
+		}
+	}
+	return nil
+}
+
+func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+
+		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+			NetworkInterfaceIds: []*string{aws.String(id)},
+		}
+		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+
+		if err != nil {
+			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
+			return nil, "", err
+		}
+
+		eni := describeResp.NetworkInterfaces[0]
+		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
+		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
+		return eni, hasAttachment, nil
+	}
 }

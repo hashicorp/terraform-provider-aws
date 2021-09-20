@@ -403,7 +403,7 @@ func expandTrustedKeyGroups(s []interface{}) *cloudfront.TrustedKeyGroups {
 	var tkg cloudfront.TrustedKeyGroups
 	if len(s) > 0 {
 		tkg.Quantity = aws.Int64(int64(len(s)))
-		tkg.Items = expandStringList(s)
+		tkg.Items = flex.ExpandStringList(s)
 		tkg.Enabled = aws.Bool(true)
 	} else {
 		tkg.Quantity = aws.Int64(0)
@@ -414,7 +414,7 @@ func expandTrustedKeyGroups(s []interface{}) *cloudfront.TrustedKeyGroups {
 
 func flattenTrustedKeyGroups(tkg *cloudfront.TrustedKeyGroups) []interface{} {
 	if tkg.Items != nil {
-		return flattenStringList(tkg.Items)
+		return flex.FlattenStringList(tkg.Items)
 	}
 	return []interface{}{}
 }
@@ -423,7 +423,7 @@ func expandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {
 	var ts cloudfront.TrustedSigners
 	if len(s) > 0 {
 		ts.Quantity = aws.Int64(int64(len(s)))
-		ts.Items = expandStringList(s)
+		ts.Items = flex.ExpandStringList(s)
 		ts.Enabled = aws.Bool(true)
 	} else {
 		ts.Quantity = aws.Int64(0)
@@ -434,7 +434,7 @@ func expandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {
 
 func flattenTrustedSigners(ts *cloudfront.TrustedSigners) []interface{} {
 	if ts.Items != nil {
-		return flattenStringList(ts.Items)
+		return flex.FlattenStringList(ts.Items)
 	}
 	return []interface{}{}
 }
@@ -588,13 +588,13 @@ func flattenForwardedValues(fv *cloudfront.ForwardedValues) map[string]interface
 func expandHeaders(d []interface{}) *cloudfront.Headers {
 	return &cloudfront.Headers{
 		Quantity: aws.Int64(int64(len(d))),
-		Items:    expandStringList(d),
+		Items:    flex.ExpandStringList(d),
 	}
 }
 
 func flattenHeaders(h *cloudfront.Headers) []interface{} {
 	if h.Items != nil {
-		return flattenStringList(h.Items)
+		return flex.FlattenStringList(h.Items)
 	}
 	return []interface{}{}
 }
@@ -602,13 +602,13 @@ func flattenHeaders(h *cloudfront.Headers) []interface{} {
 func expandQueryStringCacheKeys(d []interface{}) *cloudfront.QueryStringCacheKeys {
 	return &cloudfront.QueryStringCacheKeys{
 		Quantity: aws.Int64(int64(len(d))),
-		Items:    expandStringList(d),
+		Items:    flex.ExpandStringList(d),
 	}
 }
 
 func flattenQueryStringCacheKeys(k *cloudfront.QueryStringCacheKeys) []interface{} {
 	if k.Items != nil {
-		return flattenStringList(k.Items)
+		return flex.FlattenStringList(k.Items)
 	}
 	return []interface{}{}
 }
@@ -635,13 +635,13 @@ func flattenCookiePreference(cp *cloudfront.CookiePreference) map[string]interfa
 func expandCookieNames(d []interface{}) *cloudfront.CookieNames {
 	return &cloudfront.CookieNames{
 		Quantity: aws.Int64(int64(len(d))),
-		Items:    expandStringList(d),
+		Items:    flex.ExpandStringList(d),
 	}
 }
 
 func flattenCookieNames(cn *cloudfront.CookieNames) []interface{} {
 	if cn.Items != nil {
-		return flattenStringList(cn.Items)
+		return flex.FlattenStringList(cn.Items)
 	}
 	return []interface{}{}
 }
@@ -649,13 +649,13 @@ func flattenCookieNames(cn *cloudfront.CookieNames) []interface{} {
 func expandAllowedMethods(s *schema.Set) *cloudfront.AllowedMethods {
 	return &cloudfront.AllowedMethods{
 		Quantity: aws.Int64(int64(s.Len())),
-		Items:    expandStringSet(s),
+		Items:    flex.ExpandStringSet(s),
 	}
 }
 
 func flattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
 	if am.Items != nil {
-		return flattenStringSet(am.Items)
+		return flex.FlattenStringSet(am.Items)
 	}
 	return nil
 }
@@ -663,13 +663,13 @@ func flattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
 func expandCachedMethods(s *schema.Set) *cloudfront.CachedMethods {
 	return &cloudfront.CachedMethods{
 		Quantity: aws.Int64(int64(s.Len())),
-		Items:    expandStringSet(s),
+		Items:    flex.ExpandStringSet(s),
 	}
 }
 
 func flattenCachedMethods(cm *cloudfront.CachedMethods) *schema.Set {
 	if cm.Items != nil {
-		return flattenStringSet(cm.Items)
+		return flex.FlattenStringSet(cm.Items)
 	}
 	return nil
 }
@@ -1046,7 +1046,7 @@ func customOriginConfigHash(v interface{}) int {
 }
 
 func expandCustomOriginConfigSSL(s []interface{}) *cloudfront.OriginSslProtocols {
-	items := expandStringList(s)
+	items := flex.ExpandStringList(s)
 	return &cloudfront.OriginSslProtocols{
 		Quantity: aws.Int64(int64(len(items))),
 		Items:    items,
@@ -1054,7 +1054,7 @@ func expandCustomOriginConfigSSL(s []interface{}) *cloudfront.OriginSslProtocols
 }
 
 func flattenCustomOriginConfigSSL(osp *cloudfront.OriginSslProtocols) *schema.Set {
-	return flattenStringSet(osp.Items)
+	return flex.FlattenStringSet(osp.Items)
 }
 
 func expandS3OriginConfig(m map[string]interface{}) *cloudfront.S3OriginConfig {
@@ -1204,14 +1204,14 @@ func expandAliases(s *schema.Set) *cloudfront.Aliases {
 		Quantity: aws.Int64(int64(s.Len())),
 	}
 	if s.Len() > 0 {
-		aliases.Items = expandStringSet(s)
+		aliases.Items = flex.ExpandStringSet(s)
 	}
 	return &aliases
 }
 
 func flattenAliases(aliases *cloudfront.Aliases) *schema.Set {
 	if aliases.Items != nil {
-		return flattenStringSet(aliases.Items)
+		return flex.FlattenStringSet(aliases.Items)
 	}
 	return schema.NewSet(aliasesHash, []interface{}{})
 }
@@ -1243,7 +1243,7 @@ func expandGeoRestriction(m map[string]interface{}) *cloudfront.GeoRestriction {
 	}
 
 	if v, ok := m["locations"]; ok {
-		gr.Items = expandStringSet(v.(*schema.Set))
+		gr.Items = flex.ExpandStringSet(v.(*schema.Set))
 		gr.Quantity = aws.Int64(int64(v.(*schema.Set).Len()))
 	}
 
@@ -1255,7 +1255,7 @@ func flattenGeoRestriction(gr *cloudfront.GeoRestriction) map[string]interface{}
 
 	m["restriction_type"] = aws.StringValue(gr.RestrictionType)
 	if gr.Items != nil {
-		m["locations"] = flattenStringSet(gr.Items)
+		m["locations"] = flex.FlattenStringSet(gr.Items)
 	}
 	return m
 }

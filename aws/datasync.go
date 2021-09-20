@@ -15,7 +15,7 @@ func expandDataSyncEc2Config(l []interface{}) *datasync.Ec2Config {
 	m := l[0].(map[string]interface{})
 
 	ec2Config := &datasync.Ec2Config{
-		SecurityGroupArns: expandStringSet(m["security_group_arns"].(*schema.Set)),
+		SecurityGroupArns: flex.ExpandStringSet(m["security_group_arns"].(*schema.Set)),
 		SubnetArn:         aws.String(m["subnet_arn"].(string)),
 	}
 
@@ -44,7 +44,7 @@ func expandDataSyncOnPremConfig(l []interface{}) *datasync.OnPremConfig {
 	m := l[0].(map[string]interface{})
 
 	onPremConfig := &datasync.OnPremConfig{
-		AgentArns: expandStringSet(m["agent_arns"].(*schema.Set)),
+		AgentArns: flex.ExpandStringSet(m["agent_arns"].(*schema.Set)),
 	}
 
 	return onPremConfig
@@ -99,7 +99,7 @@ func flattenDataSyncEc2Config(ec2Config *datasync.Ec2Config) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"security_group_arns": flattenStringSet(ec2Config.SecurityGroupArns),
+		"security_group_arns": flex.FlattenStringSet(ec2Config.SecurityGroupArns),
 		"subnet_arn":          aws.StringValue(ec2Config.SubnetArn),
 	}
 
@@ -124,7 +124,7 @@ func flattenDataSyncOnPremConfig(onPremConfig *datasync.OnPremConfig) []interfac
 	}
 
 	m := map[string]interface{}{
-		"agent_arns": flattenStringSet(onPremConfig.AgentArns),
+		"agent_arns": flex.FlattenStringSet(onPremConfig.AgentArns),
 	}
 
 	return []interface{}{m}

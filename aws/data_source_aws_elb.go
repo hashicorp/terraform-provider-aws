@@ -248,10 +248,10 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		scheme = aws.StringValue(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
-	d.Set("availability_zones", flattenStringList(lb.AvailabilityZones))
+	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
 	d.Set("instances", flattenInstances(lb.Instances))
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
-	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
+	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
 		if lb.SourceSecurityGroup.OwnerAlias != nil && aws.StringValue(lb.SourceSecurityGroup.OwnerAlias) != "" {
@@ -271,7 +271,7 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	d.Set("subnets", flattenStringList(lb.Subnets))
+	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
 	if lbAttrs.ConnectionSettings != nil {
 		d.Set("idle_timeout", lbAttrs.ConnectionSettings.IdleTimeout)
 	}

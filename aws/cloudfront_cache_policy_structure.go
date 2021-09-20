@@ -12,7 +12,7 @@ func expandCloudFrontCachePolicyCookieNames(tfMap map[string]interface{}) *cloud
 		return nil
 	}
 
-	items := expandStringSet(tfMap["items"].(*schema.Set))
+	items := flex.ExpandStringSet(tfMap["items"].(*schema.Set))
 
 	apiObject := &cloudfront.CookieNames{
 		Items:    items,
@@ -43,7 +43,7 @@ func expandCloudFrontCachePolicyHeaders(tfMap map[string]interface{}) *cloudfron
 		return nil
 	}
 
-	items := expandStringSet(tfMap["items"].(*schema.Set))
+	items := flex.ExpandStringSet(tfMap["items"].(*schema.Set))
 
 	apiObject := &cloudfront.Headers{
 		Items:    items,
@@ -74,7 +74,7 @@ func expandCloudFrontCachePolicyQueryStringNames(tfMap map[string]interface{}) *
 		return nil
 	}
 
-	items := expandStringSet(tfMap["items"].(*schema.Set))
+	items := flex.ExpandStringSet(tfMap["items"].(*schema.Set))
 
 	apiObject := &cloudfront.QueryStringNames{
 		Items:    items,
