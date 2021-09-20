@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func Route53RecoveryControlConfigClusterStatus(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
