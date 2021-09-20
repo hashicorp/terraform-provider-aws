@@ -1,4 +1,4 @@
-package waiter
+package kinesisanalyticsv2
 
 import (
 	"time"

@@ -1,4 +1,4 @@
-package waiter
+package kinesisanalyticsv2
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
