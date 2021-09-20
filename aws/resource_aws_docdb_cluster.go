@@ -294,7 +294,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			opts.AvailabilityZones = expandStringSet(attr)
+			opts.AvailabilityZones = flex.ExpandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("backup_retention_period"); ok {
@@ -312,7 +312,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+			opts.EnableCloudwatchLogsExports = flex.ExpandStringList(attr.([]interface{}))
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
@@ -338,7 +338,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringSet(attr)
+			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		log.Printf("[DEBUG] DocDB Cluster restore from snapshot configuration: %s", opts)
@@ -393,11 +393,11 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
+			createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = expandStringSet(attr)
+			createOpts.AvailabilityZones = flex.ExpandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
@@ -417,7 +417,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+			createOpts.EnableCloudwatchLogsExports = flex.ExpandStringList(attr.([]interface{}))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -616,7 +616,7 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = expandStringSet(attr)
+			req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}
@@ -837,7 +837,7 @@ func buildDocDBCloudwatchLogsExportConfiguration(d *schema.ResourceData) *docdb.
 	create, disable := diffCloudwatchLogsExportConfiguration(o, n)
 
 	return &docdb.CloudwatchLogsExportConfiguration{
-		EnableLogTypes:  expandStringList(create),
-		DisableLogTypes: expandStringList(disable),
+		EnableLogTypes:  flex.ExpandStringList(create),
+		DisableLogTypes: flex.ExpandStringList(disable),
 	}
 }

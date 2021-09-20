@@ -144,7 +144,7 @@ func resourceAwsDocDBClusterSnapshotRead(d *schema.ResourceData, meta interface{
 
 	snapshot := resp.DBClusterSnapshots[0]
 
-	if err := d.Set("availability_zones", flattenStringList(snapshot.AvailabilityZones)); err != nil {
+	if err := d.Set("availability_zones", flex.FlattenStringList(snapshot.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting availability_zones: %s", err)
 	}
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
