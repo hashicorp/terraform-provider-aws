@@ -272,7 +272,7 @@ func ExpandAnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tftags.New(v).IgnoreAws().S3Tags()
+		tags = Tags(tftags.New(v).IgnoreAws())
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -364,7 +364,7 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 			result["prefix"] = *and.Prefix
 		}
 		if and.Tags != nil {
-			result["tags"] = tftags.S3KeyValueTags(and.Tags).IgnoreAws().Map()
+			result["tags"] = KeyValueTags(and.Tags).IgnoreAws().Map()
 		}
 	} else if analyticsFilter.Prefix != nil {
 		result["prefix"] = *analyticsFilter.Prefix
@@ -372,7 +372,7 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 		tags := []*s3.Tag{
 			analyticsFilter.Tag,
 		}
-		result["tags"] = tftags.S3KeyValueTags(tags).IgnoreAws().Map()
+		result["tags"] = KeyValueTags(tags).IgnoreAws().Map()
 	} else {
 		return nil
 	}
