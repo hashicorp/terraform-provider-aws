@@ -130,7 +130,7 @@ func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 		NetworkInterfaceId:   aws.String(d.Get("network_interface_id").(string)),
 		TargetName:           aws.String(d.Get("target_name").(string)),
 		PreserveExistingData: aws.Bool(d.Get("preserve_existing_data").(bool)),
-		Tags:                 tags.IgnoreAws().StoragegatewayTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("snapshot_id"); ok {
@@ -167,7 +167,7 @@ func resourceStorediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -217,7 +217,7 @@ func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("kms_key", volume.KMSKey)
 	d.Set("kms_encrypted", volume.KMSKey != nil)
 
-	tags, err := tftags.StoragegatewayListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
 	}
