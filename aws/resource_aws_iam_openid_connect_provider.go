@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
+func ResourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamOpenIDConnectProviderCreate,
-		Read:   resourceAwsIamOpenIDConnectProviderRead,
-		Update: resourceAwsIamOpenIDConnectProviderUpdate,
-		Delete: resourceAwsIamOpenIDConnectProviderDelete,
+		Create: resourceOpenIDConnectProviderCreate,
+		Read:   resourceOpenIDConnectProviderRead,
+		Update: resourceOpenIDConnectProviderUpdate,
+		Delete: resourceOpenIDConnectProviderDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,7 +59,7 @@ func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 	}
 }
 
-func resourceAwsIamOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -78,10 +78,10 @@ func resourceAwsIamOpenIDConnectProviderCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(out.OpenIDConnectProviderArn))
 
-	return resourceAwsIamOpenIDConnectProviderRead(d, meta)
+	return resourceOpenIDConnectProviderRead(d, meta)
 }
 
-func resourceAwsIamOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -118,7 +118,7 @@ func resourceAwsIamOpenIDConnectProviderRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsIamOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("thumbprint_list") {
@@ -141,10 +141,10 @@ func resourceAwsIamOpenIDConnectProviderUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsIamOpenIDConnectProviderRead(d, meta)
+	return resourceOpenIDConnectProviderRead(d, meta)
 }
 
-func resourceAwsIamOpenIDConnectProviderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOpenIDConnectProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.DeleteOpenIDConnectProviderInput{

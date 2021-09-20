@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMUser() *schema.Resource {
+func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMUserRead,
+		Read: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -41,7 +41,7 @@ func dataSourceAwsIAMUser() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMUserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

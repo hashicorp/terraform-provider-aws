@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamPolicyAttachment() *schema.Resource {
+func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamPolicyAttachmentCreate,
-		Read:   resourceAwsIamPolicyAttachmentRead,
-		Update: resourceAwsIamPolicyAttachmentUpdate,
-		Delete: resourceAwsIamPolicyAttachmentDelete,
+		Create: resourcePolicyAttachmentCreate,
+		Read:   resourcePolicyAttachmentRead,
+		Update: resourcePolicyAttachmentUpdate,
+		Delete: resourcePolicyAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -53,7 +53,7 @@ func resourceAwsIamPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	name := d.Get("name").(string)
@@ -80,10 +80,10 @@ func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 		}
 	}
 	d.SetId(d.Get("name").(string))
-	return resourceAwsIamPolicyAttachmentRead(d, meta)
+	return resourcePolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsIamPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	arn := d.Get("policy_arn").(string)
 	name := d.Get("name").(string)
@@ -138,7 +138,7 @@ func resourceAwsIamPolicyAttachmentRead(d *schema.ResourceData, meta interface{}
 
 	return nil
 }
-func resourceAwsIamPolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	var userErr, roleErr, groupErr error
@@ -155,10 +155,10 @@ func resourceAwsIamPolicyAttachmentUpdate(d *schema.ResourceData, meta interface
 	if userErr != nil || roleErr != nil || groupErr != nil {
 		return composeErrors(fmt.Sprint("[WARN] Error updating user, role, or group list from IAM Policy Attachment ", name, ":"), userErr, roleErr, groupErr)
 	}
-	return resourceAwsIamPolicyAttachmentRead(d, meta)
+	return resourcePolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsIamPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)

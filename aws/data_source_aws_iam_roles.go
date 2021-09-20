@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMRoles() *schema.Resource {
+func DataSourceRoles() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMRolesRead,
+		Read: dataSourceRolesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -39,7 +39,7 @@ func dataSourceAwsIAMRoles() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMRolesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.ListRolesInput{}

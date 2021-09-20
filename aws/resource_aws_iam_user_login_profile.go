@@ -21,11 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamUserLoginProfile() *schema.Resource {
+func ResourceUserLoginProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserLoginProfileCreate,
-		Read:   resourceAwsIamUserLoginProfileRead,
-		Delete: resourceAwsIamUserLoginProfileDelete,
+		Create: resourceUserLoginProfileCreate,
+		Read:   resourceUserLoginProfileRead,
+		Delete: resourceUserLoginProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("encrypted_password", "")
@@ -125,7 +125,7 @@ func checkIAMPwdPolicy(pass []byte) bool {
 		bytes.ContainsAny(pass, charUpper))
 }
 
-func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	username := d.Get("user").(string)
 
@@ -164,7 +164,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.GetLoginProfileInput{
@@ -212,7 +212,7 @@ func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.DeleteLoginProfileInput{

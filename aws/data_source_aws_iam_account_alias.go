@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIamAccountAlias() *schema.Resource {
+func DataSourceAccountAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIamAccountAliasRead,
+		Read: dataSourceAccountAliasRead,
 
 		Schema: map[string]*schema.Schema{
 			"account_alias": {
@@ -23,7 +23,7 @@ func dataSourceAwsIamAccountAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIamAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	log.Printf("[DEBUG] Reading IAM Account Aliases.")

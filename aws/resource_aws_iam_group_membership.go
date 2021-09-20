@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamGroupMembership() *schema.Resource {
+func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamGroupMembershipCreate,
-		Read:   resourceAwsIamGroupMembershipRead,
-		Update: resourceAwsIamGroupMembershipUpdate,
-		Delete: resourceAwsIamGroupMembershipDelete,
+		Create: resourceGroupMembershipCreate,
+		Read:   resourceGroupMembershipRead,
+		Update: resourceGroupMembershipUpdate,
+		Delete: resourceGroupMembershipDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,7 +45,7 @@ func resourceAwsIamGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceAwsIamGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	group := d.Get("group").(string)
@@ -56,10 +56,10 @@ func resourceAwsIamGroupMembershipCreate(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId(d.Get("name").(string))
-	return resourceAwsIamGroupMembershipRead(d, meta)
+	return resourceGroupMembershipRead(d, meta)
 }
 
-func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	group := d.Get("group").(string)
 
@@ -124,7 +124,7 @@ func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsIamGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("users") {
@@ -152,10 +152,10 @@ func resourceAwsIamGroupMembershipUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsIamGroupMembershipRead(d, meta)
+	return resourceGroupMembershipRead(d, meta)
 }
 
-func resourceAwsIamGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
 	group := d.Get("group").(string)

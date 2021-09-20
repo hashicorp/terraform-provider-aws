@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamAccountAlias() *schema.Resource {
+func ResourceAccountAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamAccountAliasCreate,
-		Read:   resourceAwsIamAccountAliasRead,
-		Delete: resourceAwsIamAccountAliasDelete,
+		Create: resourceAccountAliasCreate,
+		Read:   resourceAccountAliasRead,
+		Delete: resourceAccountAliasDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -30,7 +30,7 @@ func resourceAwsIamAccountAlias() *schema.Resource {
 	}
 }
 
-func resourceAwsIamAccountAliasCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	account_alias := d.Get("account_alias").(string)
@@ -50,7 +50,7 @@ func resourceAwsIamAccountAliasCreate(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsIamAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	params := &iam.ListAccountAliasesInput{}
@@ -74,7 +74,7 @@ func resourceAwsIamAccountAliasRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsIamAccountAliasDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	account_alias := d.Get("account_alias").(string)

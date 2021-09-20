@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamSamlProvider() *schema.Resource {
+func ResourceSamlProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamSamlProviderCreate,
-		Read:   resourceAwsIamSamlProviderRead,
-		Update: resourceAwsIamSamlProviderUpdate,
-		Delete: resourceAwsIamSamlProviderDelete,
+		Create: resourceSamlProviderCreate,
+		Read:   resourceSamlProviderRead,
+		Update: resourceSamlProviderUpdate,
+		Delete: resourceSamlProviderDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -54,7 +54,7 @@ func resourceAwsIamSamlProvider() *schema.Resource {
 	}
 }
 
-func resourceAwsIamSamlProviderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSamlProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -72,10 +72,10 @@ func resourceAwsIamSamlProviderCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(out.SAMLProviderArn))
 
-	return resourceAwsIamSamlProviderRead(d, meta)
+	return resourceSamlProviderRead(d, meta)
 }
 
-func resourceAwsIamSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -116,7 +116,7 @@ func resourceAwsIamSamlProviderRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsIamSamlProviderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSamlProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -138,10 +138,10 @@ func resourceAwsIamSamlProviderUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsIamSamlProviderRead(d, meta)
+	return resourceSamlProviderRead(d, meta)
 }
 
-func resourceAwsIamSamlProviderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSamlProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.DeleteSAMLProviderInput{

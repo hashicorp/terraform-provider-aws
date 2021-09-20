@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamAccessKey() *schema.Resource {
+func ResourceAccessKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamAccessKeyCreate,
-		Read:   resourceAwsIamAccessKeyRead,
-		Update: resourceAwsIamAccessKeyUpdate,
-		Delete: resourceAwsIamAccessKeyDelete,
+		Create: resourceAccessKeyCreate,
+		Read:   resourceAccessKeyRead,
+		Update: resourceAccessKeyUpdate,
+		Delete: resourceAccessKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			// ListAccessKeys requires UserName field in certain scenarios:
@@ -97,7 +97,7 @@ func resourceAwsIamAccessKey() *schema.Resource {
 	}
 }
 
-func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.CreateAccessKeyInput{
@@ -178,7 +178,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 	})
 }
 
-func resourceAwsIamAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.ListAccessKeysInput{
@@ -221,7 +221,7 @@ func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKe
 	return nil
 }
 
-func resourceAwsIamAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("status") {
@@ -230,10 +230,10 @@ func resourceAwsIamAccessKeyUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsIamAccessKeyRead(d, meta)
+	return resourceAccessKeyRead(d, meta)
 }
 
-func resourceAwsIamAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.DeleteAccessKeyInput{

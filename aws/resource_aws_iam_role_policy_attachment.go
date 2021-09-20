@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamRolePolicyAttachment() *schema.Resource {
+func ResourceRolePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamRolePolicyAttachmentCreate,
-		Read:   resourceAwsIamRolePolicyAttachmentRead,
-		Delete: resourceAwsIamRolePolicyAttachmentDelete,
+		Create: resourceRolePolicyAttachmentCreate,
+		Read:   resourceRolePolicyAttachmentRead,
+		Delete: resourceRolePolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamRolePolicyAttachmentImport,
 		},
@@ -39,7 +39,7 @@ func resourceAwsIamRolePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	role := d.Get("role").(string)
@@ -53,10 +53,10 @@ func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta inter
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
 
-	return resourceAwsIamRolePolicyAttachmentRead(d, meta)
+	return resourceRolePolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsIamRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	role := d.Get("role").(string)
 	policyARN := d.Get("policy_arn").(string)
@@ -113,7 +113,7 @@ func resourceAwsIamRolePolicyAttachmentRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsIamRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)

@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamUser() *schema.Resource {
+func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserCreate,
-		Read:   resourceAwsIamUserRead,
-		Update: resourceAwsIamUserUpdate,
-		Delete: resourceAwsIamUserDelete,
+		Create: resourceUserCreate,
+		Read:   resourceUserRead,
+		Update: resourceUserUpdate,
+		Delete: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceAwsIamUser() *schema.Resource {
 	}
 }
 
-func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -104,10 +104,10 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(createResp.User.UserName))
 
-	return resourceAwsIamUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -174,7 +174,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChanges("name", "path") {
@@ -231,10 +231,10 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsIamUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	// IAM Users must be removed from all groups before they can be deleted

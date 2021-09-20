@@ -16,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamGroupPolicy() *schema.Resource {
+func ResourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutGroupPolicy API is idempotent, so these can be the same.
 		Create: resourceAwsIamGroupPolicyPut,
 		Update: resourceAwsIamGroupPolicyPut,
 
-		Read:   resourceAwsIamGroupPolicyRead,
-		Delete: resourceAwsIamGroupPolicyDelete,
+		Read:   resourceGroupPolicyRead,
+		Delete: resourceGroupPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -84,7 +84,7 @@ func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	group, name, err := resourceAwsIamGroupPolicyParseId(d.Id())
@@ -153,7 +153,7 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsIamGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	group, name, err := resourceAwsIamGroupPolicyParseId(d.Id())

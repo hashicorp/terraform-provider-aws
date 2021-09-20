@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamUserSshKey() *schema.Resource {
+func ResourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserSshKeyCreate,
-		Read:   resourceAwsIamUserSshKeyRead,
-		Update: resourceAwsIamUserSshKeyUpdate,
-		Delete: resourceAwsIamUserSshKeyDelete,
+		Create: resourceUserSSHKeyCreate,
+		Read:   resourceUserSSHKeyRead,
+		Update: resourceUserSSHKeyUpdate,
+		Delete: resourceUserSSHKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamUserSshKeyImport,
 		},
@@ -73,7 +73,7 @@ func resourceAwsIamUserSshKey() *schema.Resource {
 	}
 }
 
-func resourceAwsIamUserSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	username := d.Get("username").(string)
 	publicKey := d.Get("public_key").(string)
@@ -91,10 +91,10 @@ func resourceAwsIamUserSshKeyCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(createResp.SSHPublicKey.SSHPublicKeyId))
 
-	return resourceAwsIamUserSshKeyUpdate(d, meta)
+	return resourceUserSSHKeyUpdate(d, meta)
 }
 
-func resourceAwsIamUserSshKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	username := d.Get("username").(string)
 	encoding := d.Get("encoding").(string)
@@ -152,7 +152,7 @@ func resourceAwsIamUserSshKeyRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsIamUserSshKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("status") {
 		conn := meta.(*conns.AWSClient).IAMConn
 
@@ -173,10 +173,10 @@ func resourceAwsIamUserSshKeyUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("Error updating IAM User SSH Key %s: %s", d.Id(), err)
 		}
 	}
-	return resourceAwsIamUserSshKeyRead(d, meta)
+	return resourceUserSSHKeyRead(d, meta)
 }
 
-func resourceAwsIamUserSshKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.DeleteSSHPublicKeyInput{

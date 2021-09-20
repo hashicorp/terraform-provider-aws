@@ -16,7 +16,7 @@ import (
 
 var dataSourceAwsIamPolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
 
-func dataSourceAwsIamPolicyDocument() *schema.Resource {
+func DataSourcePolicyDocument() *schema.Resource {
 	setOfString := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -26,7 +26,7 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Read: dataSourceAwsIamPolicyDocumentRead,
+		Read: dataSourcePolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
 			"json": {
@@ -115,7 +115,7 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	mergedDoc := &IAMPolicyDoc{}
 
 	if v, ok := d.GetOk("source_json"); ok {
