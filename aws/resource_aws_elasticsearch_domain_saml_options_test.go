@@ -24,7 +24,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,14 +56,14 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticSearchDomainSAMLOptions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticSearchDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -79,14 +79,14 @@ func TestAccAWSElasticSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsElasticSearchDomain(), esDomainResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticSearchDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +103,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +135,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,7 +159,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_Disabled(t *testing.T) {
 }
 
 func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).esconn
+	conn := acctest.Provider.Meta().(*AWSClient).esconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticsearch_domain_saml_options" {
@@ -203,7 +203,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).esconn
+		conn := acctest.Provider.Meta().(*AWSClient).esconn
 		_, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 			DomainName: aws.String(options.Primary.Attributes["domain_name"]),
 		})
