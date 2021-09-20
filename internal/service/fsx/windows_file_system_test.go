@@ -74,7 +74,7 @@ func testSweepFSXWindowsFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
+func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -130,7 +130,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_singleAz2(t *testing.T) {
+func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -179,7 +179,7 @@ func TestAccAWSFsxWindowsFileSystem_singleAz2(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_storageTypeHdd(t *testing.T) {
+func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -210,7 +210,7 @@ func TestAccAWSFsxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_multiAz(t *testing.T) {
+func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -258,7 +258,7 @@ func TestAccAWSFsxWindowsFileSystem_multiAz(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
+func TestAccFSxWindowsFileSystem_disappears(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -280,7 +280,7 @@ func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_aliases(t *testing.T) {
+func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -330,7 +330,7 @@ func TestAccAWSFsxWindowsFileSystem_aliases(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_AutomaticBackupRetentionDays(t *testing.T) {
+func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -376,7 +376,7 @@ func TestAccAWSFsxWindowsFileSystem_AutomaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_CopyTagsToBackups(t *testing.T) {
+func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -414,7 +414,7 @@ func TestAccAWSFsxWindowsFileSystem_CopyTagsToBackups(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_DailyAutomaticBackupStartTime(t *testing.T) {
+func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -452,7 +452,7 @@ func TestAccAWSFsxWindowsFileSystem_DailyAutomaticBackupStartTime(t *testing.T) 
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_KmsKeyId(t *testing.T) {
+func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	kmsKeyResourceName1 := "aws_kms_key.test1"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
@@ -492,7 +492,7 @@ func TestAccAWSFsxWindowsFileSystem_KmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_SecurityGroupIds(t *testing.T) {
+func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -530,7 +530,7 @@ func TestAccAWSFsxWindowsFileSystem_SecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory(t *testing.T) {
+func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -561,7 +561,7 @@ func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory_Username(t *testing.T) {
+func TestAccFSxWindowsFileSystem_SelfManagedActiveDirectory_username(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -599,7 +599,7 @@ func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory_Username(t *testi
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
+func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -637,7 +637,7 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_fromBackup(t *testing.T) {
+func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -668,7 +668,7 @@ func TestAccAWSFsxWindowsFileSystem_fromBackup(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_Tags(t *testing.T) {
+func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -718,7 +718,7 @@ func TestAccAWSFsxWindowsFileSystem_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_ThroughputCapacity(t *testing.T) {
+func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -756,7 +756,7 @@ func TestAccAWSFsxWindowsFileSystem_ThroughputCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
+func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -794,7 +794,7 @@ func TestAccAWSFsxWindowsFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_auditConfig(t *testing.T) {
+func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

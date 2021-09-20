@@ -68,7 +68,7 @@ func testSweepFSXBackups(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSFsxBackup_basic(t *testing.T) {
+func TestAccFSxBackup_basic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
 
@@ -96,7 +96,7 @@ func TestAccAWSFsxBackup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxBackup_disappears(t *testing.T) {
+func TestAccFSxBackup_disappears(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
 
@@ -118,7 +118,7 @@ func TestAccAWSFsxBackup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
+func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
 
@@ -140,7 +140,7 @@ func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxBackup_tags(t *testing.T) {
+func TestAccFSxBackup_tags(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
 
