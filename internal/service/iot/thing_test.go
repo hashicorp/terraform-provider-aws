@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepIotThings(region string) error {
 		}
 
 		for _, thing := range page.Things {
-			r := ResourceThing()
+			r := tfiot.ResourceThing()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(thing.ThingName))

@@ -50,7 +50,7 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 	return resourcePolicyAttachmentRead(d, meta)
 }
 
-func listIotPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
+func ListPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
 	fn func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool) error {
 	for {
 		page, err := conn.ListAttachedPolicies(input)
@@ -68,7 +68,7 @@ func listIotPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPolicies
 	return nil
 }
 
-func getIotPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
+func GetPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
 	var policy *iot.Policy
 
 	input := &iot.ListAttachedPoliciesInput{
@@ -77,7 +77,7 @@ func getIotPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Poli
 		Target:    aws.String(target),
 	}
 
-	err := listIotPolicyAttachmentPages(conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
+	err := ListPolicyAttachmentPages(conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
 		for _, att := range out.Policies {
 			if policyName == aws.StringValue(att.PolicyName) {
 				policy = att
@@ -98,7 +98,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 
 	var policy *iot.Policy
 
-	policy, err := getIotPolicyAttachment(conn, target, policyName)
+	policy, err := GetPolicyAttachment(conn, target, policyName)
 
 	if err != nil {
 		return fmt.Errorf("error listing policy attachments for target %s: %s", target, err)
