@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestEndpointGroupARNToListenerARN(t *testing.T) {

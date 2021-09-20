@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Global Route53 Zone ID for Global Accelerators, exported as a
@@ -91,7 +92,7 @@ func ResourceAccelerator() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"flow_logs_enabled": {
