@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const defaultAuthorizerTTL = 300
+const DefaultAuthorizerTTL = 300
 
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
@@ -77,7 +77,7 @@ func ResourceAuthorizer() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 3600),
-				Default:      defaultAuthorizerTTL,
+				Default:      DefaultAuthorizerTTL,
 			},
 			"identity_validation_expression": {
 				Type:     schema.TypeString,
@@ -186,7 +186,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	if authorizer.AuthorizerResultTtlInSeconds != nil {
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
 	} else {
-		d.Set("authorizer_result_ttl_in_seconds", defaultAuthorizerTTL)
+		d.Set("authorizer_result_ttl_in_seconds", DefaultAuthorizerTTL)
 	}
 
 	d.Set("authorizer_uri", authorizer.AuthorizerUri)

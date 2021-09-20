@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const emptyBasePathMappingValue = "(none)"
+const EmptyBasePathMappingValue = "(none)"
 
 func ResourceBasePathMapping() *schema.Resource {
 	return &schema.Resource{
@@ -117,7 +117,7 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 		})
 	}
 
-	domainName, basePath, decodeErr := decodeApiGatewayBasePathMappingId(d.Id())
+	domainName, basePath, decodeErr := DecodeBasePathMappingID(d.Id())
 	if decodeErr != nil {
 		return decodeErr
 	}
@@ -151,7 +151,7 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
-	domainName, basePath, err := decodeApiGatewayBasePathMappingId(d.Id())
+	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 
 	mappingBasePath := aws.StringValue(mapping.BasePath)
 
-	if mappingBasePath == emptyBasePathMappingValue {
+	if mappingBasePath == EmptyBasePathMappingValue {
 		mappingBasePath = ""
 	}
 
@@ -187,7 +187,7 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
-	domainName, basePath, err := decodeApiGatewayBasePathMappingId(d.Id())
+	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func decodeApiGatewayBasePathMappingId(id string) (string, string, error) {
+func DecodeBasePathMappingID(id string) (string, string, error) {
 	idFormatErr := fmt.Errorf("Unexpected format of ID (%q), expected DOMAIN/BASEPATH", id)
 
 	parts := strings.SplitN(id, "/", 2)
@@ -224,7 +224,7 @@ func decodeApiGatewayBasePathMappingId(id string) (string, string, error) {
 	}
 
 	if basePath == "" {
-		basePath = emptyBasePathMappingValue
+		basePath = EmptyBasePathMappingValue
 	}
 
 	return domainName, basePath, nil

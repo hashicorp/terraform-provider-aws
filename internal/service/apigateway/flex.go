@@ -106,7 +106,7 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 	return operations
 }
 
-func flattenAPIGatewayThrottleSettings(settings *apigateway.ThrottleSettings) []map[string]interface{} {
+func FlattenThrottleSettings(settings *apigateway.ThrottleSettings) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	if settings != nil {

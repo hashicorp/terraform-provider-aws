@@ -71,7 +71,7 @@ func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Reading API Gateway Documentation Version %s", d.Id())
 
-	apiId, docVersion, err := decodeApiGatewayDocumentationVersionId(d.Id())
+	apiId, docVersion, err := DecodeDocumentationVersionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func resourceDocumentationVersionDelete(d *schema.ResourceData, meta interface{}
 	return err
 }
 
-func decodeApiGatewayDocumentationVersionId(id string) (string, string, error) {
+func DecodeDocumentationVersionID(id string) (string, string, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Expected ID in the form of REST-API-ID/VERSION, given: %q", id)

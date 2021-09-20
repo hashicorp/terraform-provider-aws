@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
@@ -347,7 +348,7 @@ func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIntegration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

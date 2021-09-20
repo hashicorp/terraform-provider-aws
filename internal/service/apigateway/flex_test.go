@@ -15,7 +15,7 @@ func TestFlattenThrottleSettings(t *testing.T) {
 		BurstLimit: aws.Int64(expectedBurstLimit),
 		RateLimit:  aws.Float64(expectedRateLimit),
 	}
-	result := flattenAPIGatewayThrottleSettings(ts)
+	result := FlattenThrottleSettings(ts)
 
 	if len(result) != 1 {
 		t.Fatalf("Expected map to have exactly 1 element, got %d", len(result))

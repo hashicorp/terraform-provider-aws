@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
@@ -181,7 +182,7 @@ func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDocumentationPart(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -202,7 +203,7 @@ func testAccCheckAWSAPIGatewayDocumentationPartExists(n string, res *apigateway.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
-		apiId, id, err := decodeApiGatewayDocumentationPartId(rs.Primary.ID)
+		apiId, id, err := tfapigateway.DecodeDocumentationPartID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -230,7 +231,7 @@ func testAccCheckAWSAPIGatewayDocumentationPartDestroy(s *terraform.State) error
 			continue
 		}
 
-		apiId, id, err := decodeApiGatewayDocumentationPartId(rs.Primary.ID)
+		apiId, id, err := tfapigateway.DecodeDocumentationPartID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

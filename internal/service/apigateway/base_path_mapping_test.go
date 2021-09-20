@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -43,13 +44,13 @@ func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
 		{
 			Input:      "domain-name/",
 			DomainName: "domain-name",
-			BasePath:   emptyBasePathMappingValue,
+			BasePath:   tfapigateway.EmptyBasePathMappingValue,
 			ErrCount:   0,
 		},
 	}
 
 	for _, tc := range testCases {
-		domainName, basePath, err := decodeApiGatewayBasePathMappingId(tc.Input)
+		domainName, basePath, err := tfapigateway.DecodeBasePathMappingID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -193,7 +194,7 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBasePathMapping(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -214,7 +215,7 @@ func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathM
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
-		domainName, basePath, err := decodeApiGatewayBasePathMappingId(rs.Primary.ID)
+		domainName, basePath, err := tfapigateway.DecodeBasePathMappingID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -243,7 +244,7 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 				continue
 			}
 
-			domainName, basePath, err := decodeApiGatewayBasePathMappingId(rs.Primary.ID)
+			domainName, basePath, err := tfapigateway.DecodeBasePathMappingID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
