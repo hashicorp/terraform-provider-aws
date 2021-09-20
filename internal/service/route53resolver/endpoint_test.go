@@ -78,7 +78,7 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 	return errors
 }
 
-func TestAccAWSRoute53ResolverEndpoint_basicInbound(t *testing.T) {
+func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.foo"
 	rInt := sdkacctest.RandInt()
@@ -110,7 +110,7 @@ func TestAccAWSRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
+func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.foo"
 	rInt := sdkacctest.RandInt()

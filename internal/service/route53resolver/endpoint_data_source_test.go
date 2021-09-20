@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
+func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rInt := sdkacctest.RandInt()
 	direction := "INBOUND"
@@ -40,7 +40,7 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverEndpointDataSource_Filter(t *testing.T) {
+func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rInt := sdkacctest.RandInt()
 	direction := "OUTBOUND"

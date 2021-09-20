@@ -80,7 +80,7 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 	return errors
 }
 
-func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
+func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	var assn route53resolver.ResolverRuleAssociation
 	resourceNameVpc := "aws_vpc.example"
 	resourceNameRule := "aws_route53_resolver_rule.example"

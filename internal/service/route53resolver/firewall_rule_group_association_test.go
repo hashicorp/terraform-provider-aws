@@ -66,7 +66,7 @@ func testSweepRoute53ResolverFirewallRuleGroupAssociations(region string) error 
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_basic(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroupAssociation_basic(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"
@@ -98,7 +98,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_name(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroupAssociation_name(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	rNewName := sdkacctest.RandomWithPrefix("tf-acc-test2")
@@ -133,7 +133,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_name(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_mutationProtection(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroupAssociation_mutationProtection(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"
@@ -167,7 +167,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_mutationProtection(t 
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_priority(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroupAssociation_priority(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"
@@ -201,7 +201,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_priority(t *testing.T
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_disappears(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroupAssociation_disappears(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"
@@ -224,7 +224,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_disappears(t *testing
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroupAssociation_tags(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroupAssociation_tags(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"

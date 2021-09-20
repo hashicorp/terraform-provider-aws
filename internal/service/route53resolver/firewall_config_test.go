@@ -69,7 +69,7 @@ func testSweepRoute53ResolverFirewallConfigs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
+func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	var v route53resolver.FirewallConfig
 	resourceName := "aws_route53_resolver_firewall_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -97,7 +97,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
+func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	var v route53resolver.FirewallConfig
 	resourceName := "aws_route53_resolver_firewall_config.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
