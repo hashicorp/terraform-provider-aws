@@ -223,12 +223,12 @@ func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 
 		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-		if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -240,11 +240,11 @@ func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface
 	})
 
 	// Handle AWS Go SDK automatic retries
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteLoginProfile(input)
 	}
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 

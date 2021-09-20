@@ -176,7 +176,7 @@ func testAccCheckIAMSamlProviderDestroy(s *terraform.State) error {
 		}
 		out, err := conn.GetSAMLProvider(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 

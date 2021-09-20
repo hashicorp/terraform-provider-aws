@@ -62,12 +62,12 @@ func testSweepIamPolicies(region string) error {
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
-			if isAWSErr(err, iam.ErrCodeDeleteConflictException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeDeleteConflictException, "") {
 				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
 				continue
 			}
 
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				continue
 			}
 
@@ -367,7 +367,7 @@ func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
 			PolicyArn: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 

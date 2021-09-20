@@ -174,7 +174,7 @@ func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
 			GroupName: group,
 		})
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				continue
 			}
 			return err

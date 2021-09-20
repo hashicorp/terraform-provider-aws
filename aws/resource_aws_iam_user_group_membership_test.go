@@ -126,7 +126,7 @@ func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
 				return !lastPage
 			})
 			if err != nil {
-				if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 					continue
 				}
 				return err

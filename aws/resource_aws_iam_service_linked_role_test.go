@@ -303,7 +303,7 @@ func testAccCheckAWSIAMServiceLinkedRoleDestroy(s *terraform.State) error {
 			return fmt.Errorf("Service-Linked Role still exists: %q", rs.Primary.ID)
 		}
 
-		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if !tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return err
 		}
 	}
@@ -332,7 +332,7 @@ func testAccCheckAWSIAMServiceLinkedRoleExists(n string) resource.TestCheckFunc 
 		_, err = conn.GetRole(params)
 
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				return fmt.Errorf("Service-Linked Role doesn't exists: %q", rs.Primary.ID)
 			}
 			return err

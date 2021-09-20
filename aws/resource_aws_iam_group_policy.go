@@ -166,7 +166,7 @@ func resourceAwsIamGroupPolicyDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, err := iamconn.DeleteGroupPolicy(request); err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM group policy %s: %s", d.Id(), err)

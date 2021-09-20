@@ -119,7 +119,7 @@ func resourceAwsIamRolePolicyAttachmentDelete(d *schema.ResourceData, meta inter
 
 	err := detachPolicyFromRole(conn, role, arn)
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 

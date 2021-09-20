@@ -130,7 +130,7 @@ func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
 
 		hasPolicyAttachment, err := iamRoleHasPolicyARNAttachment(conn, role, policyARN)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 

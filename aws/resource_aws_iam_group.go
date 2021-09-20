@@ -176,7 +176,7 @@ func deleteAwsIamGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 		return !lastPage
 	})
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
@@ -192,7 +192,7 @@ func deleteAwsIamGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 
 		_, err := conn.DetachGroupPolicy(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
@@ -215,7 +215,7 @@ func deleteAwsIamGroupPolicies(conn *iam.IAM, groupName string) error {
 		return !lastPage
 	})
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
@@ -231,7 +231,7 @@ func deleteAwsIamGroupPolicies(conn *iam.IAM, groupName string) error {
 
 		_, err := conn.DeleteGroupPolicy(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 

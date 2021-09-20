@@ -84,7 +84,7 @@ func resourceAwsIamSamlProviderRead(d *schema.ResourceData, meta interface{}) er
 	}
 	out, err := conn.GetSAMLProvider(input)
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			log.Printf("[WARN] IAM SAML Provider %q not found, removing from state.", d.Id())
 			d.SetId("")
 			return nil
@@ -148,7 +148,7 @@ func resourceAwsIamSamlProviderDelete(d *schema.ResourceData, meta interface{}) 
 	}
 	_, err := conn.DeleteSAMLProvider(input)
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting IAM SAML Provider (%q): %w", d.Id(), err)

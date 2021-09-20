@@ -75,7 +75,7 @@ func testSweepIamUsers(region string) error {
 		}
 		listUserPoliciesOutput, err := conn.ListUserPolicies(listUserPoliciesInput)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 		if err != nil {
@@ -94,7 +94,7 @@ func testSweepIamUsers(region string) error {
 			}
 
 			if _, err := conn.DeleteUserPolicy(input); err != nil {
-				if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 					continue
 				}
 				sweeperErr := fmt.Errorf("error deleting IAM User (%s) inline policy %q: %s", username, *inlinePolicyName, err)
@@ -109,7 +109,7 @@ func testSweepIamUsers(region string) error {
 		}
 		listAttachedUserPoliciesOutput, err := conn.ListAttachedUserPolicies(listAttachedUserPoliciesInput)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 		if err != nil {
@@ -180,7 +180,7 @@ func testSweepIamUsers(region string) error {
 
 		_, err = conn.DeleteUser(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 		if err != nil {
@@ -616,7 +616,7 @@ func testAccCheckAWSUserDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if !tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return err
 		}
 	}
