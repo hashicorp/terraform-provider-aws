@@ -8,13 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := finder.FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+		result, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
 		if err != nil {
 			return nil, "", err
@@ -30,7 +29,7 @@ func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamo
 
 func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := finder.FindDynamoDBTableByName(conn, tableName)
+		table, err := FindDynamoDBTableByName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -104,7 +103,7 @@ func statusDynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region stri
 
 func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		gsi, err := finder.FindDynamoDBGSIByTableNameIndexName(conn, tableName, indexName)
+		gsi, err := FindDynamoDBGSIByTableNameIndexName(conn, tableName, indexName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -124,7 +123,7 @@ func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) res
 
 func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pitr, err := finder.FindDynamoDBPITRDescriptionByTableName(conn, tableName)
+		pitr, err := FindDynamoDBPITRDescriptionByTableName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -144,7 +143,7 @@ func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.Stat
 
 func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ttl, err := finder.FindDynamoDBTTLRDescriptionByTableName(conn, tableName)
+		ttl, err := FindDynamoDBTTLRDescriptionByTableName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -164,7 +163,7 @@ func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.State
 
 func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := finder.FindDynamoDBTableByName(conn, tableName)
+		table, err := FindDynamoDBTableByName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
