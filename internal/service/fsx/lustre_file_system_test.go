@@ -48,7 +48,7 @@ func testSweepFSXLustreFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceLustreFileSystem()
+			r := tffsx.ResourceLustreFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -138,7 +138,7 @@ func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxLustreFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceLustreFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
