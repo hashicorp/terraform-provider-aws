@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
@@ -173,7 +174,7 @@ func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
 				Config: testAccDeviceFarmProjectConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDevicefarmProject(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

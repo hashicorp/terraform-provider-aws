@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDevicefarmProject() *schema.Resource {
+func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDevicefarmProjectCreate,
-		Read:   resourceAwsDevicefarmProjectRead,
-		Update: resourceAwsDevicefarmProjectUpdate,
-		Delete: resourceAwsDevicefarmProjectDelete,
+		Create: resourceProjectCreate,
+		Read:   resourceProjectRead,
+		Update: resourceProjectUpdate,
+		Delete: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,7 +44,7 @@ func resourceAwsDevicefarmProject() *schema.Resource {
 	}
 }
 
-func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -74,10 +74,10 @@ func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsDevicefarmProjectRead(d, meta)
+	return resourceProjectRead(d, meta)
 }
 
-func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -123,7 +123,7 @@ func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsDevicefarmProjectUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -154,10 +154,10 @@ func resourceAwsDevicefarmProjectUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsDevicefarmProjectRead(d, meta)
+	return resourceProjectRead(d, meta)
 }
 
-func resourceAwsDevicefarmProjectDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
 	input := &devicefarm.DeleteProjectInput{
