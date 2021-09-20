@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func KeyState(conn *kms.KMS, id string) resource.StateRefreshFunc {
+func StatusKeyState(conn *kms.KMS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.KeyByID(conn, id)
+		output, err := finder.FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
+func FindAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
 	input := &kms.ListAliasesInput{}
 	var output *kms.AliasListEntry
 
@@ -39,7 +39,7 @@ func AliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
 	return output, nil
 }
 
-func KeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+func FindKeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(id),
 	}
@@ -77,7 +77,7 @@ func KeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	return keyMetadata, nil
 }
 
-func KeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (*string, error) {
+func FindKeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (*string, error) {
 	input := &kms.GetKeyPolicyInput{
 		KeyId:      aws.String(keyID),
 		PolicyName: aws.String(policyName),
@@ -106,7 +106,7 @@ func KeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (*st
 	return output.Policy, nil
 }
 
-func KeyRotationEnabledByKeyID(conn *kms.KMS, keyID string) (*bool, error) {
+func FindKeyRotationEnabledByKeyID(conn *kms.KMS, keyID string) (*bool, error) {
 	input := &kms.GetKeyRotationStatusInput{
 		KeyId: aws.String(keyID),
 	}

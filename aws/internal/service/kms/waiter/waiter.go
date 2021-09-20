@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for KeyState to return PendingDeletion
+	// Maximum amount of time to wait for StatusKeyState to return PendingDeletion
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
 	KeyDeletedTimeout                = 20 * time.Minute
@@ -32,17 +32,17 @@ const (
 	PropagationTimeout = 2 * time.Minute
 )
 
-// IAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
+// WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
-func IAMPropagation(f func() (interface{}, error)) (interface{}, error) {
+func WaitIAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 	return tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, f, kms.ErrCodeMalformedPolicyDocumentException)
 }
 
-func KeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+func WaitKeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
 		Target:  []string{},
-		Refresh: KeyState(conn, id),
+		Refresh: StatusKeyState(conn, id),
 		Timeout: KeyDeletedTimeout,
 	}
 
@@ -55,9 +55,9 @@ func KeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	return nil, err
 }
 
-func KeyDescriptionPropagated(conn *kms.KMS, id string, description string) error {
+func WaitKeyDescriptionPropagated(conn *kms.KMS, id string, description string) error {
 	checkFunc := func() (bool, error) {
-		output, err := finder.KeyByID(conn, id)
+		output, err := finder.FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -77,11 +77,11 @@ func KeyDescriptionPropagated(conn *kms.KMS, id string, description string) erro
 	return tfresource.WaitUntil(KeyDescriptionPropagationTimeout, checkFunc, opts)
 }
 
-func KeyMaterialImported(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+func WaitKeyMaterialImported(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kms.KeyStatePendingImport},
 		Target:  []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
-		Refresh: KeyState(conn, id),
+		Refresh: StatusKeyState(conn, id),
 		Timeout: KeyMaterialImportedTimeout,
 	}
 
@@ -94,9 +94,9 @@ func KeyMaterialImported(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	return nil, err
 }
 
-func KeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
+func WaitKeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
 	checkFunc := func() (bool, error) {
-		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, id, tfkms.PolicyNameDefault)
+		output, err := finder.FindKeyPolicyByKeyIDAndPolicyName(conn, id, tfkms.PolicyNameDefault)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -122,9 +122,9 @@ func KeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
 	return tfresource.WaitUntil(KeyPolicyPropagationTimeout, checkFunc, opts)
 }
 
-func KeyRotationEnabledPropagated(conn *kms.KMS, id string, enabled bool) error {
+func WaitKeyRotationEnabledPropagated(conn *kms.KMS, id string, enabled bool) error {
 	checkFunc := func() (bool, error) {
-		output, err := finder.KeyRotationEnabledByKeyID(conn, id)
+		output, err := finder.FindKeyRotationEnabledByKeyID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -144,9 +144,9 @@ func KeyRotationEnabledPropagated(conn *kms.KMS, id string, enabled bool) error 
 	return tfresource.WaitUntil(KeyRotationUpdatedTimeout, checkFunc, opts)
 }
 
-func KeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
+func WaitKeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
 	checkFunc := func() (bool, error) {
-		output, err := finder.KeyByID(conn, id)
+		output, err := finder.FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -166,9 +166,9 @@ func KeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
 	return tfresource.WaitUntil(KeyStatePropagationTimeout, checkFunc, opts)
 }
 
-func KeyValidToPropagated(conn *kms.KMS, id string, validTo string) error {
+func WaitKeyValidToPropagated(conn *kms.KMS, id string, validTo string) error {
 	checkFunc := func() (bool, error) {
-		output, err := finder.KeyByID(conn, id)
+		output, err := finder.FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -192,7 +192,7 @@ func KeyValidToPropagated(conn *kms.KMS, id string, validTo string) error {
 	return tfresource.WaitUntil(KeyValidToPropagationTimeout, checkFunc, opts)
 }
 
-func TagsPropagated(conn *kms.KMS, id string, tags tftags.KeyValueTags) error {
+func WaitTagsPropagated(conn *kms.KMS, id string, tags tftags.KeyValueTags) error {
 	checkFunc := func() (bool, error) {
 		output, err := tftags.KmsListTags(conn, id)
 

@@ -459,7 +459,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
+		output, err := finder.FindKeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
 		if err != nil {
 			return err
@@ -488,7 +488,7 @@ func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.KeyByID(conn, rs.Primary.ID)
+		_, err := finder.FindKeyByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -518,7 +518,7 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-			return finder.KeyByID(conn, rs.Primary.ID)
+			return finder.FindKeyByID(conn, rs.Primary.ID)
 		})
 
 		if err != nil {

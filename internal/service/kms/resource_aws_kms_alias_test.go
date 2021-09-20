@@ -241,7 +241,7 @@ func testAccCheckAWSKmsAliasDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.AliasByName(conn, rs.Primary.ID)
+		_, err := finder.FindAliasByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -270,7 +270,7 @@ func testAccCheckAWSKmsAliasExists(name string, v *kms.AliasListEntry) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-		output, err := finder.AliasByName(conn, rs.Primary.ID)
+		output, err := finder.FindAliasByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
