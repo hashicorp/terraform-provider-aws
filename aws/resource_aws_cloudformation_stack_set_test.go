@@ -34,7 +34,7 @@ func testSweepCloudformationStackSets(region string) error {
 	conn := client.(*AWSClient).cfconn
 	stackSets, err := listCloudFormationStackSets(conn)
 
-	if testSweepSkipSweepError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
+	if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -54,7 +54,7 @@ func testSweepCloudformationStackSets(region string) error {
 		log.Printf("[INFO] Deleting CloudFormation StackSet: %s", name)
 		_, err := conn.DeleteStackSet(input)
 
-		if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 			continue
 		}
 
@@ -676,7 +676,7 @@ func testAccCheckAWSCloudFormationStackSetDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeStackSet(&input)
 
-		if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 			return nil
 		}
 
@@ -718,7 +718,7 @@ func testAccPreCheckAWSCloudFormationStackSet(t *testing.T) {
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSets(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

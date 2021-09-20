@@ -147,7 +147,7 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		var output *cloudformation.CreateStackInstancesOutput
 		output, err = conn.CreateStackInstances(input)
 
@@ -189,13 +189,13 @@ func resourceAwsCloudFormationStackSetInstanceRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Reading CloudFormation StackSet Instance: %s", d.Id())
 	output, err := conn.DescribeStackInstance(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
 		log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -281,11 +281,11 @@ func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
 	output, err := conn.DeleteStackInstances(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
 		return nil
 	}
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		return nil
 	}
 

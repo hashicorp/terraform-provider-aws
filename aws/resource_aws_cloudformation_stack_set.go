@@ -203,7 +203,7 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading CloudFormation StackSet: %s", d.Id())
 	output, err := conn.DescribeStackSet(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -337,7 +337,7 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())
 	_, err := conn.DeleteStackSet(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		return nil
 	}
 
