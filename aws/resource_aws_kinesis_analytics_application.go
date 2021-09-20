@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceApplication() *schema.Resource {
@@ -62,13 +63,13 @@ func ResourceApplication() *schema.Resource {
 						"log_stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -127,13 +128,13 @@ func ResourceApplication() *schema.Resource {
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -148,13 +149,13 @@ func ResourceApplication() *schema.Resource {
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -201,13 +202,13 @@ func ResourceApplication() *schema.Resource {
 												"resource_arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 
 												"role_arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -364,13 +365,13 @@ func ResourceApplication() *schema.Resource {
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -385,13 +386,13 @@ func ResourceApplication() *schema.Resource {
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -406,13 +407,13 @@ func ResourceApplication() *schema.Resource {
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -465,7 +466,7 @@ func ResourceApplication() *schema.Resource {
 									"bucket_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 
 									"file_key": {
@@ -476,7 +477,7 @@ func ResourceApplication() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},

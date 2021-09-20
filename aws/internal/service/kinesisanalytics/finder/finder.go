@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // ApplicationDetailByName returns the application corresponding to the specified name.
