@@ -10,21 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -32,7 +33,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-"+rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-"+rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
@@ -60,7 +61,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroupModified(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-updated-"+rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-updated-"+rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-updated-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
@@ -93,11 +94,11 @@ func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -164,11 +165,11 @@ func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -205,11 +206,11 @@ func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -217,7 +218,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeDeployDeploymentGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeDeployDeploymentGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,11 +229,11 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -240,7 +241,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeDeployApp(), "aws_codedeploy_app.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeDeployApp(), "aws_codedeploy_app.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -252,11 +253,11 @@ func TestAccAWSCodeDeployDeploymentGroup_tags(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -299,11 +300,11 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_basic(t *testing.T
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -348,11 +349,11 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -371,7 +372,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						"InstanceFailure",
 					}),
 					testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(&group, "test-trigger-2",
-						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", testAccGetPartition(), rName))),
+						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -392,7 +393,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						"InstanceFailure",
 					}),
 					testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(&group, "test-trigger-2",
-						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", testAccGetPartition(), rName))),
+						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -409,11 +410,11 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *tes
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -444,11 +445,11 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *tes
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -493,11 +494,11 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *tes
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -536,11 +537,11 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *te
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -584,11 +585,11 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T)
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -621,11 +622,11 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T)
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -674,11 +675,11 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T)
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -719,11 +720,11 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -772,11 +773,11 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_default(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -806,11 +807,11 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -848,11 +849,11 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -895,11 +896,11 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -941,11 +942,11 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -976,11 +977,11 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1024,11 +1025,11 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1067,11 +1068,11 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1103,11 +1104,11 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1151,11 +1152,11 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1194,11 +1195,11 @@ func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_cre
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1236,11 +1237,11 @@ func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_upd
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1312,11 +1313,11 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1368,11 +1369,11 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1436,11 +1437,11 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1518,11 +1519,11 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1586,11 +1587,11 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 	var group codedeploy.DeploymentGroupInfo
 	resourceName := "aws_codedeploy_deployment_group.test"
 
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1688,7 +1689,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 
 func TestAccAWSCodeDeployDeploymentGroup_ECS_BlueGreen(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	ecsClusterResourceName := "aws_ecs_cluster.test"
 	ecsServiceResourceName := "aws_ecs_service.test"
 	lbTargetGroupBlueResourceName := "aws_lb_target_group.blue"
@@ -1696,8 +1697,8 @@ func TestAccAWSCodeDeployDeploymentGroup_ECS_BlueGreen(t *testing.T) {
 	resourceName := "aws_codedeploy_deployment_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codedeploy.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
