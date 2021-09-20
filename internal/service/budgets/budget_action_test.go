@@ -53,7 +53,7 @@ func testSweepBudgetsBudgetActionss(region string) error {
 			log.Printf("[INFO] Deleting Budget Action: %s", name)
 			id := fmt.Sprintf("%s:%s:%s", accountID, aws.StringValue(action.ActionId), name)
 
-			r := ResourceBudgetAction()
+			r := tfbudgets.ResourceBudgetAction()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -130,7 +130,7 @@ func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBudgetAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
