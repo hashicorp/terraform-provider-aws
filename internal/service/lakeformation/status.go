@@ -1,4 +1,4 @@
-package waiter
+package lakeformation
 
 import (
 	"fmt"
