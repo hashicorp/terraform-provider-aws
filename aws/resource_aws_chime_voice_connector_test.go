@@ -21,7 +21,7 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,14 +51,14 @@ func TestAccAWSChimeVoiceConnector_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnector(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsChimeVoiceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,7 +75,7 @@ func TestAccAWSChimeVoiceConnector_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func testAccCheckAWSChimeVoiceConnectorExists(name string, vc *chime.VoiceConnec
 			return fmt.Errorf("no Chime voice connector ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -151,7 +151,7 @@ func testAccCheckAWSChimeVoiceConnectorDestroy(s *terraform.State) error {
 		if rs.Type != "aws_chime_voice_connector" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

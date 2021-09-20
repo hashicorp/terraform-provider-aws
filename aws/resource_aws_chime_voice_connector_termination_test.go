@@ -19,7 +19,7 @@ func TestAccAWSChimeVoiceConnectorTermination_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,14 +48,14 @@ func TestAccAWSChimeVoiceConnectorTermination_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnectorTermination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsChimeVoiceConnectorTermination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,7 +70,7 @@ func TestAccAWSChimeVoiceConnectorTermination_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +142,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 			return fmt.Errorf("no Chime Voice Connector termination ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorTerminationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -165,7 +165,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationDestroy(s *terraform.State) er
 		if rs.Type != "aws_chime_voice_connector_termination" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorTerminationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

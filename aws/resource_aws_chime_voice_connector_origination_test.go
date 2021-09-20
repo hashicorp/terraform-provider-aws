@@ -19,7 +19,7 @@ func TestAccAWSChimeVoiceConnectorOrigination_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,14 +49,14 @@ func TestAccAWSChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorOriginationConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorOriginationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnectorOrigination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsChimeVoiceConnectorOrigination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func TestAccAWSChimeVoiceConnectorOrigination_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func testAccCheckAWSChimeVoiceConnectorOriginationExists(name string) resource.T
 			return fmt.Errorf("no Chime voice connector origination ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -140,7 +140,7 @@ func testAccCheckAWSChimeVoiceConnectorOriginationDestroy(s *terraform.State) er
 		if rs.Type != "aws_chime_voice_connector_origination" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

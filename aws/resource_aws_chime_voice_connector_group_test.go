@@ -21,7 +21,7 @@ func TestAccAWSChimeVoiceConnectorGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,14 +51,14 @@ func TestAccAWSChimeVoiceConnectorGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSChimeVoiceConnectorGroupConfig(vcgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnectorGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsChimeVoiceConnectorGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,7 +75,7 @@ func TestAccAWSChimeVoiceConnectorGroup_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +149,7 @@ func testAccCheckAWSChimeVoiceConnectorGroupExists(name string, vc *chime.VoiceC
 			return fmt.Errorf("no Chime voice connector group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorGroupInput{
 			VoiceConnectorGroupId: aws.String(rs.Primary.ID),
 		}
@@ -169,7 +169,7 @@ func testAccCheckAWSChimeVoiceConnectorGroupDestroy(s *terraform.State) error {
 		if rs.Type != "aws_chime_voice_connector" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
 		input := &chime.GetVoiceConnectorGroupInput{
 			VoiceConnectorGroupId: aws.String(rs.Primary.ID),
 		}
