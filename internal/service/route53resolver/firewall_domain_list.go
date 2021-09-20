@@ -66,7 +66,7 @@ func resourceFirewallDomainListCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().Route53resolverTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver DNS Firewall domain list: %#v", input)
@@ -125,7 +125,7 @@ func resourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("domains", flex.FlattenStringSet(domains))
 
-	tags, err := tftags.Route53resolverListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall domain list (%s): %w", arn, err)
 	}
@@ -185,7 +185,7 @@ func resourceFirewallDomainListUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver DNS Firewall domain list (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

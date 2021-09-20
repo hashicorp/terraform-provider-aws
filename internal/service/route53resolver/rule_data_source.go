@@ -138,7 +138,7 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
 	if shareStatus != route53resolver.ShareStatusSharedWithMe {
 		arn := aws.StringValue(rule.Arn)
-		tags, err := tftags.Route53resolverListTags(conn, arn)
+		tags, err := ListTags(conn, arn)
 
 		if err != nil {
 			return fmt.Errorf("error listing tags for Route 53 Resolver rule (%s): %w", arn, err)
