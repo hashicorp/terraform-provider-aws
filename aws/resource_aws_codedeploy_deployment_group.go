@@ -552,11 +552,11 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateDeploymentGroup(&input)
 
-		if isAWSErr(err, codedeploy.ErrCodeInvalidRoleException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidRoleException, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
 			return resource.RetryableError(err)
 		}
 
@@ -567,7 +567,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreateDeploymentGroup(&input)
 	}
 	if err != nil {
@@ -593,8 +593,8 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") ||
-			isAWSErr(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") ||
+			tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
 			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", deploymentGroupName)
 			d.SetId("")
 			return nil
@@ -781,11 +781,11 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err = conn.UpdateDeploymentGroup(&input)
 
-			if isAWSErr(err, codedeploy.ErrCodeInvalidRoleException, "") {
+			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidRoleException, "") {
 				return resource.RetryableError(err)
 			}
 
-			if isAWSErr(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
+			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
 				return resource.RetryableError(err)
 			}
 
@@ -796,7 +796,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateDeploymentGroup(&input)
 		}
 		if err != nil {
@@ -825,7 +825,7 @@ func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") {
 			return nil
 		}
 		return err

@@ -134,7 +134,7 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 		ApplicationName: aws.String(application),
 	})
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
 			d.SetId("")
 			log.Printf("[WARN] CodeDeploy Application (%s) not found, removing from state", d.Id())
 			return nil
@@ -220,7 +220,7 @@ func resourceAwsCodeDeployAppDelete(d *schema.ResourceData, meta interface{}) er
 		ApplicationName: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
 			return nil
 		}
 

@@ -307,7 +307,7 @@ func testAccCheckAWSCodeDeployAppDestroy(s *terraform.State) error {
 			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
 		})
 
-		if isAWSErr(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
 			continue
 		}
 
