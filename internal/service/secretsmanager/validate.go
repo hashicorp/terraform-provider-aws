@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validSecretName(v interface{}, k string) (ws []string, errors []error) {
