@@ -17,7 +17,7 @@ func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
 }
 
 func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := acctest.Provider.Meta().(*AWSClient).emrconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_security_configuration" {
 			continue
@@ -77,7 +77,7 @@ func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc
 			return fmt.Errorf("No EMR Security Configuration ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).emrconn
+		conn := acctest.Provider.Meta().(*AWSClient).emrconn
 		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
 		})

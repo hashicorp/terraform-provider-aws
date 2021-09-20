@@ -21,7 +21,7 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +95,7 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,14 +150,14 @@ func TestAccAWSEBSSnapshot_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshot(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEbsSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -176,7 +176,7 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		request := &ec2.DescribeSnapshotsInput{
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
@@ -194,7 +194,7 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 }
 
 func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ebs_snapshot" {

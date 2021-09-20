@@ -24,7 +24,7 @@ func TestAccAWSAMI_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,7 @@ func TestAccAWSAMI_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,14 +171,14 @@ func TestAccAWSAMI_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAmiConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAmiExists(resourceName, &ami),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAmi(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmi(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -195,7 +195,7 @@ func TestAccAWSAMI_EphemeralBlockDevices(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -257,7 +257,7 @@ func TestAccAWSAMI_Gp3BlockDevice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func TestAccAWSAMI_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -361,7 +361,7 @@ func TestAccAWSAMI_tags(t *testing.T) {
 }
 
 func testAccCheckAmiDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami" {
@@ -402,7 +402,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			return fmt.Errorf("No AMI ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		var resp *ec2.DescribeImagesOutput
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {

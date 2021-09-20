@@ -21,7 +21,7 @@ func TestAccAWSAMICopy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func TestAccAWSAMICopy_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +78,7 @@ func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func TestAccAWSAMICopy_DestinationOutpost(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func TestAccAWSAMICopy_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +169,7 @@ func testAccCheckAWSAMICopyExists(resourceName string, image *ec2.Image) resourc
 			return fmt.Errorf("No ID set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DescribeImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
@@ -190,7 +190,7 @@ func testAccCheckAWSAMICopyExists(resourceName string, image *ec2.Image) resourc
 }
 
 func testAccCheckAWSAMICopyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_copy" {

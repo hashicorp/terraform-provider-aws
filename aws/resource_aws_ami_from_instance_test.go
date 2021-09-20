@@ -21,7 +21,7 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +50,7 @@ func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -90,14 +90,14 @@ func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAmiFromInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmiFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,7 +116,7 @@ func testAccCheckAWSAMIFromInstanceExists(resourceName string, image *ec2.Image)
 			return fmt.Errorf("No ID set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DescribeImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
@@ -137,7 +137,7 @@ func testAccCheckAWSAMIFromInstanceExists(resourceName string, image *ec2.Image)
 }
 
 func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_from_instance" {

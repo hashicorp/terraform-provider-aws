@@ -18,12 +18,12 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSVPNGatewayRoutePropagation_basic,
 				Check: func(state *terraform.State) error {
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
+					conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 					rs := state.RootModule().Resources["aws_vpn_gateway_route_propagation.foo"]
 					if rs == nil {
@@ -58,7 +58,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 			},
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			conn := testAccProvider.Meta().(*AWSClient).ec2conn
+			conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 			rt, err := waiter.RouteTableDeleted(conn, rtID)
 

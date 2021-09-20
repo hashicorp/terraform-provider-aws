@@ -17,7 +17,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceGatewayConfig,
@@ -45,7 +45,7 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceInterfaceConfig,
@@ -73,7 +73,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName),
@@ -100,7 +100,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName),
@@ -127,7 +127,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName),
@@ -153,7 +153,7 @@ func TestAccDataSourceAwsVpcEndpointService_ServiceType_Gateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType("s3", "Gateway"),
@@ -172,7 +172,7 @@ func TestAccDataSourceAwsVpcEndpointService_ServiceType_Interface(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType("ec2", "Interface"),

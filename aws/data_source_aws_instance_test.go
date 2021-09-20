@@ -17,7 +17,7 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig,
@@ -42,7 +42,7 @@ func TestAccAWSInstanceDataSource_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_Tags(rInt),
@@ -63,7 +63,7 @@ func TestAccAWSInstanceDataSource_AzUserData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_AzUserData,
@@ -86,7 +86,7 @@ func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_gp2IopsDevice,
@@ -111,7 +111,7 @@ func TestAccAWSInstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_gp3ThroughputDevice,
@@ -136,7 +136,7 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_blockDevices,
@@ -161,7 +161,7 @@ func TestAccAWSInstanceDataSource_EbsBlockDevice_KmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId,
@@ -175,7 +175,7 @@ func TestAccAWSInstanceDataSource_RootBlockDevice_KmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId,
@@ -191,7 +191,7 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_rootInstanceStore,
@@ -215,7 +215,7 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_privateIP(rName),
@@ -237,7 +237,7 @@ func TestAccAWSInstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName),
@@ -259,7 +259,7 @@ func TestAccAWSInstanceDataSource_ipv6Addresses(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_ipv6Addresses(rName),
@@ -278,7 +278,7 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
 	rName := fmt.Sprintf("tf-test-key-%d", sdkacctest.RandInt())
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -286,7 +286,7 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_keyPair(rName, publicKey),
@@ -309,7 +309,7 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_VPC(rName),
@@ -333,7 +333,7 @@ func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_PlacementGroup(rName),
@@ -353,7 +353,7 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_SecurityGroups(rInt),
@@ -377,7 +377,7 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_VPCSecurityGroups(rName),
@@ -396,7 +396,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
 
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -404,7 +404,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey, true),
@@ -428,7 +428,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
 
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -436,7 +436,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey, false),
@@ -463,7 +463,7 @@ func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
@@ -498,7 +498,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
@@ -536,7 +536,7 @@ func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 
@@ -559,7 +559,7 @@ func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_metadataOptions(rName),
@@ -582,7 +582,7 @@ func TestAccAWSInstanceDataSource_enclaveOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_enclaveOptions(rName),
@@ -603,7 +603,7 @@ func TestAccAWSInstanceDataSource_blockDeviceTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceDataSourceConfig_blockDeviceTags(rName),

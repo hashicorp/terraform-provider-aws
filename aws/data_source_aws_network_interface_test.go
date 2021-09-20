@@ -18,7 +18,7 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigBasic(rName),
@@ -46,7 +46,7 @@ func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigFilters(rName),
@@ -71,7 +71,7 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigCarrierIPAssociation(rName),
@@ -119,7 +119,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName),

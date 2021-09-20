@@ -10,7 +10,7 @@ import (
 )
 
 func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
 
 	var instances []*ssoadmin.InstanceMetadata
 	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
@@ -42,7 +42,7 @@ func TestAccDataSourceAWSSSOAdminInstances_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSSSOAdminInstancesConfigBasic,

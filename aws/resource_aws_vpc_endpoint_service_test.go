@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepEc2VpcEndpointServices(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -73,7 +73,7 @@ func testSweepEc2VpcEndpointServices(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -94,7 +94,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func TestAccAWSVpcEndpointService_AllowedPrincipals(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,14 +173,14 @@ func TestAccAWSVpcEndpointService_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpointService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -196,7 +196,7 @@ func TestAccAWSVpcEndpointService_GatewayLoadBalancerArns(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +231,7 @@ func TestAccAWSVpcEndpointService_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,7 +277,7 @@ func TestAccAWSVpcEndpointService_private_dns_name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,7 +308,7 @@ func TestAccAWSVpcEndpointService_private_dns_name(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointServiceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_service" {
@@ -346,7 +346,7 @@ func testAccCheckVpcEndpointServiceExists(n string, svcCfg *ec2.ServiceConfigura
 			return fmt.Errorf("No VPC Endpoint Service ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		resp, err := conn.DescribeVpcEndpointServiceConfigurations(&ec2.DescribeVpcEndpointServiceConfigurationsInput{
 			ServiceIds: []*string{aws.String(rs.Primary.ID)},

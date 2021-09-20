@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepDbClusterSnapshots(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -39,7 +39,7 @@ func testSweepDbClusterSnapshots(region string) error {
 
 	for {
 		output, err := conn.DescribeDBClusterSnapshots(input)
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping RDS DB Cluster Snapshots sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -83,7 +83,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,7 +168,7 @@ func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 }
 
 func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_cluster_snapshot" {
@@ -206,7 +206,7 @@ func testAccCheckDbClusterSnapshotExists(resourceName string, dbClusterSnapshot 
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		request := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),

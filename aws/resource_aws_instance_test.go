@@ -5,7 +5,6 @@ import (
 	"log"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -44,14 +44,14 @@ func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func testSweepInstances(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).ec2conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeInstancesPages(&ec2.DescribeInstancesInput{}, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
@@ -77,7 +77,7 @@ func testSweepInstances(region string) error {
 				d.SetId(id)
 				d.Set("disable_api_termination", false)
 
-				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 			}
 		}
 		return !lastPage
@@ -87,11 +87,11 @@ func testSweepInstances(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Instances for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Instances for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -166,7 +166,7 @@ func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,7 +192,7 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +217,7 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -248,7 +248,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			acctest.PreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -278,7 +278,7 @@ func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,7 +343,7 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -358,7 +358,7 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidThroughputForVolumeType(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -378,7 +378,7 @@ func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -407,7 +407,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -451,7 +451,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -481,7 +481,7 @@ func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -541,7 +541,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -616,7 +616,7 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -670,7 +670,7 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -725,7 +725,7 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -765,7 +765,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 
 	checkDisableApiTermination := func(expected bool) resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			conn := testAccProvider.Meta().(*AWSClient).ec2conn
+			conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 			r, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
 				InstanceId: v.InstanceId,
 				Attribute:  aws.String("disableApiTermination"),
@@ -784,7 +784,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -818,7 +818,7 @@ func TestAccAWSInstance_dedicatedInstance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -847,7 +847,7 @@ func TestAccAWSInstance_outpost(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -874,7 +874,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -901,7 +901,7 @@ func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -926,7 +926,7 @@ func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -945,7 +945,7 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -972,7 +972,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -998,7 +998,7 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1035,7 +1035,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1062,7 +1062,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1097,7 +1097,7 @@ func TestAccAWSInstance_blockDeviceTags_volumeTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1150,7 +1150,7 @@ func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1198,7 +1198,7 @@ func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1266,7 +1266,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1322,7 +1322,7 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1350,7 +1350,7 @@ func TestAccAWSInstance_withIamInstanceProfilePath(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1386,7 +1386,7 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1423,7 +1423,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1462,7 +1462,7 @@ func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1489,7 +1489,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 	keyPairResourceName := "aws_key_pair.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1497,7 +1497,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1519,7 +1519,7 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1556,7 +1556,7 @@ func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1591,7 +1591,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1625,7 +1625,7 @@ func TestAccAWSInstance_EbsRootDevice_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1660,7 +1660,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifySize(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1700,7 +1700,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1741,7 +1741,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io1(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1784,7 +1784,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1827,7 +1827,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyThroughput_Gp3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1869,7 +1869,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyDeleteOnTermination(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1914,7 +1914,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyAll(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1954,7 +1954,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2007,7 +2007,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2058,7 +2058,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2111,7 +2111,7 @@ func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2142,7 +2142,7 @@ func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2176,7 +2176,7 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2215,7 +2215,7 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2250,7 +2250,7 @@ func TestAccAWSInstance_NewNetworkInterface_PublicIPAndSecondaryPrivateIPs(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2290,7 +2290,7 @@ func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2321,7 +2321,7 @@ func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2368,7 +2368,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPs(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2400,7 +2400,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPsUpdat
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2445,7 +2445,7 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2474,7 +2474,7 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2503,7 +2503,7 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2532,7 +2532,7 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2561,7 +2561,7 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2590,7 +2590,7 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2622,7 +2622,7 @@ func TestAccAWSInstance_LaunchTemplate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2652,7 +2652,7 @@ func TestAccAWSInstance_LaunchTemplate_OverrideTemplate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2678,7 +2678,7 @@ func TestAccAWSInstance_LaunchTemplate_SetSpecificVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2712,7 +2712,7 @@ func TestAccAWSInstance_LaunchTemplate_ModifyTemplate_DefaultVersion(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2746,7 +2746,7 @@ func TestAccAWSInstance_LaunchTemplate_UpdateTemplateVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2780,7 +2780,7 @@ func TestAccAWSInstance_LaunchTemplate_SwapIDAndName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2809,7 +2809,7 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -2817,7 +2817,7 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2851,7 +2851,7 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -2859,7 +2859,7 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2897,7 +2897,7 @@ func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2925,7 +2925,7 @@ func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2957,7 +2957,7 @@ func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2985,7 +2985,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3021,7 +3021,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3057,7 +3057,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3085,7 +3085,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3113,7 +3113,7 @@ func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3157,7 +3157,7 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3184,7 +3184,7 @@ func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3212,7 +3212,7 @@ func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3248,7 +3248,7 @@ func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3284,7 +3284,7 @@ func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3328,7 +3328,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3365,7 +3365,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3401,14 +3401,14 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3424,7 +3424,7 @@ func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3457,7 +3457,7 @@ func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3488,7 +3488,7 @@ func TestAccAWSInstance_hibernation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3523,7 +3523,7 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3562,7 +3562,7 @@ func TestAccAWSInstance_enclaveOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3599,7 +3599,7 @@ func TestAccAWSInstance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3633,7 +3633,7 @@ func TestAccAWSInstance_CapacityReservation_Preference_open(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3661,7 +3661,7 @@ func TestAccAWSInstance_CapacityReservation_Preference_none(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3689,7 +3689,7 @@ func TestAccAWSInstance_CapacityReservation_TargetId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3718,7 +3718,7 @@ func TestAccAWSInstance_CapacityReservation_modifyPreference(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3756,7 +3756,7 @@ func TestAccAWSInstance_CapacityReservation_modifyTarget(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -3806,7 +3806,7 @@ func testAccCheckInstanceRecreated(before, after *ec2.Instance) resource.TestChe
 }
 
 func testAccCheckInstanceDestroy(s *terraform.State) error {
-	return testAccCheckInstanceDestroyWithProvider(s, testAccProvider)
+	return testAccCheckInstanceDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -3837,11 +3837,11 @@ func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schem
 }
 
 func testAccCheckInstanceExists(n string, i *ec2.Instance) resource.TestCheckFunc {
-	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProvider })
+	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckInstanceEc2ClassicExists(n string, i *ec2.Instance) resource.TestCheckFunc {
-	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProviderEc2Classic })
+	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return acctest.ProviderEC2Classic })
 }
 
 func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -3874,7 +3874,7 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 
 func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		params := &ec2.StopInstancesInput{
 			InstanceIds: []*string{instance.InstanceId},
@@ -3937,7 +3937,7 @@ func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		_, err := conn.CreateTags(&ec2.CreateTagsInput{
 			Resources: []*string{instance.InstanceId},
 			Tags: []*ec2.Tag{
@@ -3950,12 +3950,6 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 		return err
 	}
 }
-
-
-
-
-
-
 
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
 	return fmt.Sprintf(`
@@ -4288,7 +4282,7 @@ func TestAccAWSInstance_GP3RootBlockDevice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -5966,8 +5960,6 @@ resource "aws_instance" "test" {
 `)
 }
 
-
-
 // testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
 // The data source is named 'amzn-ami-minimal-hvm-instance-store'.
@@ -6291,12 +6283,6 @@ resource "aws_instance" "test" {
 }
 `)
 }
-
-
-
-
-
-
 
 func testAccInstanceConfigCapacityReservationSpecification_unspecified(rName string) string {
 	return acctest.ConfigCompose(

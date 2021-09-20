@@ -22,7 +22,7 @@ func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccAWSCustomerGateway_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +99,7 @@ func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +129,7 @@ func TestAccAWSCustomerGateway_deviceName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,14 +159,14 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCustomerGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCustomerGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -182,7 +182,7 @@ func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,7 +204,7 @@ func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
 }
 
 func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_customer_gatewah" {
@@ -256,7 +256,7 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 			return fmt.Errorf("Not found: %s", gatewayResource)
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		gatewayFilter := &ec2.Filter{
 			Name:   aws.String("customer-gateway-id"),
 			Values: []*string{aws.String(gateway.Primary.ID)},

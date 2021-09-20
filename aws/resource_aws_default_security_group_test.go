@@ -20,7 +20,7 @@ func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +73,7 @@ func TestAccAWSDefaultSecurityGroup_Vpc_empty(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +101,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,7 +153,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +184,7 @@ func testAccCheckAWSDefaultSecurityGroupExists(n string, group *ec2.SecurityGrou
 			return fmt.Errorf("No EC2 Default Security Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -208,7 +208,7 @@ func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.Se
 			return fmt.Errorf("No EC2 Default Security Group ID is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {

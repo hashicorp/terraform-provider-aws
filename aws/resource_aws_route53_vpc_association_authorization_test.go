@@ -58,7 +58,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53VPCAssociationAuthorization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53VPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,7 +67,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_vpc_association_authorization" {
@@ -116,7 +116,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 		req := route53.ListVPCAssociationAuthorizationsInput{
 			HostedZoneId: aws.String(zone_id),

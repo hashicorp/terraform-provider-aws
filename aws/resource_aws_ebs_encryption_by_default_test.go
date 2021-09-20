@@ -17,7 +17,7 @@ func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEncryptionByDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
 }
 
 func testAccCheckAwsEncryptionByDefaultDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
@@ -64,7 +64,7 @@ func testAccCheckEbsEncryptionByDefault(n string, enabled bool) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {

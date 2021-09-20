@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
@@ -56,7 +57,7 @@ func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta int
 		req.LocalGatewayRouteTableIds = []*string{aws.String(v.(string))}
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 			"outpost-arn":      d.Get("outpost_arn").(string),

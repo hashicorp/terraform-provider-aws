@@ -23,7 +23,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := testAccProvider.Meta().(*AWSClient).rdsconn
+					conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(fmt.Sprintf("tf-cluster-instance-%d", rInt)),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -108,7 +108,7 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +140,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +172,7 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,7 +204,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -259,7 +259,7 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -297,7 +297,7 @@ func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,7 +343,7 @@ func testAccCheckAWSDBClusterInstanceAttributes(v *rds.DBInstance) resource.Test
 
 func testAccAWSClusterInstanceDisappears(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 		opts := &rds.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
@@ -380,7 +380,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 		resp, err := conn.DescribeDBInstances(&rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -408,7 +408,7 @@ func TestAccAWSRDSClusterInstance_MonitoringInterval(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -461,7 +461,7 @@ func TestAccAWSRDSClusterInstance_MonitoringRoleArn_EnabledToDisabled(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -500,7 +500,7 @@ func TestAccAWSRDSClusterInstance_MonitoringRoleArn_EnabledToRemoved(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -538,7 +538,7 @@ func TestAccAWSRDSClusterInstance_MonitoringRoleArn_RemovedToEnabled(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -576,7 +576,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql1(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -609,7 +609,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql2(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -641,7 +641,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraPostgresql(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -674,7 +674,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -707,7 +707,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql1_Defau
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -745,7 +745,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -779,7 +779,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraMysql2_Defau
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsPreCheck(t, engine, engineVersion) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -816,7 +816,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -849,7 +849,7 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql_D
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccRDSPerformanceInsightsDefaultVersionPreCheck(t, engine) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -885,7 +885,7 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -909,7 +909,7 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 }
 
 func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine string) {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		DefaultOnly: aws.Bool(true),
@@ -929,7 +929,7 @@ func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine st
 }
 
 func testAccRDSPerformanceInsightsPreCheck(t *testing.T, engine string, engineVersion string) {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:        aws.String(engine),

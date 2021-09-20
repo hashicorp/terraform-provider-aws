@@ -21,7 +21,7 @@ func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +82,7 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +126,7 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,7 +158,7 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +205,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 			return fmt.Errorf("No Redshift Security Group ID is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).redshiftconn
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).redshiftconn
 
 		opts := redshift.DescribeClusterSecurityGroupsInput{
 			ClusterSecurityGroupName: aws.String(rs.Primary.ID),
@@ -229,7 +229,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 }
 
 func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProviderEc2Classic.Meta().(*AWSClient).redshiftconn
+	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).redshiftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_security_group" {

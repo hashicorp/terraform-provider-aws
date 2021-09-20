@@ -21,7 +21,7 @@ func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -42,14 +42,14 @@ func TestAccAWSVpnGatewayAttachment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpnGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnGatewayAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpnGatewayAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpnGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,7 +68,7 @@ func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		out, err := finder.VpnGatewayVpcAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
 		if err != nil {
 			return err
@@ -87,7 +87,7 @@ func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 }
 
 func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway_attachment" {

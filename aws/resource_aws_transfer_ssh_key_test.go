@@ -18,7 +18,7 @@ func testAccAWSTransferSshKey_basic(t *testing.T) {
 
 	resourceName := "aws_transfer_ssh_key.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -26,7 +26,7 @@ func testAccAWSTransferSshKey_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSTransferSshKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +58,7 @@ func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) r
 			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := acctest.Provider.Meta().(*AWSClient).transferconn
 		serverID, userName, sshKeyID, err := decodeTransferSshKeyId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -85,7 +85,7 @@ func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) r
 }
 
 func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := acctest.Provider.Meta().(*AWSClient).transferconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_ssh_key" {

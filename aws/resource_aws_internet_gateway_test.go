@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepInternetGateways(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -35,7 +35,7 @@ func testSweepInternetGateways(region string) error {
 	req := &ec2.DescribeInternetGatewaysInput{}
 	resp, err := conn.DescribeInternetGateways(req)
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Internet Gateway sweep for %s: %s", region, err)
 			return nil
 		}
@@ -144,7 +144,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +190,7 @@ func TestAccAWSInternetGateway_delete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,7 +214,7 @@ func TestAccAWSInternetGateway_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,14 +258,14 @@ func TestAccAWSInternetGateway_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInternetGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsInternetGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsInternetGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -274,7 +274,7 @@ func TestAccAWSInternetGateway_disappears(t *testing.T) {
 }
 
 func testAccCheckInternetGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_internet_gateway" {
@@ -313,7 +313,7 @@ func testAccCheckInternetGatewayExists(n string, ig *ec2.InternetGateway) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeInternetGateways(&ec2.DescribeInternetGatewaysInput{
 			InternetGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})

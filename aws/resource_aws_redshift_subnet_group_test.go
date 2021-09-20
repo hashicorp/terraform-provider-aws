@@ -26,14 +26,14 @@ func init() {
 }
 
 func testSweepRedshiftSubnetGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).redshiftconn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &redshift.DescribeClusterSubnetGroupsInput{}
@@ -58,7 +58,7 @@ func testSweepRedshiftSubnetGroups(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -68,11 +68,11 @@ func testSweepRedshiftSubnetGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -88,7 +88,7 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,14 +120,14 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRedshiftSubnetGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRedshiftSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,7 +143,7 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,7 +181,7 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,7 +219,7 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -254,7 +254,7 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 }
 
 func testAccCheckRedshiftSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_subnet_group" {
@@ -295,7 +295,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 		resp, err := conn.DescribeClusterSubnetGroups(
 			&redshift.DescribeClusterSubnetGroupsInput{ClusterSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

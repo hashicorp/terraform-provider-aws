@@ -20,7 +20,7 @@ func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{

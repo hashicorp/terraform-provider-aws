@@ -18,7 +18,7 @@ func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			// Scaffold everything
@@ -47,7 +47,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
 					testAccAWSSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +64,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 }
 
 func testAccAWSSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_snapshot_create_volume_permission" {
@@ -87,7 +87,7 @@ func testAccAWSSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
 
 func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		if has, err := hasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
 			return err
 		} else if !has {
@@ -99,7 +99,7 @@ func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *strin
 
 func testAccAWSSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		if has, err := hasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
 			return err
 		} else if has {

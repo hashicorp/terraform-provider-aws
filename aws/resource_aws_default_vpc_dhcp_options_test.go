@@ -17,7 +17,7 @@ func TestAccAWSDefaultVpcDhcpOptions_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultVpcDhcpOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -25,7 +25,7 @@ func TestAccAWSDefaultVpcDhcpOptions_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", resourceAwsEc2RegionalPrivateDnsSuffix(acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", regionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
@@ -43,7 +43,7 @@ func TestAccAWSDefaultVpcDhcpOptions_owner(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultVpcDhcpOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAWSDefaultVpcDhcpOptions_owner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", resourceAwsEc2RegionalPrivateDnsSuffix(acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", regionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),

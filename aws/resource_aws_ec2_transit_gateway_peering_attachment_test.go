@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -68,7 +68,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 			return !lastPage
 		})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
 		return nil
 	}
@@ -256,7 +256,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName string
 			return fmt.Errorf("No EC2 Transit Gateway Peering Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		attachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
 
@@ -279,7 +279,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName string
 }
 
 func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_peering_attachment" {
@@ -310,7 +310,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy(s *terraform.State
 
 func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDisappears(transitGatewayPeeringAttachment *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
 			TransitGatewayAttachmentId: transitGatewayPeeringAttachment.TransitGatewayAttachmentId,

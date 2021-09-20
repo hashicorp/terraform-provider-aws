@@ -21,7 +21,7 @@ func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,14 +50,14 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2LocalGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2LocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		route, err := getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
@@ -99,7 +99,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 }
 
 func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_local_gateway_route" {

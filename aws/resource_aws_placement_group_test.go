@@ -28,14 +28,14 @@ func init() {
 }
 
 func testSweepEc2PlacementGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).ec2conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &ec2.DescribePlacementGroupsInput{}
@@ -56,14 +56,14 @@ func testSweepEc2PlacementGroups(region string) error {
 
 		d.SetId(aws.StringValue(placementGroup.GroupName))
 
-		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Placement Group for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -79,7 +79,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,14 +152,14 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPlacementGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsPlacementGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -168,7 +168,7 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_placement_group" {
@@ -203,7 +203,7 @@ func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resou
 			return fmt.Errorf("No Placement Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribePlacementGroups(&ec2.DescribePlacementGroupsInput{
 			GroupNames: []*string{aws.String(rs.Primary.ID)},
 		})

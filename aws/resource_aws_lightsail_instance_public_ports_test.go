@@ -24,7 +24,7 @@ func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
 			testAccPreCheckAWSLightsail(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +54,7 @@ func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
 			testAccPreCheckAWSLightsail(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +89,7 @@ func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
 			testAccPreCheckAWSLightsail(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +118,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		input := &lightsail.GetInstancePortStatesInput{
 			InstanceName: aws.String(rs.Primary.Attributes["instance_name"]),
@@ -135,7 +135,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 }
 
 func testAccCheckAWSLightsailInstancePublicPortsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+	conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_instance_public_ports" {

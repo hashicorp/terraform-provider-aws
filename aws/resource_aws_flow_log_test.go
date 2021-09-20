@@ -23,7 +23,7 @@ func init() {
 }
 
 func testSweepFlowLogs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -55,7 +55,7 @@ func testSweepFlowLogs(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Flow Logs sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -77,7 +77,7 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func TestAccAWSFlowLog_LogFormat(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +152,7 @@ func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,7 +187,7 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,7 +219,7 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +247,7 @@ func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,7 +266,7 @@ func TestAccAWSFlowLog_LogDestinationType_MaxAggregationInterval(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -294,7 +294,7 @@ func TestAccAWSFlowLog_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -342,14 +342,14 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFlowLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -368,7 +368,7 @@ func testAccCheckFlowLogExists(n string, flowLog *ec2.FlowLog) resource.TestChec
 			return fmt.Errorf("No Flow Log ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		describeOpts := &ec2.DescribeFlowLogsInput{
 			FlowLogIds: []*string{aws.String(rs.Primary.ID)},
 		}

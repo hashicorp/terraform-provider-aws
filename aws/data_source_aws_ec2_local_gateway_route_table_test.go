@@ -15,7 +15,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayRouteTableConfigLocalGatewayRouteTableId(),
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_Filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayRouteTableConfigFilter(),
@@ -57,7 +57,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_LocalGatewayId(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayRouteTableConfigLocalGatewayId(),
@@ -78,7 +78,7 @@ func TestAccDataSourceAwsEc2LocalGatewayRouteTable_OutpostArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayRouteTableConfigOutpostArn(),

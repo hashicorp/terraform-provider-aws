@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,7 +25,7 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			// Verify non-existent Route Table ID behavior
@@ -68,7 +70,7 @@ func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,7 +78,7 @@ func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpc(), vpcResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpc(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +96,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +166,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +232,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +264,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_VpcEndpoint(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,7 +305,7 @@ func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -333,7 +335,7 @@ func TestAccAWSDefaultRouteTable_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -376,7 +378,7 @@ func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -413,7 +415,7 @@ func TestAccAWSDefaultRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -457,7 +459,7 @@ func TestAccAWSDefaultRouteTable_RevokeExistingRules(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -506,7 +508,7 @@ func TestAccAWSDefaultRouteTable_RevokeExistingRules(t *testing.T) {
 }
 
 func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_route_table" {
@@ -1206,8 +1208,9 @@ resource "aws_default_route_table" "test" {
 }
 `, rName))
 }
+
 func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 
@@ -1237,4 +1240,3 @@ func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
 
 	t.Skip("skipping acceptance testing: region does not support ELBv2 Gateway Load Balancers")
 }
-

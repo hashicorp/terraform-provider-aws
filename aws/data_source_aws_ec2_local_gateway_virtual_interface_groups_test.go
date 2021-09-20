@@ -16,7 +16,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_basic(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsConfig(),
@@ -35,7 +35,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Filter(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsConfigFilter(),
@@ -55,7 +55,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Tags(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsConfigTags(rName),

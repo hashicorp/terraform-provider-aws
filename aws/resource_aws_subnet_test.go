@@ -57,14 +57,14 @@ func init() {
 }
 
 func testSweepSubnets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).ec2conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &ec2.DescribeSubnetsInput{}
@@ -90,7 +90,7 @@ func testSweepSubnets(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -100,11 +100,11 @@ func testSweepSubnets(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Subnets for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Subnets for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -119,7 +119,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccAWSSubnet_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -600,7 +600,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -640,7 +640,7 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -683,7 +683,7 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -710,14 +710,14 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSubnet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -733,7 +733,7 @@ func TestAccAWSSubnet_CustomerOwnedIpv4Pool(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -759,7 +759,7 @@ func TestAccAWSSubnet_MapCustomerOwnedIpOnLaunch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -785,7 +785,7 @@ func TestAccAWSSubnet_MapPublicIpOnLaunch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -826,7 +826,7 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -880,7 +880,7 @@ func testAccCheckAwsSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) 
 }
 
 func testAccCheckSubnetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_subnet" {
@@ -923,7 +923,7 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeSubnets(&ec2.DescribeSubnetsInput{
 			SubnetIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -942,7 +942,7 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 
 func testAccCheckSubnetUpdateTags(subnet *ec2.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		return keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(subnet.SubnetId), oldTags, newTags)
 	}

@@ -27,7 +27,7 @@ func init() {
 }
 
 func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -57,7 +57,7 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
 			return nil
 		}
@@ -75,7 +75,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resour
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		output, err := conn.DescribeNotebookInstanceLifecycleConfig(&sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})
@@ -171,7 +171,7 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy(s *te
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(&sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})

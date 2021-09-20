@@ -19,7 +19,7 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName),
@@ -56,7 +56,7 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterIdentifier(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName),
@@ -93,7 +93,7 @@ func TestAccAWSDbClusterSnapshotDataSource_MostRecent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName),

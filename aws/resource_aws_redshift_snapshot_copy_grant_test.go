@@ -19,7 +19,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,14 +91,14 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRedshiftSnapshotCopyGrant_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftSnapshotCopyGrantExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRedshiftSnapshotCopyGrant(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRedshiftSnapshotCopyGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,7 +107,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_snapshot_copy_grant" {
@@ -133,7 +133,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantExists(name string) resource.TestCh
 		}
 
 		// retrieve the client from the test provider
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 
 		input := redshift.DescribeSnapshotCopyGrantsInput{
 			MaxRecords:            aws.Int64(int64(100)),

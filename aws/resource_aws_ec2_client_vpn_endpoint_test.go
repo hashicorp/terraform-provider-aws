@@ -36,7 +36,7 @@ func init() {
 }
 
 func testSweepEc2ClientVpnEndpoints(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -66,7 +66,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -139,7 +139,7 @@ func testAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,14 +169,14 @@ func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ClientVpnEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -192,7 +192,7 @@ func testAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -249,7 +249,7 @@ func testAccAwsEc2ClientVpnEndpoint_federated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -290,7 +290,7 @@ func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -326,7 +326,7 @@ func testAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -353,7 +353,7 @@ func testAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -396,7 +396,7 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -430,7 +430,7 @@ func testAccAwsEc2ClientVpnEndpoint_selfServicePortal(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -461,7 +461,7 @@ func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 }
 
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
@@ -489,7 +489,7 @@ func testAccCheckAwsEc2ClientVpnEndpointExists(name string, endpoint *ec2.Client
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DescribeClientVpnEndpointsInput{
 			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
@@ -510,15 +510,15 @@ func testAccCheckAwsEc2ClientVpnEndpointExists(name string, endpoint *ec2.Client
 }
 
 func testAccEc2ClientVpnEndpointConfigAcmCertificateBase() string {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 }
-`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 func testAccEc2ClientVpnEndpointMsADBase() string {

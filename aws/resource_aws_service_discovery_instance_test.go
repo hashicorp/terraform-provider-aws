@@ -25,7 +25,7 @@ func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsServiceDiscoveryInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +78,7 @@ func TestAccAWSServiceDiscoveryInstance_public(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsServiceDiscoveryInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func TestAccAWSServiceDiscoveryInstance_http(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsServiceDiscoveryInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func testAccCheckAwsServiceDiscoveryInstanceExists(name string) resource.TestChe
 			return fmt.Errorf("No Service Discovery Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sdconn
+		conn := acctest.Provider.Meta().(*AWSClient).sdconn
 
 		_, err := finder.InstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
@@ -305,7 +305,7 @@ func testAccAWSServiceDiscoveryInstanceImportStateIdFunc(resourceName string) re
 }
 
 func testAccCheckAwsServiceDiscoveryInstanceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*AWSClient).sdconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_instance" {

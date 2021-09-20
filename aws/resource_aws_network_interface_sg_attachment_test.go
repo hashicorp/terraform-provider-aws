@@ -23,7 +23,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsNetworkInterfaceSGAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkInterfaceSGAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +69,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_Instance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_DataSource(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +123,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_Multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,7 +158,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName string) reso
 			return fmt.Errorf("No resource ID set: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		networkInterfaceID := rs.Primary.Attributes["network_interface_id"]
 		securityGroupID := rs.Primary.Attributes["security_group_id"]
 
@@ -177,7 +177,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName string) reso
 }
 
 func testAccCheckAWSNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface_sg_attachment" {

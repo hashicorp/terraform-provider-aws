@@ -35,7 +35,7 @@ func init() {
 }
 
 func testSweepSecurityGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -77,7 +77,7 @@ func testSweepSecurityGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -583,7 +583,7 @@ func TestAccAWSSecurityGroup_allowAll(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -609,7 +609,7 @@ func TestAccAWSSecurityGroup_sourceSecurityGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -635,7 +635,7 @@ func TestAccAWSSecurityGroup_IPRangeAndSecurityGroupWithSameRules(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -661,7 +661,7 @@ func TestAccAWSSecurityGroup_IPRangesWithSameRules(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -687,7 +687,7 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -730,7 +730,7 @@ func TestAccAWSSecurityGroup_egressConfigMode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -771,7 +771,7 @@ func TestAccAWSSecurityGroup_ingressConfigMode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -813,7 +813,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -925,7 +925,7 @@ func TestAccAWSSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// create the configuration with 2 security groups, then create a
@@ -1005,7 +1005,7 @@ func TestAccAWSSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// create the configuration with 2 security groups, then create a
@@ -1059,7 +1059,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1111,7 +1111,7 @@ func TestAccAWSSecurityGroup_Name_Generated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1140,7 +1140,7 @@ func TestAccAWSSecurityGroup_Name_TerraformPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1168,7 +1168,7 @@ func TestAccAWSSecurityGroup_NamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1197,7 +1197,7 @@ func TestAccAWSSecurityGroup_NamePrefix_TerraformPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1239,7 +1239,7 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1274,7 +1274,7 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1318,7 +1318,7 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1355,7 +1355,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1391,7 +1391,7 @@ func TestAccAWSSecurityGroup_multiIngress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1417,7 +1417,7 @@ func TestAccAWSSecurityGroup_change(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1450,7 +1450,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1562,7 +1562,7 @@ func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1589,7 +1589,7 @@ func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSSecurityGroupEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1617,7 +1617,7 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1671,7 +1671,7 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1746,7 +1746,7 @@ func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1777,7 +1777,7 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1822,7 +1822,7 @@ func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1849,7 +1849,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1902,7 +1902,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSSecurityGroupEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1942,7 +1942,7 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1970,7 +1970,7 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1998,7 +1998,7 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2080,7 +2080,7 @@ func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckF
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		// cycle from primary to secondary
 		perm1 := cycleIpPermForGroup(*secondary.GroupId)
@@ -2120,7 +2120,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
 			var err error
 			if sg.IpPermissions != nil {
@@ -2150,7 +2150,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 }
 
 func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_security_group" {
@@ -2172,7 +2172,7 @@ func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSSecurityGroupEc2ClassicDestroy(s *terraform.State) error {
-	conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_security_group" {
@@ -2204,7 +2204,7 @@ func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) reso
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
@@ -2231,7 +2231,7 @@ func testAccCheckAWSSecurityGroupEc2ClassicExists(n string, group *ec2.SecurityG
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
@@ -2494,7 +2494,7 @@ func testAccCheckAWSSecurityGroupExistsWithoutDefault(n string) resource.TestChe
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		group, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
@@ -2520,7 +2520,7 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2545,7 +2545,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
@@ -2592,7 +2592,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
@@ -2618,7 +2618,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 
 					id := aws.StringValue(group.GroupId)
 
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
+					conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 					match, err := finder.SecurityGroupByID(conn, id)
 					if tfresource.NotFound(err) {
@@ -2653,7 +2653,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
@@ -2698,7 +2698,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
@@ -2741,7 +2741,7 @@ func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			// Create a valid security group with some rules and make sure it exists
@@ -2773,7 +2773,7 @@ func testAccCheckAWSSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIng
 }
 
 func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressCount int) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	group, err := finder.SecurityGroupByID(conn, id)
 	if tfresource.NotFound(err) {

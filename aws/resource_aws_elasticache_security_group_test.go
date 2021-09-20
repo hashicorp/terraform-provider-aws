@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepElasticacheCacheSecurityGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -57,7 +57,7 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elasticache Cache Security Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -73,7 +73,7 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_security_group" {
@@ -125,7 +125,7 @@ func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckF
 			return fmt.Errorf("No cache security group ID is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).elasticacheconn
 		_, err := conn.DescribeCacheSecurityGroups(&elasticache.DescribeCacheSecurityGroupsInput{
 			CacheSecurityGroupName: aws.String(rs.Primary.ID),
 		})

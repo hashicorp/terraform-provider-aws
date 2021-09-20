@@ -15,7 +15,7 @@ func TestAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAWSEc2TransitGatewayDataSource_ID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{

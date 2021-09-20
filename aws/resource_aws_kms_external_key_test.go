@@ -26,7 +26,7 @@ func TestAccAWSKmsExternalKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,14 +67,14 @@ func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKmsExternalKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,7 +90,7 @@ func TestAccAWSKmsExternalKey_DeletionWindowInDays(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -130,7 +130,7 @@ func TestAccAWSKmsExternalKey_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,7 +170,7 @@ func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -218,7 +218,7 @@ func TestAccAWSKmsExternalKey_KeyMaterialBase64(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ func TestAccAWSKmsExternalKey_Policy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,7 +303,7 @@ func TestAccAWSKmsExternalKey_PolicyBypass(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,7 +336,7 @@ func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -390,7 +390,7 @@ func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -453,7 +453,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
@@ -477,7 +477,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 }
 
 func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_external_key" {
@@ -511,7 +511,7 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
 			return finder.KeyByID(conn, rs.Primary.ID)

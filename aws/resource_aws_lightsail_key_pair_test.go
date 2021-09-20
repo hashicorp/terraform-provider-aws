@@ -23,7 +23,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 
 	resourceName := "aws_lightsail_key_pair.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -54,7 +54,7 @@ func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +82,7 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSLightsailKeyPair_nameprefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +134,7 @@ func testAccCheckAWSLightsailKeyPairExists(n string, res *lightsail.KeyPair) res
 			return errors.New("No LightsailKeyPair set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
@@ -158,7 +158,7 @@ func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),

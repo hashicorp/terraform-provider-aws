@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones(),
@@ -45,7 +46,7 @@ func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigFilter(),
@@ -73,7 +74,7 @@ func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSLocalZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("local-zone"),
@@ -101,7 +102,7 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigName(),
@@ -129,7 +130,7 @@ func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("wavelength-zone"),
@@ -157,7 +158,7 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneId(),
@@ -179,10 +180,10 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 }
 
 func testAccPreCheckAWSLocalZoneAvailable(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
 			"zone-type":     "local-zone",
 			"opt-in-status": "opted-in",
 		}),

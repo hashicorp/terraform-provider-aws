@@ -18,7 +18,7 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	resourceName := "aws_iam_user_ssh_key.user"
 
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	publicKey, _, err := RandSSHKeyPairSize(2048, testAccDefaultEmailAddress)
+	publicKey, _, err := RandSSHKeyPairSize(2048, acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -26,7 +26,7 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 }
 
 func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_ssh_key" {
@@ -117,7 +117,7 @@ func testAccCheckAWSUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyO
 			return fmt.Errorf("No SSHPublicKeyID is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		username := rs.Primary.Attributes["username"]
 		encoding := rs.Primary.Attributes["encoding"]

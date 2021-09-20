@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 const (
@@ -241,7 +242,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("vpc_id", vpce.VpcId)
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
 			"prefix-list-name": serviceName,
 		}),
 	})
@@ -400,7 +401,7 @@ func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 
 func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Duration) error {
 	describeSvcReq := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
-	describeSvcReq.Filters = buildEC2AttributeFilterList(
+	describeSvcReq.Filters = tfec2.BuildAttributeFilterList(
 		map[string]string{
 			"service-name": svcName,
 		},

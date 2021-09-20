@@ -28,7 +28,7 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +107,7 @@ func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,7 +132,7 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +156,7 @@ func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,7 +181,7 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +206,7 @@ func testAccCheckAWSNeptuneClusterInstanceExists(n string, v *neptune.DBInstance
 			return fmt.Errorf("No Neptune Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
 		resp, err := conn.DescribeDBInstances(&neptune.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})

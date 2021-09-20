@@ -19,7 +19,7 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +129,7 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eip_association.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -137,7 +137,7 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +166,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,7 +174,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEipAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEipAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -193,8 +193,8 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 			return fmt.Errorf("No EIP Association ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		platforms := testAccProvider.Meta().(*AWSClient).supportedplatforms
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		platforms := acctest.Provider.Meta().(*AWSClient).supportedplatforms
 
 		request, err := describeAddressesById(rs.Primary.ID, platforms)
 		if err != nil {
@@ -226,8 +226,8 @@ func testAccCheckAWSEIPAssociationEc2ClassicExists(name string, res *ec2.Address
 			return fmt.Errorf("No EIP Association ID is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
-		platforms := testAccProviderEc2Classic.Meta().(*AWSClient).supportedplatforms
+		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
+		platforms := acctest.ProviderEC2Classic.Meta().(*AWSClient).supportedplatforms
 
 		request, err := describeAddressesById(rs.Primary.ID, platforms)
 
@@ -280,7 +280,7 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("No EIP Association ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		request := &ec2.DescribeAddressesInput{
 			Filters: []*ec2.Filter{

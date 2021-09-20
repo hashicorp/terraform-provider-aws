@@ -30,14 +30,14 @@ func init() {
 }
 
 func testSweepRoute53KeySigningKeys(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).r53conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHostedZonesInput{}
@@ -84,7 +84,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 				d.Set("name", dns.Name)
 				d.Set("status", dns.Status)
 
-				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 			}
 
 		}
@@ -96,11 +96,11 @@ func testSweepRoute53KeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error getting Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
+	if err = acctest.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Route53 Key-Signing Keys sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -119,7 +119,7 @@ func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,14 +160,14 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53KeySigningKeyExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53KeySigningKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53KeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -184,7 +184,7 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{

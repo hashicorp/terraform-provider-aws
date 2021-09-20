@@ -24,7 +24,7 @@ func init() {
 }
 
 func testSweepEc2NetworkInterfaces(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -58,7 +58,7 @@ func testSweepEc2NetworkInterfaces(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 Network Interface sweep for %s: %s", region, err)
 			return nil
 		}
@@ -77,7 +77,7 @@ func TestAccAWSENI_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func TestAccAWSENI_IPv6(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func TestAccAWSENI_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +206,7 @@ func TestAccAWSENI_IPv6Count(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -254,14 +254,14 @@ func TestAccAWSENI_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &networkInterface),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkInterface(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -279,7 +279,7 @@ func TestAccAWSENI_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -345,7 +345,7 @@ func TestAccAWSENI_Attachment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -378,7 +378,7 @@ func TestAccAWSENI_IgnoreExternalAttachment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -405,7 +405,7 @@ func TestAccAWSENI_SourceDestCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -446,7 +446,7 @@ func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -509,7 +509,7 @@ func TestAccAWSENI_InterfaceType_efa(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -539,7 +539,7 @@ func testAccCheckAWSENIExists(n string, res *ec2.NetworkInterface) resource.Test
 			return fmt.Errorf("No ENI ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		input := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -566,7 +566,7 @@ func testAccCheckAWSENIDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		input := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -597,7 +597,7 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 			NetworkInterfaceId: conf.NetworkInterfaceId,
 		}
 
-		_, err := testAccProvider.Meta().(*AWSClient).ec2conn.AttachNetworkInterface(input)
+		_, err := acctest.Provider.Meta().(*AWSClient).ec2conn.AttachNetworkInterface(input)
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)

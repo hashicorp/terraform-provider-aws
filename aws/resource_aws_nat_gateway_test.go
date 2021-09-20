@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepNatGateways(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -31,7 +31,7 @@ func testSweepNatGateways(region string) error {
 	req := &ec2.DescribeNatGatewaysInput{}
 	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
 			return nil
 		}
@@ -64,7 +64,7 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestAccAWSNatGateway_ConnectivityType_Private(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,7 +155,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 }
 
 func testAccCheckNatGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_nat_gateway" {
@@ -203,7 +203,7 @@ func testAccCheckNatGatewayExists(n string, ng *ec2.NatGateway) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeNatGateways(&ec2.DescribeNatGatewaysInput{
 			NatGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})

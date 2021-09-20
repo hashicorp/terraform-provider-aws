@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -52,7 +51,7 @@ func resourceAwsDefaultVpcDhcpOptionsCreate(d *schema.ResourceData, meta interfa
 		},
 		{
 			Name:   aws.String("value"),
-			Values: aws.StringSlice([]string{resourceAwsEc2RegionalPrivateDnsSuffix(meta.(*AWSClient).region)}),
+			Values: aws.StringSlice([]string{regionalPrivateDNSSuffix(meta.(*AWSClient).region)}),
 		},
 		{
 			Name:   aws.String("key"),
@@ -108,7 +107,7 @@ func resourceAwsDefaultVpcDhcpOptionsDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsEc2RegionalPrivateDnsSuffix(region string) string {
+func regionalPrivateDNSSuffix(region string) string {
 	if region == endpoints.UsEast1RegionID {
 		return "ec2.internal"
 	}
@@ -122,8 +121,4 @@ func resourceAwsEc2RegionalPublicDnsSuffix(region string) string {
 	}
 
 	return fmt.Sprintf("%s.compute", region)
-}
-
-func resourceAwsEc2DashIP(ip string) string {
-	return strings.Replace(ip, ".", "-", -1)
 }

@@ -20,7 +20,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,14 +46,14 @@ func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,7 +62,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_route_table_association" {
@@ -96,7 +96,7 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestC
 			return fmt.Errorf("No VPC Endpoint Route Table Association ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		return finder.VpcEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 	}

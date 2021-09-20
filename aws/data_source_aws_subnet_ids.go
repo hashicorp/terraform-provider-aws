@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsSubnetIDs() *schema.Resource {
@@ -38,7 +39,7 @@ func dataSourceAwsSubnetIDsRead(d *schema.ResourceData, meta interface{}) error 
 	req := &ec2.DescribeSubnetsInput{}
 
 	if vpc, vpcOk := d.GetOk("vpc_id"); vpcOk {
-		req.Filters = buildEC2AttributeFilterList(
+		req.Filters = tfec2.BuildAttributeFilterList(
 			map[string]string{
 				"vpc-id": vpc.(string),
 			},

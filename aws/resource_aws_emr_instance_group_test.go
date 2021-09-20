@@ -22,7 +22,7 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +105,7 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -148,7 +148,7 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,7 +193,7 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +226,7 @@ func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,7 +250,7 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +281,7 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 }
 
 func testAccCheckAWSEmrInstanceGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := acctest.Provider.Meta().(*AWSClient).emrconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -321,7 +321,7 @@ func testAccCheckAWSEmrInstanceGroupExists(name string, ig *emr.InstanceGroup) r
 			return fmt.Errorf("No task group id set")
 		}
 
-		meta := testAccProvider.Meta()
+		meta := acctest.Provider.Meta()
 		conn := meta.(*AWSClient).emrconn
 		group, err := fetchEMRInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {

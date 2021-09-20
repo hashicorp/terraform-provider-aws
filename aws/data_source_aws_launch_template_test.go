@@ -19,7 +19,7 @@ func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +44,7 @@ func TestAccAWSLaunchTemplateDataSource_id_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +69,7 @@ func TestAccAWSLaunchTemplateDataSource_filter_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func TestAccAWSLaunchTemplateDataSource_filter_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +140,7 @@ func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +164,7 @@ func TestAccAWSLaunchTemplateDataSource_enclaveOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +186,7 @@ func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,7 +222,7 @@ func TestAccAWSLaunchTemplateDataSource_associateCarrierIPAddress(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,7 +258,7 @@ func TestAccAWSLaunchTemplateDataSource_networkInterfaces_deleteOnTermination(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -290,7 +290,7 @@ func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{

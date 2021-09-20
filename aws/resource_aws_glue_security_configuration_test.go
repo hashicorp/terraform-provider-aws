@@ -21,7 +21,7 @@ func init() {
 }
 
 func testSweepGlueSecurityConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -32,7 +32,7 @@ func testSweepGlueSecurityConfigurations(region string) error {
 	for {
 		output, err := conn.GetSecurityConfigurations(input)
 
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
 			return nil
 		}
@@ -70,7 +70,7 @@ func TestAccAWSGlueSecurityConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAWSGlueSecurityConfiguration_CloudWatchEncryption_CloudWatchEncrypti
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func TestAccAWSGlueSecurityConfiguration_JobBookmarksEncryption_JobBookmarksEncr
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,7 +173,7 @@ func TestAccAWSGlueSecurityConfiguration_S3Encryption_S3EncryptionMode_SSEKMS(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,7 +204,7 @@ func TestAccAWSGlueSecurityConfiguration_S3Encryption_S3EncryptionMode_SSES3(t *
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +237,7 @@ func testAccCheckAWSGlueSecurityConfigurationExists(resourceName string, securit
 			return fmt.Errorf("No Glue Security Configuration ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetSecurityConfiguration(&glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
@@ -265,7 +265,7 @@ func testAccCheckAWSGlueSecurityConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetSecurityConfiguration(&glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),

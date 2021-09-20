@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepKmsKeys(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -65,7 +65,7 @@ func testSweepKmsKeys(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)
 			return nil
 		}
@@ -82,7 +82,7 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +112,7 @@ func TestAccAWSKmsKey_asymmetricKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,14 +135,14 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKmsKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -159,7 +159,7 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,7 +193,7 @@ func TestAccAWSKmsKey_policyBypass(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -254,7 +254,7 @@ func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -309,7 +309,7 @@ func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -357,7 +357,7 @@ func TestAccAWSKmsKey_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -406,7 +406,7 @@ func testAccCheckAWSKmsKeyHasPolicy(name string, expectedPolicyText string) reso
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		out, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
 			KeyId:      aws.String(rs.Primary.ID),
@@ -432,7 +432,7 @@ func testAccCheckAWSKmsKeyHasPolicy(name string, expectedPolicyText string) reso
 }
 
 func testAccCheckAWSKmsKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_key" {
@@ -466,7 +466,7 @@ func testAccCheckAWSKmsKeyExists(name string, key *kms.KeyMetadata) resource.Tes
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
 
 		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
 			return finder.KeyByID(conn, rs.Primary.ID)

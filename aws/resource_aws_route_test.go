@@ -27,7 +27,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,14 +73,14 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,14 +98,14 @@ func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRouteTable(), rtResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRouteTable(), rtResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,7 +123,7 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,7 +173,7 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -218,7 +218,7 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +263,7 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,7 +308,7 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -353,7 +353,7 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -398,7 +398,7 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -443,7 +443,7 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -488,7 +488,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -534,7 +534,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -581,7 +581,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -648,7 +648,7 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -693,7 +693,7 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -738,7 +738,7 @@ func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -769,7 +769,7 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -814,7 +814,7 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -859,7 +859,7 @@ func TestAccAWSRoute_IPv4_To_CarrierGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -904,7 +904,7 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -949,7 +949,7 @@ func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -994,7 +994,7 @@ func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1040,7 +1040,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1245,7 +1245,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1400,7 +1400,7 @@ func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1447,7 +1447,7 @@ func TestAccAWSRoute_LocalRoute(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1485,7 +1485,7 @@ func TestAccAWSRoute_PrefixList_To_InternetGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1530,7 +1530,7 @@ func TestAccAWSRoute_PrefixList_To_VpnGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1575,7 +1575,7 @@ func TestAccAWSRoute_PrefixList_To_Instance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1620,7 +1620,7 @@ func TestAccAWSRoute_PrefixList_To_NetworkInterface_Unattached(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1666,7 +1666,7 @@ func TestAccAWSRoute_PrefixList_To_NetworkInterface_Attached(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1711,7 +1711,7 @@ func TestAccAWSRoute_PrefixList_To_VpcPeeringConnection(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1756,7 +1756,7 @@ func TestAccAWSRoute_PrefixList_To_NatGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1801,7 +1801,7 @@ func TestAccAWSRoute_PrefixList_To_TransitGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1850,7 +1850,7 @@ func TestAccAWSRoute_PrefixList_To_CarrierGateway(t *testing.T) {
 			testAccPreCheckAWSWavelengthZoneAvailable(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1899,7 +1899,7 @@ func TestAccAWSRoute_PrefixList_To_LocalGateway(t *testing.T) {
 			acctest.PreCheckOutpostsOutposts(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1944,7 +1944,7 @@ func TestAccAWSRoute_PrefixList_To_EgressOnlyInternetGateway(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1990,7 +1990,7 @@ func testAccCheckAWSRouteExists(n string, v *ec2.Route) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		var route *ec2.Route
 		var err error
@@ -2018,7 +2018,7 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {

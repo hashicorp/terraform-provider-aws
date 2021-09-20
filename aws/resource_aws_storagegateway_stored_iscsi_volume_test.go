@@ -21,7 +21,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_kms(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_snapshotId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -176,14 +176,14 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -198,7 +198,7 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName string, s
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(rs.Primary.ID)},
@@ -221,7 +221,7 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName string, s
 }
 
 func testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+	conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_stored_iscsi_volume" {

@@ -30,7 +30,7 @@ func init() {
 }
 
 func testSweepEc2VpcEndpoints(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -77,7 +77,7 @@ func testSweepEc2VpcEndpoints(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -97,7 +97,7 @@ func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +136,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +230,7 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -300,7 +300,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -358,7 +358,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -399,7 +399,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -460,14 +460,14 @@ func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpcEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -483,7 +483,7 @@ func TestAccAWSVpcEndpoint_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -529,7 +529,7 @@ func TestAccAWSVpcEndpoint_VpcEndpointType_GatewayLoadBalancer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -549,7 +549,7 @@ func TestAccAWSVpcEndpoint_VpcEndpointType_GatewayLoadBalancer(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint" {
@@ -581,7 +581,7 @@ func testAccCheckVpcEndpointExists(n string, endpoint *ec2.VpcEndpoint) resource
 			return fmt.Errorf("No VPC Endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		out, err := finder.VpcEndpointByID(conn, rs.Primary.ID)
 

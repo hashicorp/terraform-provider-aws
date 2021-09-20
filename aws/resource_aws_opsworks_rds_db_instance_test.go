@@ -19,7 +19,7 @@ func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksRdsDbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,7 @@ func testAccCheckAWSOpsworksRdsDbExists(
 			return fmt.Errorf("Rds Db stack id is missing, should be set.")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 		params := &opsworks.DescribeRdsDbInstancesInput{
 			StackId: aws.String(rs.Primary.Attributes["stack_id"]),
@@ -121,7 +121,7 @@ func testAccCheckAWSOpsworksCreateRdsDbAttributes(
 }
 
 func testAccCheckAwsOpsworksRdsDbDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_rds_db_instance" {
@@ -187,6 +187,7 @@ resource "aws_db_instance" "foo" {
 }
 `, testAccAwsOpsworksStackConfigVpcCreate(name))
 }
+
 func testAccAWSDBInstanceBasicConfig() string {
 	return acctest.ConfigCompose(testAccAWSDBInstanceConfig_orderableClassMysql(), `
 resource "aws_db_instance" "bar" {
@@ -225,4 +226,3 @@ data "aws_rds_orderable_db_instance" "test" {
 func testAccAWSDBInstanceConfig_orderableClassMysql() string {
 	return testAccAWSDBInstanceConfig_orderableClass("mysql", "5.6.35", "general-public-license")
 }
-

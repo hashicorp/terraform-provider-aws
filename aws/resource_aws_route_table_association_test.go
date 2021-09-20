@@ -23,7 +23,7 @@ func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,7 +55,7 @@ func TestAccAWSRouteTableAssociation_Subnet_ChangeRouteTable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +88,7 @@ func TestAccAWSRouteTableAssociation_Gateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +120,7 @@ func TestAccAWSRouteTableAssociation_Gateway_ChangeRouteTable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,14 +151,14 @@ func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteTableAssociationConfigSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,7 +167,7 @@ func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
 }
 
 func testAccCheckRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route_table_association" {
@@ -201,7 +201,7 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTableAssociat
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		association, err := finder.RouteTableAssociationByID(conn, rs.Primary.ID)
 

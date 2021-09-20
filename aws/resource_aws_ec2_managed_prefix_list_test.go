@@ -22,7 +22,7 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,14 +64,14 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2ManagedPrefixListConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2ManagedPrefixList(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2ManagedPrefixList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func TestAccAwsEc2ManagedPrefixList_AddressFamily_IPv6(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +113,7 @@ func TestAccAwsEc2ManagedPrefixList_Entry_Cidr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAwsEc2ManagedPrefixList_Entry_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func TestAccAwsEc2ManagedPrefixList_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ func TestAccAwsEc2ManagedPrefixList_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,7 +303,7 @@ func TestAccAwsEc2ManagedPrefixList_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_managed_prefix_list" {
@@ -340,7 +340,7 @@ func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		pl, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
 
@@ -357,7 +357,7 @@ func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestChec
 }
 
 func testAccPreCheckEc2ManagedPrefixList(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 

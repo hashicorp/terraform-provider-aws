@@ -25,7 +25,7 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +128,7 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 }
 
 func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_access_key" {
@@ -170,7 +170,7 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 			return fmt.Errorf("No Role name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 		name := rs.Primary.Attributes["user"]
 
 		resp, err := iamconn.ListAccessKeys(&iam.ListAccessKeysInput{

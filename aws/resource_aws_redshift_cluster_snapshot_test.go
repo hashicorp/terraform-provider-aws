@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepRedshiftClusterSnapshots(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -53,7 +53,7 @@ func testSweepRedshiftClusterSnapshots(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Redshift Cluster Snapshot sweep for %s: %s", region, err)
 			return nil
 		}

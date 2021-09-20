@@ -16,6 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func init() {
 }
 
 func testSweepEc2CarrierGateway(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -55,7 +56,7 @@ func testSweepEc2CarrierGateway(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if acctest.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Carrier Gateway sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -76,7 +77,7 @@ func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,14 +107,14 @@ func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2CarrierGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2CarrierGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEc2CarrierGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +130,7 @@ func TestAccAWSEc2CarrierGateway_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +168,7 @@ func TestAccAWSEc2CarrierGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckEc2CarrierGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_carrier_gateway" {
@@ -205,7 +206,7 @@ func testAccCheckEc2CarrierGatewayExists(n string, v *ec2.CarrierGateway) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 		out, err := finder.CarrierGatewayByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -224,10 +225,10 @@ func testAccCheckEc2CarrierGatewayExists(n string, v *ec2.CarrierGateway) resour
 }
 
 func testAccPreCheckAWSWavelengthZoneAvailable(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
 			"zone-type":     "wavelength-zone",
 			"opt-in-status": "opted-in",
 		}),

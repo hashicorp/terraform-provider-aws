@@ -19,7 +19,7 @@ func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -33,7 +33,7 @@ func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointServiceAllowedPrincipalDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_service_allowed_principal" {
@@ -76,7 +76,7 @@ func testAccCheckVpcEndpointServiceAllowedPrincipalExists(n string) resource.Tes
 			return fmt.Errorf("No VPC Endpoint Service ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
 			ServiceId: aws.String(rs.Primary.Attributes["vpc_endpoint_service_id"]),

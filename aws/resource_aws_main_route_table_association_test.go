@@ -21,7 +21,7 @@ func TestAccAWSMainRouteTableAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMainRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +41,7 @@ func TestAccAWSMainRouteTableAssociation_basic(t *testing.T) {
 }
 
 func testAccCheckMainRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_main_route_table_association" {
@@ -75,7 +75,7 @@ func testAccCheckMainRouteTableAssociationExists(n string, v *ec2.RouteTableAsso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		association, err := finder.MainRouteTableAssociationByID(conn, rs.Primary.ID)
 

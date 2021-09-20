@@ -14,7 +14,7 @@ import (
 
 func testAccDataSourceAwsEc2ManagedPrefixListGetIdByName(name string, id *string, arn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		output, err := conn.DescribeManagedPrefixLists(&ec2.DescribeManagedPrefixListsInput{
 			Filters: []*ec2.Filter{
@@ -47,7 +47,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2ManagedPrefixListConfig_basic,
@@ -102,7 +102,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2ManagedPrefixListConfig_filter,
@@ -154,7 +154,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_matchesTooMany(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsPrefixListConfig_matchesTooMany,

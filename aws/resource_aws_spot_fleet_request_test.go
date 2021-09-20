@@ -25,14 +25,14 @@ func init() {
 }
 
 func testSweepSpotFleetRequests(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*AWSClient).ec2conn
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*acctest.SweepResource, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, lastPage bool) bool {
@@ -53,7 +53,7 @@ func testSweepSpotFleetRequests(region string) error {
 			d.SetId(id)
 			d.Set("terminate_instances_with_expiration", true)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, acctest.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -63,11 +63,11 @@ func testSweepSpotFleetRequests(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Fleet Requests for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = acctest.SweepOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Fleet Requests for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if acctest.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -81,7 +81,7 @@ func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -89,7 +89,7 @@ func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +118,7 @@ func TestAccAWSSpotFleetRequest_tags(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -126,7 +126,7 @@ func TestAccAWSSpotFleetRequest_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,7 +170,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -178,7 +178,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +208,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -216,7 +216,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -244,7 +244,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -252,7 +252,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -274,7 +274,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -282,7 +282,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -310,7 +310,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -318,7 +318,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -356,7 +356,7 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -364,7 +364,7 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -396,7 +396,7 @@ func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -404,7 +404,7 @@ func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -444,7 +444,7 @@ func TestAccAWSSpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -452,7 +452,7 @@ func TestAccAWSSpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -478,7 +478,7 @@ func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -486,7 +486,7 @@ func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -512,7 +512,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -520,7 +520,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -547,7 +547,7 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -555,7 +555,7 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -582,7 +582,7 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -590,7 +590,7 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -617,7 +617,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -625,7 +625,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -663,7 +663,7 @@ func TestAccAWSSpotFleetRequest_updateTargetCapacity(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -671,7 +671,7 @@ func TestAccAWSSpotFleetRequest_updateTargetCapacity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -713,7 +713,7 @@ func TestAccAWSSpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -721,7 +721,7 @@ func TestAccAWSSpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -755,7 +755,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -763,7 +763,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -791,7 +791,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 	availabilityZonesDataSource := "data.aws_availability_zones.available"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -799,7 +799,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -828,7 +828,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -836,7 +836,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -865,7 +865,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	instanceTypeDataSource := "data.aws_ec2_instance_type_offering.available"
 	availabilityZonesDataSource := "data.aws_availability_zones.available"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -873,7 +873,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -905,7 +905,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -913,7 +913,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -941,7 +941,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 	instanceTypeDataSourceName := "data.aws_ec2_instance_type_offering.available"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -949,7 +949,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -982,7 +982,7 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -990,7 +990,7 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1017,7 +1017,7 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1025,7 +1025,7 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1053,7 +1053,7 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1061,7 +1061,7 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1090,7 +1090,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1112,7 +1112,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1148,7 +1148,7 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1156,7 +1156,7 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1182,7 +1182,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *t
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1190,7 +1190,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1215,7 +1215,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1223,7 +1223,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1247,7 +1247,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDeviceGp3(t *testing
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1255,7 +1255,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDeviceGp3(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1286,7 +1286,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDeviceGp3(t *testin
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1294,7 +1294,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDeviceGp3(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1325,7 +1325,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1333,7 +1333,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1363,7 +1363,7 @@ func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1371,7 +1371,7 @@ func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1398,7 +1398,7 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1406,7 +1406,7 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1434,7 +1434,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1442,7 +1442,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1470,7 +1470,7 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1478,7 +1478,7 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1518,7 +1518,7 @@ func TestAccAWSSpotFleetRequest_CapacityRebalance(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1526,7 +1526,7 @@ func TestAccAWSSpotFleetRequest_CapacityRebalance(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1551,7 +1551,7 @@ func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1559,7 +1559,7 @@ func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1576,7 +1576,7 @@ func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1584,14 +1584,14 @@ func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestConfig(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSpotFleetRequest(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSpotFleetRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1621,7 +1621,7 @@ func testAccCheckAWSSpotFleetRequestExists(
 			return errors.New("No Spot fleet request with that id exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		params := &ec2.DescribeSpotFleetRequestsInput{
 			SpotFleetRequestIds: []*string{&rs.Primary.ID},
@@ -1643,7 +1643,7 @@ func testAccCheckAWSSpotFleetRequestExists(
 }
 
 func testAccCheckAWSSpotFleetRequestDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_spot_fleet_request" {
@@ -1715,7 +1715,7 @@ func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
 }
 
 func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeSpotFleetRequestsInput{}
 
