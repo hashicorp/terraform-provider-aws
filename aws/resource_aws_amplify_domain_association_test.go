@@ -30,7 +30,7 @@ func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,14 +71,14 @@ func testAccAWSAmplifyDomainAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAmplifyDomainAssociationConfig(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAmplifyDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmplifyDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,7 +100,7 @@ func testAccAWSAmplifyDomainAssociation_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +162,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+		conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
 
 		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
@@ -177,7 +177,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 }
 
 func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+	conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_domain_association" {
