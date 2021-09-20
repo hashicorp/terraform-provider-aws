@@ -466,7 +466,7 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 		hasManaged = true
 	}
 
-	err := deleteIamRole(conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
+	err := DeleteRole(conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
@@ -479,7 +479,7 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteIamRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasManaged bool) error {
+func DeleteRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasManaged bool) error {
 	if err := deleteIamRoleInstanceProfiles(conn, roleName); err != nil {
 		return fmt.Errorf("unable to detach instance profiles: %w", err)
 	}

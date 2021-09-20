@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestResourceSortByExpirationDate(t *testing.T) {
@@ -29,7 +30,7 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 			Expiration:            aws.Time(time.Now().Add(2 * time.Hour)),
 		},
 	}
-	sort.Sort(certificateByExpiration(certs))
+	sort.Sort(tfiam.CertificateByExpiration(certs))
 	if aws.StringValue(certs[0].ServerCertificateName) != "latest" {
 		t.Fatalf("Expected first item to be %q, but was %q", "latest", *certs[0].ServerCertificateName)
 	}

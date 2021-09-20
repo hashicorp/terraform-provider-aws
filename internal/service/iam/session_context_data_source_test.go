@@ -8,6 +8,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestAssumedRoleRoleSessionName(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			role, session := roleNameSessionFromARN(testCase.ARN)
+			role, session := tfiam.RoleNameSessionFromARN(testCase.ARN)
 
 			if testCase.ExpectedRoleName != role || testCase.ExpectedSessionName != session {
 				t.Errorf("for %s: got role %s, session %s; expected role %s, session %s", testCase.ARN, role, session, testCase.ExpectedRoleName, testCase.ExpectedSessionName)

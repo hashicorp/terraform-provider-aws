@@ -79,17 +79,17 @@ func DataSourceServerCertificate() *schema.Resource {
 	}
 }
 
-type certificateByExpiration []*iam.ServerCertificateMetadata
+type CertificateByExpiration []*iam.ServerCertificateMetadata
 
-func (m certificateByExpiration) Len() int {
+func (m CertificateByExpiration) Len() int {
 	return len(m)
 }
 
-func (m certificateByExpiration) Swap(i, j int) {
+func (m CertificateByExpiration) Swap(i, j int) {
 	m[i], m[j] = m[j], m[i]
 }
 
-func (m certificateByExpiration) Less(i, j int) bool {
+func (m CertificateByExpiration) Less(i, j int) bool {
 	return m[i].Expiration.After(*m[j].Expiration)
 }
 
@@ -131,7 +131,7 @@ func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("Search for AWS IAM server certificate returned too many results")
 		}
 
-		sort.Sort(certificateByExpiration(metadatas))
+		sort.Sort(CertificateByExpiration(metadatas))
 	}
 
 	metadata := metadatas[0]

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepIamServiceLinkedRoles(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting IAM Service Role: %s", roleName)
-			deletionTaskID, err := deleteIamServiceLinkedRole(conn, roleName)
+			deletionTaskID, err := tfiam.DeleteServiceLinkedRole(conn, roleName)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete IAM Service Role %s: %s", roleName, err)
 				continue
@@ -62,7 +63,7 @@ func testSweepIamServiceLinkedRoles(region string) error {
 			}
 
 			log.Printf("[INFO] Waiting for deletion of IAM Service Role: %s", roleName)
-			err = deleteIamServiceLinkedRoleWaiter(conn, deletionTaskID)
+			err = tfiam.DeleteServiceLinkedRoleWaiter(conn, deletionTaskID)
 			if err != nil {
 				log.Printf("[ERROR] Failed to wait for deletion of IAM Service Role %s: %s", roleName, err)
 			}
@@ -120,7 +121,7 @@ func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		serviceName, roleName, customSuffix, err := decodeIamServiceLinkedRoleID(tc.Input)
+		serviceName, roleName, customSuffix, err := tfiam.DecodeServiceLinkedRoleID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -155,7 +156,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 				PreConfig: func() {
 					// Remove existing if possible
 					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-					deletionID, err := deleteIamServiceLinkedRole(conn, name)
+					deletionID, err := tfiam.DeleteServiceLinkedRole(conn, name)
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
 					}
@@ -163,7 +164,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 						return
 					}
 
-					err = deleteIamServiceLinkedRoleWaiter(conn, deletionID)
+					err = tfiam.DeleteServiceLinkedRoleWaiter(conn, deletionID)
 					if err != nil {
 						t.Fatalf("Error waiting for role (%s) to be deleted: %s", name, err)
 					}
@@ -291,7 +292,7 @@ func testAccCheckAWSIAMServiceLinkedRoleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, roleName, _, err := decodeIamServiceLinkedRoleID(rs.Primary.ID)
+		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -323,7 +324,7 @@ func testAccCheckAWSIAMServiceLinkedRoleExists(n string) resource.TestCheckFunc 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		_, roleName, _, err := decodeIamServiceLinkedRoleID(rs.Primary.ID)
+		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

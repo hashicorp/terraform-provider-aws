@@ -87,7 +87,7 @@ func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) erro
 func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	group, name, err := resourceAwsIamGroupPolicyParseId(d.Id())
+	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	group, name, err := resourceAwsIamGroupPolicyParseId(d.Id())
+	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamGroupPolicyParseId(id string) (groupName, policyName string, err error) {
+func GroupPolicyParseID(id string) (groupName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err = fmt.Errorf("group_policy id must be of the form <group name>:<policy name>")

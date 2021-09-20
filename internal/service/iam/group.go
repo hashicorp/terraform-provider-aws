@@ -164,7 +164,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteAwsIamGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
+func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 	var attachedPolicies []*iam.AttachedPolicy
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
@@ -204,7 +204,7 @@ func deleteAwsIamGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 	return nil
 }
 
-func deleteAwsIamGroupPolicies(conn *iam.IAM, groupName string) error {
+func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
 	var inlinePolicies []*string
 	input := &iam.ListGroupPoliciesInput{
 		GroupName: aws.String(groupName),

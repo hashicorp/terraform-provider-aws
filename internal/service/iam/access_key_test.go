@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
@@ -292,7 +293,7 @@ func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual, err := sesSmtpPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
+		actual, err := tfiam.SessmTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}

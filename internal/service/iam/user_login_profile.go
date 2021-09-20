@@ -76,9 +76,9 @@ const (
 	charSymbols = "!@#$%^&*()_+-=[]{}|'"
 )
 
-// generateIAMPassword generates a random password of a given length, matching the
+// GeneratePassword generates a random password of a given length, matching the
 // most restrictive iam password policy.
-func generateIAMPassword(length int) (string, error) {
+func GeneratePassword(length int) (string, error) {
 	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
@@ -104,7 +104,7 @@ func generateIAMPassword(length int) (string, error) {
 			result[i] = charset[r.Int64()]
 		}
 
-		if !checkIAMPwdPolicy(result) {
+		if !CheckPwdPolicy(result) {
 			continue
 		}
 
@@ -116,7 +116,7 @@ func generateIAMPassword(length int) (string, error) {
 
 // Check the generated password contains all character classes listed in the
 // IAM password policy.
-func checkIAMPwdPolicy(pass []byte) bool {
+func CheckPwdPolicy(pass []byte) bool {
 	return (bytes.ContainsAny(pass, charLower) &&
 		bytes.ContainsAny(pass, charNumbers) &&
 		bytes.ContainsAny(pass, charSymbols) &&
@@ -134,7 +134,7 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 
 	passwordResetRequired := d.Get("password_reset_required").(bool)
 	passwordLength := d.Get("password_length").(int)
-	initialPassword, err := generateIAMPassword(passwordLength)
+	initialPassword, err := GeneratePassword(passwordLength)
 	if err != nil {
 		return err
 	}

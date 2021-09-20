@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepIamPolicies(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting IAM Policy: %s", arn)
-			if err := iamPolicyDeleteNondefaultVersions(arn, conn); err != nil {
+			if err := tfiam.PolicyDeleteNondefaultVersions(arn, conn); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Policy (%s) non-default versions: %w", arn, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -229,7 +230,7 @@ func TestAccAWSIAMPolicy_disappears(t *testing.T) {
 				Config: testAccAWSIAMPolicyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMPolicyExists(resourceName, &out),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -118,7 +118,7 @@ func resourceUserPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := detachPolicyFromUser(conn, user, arn)
+	err := DetachPolicyFromUser(conn, user, arn)
 	if err != nil {
 		return fmt.Errorf("Error removing policy %s from IAM User %s: %v", arn, user, err)
 	}
@@ -149,7 +149,7 @@ func attachPolicyToUser(conn *iam.IAM, user string, arn string) error {
 	return err
 }
 
-func detachPolicyFromUser(conn *iam.IAM, user string, arn string) error {
+func DetachPolicyFromUser(conn *iam.IAM, user string, arn string) error {
 	_, err := conn.DetachUserPolicy(&iam.DetachUserPolicyInput{
 		UserName:  aws.String(user),
 		PolicyArn: aws.String(arn),

@@ -88,7 +88,7 @@ func resourceAwsIamRolePolicyPut(d *schema.ResourceData, meta interface{}) error
 func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	role, name, err := resourceAwsIamRolePolicyParseId(d.Id())
+	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	role, name, err := resourceAwsIamRolePolicyParseId(d.Id())
+	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamRolePolicyParseId(id string) (roleName, policyName string, err error) {
+func RolePolicyParseID(id string) (roleName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("role_policy id must be of the form <role name>:<policy name>")
