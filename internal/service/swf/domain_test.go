@@ -24,7 +24,7 @@ func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
 	}
 }
 
-func TestAccAWSSwfDomain_basic(t *testing.T) {
+func TestAccSWFDomain_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
@@ -55,7 +55,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSwfDomain_tags(t *testing.T) {
+func TestAccSWFDomain_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
@@ -102,7 +102,7 @@ func TestAccAWSSwfDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
+func TestAccSWFDomain_namePrefix(t *testing.T) {
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,7 +131,7 @@ func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
+func TestAccSWFDomain_generatedName(t *testing.T) {
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +158,7 @@ func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSwfDomain_Description(t *testing.T) {
+func TestAccSWFDomain_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
