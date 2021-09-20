@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceQueue() *schema.Resource {
@@ -26,7 +27,7 @@ func DataSourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -58,7 +59,7 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("url", queueURL)
 	d.SetId(queueURL)
 
-	tags, err := keyvaluetags.SqsListTags(conn, queueURL)
+	tags, err := tftags.SqsListTags(conn, queueURL)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", queueURL, err)
