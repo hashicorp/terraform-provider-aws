@@ -684,7 +684,7 @@ func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budg
 
 func expandBudgetSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
 	result := make([]*budgets.Subscriber, 0)
-	addrs := expandStringSet(rawList.(*schema.Set))
+	addrs := flex.ExpandStringSet(rawList.(*schema.Set))
 	for _, addr := range addrs {
 		result = append(result, &budgets.Subscriber{
 			SubscriptionType: aws.String(subscriptionType),

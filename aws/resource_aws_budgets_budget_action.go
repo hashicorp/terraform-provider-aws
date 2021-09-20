@@ -468,7 +468,7 @@ func expandAwsBudgetsBudgetActionActionScpActionDefinition(l []interface{}) *bud
 	}
 
 	if v, ok := m["target_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.TargetIds = expandStringSet(v)
+		config.TargetIds = flex.ExpandStringSet(v)
 	}
 
 	return config
@@ -492,7 +492,7 @@ func expandAwsBudgetsBudgetActionActionSsmActionDefinition(l []interface{}) *bud
 	}
 
 	if v, ok := m["instance_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.InstanceIds = expandStringSet(v)
+		config.InstanceIds = flex.ExpandStringSet(v)
 	}
 
 	return config
@@ -512,15 +512,15 @@ func expandAwsBudgetsBudgetActionActionIamActionDefinition(l []interface{}) *bud
 	}
 
 	if v, ok := m["groups"].(*schema.Set); ok && v.Len() > 0 {
-		config.Groups = expandStringSet(v)
+		config.Groups = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := m["roles"].(*schema.Set); ok && v.Len() > 0 {
-		config.Roles = expandStringSet(v)
+		config.Roles = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := m["users"].(*schema.Set); ok && v.Len() > 0 {
-		config.Users = expandStringSet(v)
+		config.Users = flex.ExpandStringSet(v)
 	}
 
 	return config
@@ -563,15 +563,15 @@ func flattenAwsBudgetsBudgetActionIamActionDefinition(lt *budgets.IamActionDefin
 	}
 
 	if lt.Users != nil && len(lt.Users) > 0 {
-		attrs["users"] = flattenStringSet(lt.Users)
+		attrs["users"] = flex.FlattenStringSet(lt.Users)
 	}
 
 	if lt.Roles != nil && len(lt.Roles) > 0 {
-		attrs["roles"] = flattenStringSet(lt.Roles)
+		attrs["roles"] = flex.FlattenStringSet(lt.Roles)
 	}
 
 	if lt.Groups != nil && len(lt.Groups) > 0 {
-		attrs["groups"] = flattenStringSet(lt.Groups)
+		attrs["groups"] = flex.FlattenStringSet(lt.Groups)
 	}
 
 	return []map[string]interface{}{attrs}
@@ -587,7 +587,7 @@ func flattenAwsBudgetsBudgetActionScpActionDefinition(lt *budgets.ScpActionDefin
 	}
 
 	if lt.TargetIds != nil && len(lt.TargetIds) > 0 {
-		attrs["target_ids"] = flattenStringSet(lt.TargetIds)
+		attrs["target_ids"] = flex.FlattenStringSet(lt.TargetIds)
 	}
 
 	return []map[string]interface{}{attrs}
@@ -600,7 +600,7 @@ func flattenAwsBudgetsBudgetActionSsmActionDefinition(lt *budgets.SsmActionDefin
 
 	attrs := map[string]interface{}{
 		"action_sub_type": aws.StringValue(lt.ActionSubType),
-		"instance_ids":    flattenStringSet(lt.InstanceIds),
+		"instance_ids":    flex.FlattenStringSet(lt.InstanceIds),
 		"region":          aws.StringValue(lt.Region),
 	}
 
