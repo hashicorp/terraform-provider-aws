@@ -15,12 +15,12 @@ import (
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 const ipSetUpdatesLimit = 1000
 
-func resourceAwsWafIPSet() *schema.Resource {
+func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafIPSetCreate,
-		Read:   resourceAwsWafIPSetRead,
-		Update: resourceAwsWafIPSetUpdate,
-		Delete: resourceAwsWafIPSetDelete,
+		Create: resourceIPSetCreate,
+		Read:   resourceIPSetRead,
+		Update: resourceIPSetUpdate,
+		Delete: resourceIPSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsWafIPSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafIPSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	wr := newWafRetryer(conn)
@@ -85,10 +85,10 @@ func resourceAwsWafIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsWafIPSetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	params := &waf.GetIPSetInput{
@@ -131,7 +131,7 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsWafIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("ip_set_descriptors") {
@@ -144,10 +144,10 @@ func resourceAwsWafIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsWafIPSetRead(d, meta)
+	return resourceIPSetRead(d, meta)
 }
 
-func resourceAwsWafIPSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafIpSet() *schema.Resource {
+func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAWSWafIpSetRead,
 

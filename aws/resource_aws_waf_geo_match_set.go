@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafGeoMatchSet() *schema.Resource {
+func ResourceGeoMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafGeoMatchSetCreate,
-		Read:   resourceAwsWafGeoMatchSetRead,
-		Update: resourceAwsWafGeoMatchSetUpdate,
-		Delete: resourceAwsWafGeoMatchSetDelete,
+		Create: resourceGeoMatchSetCreate,
+		Read:   resourceGeoMatchSetRead,
+		Update: resourceGeoMatchSetUpdate,
+		Delete: resourceGeoMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsWafGeoMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating GeoMatchSet: %s", d.Get("name").(string))
@@ -72,10 +72,10 @@ func resourceAwsWafGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(resp.GeoMatchSet.GeoMatchSetId))
 
-	return resourceAwsWafGeoMatchSetUpdate(d, meta)
+	return resourceGeoMatchSetUpdate(d, meta)
 }
 
-func resourceAwsWafGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading GeoMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetGeoMatchSetInput{
@@ -107,7 +107,7 @@ func resourceAwsWafGeoMatchSetRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsWafGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("geo_match_constraint") {
@@ -120,10 +120,10 @@ func resourceAwsWafGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsWafGeoMatchSetRead(d, meta)
+	return resourceGeoMatchSetRead(d, meta)
 }
 
-func resourceAwsWafGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List()

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafGeoMatchSet(region string) error {
 		}
 
 		for _, geoMatchSet := range page.GeoMatchSets {
-			r := resourceAwsWafGeoMatchSet()
+			r := ResourceGeoMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(geoMatchSet.GeoMatchSetId)

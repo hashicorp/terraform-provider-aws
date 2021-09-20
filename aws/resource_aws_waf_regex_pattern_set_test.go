@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafRegexPatternSet(region string) error {
 		}
 
 		for _, regexPatternSet := range page.RegexPatternSets {
-			r := resourceAwsWafRegexPatternSet()
+			r := ResourceRegexPatternSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(regexPatternSet.RegexPatternSetId)

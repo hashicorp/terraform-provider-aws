@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafRateBasedRules(region string) error {
 		}
 
 		for _, rule := range page.Rules {
-			r := resourceAwsWafRateBasedRule()
+			r := ResourceRateBasedRule()
 			d := r.Data(nil)
 
 			id := aws.StringValue(rule.RuleId)
@@ -188,7 +189,7 @@ func TestAccAWSWafRateBasedRule_disappears(t *testing.T) {
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafRateBasedRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRateBasedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

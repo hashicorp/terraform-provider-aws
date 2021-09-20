@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafSizeConstraintSet() *schema.Resource {
+func ResourceSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafSizeConstraintSetCreate,
-		Read:   resourceAwsWafSizeConstraintSetRead,
-		Update: resourceAwsWafSizeConstraintSetUpdate,
-		Delete: resourceAwsWafSizeConstraintSetDelete,
+		Create: resourceSizeConstraintSetCreate,
+		Read:   resourceSizeConstraintSetRead,
+		Update: resourceSizeConstraintSetUpdate,
+		Delete: resourceSizeConstraintSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -26,7 +26,7 @@ func resourceAwsWafSizeConstraintSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating SizeConstraintSet: %s", d.Get("name").(string))
@@ -47,10 +47,10 @@ func resourceAwsWafSizeConstraintSetCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.SizeConstraintSet.SizeConstraintSetId))
 
-	return resourceAwsWafSizeConstraintSetUpdate(d, meta)
+	return resourceSizeConstraintSetUpdate(d, meta)
 }
 
-func resourceAwsWafSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading SizeConstraintSet: %s", d.Get("name").(string))
 	params := &waf.GetSizeConstraintSetInput{
@@ -82,7 +82,7 @@ func resourceAwsWafSizeConstraintSetRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsWafSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("size_constraints") {
@@ -95,10 +95,10 @@ func resourceAwsWafSizeConstraintSetUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsWafSizeConstraintSetRead(d, meta)
+	return resourceSizeConstraintSetRead(d, meta)
 }
 
-func resourceAwsWafSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()

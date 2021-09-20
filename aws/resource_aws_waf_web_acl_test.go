@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafWebAcls(region string) error {
 				continue
 			}
 
-			r := resourceAwsWafWebAcl()
+			r := ResourceWebACL()
 			d := r.Data(nil)
 
 			id := aws.StringValue(webACL.WebACLId)
@@ -330,7 +331,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 				Config: testAccAWSWafWebAclConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafWebAcl(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

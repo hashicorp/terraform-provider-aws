@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegexPatternSet() *schema.Resource {
+func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegexPatternSetCreate,
-		Read:   resourceAwsWafRegexPatternSetRead,
-		Update: resourceAwsWafRegexPatternSetUpdate,
-		Delete: resourceAwsWafRegexPatternSetDelete,
+		Create: resourceRegexPatternSetCreate,
+		Read:   resourceRegexPatternSetRead,
+		Update: resourceRegexPatternSetUpdate,
+		Delete: resourceRegexPatternSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,7 +40,7 @@ func resourceAwsWafRegexPatternSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating WAF Regex Pattern Set: %s", d.Get("name").(string))
@@ -60,10 +60,10 @@ func resourceAwsWafRegexPatternSetCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(resp.RegexPatternSet.RegexPatternSetId))
 
-	return resourceAwsWafRegexPatternSetUpdate(d, meta)
+	return resourceRegexPatternSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading WAF Regex Pattern Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexPatternSetInput{
@@ -95,7 +95,7 @@ func resourceAwsWafRegexPatternSetRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsWafRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Updating WAF Regex Pattern Set: %s", d.Get("name").(string))
@@ -109,10 +109,10 @@ func resourceAwsWafRegexPatternSetUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsWafRegexPatternSetRead(d, meta)
+	return resourceRegexPatternSetRead(d, meta)
 }
 
-func resourceAwsWafRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()

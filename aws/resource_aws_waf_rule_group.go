@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRuleGroup() *schema.Resource {
+func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRuleGroupCreate,
-		Read:   resourceAwsWafRuleGroupRead,
-		Update: resourceAwsWafRuleGroupUpdate,
-		Delete: resourceAwsWafRuleGroupDelete,
+		Create: resourceRuleGroupCreate,
+		Read:   resourceRuleGroupRead,
+		Update: resourceRuleGroupUpdate,
+		Delete: resourceRuleGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,7 +80,7 @@ func resourceAwsWafRuleGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -115,10 +115,10 @@ func resourceAwsWafRuleGroupCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsWafRuleGroupRead(d, meta)
+	return resourceRuleGroupRead(d, meta)
 }
 
-func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -176,7 +176,7 @@ func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsWafRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("activated_rule") {
@@ -197,10 +197,10 @@ func resourceAwsWafRuleGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsWafRuleGroupRead(d, meta)
+	return resourceRuleGroupRead(d, meta)
 }
 
-func resourceAwsWafRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()

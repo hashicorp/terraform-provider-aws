@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafWebAcl() *schema.Resource {
+func ResourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafWebAclCreate,
-		Read:   resourceAwsWafWebAclRead,
-		Update: resourceAwsWafWebAclUpdate,
-		Delete: resourceAwsWafWebAclDelete,
+		Create: resourceWebACLCreate,
+		Read:   resourceWebACLRead,
+		Update: resourceWebACLUpdate,
+		Delete: resourceWebACLDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -148,7 +148,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 	}
 }
 
-func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -212,10 +212,10 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsWafWebAclRead(d, meta)
+	return resourceWebACLRead(d, meta)
 }
 
-func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -296,7 +296,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChanges("default_action", "rules") {
@@ -349,10 +349,10 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsWafWebAclRead(d, meta)
+	return resourceWebACLRead(d, meta)
 }
 
-func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	// First, need to delete all rules

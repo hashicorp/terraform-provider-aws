@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafXssMatchSet(region string) error {
 		}
 
 		for _, xssMatchSet := range page.XssMatchSets {
-			r := resourceAwsWafXssMatchSet()
+			r := ResourceXSSMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(xssMatchSet.XssMatchSetId)
@@ -197,7 +198,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafXssMatchSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceXSSMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

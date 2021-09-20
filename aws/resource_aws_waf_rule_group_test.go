@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -50,7 +51,7 @@ func testSweepWafRuleGroups(region string) error {
 		}
 
 		for _, ruleGroup := range page.RuleGroups {
-			r := resourceAwsWafRuleGroup()
+			r := ResourceRuleGroup()
 			d := r.Data(nil)
 
 			id := aws.StringValue(ruleGroup.RuleGroupId)
@@ -286,7 +287,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := resourceAwsWafRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{
