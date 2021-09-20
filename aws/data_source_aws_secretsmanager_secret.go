@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSecretsManagerSecret() *schema.Resource {
+func DataSourceSecret() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecretsManagerSecretRead,
+		Read: dataSourceSecretRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -73,7 +73,7 @@ func dataSourceAwsSecretsManagerSecret() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

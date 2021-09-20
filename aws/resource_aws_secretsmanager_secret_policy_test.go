@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -159,7 +160,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
+func ResourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretVersionCreate,
-		Read:   resourceAwsSecretsManagerSecretVersionRead,
-		Update: resourceAwsSecretsManagerSecretVersionUpdate,
-		Delete: resourceAwsSecretsManagerSecretVersionDelete,
+		Create: resourceSecretVersionCreate,
+		Read:   resourceSecretVersionRead,
+		Update: resourceSecretVersionUpdate,
+		Delete: resourceSecretVersionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -64,7 +64,7 @@ func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
@@ -103,10 +103,10 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 
 	d.SetId(fmt.Sprintf("%s|%s", secretID, aws.StringValue(output.VersionId)))
 
-	return resourceAwsSecretsManagerSecretVersionRead(d, meta)
+	return resourceSecretVersionRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
@@ -178,7 +178,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsSecretsManagerSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
@@ -224,10 +224,10 @@ func resourceAwsSecretsManagerSecretVersionUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsSecretsManagerSecretVersionRead(d, meta)
+	return resourceSecretVersionRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretVersionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())

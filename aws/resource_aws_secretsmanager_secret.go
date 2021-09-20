@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecretsManagerSecret() *schema.Resource {
+func ResourceSecret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretCreate,
-		Read:   resourceAwsSecretsManagerSecretRead,
-		Update: resourceAwsSecretsManagerSecretUpdate,
-		Delete: resourceAwsSecretsManagerSecretDelete,
+		Create: resourceSecretCreate,
+		Read:   resourceSecretRead,
+		Update: resourceSecretUpdate,
+		Delete: resourceSecretDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -146,7 +146,7 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 	}
 }
 
-func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -257,10 +257,10 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSecretsManagerSecretRead(d, meta)
+	return resourceSecretRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -357,7 +357,7 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if d.HasChange("replica") {
@@ -484,10 +484,10 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSecretsManagerSecretRead(d, meta)
+	return resourceSecretRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {

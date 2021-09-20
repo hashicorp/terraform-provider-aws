@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecretsManagerSecretPolicy() *schema.Resource {
+func ResourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretPolicyCreate,
-		Read:   resourceAwsSecretsManagerSecretPolicyRead,
-		Update: resourceAwsSecretsManagerSecretPolicyUpdate,
-		Delete: resourceAwsSecretsManagerSecretPolicyDelete,
+		Create: resourceSecretPolicyCreate,
+		Read:   resourceSecretPolicyRead,
+		Update: resourceSecretPolicyUpdate,
+		Delete: resourceSecretPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,7 +48,7 @@ func resourceAwsSecretsManagerSecretPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.PutResourcePolicyInput{
@@ -84,10 +84,10 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(res.ARN))
 
-	return resourceAwsSecretsManagerSecretPolicyRead(d, meta)
+	return resourceSecretPolicyRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.GetResourcePolicyInput{
@@ -144,7 +144,7 @@ func resourceAwsSecretsManagerSecretPolicyRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	if d.HasChanges("policy", "block_public_policy") {
@@ -178,10 +178,10 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsSecretsManagerSecretPolicyRead(d, meta)
+	return resourceSecretPolicyRead(d, meta)
 }
 
-func resourceAwsSecretsManagerSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.DeleteResourcePolicyInput{
