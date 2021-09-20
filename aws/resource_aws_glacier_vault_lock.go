@@ -103,7 +103,7 @@ func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", d.Id(), input)
 	output, err := conn.GetVaultLock(input)
 
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Glacier Vault Lock (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -136,7 +136,7 @@ func resourceAwsGlacierVaultLockDelete(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Aborting Glacier Vault Lock (%s): %s", d.Id(), input)
 	_, err := conn.AbortVaultLock(input)
 
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
@@ -157,7 +157,7 @@ func glacierVaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resour
 		log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", vaultName, input)
 		output, err := conn.GetVaultLock(input)
 
-		if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 			return nil, "", nil
 		}
 
