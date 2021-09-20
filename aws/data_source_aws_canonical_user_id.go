@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsCanonicalUserId() *schema.Resource {
@@ -23,7 +24,7 @@ func dataSourceAwsCanonicalUserId() *schema.Resource {
 }
 
 func dataSourceAwsCanonicalUserIdRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*conns.AWSClient).S3Conn
 
 	log.Printf("[DEBUG] Reading S3 Buckets")
 

@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSPartition_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func testAccCheckAwsPartition(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Can't find resource: %s", n)
 		}
 
-		expected := acctest.Provider.Meta().(*AWSClient).partition
+		expected := acctest.Provider.Meta().(*conns.AWSClient).Partition
 		if rs.Primary.Attributes["partition"] != expected {
 			return fmt.Errorf("Incorrect Partition: expected %q, got %q", expected, rs.Primary.Attributes["partition"])
 		}
@@ -50,7 +51,7 @@ func testAccCheckAwsDnsSuffix(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Can't find resource: %s", n)
 		}
 
-		expected := acctest.Provider.Meta().(*AWSClient).dnsSuffix
+		expected := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
 		if rs.Primary.Attributes["dns_suffix"] != expected {
 			return fmt.Errorf("Incorrect DNS Suffix: expected %q, got %q", expected, rs.Primary.Attributes["dns_suffix"])
 		}
