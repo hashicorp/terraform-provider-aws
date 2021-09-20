@@ -82,7 +82,7 @@ func testSweepDataSyncLocationSmbs(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
+func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 	var locationSmb1 datasync.DescribeLocationSmbOutput
 
 	resourceName := "aws_datasync_location_smb.test"
@@ -130,7 +130,7 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationSmb_disappears(t *testing.T) {
+func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
 	var locationSmb1 datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -153,7 +153,7 @@ func TestAccAWSDataSyncLocationSmb_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationSmb_Tags(t *testing.T) {
+func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 	var locationSmb1, locationSmb2, locationSmb3 datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

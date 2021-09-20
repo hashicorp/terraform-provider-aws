@@ -81,7 +81,7 @@ func testSweepDataSyncLocationEfss(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncLocationEfs_basic(t *testing.T) {
+func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	efsFileSystemResourceName := "aws_efs_file_system.test"
 	resourceName := "aws_datasync_location_efs.test"
@@ -117,7 +117,7 @@ func TestAccAWSDataSyncLocationEfs_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationEfs_disappears(t *testing.T) {
+func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 
@@ -139,7 +139,7 @@ func TestAccAWSDataSyncLocationEfs_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationEfs_Subdirectory(t *testing.T) {
+func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 
@@ -166,7 +166,7 @@ func TestAccAWSDataSyncLocationEfs_Subdirectory(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationEfs_Tags(t *testing.T) {
+func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 	var locationEfs1, locationEfs2, locationEfs3 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 

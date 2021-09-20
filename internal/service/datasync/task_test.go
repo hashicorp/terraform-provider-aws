@@ -80,7 +80,7 @@ func testSweepDataSyncTasks(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncTask_basic(t *testing.T) {
+func TestAccDataSyncTask_basic(t *testing.T) {
 	var task1 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSyncDestinationLocationResourceName := "aws_datasync_location_s3.destination"
@@ -130,7 +130,7 @@ func TestAccAWSDataSyncTask_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_disappears(t *testing.T) {
+func TestAccDataSyncTask_disappears(t *testing.T) {
 	var task1 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -153,7 +153,7 @@ func TestAccAWSDataSyncTask_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_schedule(t *testing.T) {
+func TestAccDataSyncTask_schedule(t *testing.T) {
 	var task1 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -189,7 +189,7 @@ func TestAccAWSDataSyncTask_schedule(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_CloudWatchLogGroupARN(t *testing.T) {
+func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 	var task1 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -222,7 +222,7 @@ func TestAccAWSDataSyncTask_CloudWatchLogGroupARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_Excludes(t *testing.T) {
+func TestAccDataSyncTask_excludes(t *testing.T) {
 	var task1 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -260,7 +260,7 @@ func TestAccAWSDataSyncTask_Excludes(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_AtimeMtime(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -299,7 +299,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_AtimeMtime(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_BytesPerSecond(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -336,7 +336,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_BytesPerSecond(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_Gid(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -373,7 +373,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Gid(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_LogLevel(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -410,7 +410,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_LogLevel(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_OverwriteMode(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -447,7 +447,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_OverwriteMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_PosixPermissions(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -484,7 +484,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_PosixPermissions(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_PreserveDeletedFiles(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -521,7 +521,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_PreserveDeletedFiles(t *testing.T
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_PreserveDevices(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -558,7 +558,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_PreserveDevices(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_TaskQueueing(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -595,7 +595,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_TaskQueueing(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_TransferMode(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -632,7 +632,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_TransferMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_Uid(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -669,7 +669,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Uid(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
+func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -715,7 +715,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncTask_Tags(t *testing.T) {
+func TestAccDataSyncTask_tags(t *testing.T) {
 	acctest.Skip(t, "Tagging on creation is inconsistent")
 	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")

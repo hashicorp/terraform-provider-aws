@@ -82,7 +82,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 	return nil
 }
 
-func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
+func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	fsResourceName := "aws_fsx_windows_file_system.test"
@@ -120,7 +120,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
+func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
@@ -146,7 +146,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
+func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
@@ -178,7 +178,7 @@ func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
+func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
